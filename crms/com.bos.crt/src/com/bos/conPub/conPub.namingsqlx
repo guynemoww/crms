@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="contract_id" javaType="string" property="contractId"/>
+        <result column="biz_type" javaType="string" property="bizType"/>
+        <result column="party_id" javaType="string" property="partyId"/>
+        <result column="party_name" javaType="string" property="partyName"/>
+        <result column="contract_num" javaType="string" property="contractNum"/>
+        <result column="product_type" javaType="string" property="productType"/>
+        <result column="cert_type" javaType="string" property="certType"/>
+        <result column="cert_num" javaType="string" property="certNum"/>
+        <result column="con_status" javaType="string" property="conStatus"/>
+        <result column="begin_date" javaType="string" property="beginDate"/>
+        <result column="end_date" javaType="string" property="endDate"/>
+        <result column="currency_cd" javaType="string" property="currencyCd"/>
+        <result column="contract_amt" javaType="string" property="contractAmt"/>
+        <result column="con_balance" javaType="string" property="conBalance"/>
+        <result column="con_yu_e" javaType="string" property="conYuE"/>
+        <result column="ocup_amt" javaType="string" property="ocupAmt"/>
+        <result column="JJYE" javaType="string" property="jjye"/>
+    </resultMap>
+    <resultMap class="java.util.HashMap" id="resultMap1">
+        <result column="contract_id" javaType="string" property="contractId"/>
+        <result column="biz_type" javaType="string" property="bizType"/>
+        <result column="biz_type_flag" javaType="string" property="bizTypeFlag"/>
+        <result column="party_id" javaType="string" property="partyId"/>
+        <result column="party_name" javaType="string" property="partyName"/>
+        <result column="contract_num" javaType="string" property="contractNum"/>
+        <result column="product_type" javaType="string" property="productType"/>
+        <result column="cert_type" javaType="string" property="certType"/>
+        <result column="cert_num" javaType="string" property="certNum"/>
+        <result column="con_status" javaType="string" property="conStatus"/>
+        <result column="begin_date" javaType="string" property="beginDate"/>
+        <result column="end_date" javaType="string" property="endDate"/>
+        <result column="currency_cd" javaType="string" property="currencyCd"/>
+        <result column="contract_amt" javaType="string" property="contractAmt"/>
+        <result column="con_balance" javaType="string" property="conBalance"/>
+        <result column="con_yu_e" javaType="string" property="conYuE"/>
+        <result column="ocup_amt" javaType="string" property="ocupAmt"/>
+    </resultMap>
+    <select id="getConApvList" parameterClass="java.util.HashMap" resultMap="resultMap1">
+select t.contract_id,
+	(case apv.biz_type when '02' then '综合授信项下单笔' else apv.biz_type end ) biz_type,
+	(case apv.biz_type_flag when '02' then '综合授信项下单笔' else apv.biz_type_flag end ) biz_type_flag,
+	t.party_id,
+	f.party_name,
+	t.contract_num,
+	t.product_type,
+	f.cert_type,
+	f.cert_num,
+	t.con_status,
+	to_char(t.begin_date, 'yyyy-mm-dd') as begin_date,
+	to_char(t.end_date, 'yyyy-mm-dd') as end_date,
+	t.currency_cd,
+	t.contract_amt,
+	t.con_balance,
+	tls.con_yu_e,
+	(nvl(t.contract_amt, 0) - nvl(t.con_balance, 0)) as ocup_amt
+from tb_con_contract_info t 
+left join (select sum(nvl(jjye,0)) as con_yu_e,CONTRACT_ID from tb_loan_summary  where summary_status_cd !='06' and summary_status_cd !='09' group by CONTRACT_ID) tls on t.contract_id = tls.CONTRACT_ID
+INNER JOIN v_csm_party f ON t.party_id=f.party_id 
+INNER JOIN tb_biz_amount_detail_approve ap ON t.amount_detail_id = ap.amount_detail_id
+INNER JOIN tb_biz_amount_approve aa ON ap.amount_id = aa.amount_id
+INNER JOIN tb_biz_approve apv ON apv.approve_id = aa.approve_id
+WHERE 1=1
+<isNotNull property="userId">  and t.USER_NUM = #userId# </isNotNull>
+<isNotNull property="orgNum">  and t.ORG_NUM = #orgNum# </isNotNull>
+<isNotNull property="status">  and t.CON_STATUS=#status# </isNotNull>
+<isNotNull property="partyName">  and f.party_name like '%$partyName$%'</isNotNull>
+<isNotNull property="contractNum">  and t.contract_Num like '%$contractNum$%' </isNotNull>
+<isNotNull property="certType">  and f.cert_type = #certType# </isNotNull>
+<isNotNull property="certNum">  and f.cert_Num=#certNum# </isNotNull>
+<isNotNull property="productType">  and t.product_type=#productType# </isNotNull>
+and apv.apply_id not in (select apply_id from tb_biz_bank_struct_apply t where t.SYNDICATED_OBJECT_CD ='02')
+order by t.begin_date desc
+    </select>
+    <select id="getConApvList2" parameterClass="java.util.HashMap" resultMap="resultMap">
+		select tc.CONTRACT_ID,tc.PARTY_ID,tf.PARTY_NAME,tc.CONTRACT_NUM,tb.PRODUCT_TYPE,
+				   t.biz_type,
+			       to_char(tc.begin_date, 'yyyy-mm-dd') as begin_date,
+			       to_char(tc.end_date, 'yyyy-mm-dd') as end_date,
+			       te.PROMISE_AMOUNT,
+   			       f.cert_type,
+			       f.cert_num,
+			       te.CURRENCY_CD,
+			       tc.con_status,
+			       tc.contract_amt,
+			       ts.JJYE,
+			       tc.con_balance,
+			       '' as con_yu_e,
+			       (nvl(tc.contract_amt, 0) - nvl(tc.con_balance, 0)) as ocup_amt
+			from TB_BIZ_APPROVE t,TB_BIZ_AMOUNT_APProve ta,tb_biz_amount_detail_approve tb,
+			TB_CON_CONTRACT_INFO tc left join tb_loan_summary ts on ts.CONTRACT_ID=tc.CONTRACT_ID ,
+			TB_BIZ_BANK_STRUCT_APPLY td,TB_BIZ_BANK_MEMBER_APPLY te,tb_csm_party tf,
+			( select c.party_id,
+			        case
+			          when #certType# = '2001' then
+			           '202'
+			          else
+			           '202'
+			        end as cert_type,
+			        case
+			          when #certType# = '2001' then
+			           c.registr_cd
+			          else
+			           c.org_register_cd
+			        end as cert_num
+			   from tb_csm_corporation c) f
+			where t.APPROVE_ID=ta.APPROVE_ID
+			and ta.AMOUNT_ID=tb.AMOUNT_ID
+			and tb.AMOUNT_DETAIL_ID=tc.AMOUNT_DETAIL_ID
+			and t.APPLY_ID=td.APPLY_ID
+			and td.SYNDICATED_STRUCT_ID=te.SYNDICATED_STRUCT_ID
+			and tc.PARTY_ID=tf.PARTY_ID
+			and tf.PARTY_ID=f.PARTY_ID
+   		<isNotNull property="userId">  and te.MEMBERS_USER_NUM = #userId# </isNotNull>
+   		<isNotNull property="status">  and tc.CON_STATUS=#status# </isNotNull>
+   		<isNotNull property="partyName">  and tf.party_name like '%$partyName$%'</isNotNull>
+   		<isNotNull property="contractNum">  and tc.contract_num like '%$contractNum$%' </isNotNull>
+   		<isNotNull property="certType">  and f.cert_type = #certType# </isNotNull>
+   		<isNotNull property="certNum">  and f.cert_Num like '%$certNum$%' </isNotNull>
+    </select>
+</sqlMap>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+	<!-- 评级机构 -->
+    <resultMap class="commonj.sdo.DataObject" id="getLevelInfo">
+        <result column="DICTID"  property="dictid"/>
+        <result column="SEQNO"  property="seqno"/>
+        <result column="DICTNAME"  property="dictname"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentid"/>
+    </resultMap>
+    <select id="getLevelInfo"  parameterClass="java.util.HashMap" resultMap="getLevelInfo">
+      select DICTID,
+             SEQNO,
+             DICTNAME,
+             RANK,
+             PARENTID
+        from EOS_DICT_ENTRY where DICTTYPEID='CDKH0004'
+         <isNotNull property="parentId">
+	    	 and PARENTID like '$parentId$%' and  PARENTID is not null
+	     </isNotNull>
+	 
+	      <isNotNull property="levelOrg">
+	    	 and DICTID like '%00'
+	     </isNotNull>
+    </select>
+    
+    <!-- 同业类型 -->
+    <resultMap class="commonj.sdo.DataObject" id="getFinancialInstitutionTypeCd">
+        <result column="DICTID"  property="dictid"/>
+        <result column="SEQNO"  property="seqno"/>
+        <result column="DICTNAME"  property="dictname"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentid"/>
+    </resultMap>
+    <select id="getFinancialInstitutionTypeCd"  parameterClass="java.util.HashMap" resultMap="getFinancialInstitutionTypeCd">
+      select DICTID,
+             SEQNO,
+             DICTNAME,
+             RANK,
+             PARENTID
+        from EOS_DICT_ENTRY where DICTTYPEID='XD_KHCD0211'
+         <isNotNull property="checkParentId">
+	    	 and PARENTID is null
+	     </isNotNull>
+	 
+	      <isNotNull property="parentId">
+	    	 and DICTID like '$parentId$%' and  PARENTID is not null
+	     </isNotNull>
+    </select>
+    
+    <!-- 地址类型 -->
+      <resultMap class="commonj.sdo.DataObject" id="getAddressCd">
+        <result column="DICTID"  property="dictid"/>
+        <result column="SEQNO"  property="seqno"/>
+        <result column="DICTNAME"  property="dictname"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentid"/>
+    </resultMap>
+    <select id="getAddressCd"  parameterClass="java.util.HashMap" resultMap="getAddressCd">
+      select DICTID,
+             SEQNO,
+             DICTNAME,
+             RANK,
+             PARENTID
+        from EOS_DICT_ENTRY where DICTTYPEID='CDDZ0002'
+         <isNotNull property="parentId">
+	    	 and PARENTID like '$parentId$%' and  PARENTID is not null
+	     </isNotNull>
+	   </select>
+	   
+	  <!-- 上市公司标志-->
+      <resultMap class="commonj.sdo.DataObject" id="getListingCd">
+        <result column="DICTID"  property="dictid"/>
+        <result column="SEQNO"  property="seqno"/>
+        <result column="DICTNAME"  property="dictname"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentid"/>
+    </resultMap>
+    <select id="getListingCd"  parameterClass="java.util.HashMap" resultMap="getListingCd">
+      select DICTID,
+             SEQNO,
+             DICTNAME,
+             RANK,
+             PARENTID
+        from EOS_DICT_ENTRY where DICTTYPEID='CDKH0077'
+         <isNotNull property="parentId">
+	    	 and PARENTID = '$parentId$' and  PARENTID is not null
+	     </isNotNull>
+	     
+    </select>
+    
+     <!-- 地址类型 -->
+      <resultMap class="commonj.sdo.DataObject" id="getCertTypeCd">
+        <result column="DICTID"  property="dictid"/>
+        <result column="SEQNO"  property="seqno"/>
+        <result column="DICTNAME"  property="dictname"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentid"/>
+    </resultMap>
+    <select id="getCertTypeCd"  parameterClass="java.util.HashMap" resultMap="getCertTypeCd">
+      select DICTID,
+             SEQNO,
+             DICTNAME,
+             RANK,
+             PARENTID
+        from EOS_DICT_ENTRY where DICTTYPEID='CDKH0002'
+         <isNotNull property="parentId">
+	    	 and (PARENTID = '$parentId$' or EOS_DICT_ENTRY.DICTID='99999')
+	     </isNotNull>
+	   </select>
+	  
+	   
+	  <!-- 委托人标示 -->
+    <select id="getCorpList"  parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	      select 
+	      		 p.party_id,
+	      		 p.party_name,
+	      		 p.party_num,
+	      		 p.party_type_cd,
+	      		 p.ecif_party_num,
+	      		 p.create_time
+	        from tb_csm_party  p
+	        left join tb_csm_corporation c on c.party_id = p.party_id
+	        left join tb_csm_natural_person n on  n.party_id = p.party_id
+	        where p.party_Type_Cd in ('01','06','03')
+         <isNotNull property="partyName">
+	    	 and p.party_name like '$partyName$%'   
+	     </isNotNull>
+	     and c.if_client = '1'  
+	   </select>
+	   
+	     <!-- 模糊查询包括证件信息 -->
+    <select id="getPartyList"  parameterClass="com.bos.csm.inteface.crms.FindPartyByIdcard" resultClass="com.bos.csm.inteface.crms.FindPartyByIdcard">
+	      select 
+	      		 p.party_id partyId,
+	      		 p.party_name partyName,
+	      		 p.party_num partyNum,
+	      		 p.party_type_cd partyTypeCd,
+	      		 p.ecif_party_num ecifPartyNum,
+	      		 p.create_time createTime,
+	      		 c.certificate_type_cd certificateTypeCd,
+	      		 c.certificate_code certificateCode
+	        from tb_csm_party p left join tb_csm_certificate_info c on p.party_id = c.party_id 
+	        where 1=1 and p.party_id not in (select party_id from tb_csm_black_list where party_id is not null)
+         <isNotNull property="partyName">
+	    	 and p.party_name like '%$partyName$%'   
+	     </isNotNull>
+	     <isNotNull property="partyTypeCd">
+	    	 and p.party_Type_Cd = '$partyTypeCd$'   
+	     </isNotNull>
+	     <isNotNull property="certificateTypeCd">
+	    	 and c.certificate_type_cd = '$certificateTypeCd$'   
+	     </isNotNull>
+	     <isNotNull property="certificateCode">
+	    	 and c.certificate_code = '$certificateCode$'   
+	     </isNotNull>
+	      <isNotNull property="partyId">
+	    	 and p.party_id = '$partyId$'   
+	     </isNotNull>
+	     
+	   </select>
+	   
+	   <!-- 模糊查询包括证件信息【当前客户经理下拥有管户权或者业务权限】 -->
+    <select id="getPartyListByManage"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	      select 
+	      		 p.party_id partyId,
+	      		 p.party_name partyName,
+	      		 p.party_num partyNum,
+	      		 p.party_type_cd partyTypeCd,
+	      		 p.ecif_party_num ecifPartyNum,
+	      		 p.create_time createTime
+	        from tb_csm_party p 
+	        left join tb_csm_management_team t on t.party_id = p.party_id 
+	        where t.user_num='$usreNum$'
+         <isNotNull property="partyName">
+	    	 and p.party_name like '%$partyName$%'   
+	     </isNotNull>
+	     <isNotNull property="partyNum">
+	    	 and p.party_Num = '$partyNum$'   
+	     </isNotNull>
+	     
+	     
+	   </select>
+	   
+	       <select id="QueryCustManagerTeam"  parameterClass="com.bos.csm.manageRightChange.manageRightChange.QueryCustManagerTeam" resultClass="com.bos.csm.manageRightChange.manageRightChange.QueryCustManagerTeam">
+	   select b.userid,b.empname,a.orgname,a.orgcode,d.posiname from om_organization a,om_employee b,om_empposition c,om_position d where (a.orglevel >#orglevel# or a.orgcode=#orgcode#)  and a.orgid = b.orgid and b.empid= c.empid and c.positionid= d. positionid and posicode='P1001'
+	    </select>
+	    
+	    <!-- 通用 通过父节点查询 ganquan 15-6-29 -->
+      <resultMap class="commonj.sdo.DataObject" id="dict">
+        <result column="DICTID"  property="dictId"/>
+        <result column="SEQNO"  property="seqNo"/>
+        <result column="DICTNAME"  property="dictName"/>
+        <result column="RANK"  property="rank"/>
+        <result column="PARENTID"  property="parentId"/>
+	  </resultMap>
+	  <select id="getDict"  parameterClass="java.util.HashMap" resultMap="dict">
+	      select DICTID,
+	             SEQNO,
+	             DICTNAME,
+	             RANK,
+	             PARENTID
+	        from EOS_DICT_ENTRY where DICTTYPEID='$typeId$'
+		   <isNotNull property="parentId">
+	    	  and PARENTID ='$parentId$'
+	       </isNotNull>
+	       <isNull property="parentId">
+	    	  and PARENTID is null
+	       </isNull>
+	            order by DICTID
+	  </select>
+	    <select id="getDictForParentIdNull"  parameterClass="java.util.HashMap" resultMap="dict">
+	      select DICTID,
+	             SEQNO,
+	             DICTNAME,
+	             RANK,
+	             PARENTID
+	        from EOS_DICT_ENTRY where DICTTYPEID='$typeId$'
+		   <isNotNull property="parentId">
+	    	  and PARENTID ='$parentId$'
+	       </isNotNull>
+	            order by DICTID
+	  </select>
+</sqlMap>

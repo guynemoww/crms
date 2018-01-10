@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="areaFlow" detailDescription="" demonstration="" urls=""
+	gridVisibility="false" rulerVisibility="true" snapToGeometry="true"
+	productVersion="6.3" state="stateless">
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" nodeType="common" type="start">
+		<sourceConnections xsi:type="process:tActionLink"
+			description="" id="link0" name="link0" lineType="reference"
+			isDefault="true" type="action" actionName="action0" dataConvertClass="">
+			<sourceNode>start0</sourceNode>
+			<targetNode>assign1</targetNode>
+			<process:validateRules errorPage="" onError="default" />
+			<process:inputParameters>
+				<process:parameter description=""
+					historyStateLocation="client" isArray="false" name="titles"
+					primitiveType="String" />
+				<process:parameter description=""
+					historyStateLocation="client" isArray="false" name="xjson"
+					primitiveType="String" />
+				<process:parameter anyType="java.lang.Object"
+					description="" historyStateLocation="client" isArray="true" name="resultList" />
+				<process:parameter description=""
+					historyStateLocation="client" isArray="false" name="yunit"
+					primitiveType="String" />
+				<process:parameter description=""
+					historyStateLocation="client" isArray="false" name="seriesType"
+					primitiveType="String" />
+				<process:parameter description="自定义刻度"
+					historyStateLocation="client" isArray="false" name="tickInterval"
+					primitiveType="String" />
+				<process:parameter description="设置导出的文件名"
+					historyStateLocation="client" isArray="false" name="exportfileName"
+					primitiveType="String" />
+				<process:parameter description="设置图表宽度"
+					historyStateLocation="client" isArray="false" name="chartWidth"
+					primitiveType="String" />
+				<process:parameter description="设置图表高度"
+					historyStateLocation="client" isArray="false" name="chartHeight"
+					primitiveType="String" />
+				<process:parameter description="动态设置导出图表图片的url请求"
+					historyStateLocation="client" isArray="false" name="url"
+					primitiveType="String" />
+			</process:inputParameters>
+		</sourceConnections>
+		<location x="60" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="process:tEnd" description="" id="end0" name="结束"
+		displayName="结束" nodeType="common" type="end" contextPath="" method="forward"
+		uri="/acc/analy/pglineChart.jsp">
+		<targetConnections>link1</targetConnections>
+		<location x="788" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:inputVariables />
+		<process:returns />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="62" y="96" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="790" y="96" />
+		<figSize height="17" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tView" description="" id="view0"
+		name="pglineChart.jsp" displayName="pglineChart.jsp" type="view"
+		contextPath="" contributionName="com.bos.utp.component.report" method="forward"
+		uri="/acc/analy/pglineChart.jsp">
+		<sourceConnections xsi:type="process:tActionLink"
+			id="link1" name="link1" lineType="reference" isDefault="true" type="action"
+			actionName="action1">
+			<sourceNode>view0</sourceNode>
+			<targetNode>end0</targetNode>
+		</sourceConnections>
+		<targetConnections>link5</targetConnections>
+		<location x="646" y="60" />
+		<size height="28" width="22" />
+		<nodeLabel>view0label</nodeLabel>
+		<process:inputParameters />
+		<process:outputVariables />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="view0label" name="label"
+		nodeType="label">
+		<location x="613" y="96" />
+		<figSize height="17" width="88" />
+		<node>view0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="赋值" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link5"
+			name="link5" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>view0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link7</targetConnections>
+		<location x="498" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">f:title</process:from>
+			<process:to type="query">titles</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">xjson</process:from>
+			<process:to type="query">xjson</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">
+			</process:from>
+			<process:to type="query">yunit</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">f:series</process:from>
+			<process:to type="query">seriesType</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">MaxStr</process:from>
+			<process:to type="query">tickInterval</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">hightcharts</process:from>
+			<process:to type="query">exportfileName</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">650</process:from>
+			<process:to type="query">chartWidth</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">250</process:from>
+			<process:to type="query">chartHeight</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">com.primeton.utp.component.ExportControllerAction.exportImg</process:from>
+			<process:to type="query">url</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">finanysisProgramId</process:from>
+			<process:to type="query">map/finanysisProgramId</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">moduleId</process:from>
+			<process:to type="query">map/moduleId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="500" y="96" />
+		<figSize height="17" width="25" />
+		<node>assign0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign1"
+		name="赋值1" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link6"
+			name="link6" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign1</sourceNode>
+			<targetNode>subprocess0</targetNode>
+		</sourceConnections>
+		<targetConnections>link0</targetConnections>
+		<location x="208" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign1label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">f:finanysisProgramId</process:from>
+			<process:to type="query">map/finanysisProgramId</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">f:moduleId</process:from>
+			<process:to type="query">map/moduleId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label"
+		nodeType="label">
+		<location x="206" y="96" />
+		<figSize height="17" width="32" />
+		<node>assign1</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess0"
+		name="获取分析数据" displayName="getAccAnalyArea" type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link7"
+			name="link7" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>subprocess0</sourceNode>
+			<targetNode>assign0</targetNode>
+		</sourceConnections>
+		<targetConnections>link6</targetConnections>
+		<location x="324" y="60" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess0label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.acc.analy.getAccAnalyArea</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="map" type="query"
+					value="java.util.HashMap" valueType="Java" pattern="reference">map</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="resultList"
+					type="query" value="java.util.List" valueType="Java">resultList</process:outputVariable>
+				<process:outputVariable id="1" name="xjson"
+					type="query" value="String" valueType="Primitive">xjson</process:outputVariable>
+				<process:outputVariable id="2" name="MaxStr"
+					type="query" value="String" valueType="Primitive">MaxStr</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess0label"
+		name="label" nodeType="label">
+		<location x="301" y="95" />
+		<figSize height="17" width="73" />
+		<node>subprocess0</node>
+	</nodes>
+	<topRuler />
+	<leftRuler>
+		<guides position="-101" horizontal="true" />
+	</leftRuler>
+	<process:info author="谭凯" createTime="2013-12-03 15:07:01"
+		date="2013-12-03Z" description="折线图测试" name="折线图测试" version="6.3" />
+	<process:variables>
+		<process:variable anyType="java.util.HashMap"
+			description="" historyStateLocation="client" isArray="false" name="map" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="finanysisProgramId"
+			primitiveType="String" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="moduleId"
+			primitiveType="String" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="series"
+			primitiveType="String" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="title"
+			primitiveType="String" />
+	</process:variables>
+	<process:inputParameters />
+</process:tPageFlow>

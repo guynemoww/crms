@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenying -->
+<sqlMap>
+
+   
+    <resultMap class="commonj.sdo.DataObject" id="selectWorkListResult">
+    	<result column="ac_apply_id" property="acApplyId"/>
+    	<result column="ac_apply_num" property="acApplyNum"/>
+    	<result column="apply_status" property="applyStatus"/>
+    	<result column="apply_dt" property="applyDt"/>
+    	<result column="cust_count" property="custCount"/>
+    	<result column="debt_count" property="debtCount"/>
+    </resultMap>
+
+    <resultMap class="commonj.sdo.DataObject" id="getUserPosicodeResult">
+    	<result column="POSICODE" property="posicode"/>
+    </resultMap>
+     <resultMap class="commonj.sdo.DataObject" id="getCurrentAcApplyIdResult">
+    	<result column="AC_APPLY_ID" property="acApplyId"/>
+    </resultMap>
+     
+    <resultMap class="commonj.sdo.DataObject" id="getSubmitApplyResult">
+    	<result column="AC_APPLY_ID" property="acApplyId"/>
+    	<result column="USER_NUM" property="userNum"/>
+    	<result column="ORG_NUM" property="orgNum"/>
+    	<result column="PARTY_NAME" property="partyName"/>
+    	<result column="DELT_COUNT" property="deltCount"/>
+    </resultMap>
+    
+    <!-- 获取分类申请编号最大值 -->
+    <select id="selectMaxCode" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select max(ac_apply_num) as acApplyNum from tb_cla_assets_classify_apply
+    </select>
+    <!-- 获取分类审批编号最大值 -->
+    <select id="selectMaxCodeApproveNum" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select max(cla_approve_num) as claApproveNum from tb_cla_classify_delt_info where ac_apply_id = #acApplyId#
+    </select>
+    
+    
+
+   
+   <!-- 查询贷款数量 -->
+   <select id="selectDebtsCount" parameterClass="java.util.HashMap" resultClass="java.lang.Object">
+   		select count(*) as debtCount from tb_loan_summary t where 1=1 
+   		and t.party_id = #partyId#
+   </select>
+   
+   <!-- 获取工作列表 -->
+   <select id="selectWorkList" parameterClass="java.util.HashMap" resultMap="selectWorkListResult">
+   		select t0.ac_apply_id,
+               t0.ac_apply_num,
+               t0.apply_status,
+               t0.apply_dt,
+               (select count(*) from tb_cla_classify_cust_info t1 
+               where t1.ac_apply_id = t0.ac_apply_id) as cust_count,
+               (select count(*) from tb_cla_classify_delt_info t2 
+               where t2.ac_apply_id = t0.ac_apply_id) as debt_count
+   		  from tb_cla_assets_classify_apply t0
+  		  order by apply_dt desc
+   </select>
+
+    <!-- 获取用户机构 -->
+   <select id="getUserPosicode" parameterClass="java.util.HashMap" resultMap="getUserPosicodeResult">
+   		select distinct posicode from om_empposition t,om_position t1 
+   		where t.orgid = #orgid# and t.empid= #empid# and t.positionid = t1.positionid
+   </select>
+   
+   
+    
+     <!-- 实时分类：查询可使用的申请id（当前检查监测岗下的相同参与人的未发起的实时分类） -->
+   <select id="getCurrentAcApplyId" parameterClass="java.util.HashMap" resultMap="getCurrentAcApplyIdResult">
+   		select t0.ac_apply_id 
+			from tb_cla_assets_classify_apply t0
+			where t0.cla_properties = '03'
+			and t0.apply_status = '0'
+			and t0.user_num = (select max(user_num) from tb_csm_party t1,tb_csm_management_team t2 
+			where t1.party_id = t2.party_id and t1.party_id = #partyId#)
+			and t0.create_user_num = #createUserNum#
+			and t0.create_org_num = #createOrgNum#
+   </select>
+   
+ 
+   
+   <!-- 实时分类：查询要发起实时分类流程的信息 -->
+   <select id="getSubmitApply" parameterClass="java.util.HashMap" resultMap="getSubmitApplyResult">
+		select t.ac_apply_id,
+		       t.user_num,
+		       t.org_num,
+		       t2.party_name,
+		       (select count(1) from tb_cla_classify_delt_info t3 where t3.ac_apply_id = t1.ac_apply_id
+		       		   and t3.party_id = t1.party_id) as delt_count
+		from tb_cla_assets_classify_apply t,
+		tb_cla_classify_cust_info t1,
+		tb_csm_party t2
+		where t1.ac_apply_id = t.ac_apply_id
+		and t1.party_id = t2.party_id
+		and t.cla_properties = '03'
+		and t.apply_status = '0'
+		and t.create_user_num = #createUserNum#
+   </select>
+   
+   <!-- 根据申请id和客户id删除分类债项 -->
+   <delete id="delClassifyDebt" parameterClass="java.util.HashMap">
+   		delete from tb_cla_classify_delt_info where ac_apply_id = #acApplyId# and party_id = #partyId#
+   </delete>
+   
+   <!-- 查询需确认贷后检查信息的债项（未结清） -->
+   <resultMap class="commonj.sdo.DataObject" id="getApplyEndDeltResult">
+        <result column="LOAN_SUMMARY_ID" property="loanSummaryId"/>
+        <result column="CD_INFO_ID" property="cdInfoId"/>
+   </resultMap>
+   <select id="getApplyEndDelt" parameterClass="java.util.HashMap" resultMap="getApplyEndDeltResult">
+   		SELECT T.LOAN_SUMMARY_ID ,
+   			   T.CD_INFO_ID 
+		FROM TB_CLA_CLASSIFY_DELT_INFO T
+		WHERE 1=1
+		AND T.AC_APPLY_ID = #acApplyId# 
+		AND T.PARTY_ID = #partyId#
+		AND T.WHETHER_SQUARE != '1'
+   </select>
+   
+    <!-- 相同审批表下债项分类结果统一最差值 -->
+    <update id="updateG2Result" parameterClass="java.util.HashMap">
+    	update tb_cla_classify_delt_info t 
+    	   set t.g2_result = #maxG2Result#,
+    	   t.cls_result = #maxG2Result#
+		 where t.ac_apply_id = #acApplyId# 
+		   and t.cla_approve_num = #claApproveNum#
+		   and t.cla_method = '02'
+    </update>
+    
+    <!--添加分类债项时，查询当前债项是否有该归属的流程-->
+    <resultMap class="commonj.sdo.DataObject" id="getRiskApplyInfoResult">
+    	<result column="AC_APPLY_ID" property="acApplyId"/>
+    	<result column="USER_NUM" property="userNum"/>
+    	<result column="ORG_NUM" property="orgNum"/>
+    </resultMap>
+    <select id="getRiskApplyInfo" parameterClass="java.util.HashMap" resultMap="getRiskApplyInfoResult">
+    	select t.ac_apply_id,t.user_num,t.org_num 
+    	from tb_cla_assets_classify_apply t,
+    	     tb_cla_classify_cust_info t1 
+    	where t.ac_apply_id = t1.ac_apply_id
+		and t.apply_status = '0' 
+		and t.create_user_num = #createUserNum# 
+		and t.create_org_num = #createOrgNum#
+		and t1.party_id = #partyId#
+		and ((t.user_num is null or t.user_num = '') or t.user_num = #userNum#)
+		and ((t.org_num is null or t.org_num = '') or t.org_num = #orgNum#)
+    </select>
+</sqlMap>

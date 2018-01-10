@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="ImportMinerals.flowx" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3" state="stateless">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" collapsed="false" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tActionLink" id="link2" name="link2" displayName="link0" lineType="reference" isDefault="true" type="action" actionName="action0">
+      <sourceNode>start0</sourceNode>
+      <targetNode>view0</targetNode>
+      <process:validateRules/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <location x="155" y="233"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" nodeType="label">
+    <location x="157" y="269"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" collapsed="false" nodeType="common" type="end" contextPath="" method="forward" uri="/grt/grtImportExcel/import_Minerals.jsp" variableUri="false">
+    <targetConnections>link3</targetConnections>
+    <targetConnections>link5</targetConnections>
+    <location x="510" y="233"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" nodeType="label">
+    <location x="512" y="269"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view0" name="大宗商品现货" displayName="import_Minerals.jsp" collapsed="false" type="view" contextPath="" method="forward" uri="/grt/grtImportExcel/import_Minerals.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link0" name="link0" displayName="link3" lineType="reference" isDefault="true" type="action" actionName="importFile" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>subprocess2</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter anyType="com.primeton.ext.access.http.IUploadFile" description="" historyStateLocation="client" isArray="false" name="empItemFile"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.grt.TbGrtBigstore" name="item"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" name="importCd" primitiveType="String"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link1" name="link1" displayName="link4" lineType="reference" type="action" actionName="downExcel" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>subprocess0</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="295" y="233"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view0label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view0label" name="label" nodeType="label">
+    <location x="270" y="269"/>
+    <figSize height="17" width="73"/>
+    <node>view0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view2" name="Excel表下载" displayName="downGrtBigstoreExcel.jsp" collapsed="false" type="view" contextPath="" method="forward" uri="/grt/grtDownExcel/downGrtBigstoreExcel.jsp">
+    <sourceConnections xsi:type="process:tActionLink" id="link3" name="link3" displayName="link2" lineType="reference" isDefault="true" type="action" actionName="action1">
+      <sourceNode>view2</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="514" y="120"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view2label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view2label" name="label" nodeType="label">
+    <location x="492" y="156"/>
+    <figSize height="17" width="66"/>
+    <node>view2</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="downGrtBigstoreExcelTemp" displayName="downGrtBigstoreExcelTemp" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="link6" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>view2</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="292" y="120"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.grt.grtDownTemp.downExcelTemp.downGrtBigstoreExcelTemp</process:partner>
+      <process:inputVariables/>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="downloadFile" type="query" value="String" valueType="Primitive">downloadFile</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="224" y="155"/>
+    <figSize height="17" width="162"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="ImportBigStoreExcel" displayName="ImportBigStoreExcel" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link5" name="link5" displayName="link7" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="425" y="233"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.grt.grtImportExcel.ImportBigstore.ImportBigStoreExcel</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="excelFile" type="query" value="String" valueType="Primitive" pattern="reference">empItemFile/filePath</process:inputVariable>
+        <process:inputVariable id="1" name="item" type="query" value="com.bos.dataset.grt.TbGrtBigstore" valueType="DataObject" pattern="reference">item</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="msg" type="query" value="String" valueType="Primitive">msg</process:outputVariable>
+        <process:outputVariable id="1" name="exc" type="query" value="String" valueType="Primitive">exc</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="378" y="268"/>
+    <figSize height="17" width="120"/>
+    <node>subprocess2</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="ch" createTime="2014-08-26 20:27:16" date="2014-08-26Z" description="矿物质" name="ImportMinerals" version="6.3"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="exc" primitiveType="String"/>
+  </process:variables>
+  <process:inputParameters/>
+</process:tPageFlow>

@@ -1,0 +1,185 @@
+<!-- 
+作者：王世春
+日期：2013-12-01
+Email：wsc.hi@163.com
+功能：规则可视化编辑
+
+规则编辑：
+		规则编辑是可嵌套的，因此用递归方式实现。
+		大类分为：
+			1、如果……那么……
+			2、规则结果为
+			3、定义参数
+		表达式编辑：
+			提供业务参数、操作符（数学、逻辑运算）、函数、可调整参数（常量）
+			编辑时可通过鼠标拖动，随意改变表达式中各参数、操作符、函数的位置
+			参数类型：数值型（整数、小数）、文本型、是否型、常量
+				常量值为汉字“是、否”时为是否型；0开头的非小数为文本型，其他字符全为数字的常量为数值型；否则为文本型。
+		其中，
+			“如果”部分为表达式编辑器。
+			“那么”部分为“规则结果为”，或为嵌套的如果……那么，使用大类编辑器。
+			“规则结果为”可为常量或业务参数或表达式，使用表达式编辑器。
+			“定义参数”部分为表达式，使用表达式编辑器。
+			
+		大类可被嵌套，
+			可调整顺序、删除、增加
+			“那么”部分可嵌套大类。大类被嵌套时，以缩进的div表示。
+
+		TODO：		
+		提供编辑模式、常量修改模式、复制功能、测试功能。
+
+
+ -->
+<!doctype html>
+<html lang="zh-cn">
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="content-type">
+  <meta http-equiv="X-UA-Compatible" content="IE=7" />
+  <meta charset="utf-8">
+  <title>规则编辑器</title>
+  <link rel="stylesheet" href="./themes/cupertino/jquery-ui.css">
+  <script src="./json3.min.js"></script>
+  <script src="./jquery-1.9.1.js"></script>
+  <script src="./jquery-ui.js"></script>
+  <script src="./rule.js"></script>
+  <style>
+  *{font-size:12.5px;}
+  td, .border1 {border-color:#dddddd;border-style:solid;border-width:1px;}
+  .border2 {border-color:#999;border-style:dashed;border-width:1px;}
+  a {text-decoration:none;}
+  .ui-menu {
+    width: 200px;
+  }
+  .ui-sortable > div,.ui-sortable > span {
+	cursor:pointer;margin-right:5px;
+  }
+  .expr>div{
+	display:inline;
+	
+  }
+  .expr>span{
+	display:inline;
+	
+  }
+  .expr{
+	
+  }
+  .ifthen{
+	float:none;
+  }
+  .indent{
+	margin-left:30px;
+  }
+  .ui-selecting {
+    background: #ccc;
+  }
+  .ui-selected {
+    background: #999;
+  }
+  .menu {
+  	height:50%;
+  	overflow-y:auto;
+  }
+  .menu li {
+	cursor:pointer;
+  }
+  .menu li:hover {
+	background-color:#ccc;
+  }
+  .menu ul {
+	overflow-y:auto;
+	list-style-type:circle;
+  }
+  </style>
+</head>
+<body>
+
+<ul id="menu" class="menu" style="position:absolute;">
+  <li><a href="#">Item 1Item 1Item 1Item 1Item 1Item 1Item 1Item 1Item 1</a></li>
+  <li><a href="#">Item 2</a></li>
+  <li><a href="#">Item 3</a>
+    <ul style="height:100px;overflow-y:scroll;overflow-x:hidden;">
+      <li><a href="#">Item 3-1</a></li>
+      <li><a href="#">Item 3-2</a></li>
+      <li><a href="#">Item 3-3</a></li>
+      <li><a href="#">Item 3-5</a></li>
+      <li><a href="#">Item 3-51</a></li>
+      <li><a href="#">Item 3-52</a></li>
+      <li><a href="#">Item 3-53</a></li>
+    </ul>
+  </li>
+  <li><a href="#">Item 4</a></li>
+  <li><a href="#">Item 5</a></li>
+</ul>
+
+<div id="mainDiv">
+</div>
+<br/>
+<!-- <span style="cursor:pointer;" onclick="alert(JSON.stringify(getMainExpr()))">生成JSON表达式</span>-->
+<span style="cursor:pointer;" onclick="saveMainXML()">保存</span>
+<script>
+function dialog(dom, btns, p) {
+	$(dom).dialog($.extend({},{ autoOpen: true, draggable: true, modal: true,
+		buttons: btns ? btns : [ { text: "确定", click: function() { $( this ).dialog( "close" );}}] },p));
+}
+//dialog($('<div><span onclick="dialog($(\'<div>bbb</div>\'))">aaaaaa</span</div>'));
+
+function saveMainXML() {
+	var jsonObject=getMainExpr();
+	var html=JSON2XML(jsonObject,$('<rules/>'));
+	//alert(html);
+	var json=JSON.stringify({'decision':html});
+	//alert(json);
+	$.ajax({
+       url: "com.bos.pub.decision.saveDecision.biz.ext",
+       type: 'POST',
+       data: json,
+       cache: false,
+       contentType:'text/json',
+       success: function (text) {
+       	if(text.msg){
+       		alert(text.msg);
+       	} else {
+       		alert('保存成功');
+       	}
+       },
+       error: function (jqXHR, textStatus, errorThrown) {
+           alert(jqXHR.responseText);
+       }
+    });
+}
+
+$(function (){
+	$( "#menu" ).hide();
+	createMainDiv();
+
+	//var rules={"rules":[{"type":"assign","text":"参数1",
+	//	"expr":[{"type":"const","text":123},{"text":"+","name":"+","type":"op"},{"text":"金额","type":"数值型"}]},
+	//	{"type":"ifthen",
+	//		"ifexpr":[{"text":"金额","type":"数值型"},{"text":"&gt;=","name":">=","type":"op"},{"type":"const","text":"11"}],
+	//		"thenexpr":{"rules":[{"type":"expr","expr":[{"type":"const","text":"22"}]}]}},{"type":"expr","expr":[{"type":"const","text":"33"}]}]};
+	var rules={"rules":[
+		{"type":"assign","text":"金额_万元","expr":[{"text":"金额","type":"数值型", "numbertype":"double"},{"text":"/","name":"/","type":"op"},{"type":"const","text":"10000"}]},
+		{"type":"ifthen",
+			"ifexpr":[{"type":"expr","text":"金额_万元","paramName":"金额_万元"},{"text":"&gt;=","name":">=","type":"op"},{"type":"const","text":"1000"},
+				{"text":"并且","name":"&&","type":"op"},
+				{"text":"包含文字……","ptext":"“{1}”包含“{2}”","funcname":"contains","type":"是否型",
+					"args":[
+						{"type":"文本型","text":"进行判断的文本","val":[{"text":"客户行业","type":"文本型"}]},
+						{"type":"文本型","text":"被包含的文本","val":[{"type":"const","text":"钢铁"}]}]}],
+			"thenexpr":{"rules":[
+				{"type":"expr","expr":[{"type":"const","text":"总行审批"}]}]}},{"type":"expr","expr":[{"type":"const","text":"分行审批"}]}]};
+	setMainExpr(null,rules);
+	
+	/*
+	var jsonObject=getMainExpr();
+	var dom=$('<rules/>');
+	var html=JSON2XML(jsonObject.rules,dom);
+	self.x={};
+	XML2JSON(dom[0],self.x);
+	alert(JSON.stringify(self.x));
+	*/
+});
+</script>
+
+</body></html>

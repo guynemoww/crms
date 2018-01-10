@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+    <!--根据partyId查询出客户类型-->
+    <select id="getDictIdNameByCsmTypeCD" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select t.DICTID guaranteerType,t.DICTNAME guaranteerTypeName from 
+    	   (select d.DICTID,d.DICTNAME  from EOS_DICT_ENTRY d where d.DICTTYPEID='CDKH0001' and 
+ 				d.DICTID in('10000','21101','21102','21103','21104','21199','21200','21300','21400','21907','21900','22400','22100','22200','22900')
+			union
+			select d.DICTID,d.DICTNAME  from EOS_DICT_ENTRY d where d.DICTTYPEID='CDKH0023'
+			) t where t.DICTID in(
+        		select distinct t.CORP_CUSTOMER_TYPE_CD csmTypeCd from TB_CSM_CORPORATION t where t.PARTY_ID=#partyId#
+				union
+				select distinct t.SUBJECT_TYPE_CD csmTypeCd from TB_CSM_FINANCIAL_INSTITUTION t where t.PARTY_ID=#partyId#
+			)
+			union
+			select '10000' guaranteerType,'自然人' guaranteerTypeName from TB_CSM_NATURAL_PERSON t where t.PARTY_ID=#partyId#
+    </select>
+    
+    <!--根据客户partyID查询出客户评级-->
+    <select id="getGuaranteerEvalResult" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select t1.CREDIT_RATING_CD guaranteerEvalResult from TB_IRM_INTERNAL_RATING_RESULT t1,TB_IRM_SCALE_DEF t2
+   			where t1.CREDIT_RATING_CD=t2.CREDIT_RATING_CD and t1.RATING_STATE='1' and t1.CREDIT_RATING_CD_OLD is null and t1.IS_PROFESSIONAL='0' and t1.PARTY_ID=#partyId#
+    </select>
+</sqlMap>

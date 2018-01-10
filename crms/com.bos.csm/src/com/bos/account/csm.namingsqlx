@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+    <resultMap id="corporation" class="java.util.HashMap">
+			<result property="orgname" column="ORGNAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="corpCustomerTypeCd" column="CORP_CUSTOMER_TYPE_CD"/>
+			<result property="registrCd" column="REGISTR_CD"/>
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD"/>
+			<result property="middelCode" column="MIDDEL_CODE"/>
+			<result property="industrialTypeCd" column="INDUSTRIAL_TYPE_CD"/>
+			<result property="enterpriseScaleGx" column="ENTERPRISE_SCALE_GX"/>
+			<result property="generalAdjustRatingCd" column="GENERAL_ADJUST_RATING_CD"/>
+			<result property="thirdCustTypeCd" column="THIRD_CUST_TYPE_CD"/>
+			<result property="unifySocietyCreditNum" column="UNIFY_SOCIETY_CREDIT_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="corporation" parameterClass="java.util.HashMap" resultMap="corporation">
+		SELECT O.ORGNAME,
+			   P.PARTY_ID,
+		       P.PARTY_NAME,
+		       C.UNIFY_SOCIETY_CREDIT_NUM,
+		       C.CORP_CUSTOMER_TYPE_CD,
+		       C.REGISTR_CD,
+		       C.ORG_REGISTER_CD,
+		       C.MIDDEL_CODE,
+		       C.INDUSTRIAL_TYPE_CD,
+		       C.ENTERPRISE_SCALE_GX,
+		       IIRA.GENERAL_ADJUST_RATING_CD,
+		       C.THIRD_CUST_TYPE_CD,
+		       MT.USER_NUM
+		  FROM TB_CSM_CORPORATION C
+		  LEFT JOIN TB_IRM_INTERNAL_RATING_APPLY IIRA
+		    ON IIRA.PARTY_ID = C.PARTY_ID
+		   AND IIRA.RATING_STATE = '03', TB_CSM_MANAGEMENT_TEAM MT,
+		 TB_CSM_PARTY P, OM_ORGANIZATION O
+		 WHERE C.PARTY_ID = P.PARTY_ID
+		   AND MT.PARTY_ID = P.PARTY_ID
+		   AND P.PARTY_TYPE_CD = '01'
+		   AND MT.USER_PLACING_CD='01'
+		   AND MT.ORG_NUM = O.ORGCODE
+		   AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="corpCustomerTypeCd">  AND C.CORP_CUSTOMER_TYPE_CD = #corpCustomerTypeCd# </isNotNull>
+		 <isNotNull property="registerCd">  AND C.REGISTR_CD = #registerCd# </isNotNull>
+		 <isNotNull property="unifySocietyCreditNum">  AND C.UNIFY_SOCIETY_CREDIT_NUM = #unifySocietyCreditNum# </isNotNull>
+		 <isNotNull property="orgRegisterCd">  AND C.ORG_REGISTER_CD = #orgRegisterCd# </isNotNull>
+		 <isNotNull property="middelCode">  AND C.MIDDEL_CODE = #middelCode# </isNotNull>
+		 <isNotNull property="thirdCustTypeCd">  AND C.THIRD_CUST_TYPE_CD = #thirdCustTypeCd# </isNotNull>
+		 <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+    </select>
+    
+    <resultMap id="natural" class="java.util.HashMap">
+			<result property="orgname" column="ORGNAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="isFarmer" column="IS_FARMER"/>
+			<result property="generalAdjustRatingCd" column="GENERAL_ADJUST_RATING_CD"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="natural" parameterClass="java.util.HashMap" resultMap="natural">
+		SELECT O.ORGNAME,
+			   P.PARTY_ID,
+		       P.PARTY_NAME,
+		       N.CERT_TYPE,
+		       N.CERT_NUM,
+		       N.MIDDLE_CODE,
+		       N.IS_FARMER,
+		       IIRA.GENERAL_ADJUST_RATING_CD,
+		       MT.USER_NUM
+		  FROM TB_CSM_NATURAL_PERSON N
+		  LEFT JOIN TB_IRM_INTERNAL_RATING_APPLY IIRA
+		    ON IIRA.PARTY_ID = N.PARTY_ID
+		   AND IIRA.RATING_STATE = '03', TB_CSM_MANAGEMENT_TEAM MT,
+		 TB_CSM_PARTY P, OM_ORGANIZATION O
+		 WHERE N.PARTY_ID = P.PARTY_ID
+		   AND MT.PARTY_ID = P.PARTY_ID
+		   AND P.PARTY_TYPE_CD = '02'
+		   AND MT.USER_PLACING_CD='01'
+		   /*AND N.NATURAL_PERSON_TYPE_CD IN (1,3)*/
+		   AND MT.ORG_NUM = O.ORGCODE
+		   AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND N.CERT_TYPE = #certType# </isNotNull>
+		 <isNotNull property="certNum">  AND N.CERT_NUM = #certNum# </isNotNull>
+		 <isNotNull property="middelCode">  AND N.MIDDLE_CODE = #middelCode# </isNotNull>
+		 <isNotNull property="isFarmer">  AND N.IS_FARMER = #isFarmer# </isNotNull>
+		 <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+    </select>
+    
+    <resultMap id="loan" class="java.util.HashMap">
+			<result property="orgname" column="ORGNAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="isFarmer" column="IS_FARMER"/>
+			<result property="industry" column="INDUSTRY"/>
+			<result property="birthday" column="BIRTHDAY"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="generalAdjustRatingCd" column="GENERAL_ADJUST_RATING_CD"/>
+			<result property="industry" column="industry"/>
+	</resultMap>
+    <select id="loan" parameterClass="java.util.HashMap" resultMap="loan">
+		SELECT O.ORGNAME,
+			   P.PARTY_ID,
+		       P.PARTY_NAME,
+		       N.CERT_TYPE,
+		       N.CERT_NUM,
+		       N.MIDDLE_CODE,
+		       N.IS_FARMER,
+		       N.INDUSTRY,
+		       N.BIRTHDAY,
+		       N.industry,
+		       IIRA.GENERAL_ADJUST_RATING_CD,
+		       MT.USER_NUM
+		  FROM TB_CSM_NATURAL_PERSON N
+		  LEFT JOIN TB_IRM_INTERNAL_RATING_APPLY IIRA
+		    ON IIRA.PARTY_ID = N.PARTY_ID
+		   AND IIRA.RATING_STATE = '03', TB_CSM_MANAGEMENT_TEAM MT,
+		 TB_CSM_PARTY P, OM_ORGANIZATION O
+		 WHERE N.PARTY_ID = P.PARTY_ID
+		   AND MT.PARTY_ID = P.PARTY_ID
+		   AND P.PARTY_TYPE_CD = '02'
+		   AND MT.USER_PLACING_CD='01'
+		   AND N.NATURAL_PERSON_TYPE_CD IN (2,3)
+		   AND MT.ORG_NUM = O.ORGCODE
+		   AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND N.CERT_TYPE = #certType# </isNotNull>
+		 <isNotNull property="certNum">  AND N.CERT_NUM = #certNum# </isNotNull>
+		 <isNotNull property="middelCode">  AND N.MIDDLE_CODE = #middelCode# </isNotNull>
+		 <isNotNull property="isFarmer">  AND N.IS_FARMER = #isFarmer# </isNotNull>
+		 <isNotNull property="industry">  AND N.industry = #industry# </isNotNull>
+		 <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+    </select>
+    
+    <resultMap id="guarGroup" class="java.util.HashMap">
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="memberNum" column="MEMBER_NUM"/>
+			<result property="jointGuaranteeStatus" column="JOINT_GUARANTEE_STATUS"/>
+			<result property="jointGuaranteeType" column="JOINT_GUARANTEE_TYPE"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+
+	</resultMap>
+    <select id="guarGroup" parameterClass="java.util.HashMap" resultMap="guarGroup">
+	 select v.party_id,
+	 		v.party_num,
+	 		v.party_name,
+	 		m.user_num,
+       		(select count(*) from tb_csm_guar_memeber where party_id=g.party_id) member_num,
+       		g.joint_guarantee_type,
+       		g.joint_guarantee_status,
+       		v.cert_type,
+       		v.cert_num
+       from v_csm_party v,
+       		tb_csm_management_team m,
+       		tb_csm_guar_group g
+       where v.party_id=m.party_id 
+       and   v.party_id=g.party_id 
+       and   v.PARTY_TYPE_CD='04'
+       and   g.joint_guarantee_status in ('01','02','03','04')  
+       and   m.org_num in (select orgcode from om_organization where orgseq like '%.$orgId$.%')
+       	 <isEqual property="memeberInfo" compareValue="memeberInfo" prepend="AND">
+		  v.party_id IN (SELECT CGM.PARTY_ID FROM TB_CSM_GUAR_MEMEBER cgm
+		  LEFT JOIN V_CSM_PARTY cp ON cp.PARTY_ID=cgm.RELATED_CUST_PARTY_ID
+		  LEFT JOIN tb_csm_corporation ccp ON ccp.PARTY_ID=cgm.RELATED_CUST_PARTY_ID
+			WHERE 1=1
+			<isNotNull property="certNum" prepend="AND"> 
+			 	cp.cert_num = #certNum#
+			</isNotNull>
+			<isNotNull property="certType" prepend="AND"> 
+			 	cp.cert_type = #certType#
+			</isNotNull>
+			<isNotNull property="partyName" prepend="AND"> 
+			 	cp.PARTY_NAME LIKE '%'||#partyName#||'%'
+			</isNotNull>
+			<isNotNull property="unifySocietyCreditNum" prepend="AND"> 
+			 	ccp.UNIFY_SOCIETY_CREDIT_NUM = #unifySocietyCreditNum#
+			</isNotNull>
+			<isNotNull property="registerCd" prepend="AND"> 
+			 	ccp.REGISTR_CD = #registerCd#
+			</isNotNull>
+			<isNotNull property="orgRegisterCd" prepend="AND"> 
+			 	ccp.ORG_REGISTER_CD = #orgRegisterCd#
+			</isNotNull>
+			<isNotNull property="middelCode" prepend="AND"> 
+				ccp.MIDDEL_CODE = #middelCode#
+			</isNotNull>
+		  GROUP BY CGM.PARTY_ID
+		 )
+		</isEqual>
+       <isNotNull property="userNum"> 
+       and v.party_id in (select e.party_id from ( select a.party_id from tb_csm_guar_memeber a ,TB_CSM_MANAGEMENT_TEAM b 
+           where a.related_cust_party_id = b.party_id and b.user_num = #userNum# group by a.party_id 
+           UNION ALL select c.party_id from tb_csm_guar_memeber c ,TB_CSM_MANAGEMENT_TEAM d 
+           where c.party_id = d.party_id and d.user_num = #userNum# group by c.party_id ) e 
+           group by e.party_id )
+       </isNotNull>
+	   <isNotNull property="partyNum" prepend="AND">
+	   	   v.party_num like '%'||#partyNum#||'%'
+	   </isNotNull>
+    </select>
+    
+    
+    <resultMap id="financial" class="java.util.HashMap">
+			<result property="orgname" column="ORGNAME"/>
+			<result property="areaType" column="AREA_TYPE"/>
+			<result property="financeEnterpriseType" column="FINANCE_ENTERPRISE_TYPE"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="englishCustomerName" column="ENGLISH_CUSTOMER__NAME"/>
+			<result property="registerCode" column="REGISTER_CODE"/>
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD"/>
+			<result property="swiftBicNum" column="SWIFT_BIC_NUM"/>
+			<result property="unifySocietyCreditNum" column="UNIFY_SOCIETY_CREDIT_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="financial" parameterClass="java.util.HashMap" resultMap="financial">
+		SELECT O.ORGNAME,
+		       FI.AREA_TYPE,
+		       FI.FINANCE_ENTERPRISE_TYPE,
+		       FI.UNIFY_SOCIETY_CREDIT_NUM,
+		       P.PARTY_ID,
+		       P.PARTY_NAME,
+		       FI.ENGLISH_CUSTOMER__NAME,
+		       FI.REGISTER_CODE,
+		       FI.ORG_REGISTER_CD,
+		       FI.SWIFT_BIC_NUM,
+		       MT.USER_NUM
+		  FROM TB_CSM_FINANCIAL_INSTITUTION FI,
+		       TB_CSM_MANAGEMENT_TEAM       MT,
+		       OM_ORGANIZATION              O,
+		       TB_CSM_PARTY                 P
+		 WHERE MT.PARTY_ID = FI.PARTY_ID
+		   AND MT.ORG_NUM = O.ORGCODE
+		   AND MT.USER_PLACING_CD='01'
+		   AND P.PARTY_ID = FI.PARTY_ID
+		   AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="areaType">  AND FI.AREA_TYPE = #areaType# </isNotNull>
+		 <isNotNull property="financeEnterpriseType">  AND  FI.FINANCE_ENTERPRISE_TYPE = #financeEnterpriseType# </isNotNull>
+		 <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="registerCd">  AND FI.REGISTER_CODE = #registerCd# </isNotNull>
+		 <isNotNull property="unifySocietyCreditNum">  AND FI.UNIFY_SOCIETY_CREDIT_NUM = #unifySocietyCreditNum# </isNotNull>
+		 <isNotNull property="orgRegisterCd">  AND FI.ORG_REGISTER_CD = #orgRegisterCd# </isNotNull>
+		 <isNotNull property="swiftBicNum">  AND FI.SWIFT_BIC_NUM = #swiftBicNum# </isNotNull>
+		 <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="groupCorporation" class="java.util.HashMap">
+		 <result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="groupManageWayCd" column="GROUP_MANAGE_WAY_CD"/>
+			<result property="status" column="STATUS"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="groupCorporation" parameterClass="java.util.HashMap" resultMap="groupCorporation">
+		 SELECT P.PARTY_ID,
+		 		P.PARTY_NUM,
+		        P.PARTY_NAME,
+		        GC.GROUP_MANAGE_WAY_CD,
+		        GC.STATUS,
+		        MT.ORG_NUM,
+		        MT.USER_NUM
+		   FROM TB_CSM_GROUP_COMPANY         GC,
+		        TB_CSM_PARTY                 P,
+		        TB_CSM_MANAGEMENT_TEAM MT
+		  WHERE GC.PARTY_ID = P.PARTY_ID
+		    AND MT.PARTY_ID = P.PARTY_ID
+		    AND MT.USER_PLACING_CD='01'
+		    AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                         FROM OM_ORGANIZATION O
+									WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		  <isNotNull property="partyNum">  AND P.PARTY_NUM = #partyNum# </isNotNull>	
+		  <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>					
+		  <isNotNull property="memberNum">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, TB_CSM_PARTY T6
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND T6.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND T6.PARTY_NUM = #memberNum#) 
+ 		   </isNotNull>						
+		  <isNotNull property="memberName">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, TB_CSM_PARTY T6
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND T6.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND T6.PARTY_NAME like '%$memberName$%' ) 
+ 		   </isNotNull>
+ 		   <isNotNull property="memberCertType">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.CERT_TYPE = #memberCertType#) 
+ 		   </isNotNull>
+ 		   <isNotNull property="memberCertNum">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.CERT_NUM = #memberCertNum#) 
+ 		   </isNotNull>
+ 		   
+ 		   <isNotNull property="memberMiddelCode">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.MIDDLE_CODE = #memberMiddelCode#) 
+ 		   </isNotNull>	
+ 		   <isNotNull property="memberRegistrCd">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.REGISTR_CD = #memberRegistrCd#) 
+ 		   </isNotNull>
+ 		   <isNotNull property="memberOrgRegisterCd">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = P.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.ORG_REGISTER_CD = #memberOrgRegisterCd#) 
+ 		   </isNotNull>		
+ 		   <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="thirdParty" class="java.util.HashMap">
+			<result property="orgNum" column="Org_Num"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="corpCustomerTypeCd" column="CORP_CUSTOMER_TYPE_CD"/>
+			<result property="registrCd" column="REGISTR_CD"/>
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD"/>
+			<result property="middelCode" column="MIDDEL_CODE"/>
+			<result property="ratingState" column="RATING_STATE"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="unifySocietyCreditNum" column="UNIFY_SOCIETY_CREDIT_NUM"/>
+	</resultMap>
+    <select id="thirdParty" parameterClass="java.util.HashMap" resultMap="thirdParty">
+		 SELECT MT.Org_Num,
+		 		P.PARTY_ID,
+		        P.PARTY_NAME,
+		        T.CORP_CUSTOMER_TYPE_CD,
+		        T.REGISTR_CD,
+		        T.ORG_REGISTER_CD,
+		        T.MIDDEL_CODE,
+		        IIRA.RATING_STATE,
+		        MT.USER_NUM,
+		        T.UNIFY_SOCIETY_CREDIT_NUM 
+		   FROM TB_CSM_THIRD_PARTY T
+		   LEFT JOIN TB_IRM_INTERNAL_RATING_APPLY IIRA
+		     ON IIRA.PARTY_ID = T.PARTY_ID
+		    AND IIRA.GENERAL_ADJUST_RATING_CD = '03', TB_CSM_PARTY P,
+		  TB_CSM_MANAGEMENT_TEAM MT
+		  WHERE T.PARTY_ID = P.PARTY_ID
+		    AND MT.PARTY_ID = P.PARTY_ID
+		    AND MT.USER_PLACING_CD='01'
+		    AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                         FROM OM_ORGANIZATION O
+									WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="corpCustomerTypeCd">  AND T.CORP_CUSTOMER_TYPE_CD = #corpCustomerTypeCd# </isNotNull>
+		 <isNotNull property="registerCd">  AND T.REGISTR_CD = #registerCd# </isNotNull>
+		 <isNotNull property="orgRegisterCd">  AND T.ORG_REGISTER_CD = #orgRegisterCd# </isNotNull>
+		 <isNotNull property="middelCode">  AND T.MIDDEL_CODE = #middelCode# </isNotNull>
+		 <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+		 <isNotNull property="unifySocietyCreditNum">  AND T.UNIFY_SOCIETY_CREDIT_NUM = #unifySocietyCreditNum# </isNotNull>
+		 <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	 </select>
+	 
+	  <select id="getCsmParty" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select party_id, party_num, party_type_cd, party_name, ecif_party_num, create_time, 
+		update_time, examine_state, cust_property_status, if_data_move, is_potential_cust from crms.tb_csm_party
+		where 1=1 
+		 <isNotNull property="partyId">  AND PARTY_ID = #partyId# </isNotNull>
+		 <isNotNull property="partyNum">  AND PARTY_NUM = #partyNum# </isNotNull>
+	 </select>
+</sqlMap>

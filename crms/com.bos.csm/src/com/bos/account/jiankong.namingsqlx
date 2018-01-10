@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="yuqi" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="party_id"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="dftItr" column="DFT_ITR"/>
+			<result property="jklx" column="jklx"/>
+			<result property="rmbAmt" column="RMB_AMT"/>
+			<result property="jjyqbj" column="JJYQBJ"/>
+			<result property="normalItr" column="NORMAL_ITR"/>
+			<result property="arrearItr" column="ARREAR_ITR"/>
+			<result property="punishItr" column="PUNISH_ITR"/>
+			<result property="zh" column="ZH"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="yuqi" parameterClass="java.util.HashMap" resultMap="yuqi">
+		SELECT P.ORG_NUM,
+			   p.party_id,
+		       P.PARTY_NUM,
+		       P.PARTY_NAME,
+		       TB.PRODUCT_TYPE,
+		       TB.CONTRACT_NUM,
+		       T.SUMMARY_NUM,
+		       T.SUMMARY_CURRENCY_CD,
+		       T.SUMMARY_AMT,
+		       T.JJYE,
+		       to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		       to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+		       T.FLJG,
+		       T.YQTS,
+		       T.DFT_ITR,
+		       '1'  jklx,
+		       T.RMB_AMT,
+		       T.JJYQBJ,
+		       nvl(T.NORMAL_ITR,0) NORMAL_ITR,
+		       nvl(T.ARREAR_ITR,0) ARREAR_ITR,
+		       nvl(T.PUNISH_ITR,0) PUNISH_ITR,
+		       H.ZH,
+		       P.USER_NUM 
+		  FROM TB_LOAN_SUMMARY T, TB_LOAN_INFO TA, TB_CON_CONTRACT_INFO TB,V_CSM_PARTY P,TB_LOAN_ZH H 
+		 WHERE T.LOAN_ID = TA.LOAN_ID
+		   AND TA.CONTRACT_ID = TB.CONTRACT_ID 
+		   AND T.LOAN_ID = H.LOAN_ID AND H.ZHLX = '1' 
+		   AND nvl(T.YQTS,0) &gt; 0
+		   AND P.PARTY_ID = T.PARTY_ID
+		   AND T.Summary_Status_Cd in ('02','03')
+		   AND P.ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		   <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND p.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">    AND p.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="contractNum">    AND TB.CONTRACT_NUM = #contractNum# </isNotNull>
+		   <isNotNull property="summaryNum">    AND T.SUMMARY_NUM = #summaryNum# </isNotNull>
+		   <isNotNull property="productType">    AND TB.PRODUCT_TYPE = #productType# </isNotNull>
+		   <isNotNull property="date1">
+				AND T.BEGIN_DATE &gt;= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		   </isNotNull>
+		   <isNotNull property="date2">
+				AND T.BEGIN_DATE &lt;= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		   </isNotNull>
+		   
+		   <isNotNull property="date3">
+				AND T.END_DATE &gt;= to_date(#date3# ,'yyyy-mm-dd hh24:mi:ss')
+			</isNotNull>
+		   <isNotNull property="date4">
+				AND T.END_DATE &lt;= to_date(#date4# ,'yyyy-mm-dd hh24:mi:ss')
+		   </isNotNull>
+		   
+		   <isEqual property="summaryAmt1" compareValue="1" >
+		   		AND T.SUMMARY_AMT &gt; 0 and T.SUMMARY_AMT &lt;=1000000	
+		   </isEqual>		   
+		   <isEqual property="summaryAmt1" compareValue="2" >
+		   		AND T.SUMMARY_AMT &gt; 1000000 and T.SUMMARY_AMT &lt;=5000000	
+		   </isEqual>		   
+		   <isEqual property="summaryAmt1" compareValue="3" >
+		   		AND T.SUMMARY_AMT &gt; 5000000 and T.SUMMARY_AMT &lt;=10000000 
+		   </isEqual>		   
+		   <isEqual property="summaryAmt1" compareValue="4" >
+		   		AND T.SUMMARY_AMT &gt; 10000000 and T.SUMMARY_AMT &lt;=30000000	
+		   </isEqual>		 
+		   <isEqual property="summaryAmt1" compareValue="5" >
+		   		AND T.SUMMARY_AMT &gt; 30000000	
+		   </isEqual>
+		   
+		   <isEqual property="ts" compareValue="1" >
+		   		AND T.YQTS &gt; 0 and T.YQTS &lt;=7	
+		   </isEqual>	
+		   <isEqual property="ts" compareValue="2" >
+		   		AND T.YQTS &gt; 7 and T.YQTS &lt;=30	
+		   </isEqual>
+		   <isEqual property="ts" compareValue="3" >
+		   		AND T.YQTS &gt; 30 and T.YQTS &lt;=90	
+		   </isEqual>
+		   <isEqual property="ts" compareValue="4" >
+		   		AND T.YQTS &gt; 90 and T.YQTS &lt;=365	
+		   </isEqual>
+		   <isEqual property="ts" compareValue="5" >
+		   		AND T.YQTS &gt; 365	
+		   </isEqual>
+		   
+		   <isNotNull property="userNum">    AND P.USER_NUM = #userNum# </isNotNull>
+		   <!--
+		   <isNotNull property="summaryAmt1"> <![CDATA[   AND T.SUMMARY_AMT >= #summaryAmt1# ]]> </isNotNull>
+		   <isNotNull property="summaryAmt2"> <![CDATA[   AND T.SUMMARY_AMT <= #summaryAmt2# ]]> </isNotNull>
+		   <isNotNull property="ts1"> <![CDATA[   AND T.YQTS >= #ts1# ]]> </isNotNull>
+		   <isNotNull property="ts2"> <![CDATA[   AND T.YQTS <= #ts2# ]]> </isNotNull>
+		   -->
+	 </select>
+	 <resultMap id="daoqi" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="party_id"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="dqts" column="dqts"/>
+			<result property="jklx" column="jklx"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="daoqi" parameterClass="java.util.HashMap" resultMap="daoqi">
+		select * from (
+		  SELECT P.ORG_NUM,
+		   p.party_id,
+           P.PARTY_NUM,
+           P.PARTY_NAME,
+           p.CERT_TYPE,
+           p.CERT_NUM,
+           TB.PRODUCT_TYPE,
+           TB.CONTRACT_NUM,
+           T.SUMMARY_NUM,
+           T.SUMMARY_CURRENCY_CD,
+           T.SUMMARY_AMT,
+           T.JJYE,
+           to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		   to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+           T.FLJG,
+           P.USER_NUM,
+           (T.End_Date-to_date(to_char((select X.OPERATING_DATE from TB_PUB_DATE X),'yyyymmdd'),'yyyymmdd')) dqts,
+           '2'  jklx
+     FROM TB_LOAN_SUMMARY T, TB_LOAN_INFO TA, TB_CON_CONTRACT_INFO TB,V_CSM_PARTY P
+     WHERE T.LOAN_ID = TA.LOAN_ID
+       AND TA.CONTRACT_ID = TB.CONTRACT_ID
+       AND T.End_Date>=to_date(to_char((select X.OPERATING_DATE from TB_PUB_DATE X),'yyyymmdd'),'yyyymmdd')
+       AND P.PARTY_ID = T.PARTY_ID
+       AND T.Summary_Status_Cd in ('02','03')
+       )
+       where ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+	    <isNotNull property="partyName">  AND PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="certType">  AND CERT_TYPE = #certType# </isNotNull>
+	    <isNotNull property="certNum">    AND CERT_NUM = #certNum# </isNotNull>
+		<isNotNull property="contractNum"> AND CONTRACT_NUM = #contractNum# </isNotNull>
+		<isNotNull property="summaryNum"> AND SUMMARY_NUM = #summaryNum# </isNotNull>
+		<isNotNull property="productType"> AND PRODUCT_TYPE = #productType# </isNotNull>
+		<isNotNull property="userNum">    AND USER_NUM = #userNum# </isNotNull>
+		<isNotNull property="date1">
+			AND BEGIN_DATE &gt;= 
+			to_char(to_date(#date1#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date2">
+			AND BEGIN_DATE &lt;= 
+			to_char(to_date(#date2#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date3">
+			AND END_DATE &gt;= 
+			to_char(to_date(#date3#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+		</isNotNull>
+	    <isNotNull property="date4">
+			AND END_DATE &lt;= 
+			to_char(to_date(#date4#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    
+	    <isEqual property="summaryAmt1" compareValue="1" >
+	   		AND SUMMARY_AMT &gt; 0 and SUMMARY_AMT &lt;=1000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="2" >
+	   		AND SUMMARY_AMT &gt; 1000000 and SUMMARY_AMT &lt;=5000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="3" >
+	   		AND SUMMARY_AMT &gt; 5000000 and SUMMARY_AMT &lt;=10000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="4" >
+	   		AND SUMMARY_AMT &gt; 10000000 and SUMMARY_AMT &lt;=30000000	
+	   	</isEqual>		 
+	   	<isEqual property="summaryAmt1" compareValue="5" >
+	   		AND SUMMARY_AMT &gt; 30000000	
+	   	</isEqual>
+	   
+	   	<isEqual property="ts" compareValue="1" >
+	   		AND dqts &gt; 0 and dqts &lt;=7	
+	   	</isEqual>	
+	   	<isEqual property="ts" compareValue="2" >
+	   		AND dqts &gt; 7 and dqts &lt;=30	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="3" >
+	   		AND dqts &gt; 30 and dqts &lt;=90	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="4" >
+	   		AND dqts &gt; 90 and dqts &lt;=365	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="5" >
+	   		AND dqts &gt; 365	
+	   	</isEqual>
+		<!--
+		<isNotNull property="summaryAmt1"> <![CDATA[   AND SUMMARY_AMT >= #summaryAmt1# ]]> </isNotNull>
+		<isNotNull property="summaryAmt2"> <![CDATA[   AND SUMMARY_AMT <= #summaryAmt2# ]]> </isNotNull>
+		<isNotNull property="ts1"> <![CDATA[   AND dqts >= #ts1# ]]> </isNotNull>
+		<isNotNull property="ts2"> <![CDATA[   AND dqts <= #ts2# ]]> </isNotNull>
+		-->
+	 </select>
+	 <resultMap id="fangkuan" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="fkts" column="FKTS"/>
+			<result property="jklx" column="jklx"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="fangkuan" parameterClass="java.util.HashMap" resultMap="fangkuan">
+    select * from (
+		SELECT P.ORG_NUM,
+           P.PARTY_ID,
+           P.PARTY_NUM,
+           P.PARTY_NAME,
+           P.CERT_NUM,
+           P.CERT_TYPE,
+           TB.PRODUCT_TYPE,
+           TB.CONTRACT_NUM,
+           T.SUMMARY_NUM,
+           T.SUMMARY_CURRENCY_CD,
+           T.SUMMARY_AMT,
+           T.JJYE,
+           P.USER_NUM,
+           to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		   to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+           T.FLJG,
+           (TO_DATE(TO_CHAR((SELECT X.OPERATING_DATE FROM TB_PUB_DATE X), 'yyyy-MM-dd'), 'yyyy-MM-dd') - T.BEGIN_DATE) AS FKTS,
+           '3'  jklx
+      FROM TB_LOAN_SUMMARY T,TB_LOAN_INFO TA,TB_CON_CONTRACT_INFO TB,V_CSM_PARTY P
+     WHERE T.LOAN_ID = TA.LOAN_ID
+       AND TA.CONTRACT_ID = TB.CONTRACT_ID
+       AND P.PARTY_ID = T.PARTY_ID
+       AND T.Summary_Status_Cd in ('02','03')
+       )
+       where ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+	    <isNotNull property="partyName">  AND PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="certType">  AND CERT_TYPE = #certType# </isNotNull>
+	    <isNotNull property="certNum">    AND CERT_NUM = #certNum# </isNotNull>
+		<isNotNull property="contractNum">    AND CONTRACT_NUM = #contractNum# </isNotNull>
+		<isNotNull property="summaryNum">   AND SUMMARY_NUM = #summaryNum# </isNotNull>
+		<isNotNull property="productType">    AND PRODUCT_TYPE = #productType# </isNotNull>
+		<isNotNull property="userNum">    AND USER_NUM = #userNum# </isNotNull>
+		<isNotNull property="date1">
+			AND BEGIN_DATE &gt;= 
+			to_char(to_date(#date1#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date2">
+			AND BEGIN_DATE &lt;= 
+			to_char(to_date(#date2#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date3">
+			AND END_DATE &gt;= 
+			to_char(to_date(#date3#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+		</isNotNull>
+	    <isNotNull property="date4">
+			AND END_DATE &lt;= 
+			to_char(to_date(#date4#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    
+	    <isEqual property="summaryAmt1" compareValue="1" >
+	   		AND SUMMARY_AMT &gt; 0 and SUMMARY_AMT &lt;=1000000 
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="2" >
+	   		AND SUMMARY_AMT &gt; 1000000 and SUMMARY_AMT &lt;=5000000 
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="3" >
+	   		AND SUMMARY_AMT &gt; 5000000 and SUMMARY_AMT &lt;=10000000  
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="4" >
+	   		AND SUMMARY_AMT &gt; 10000000 and SUMMARY_AMT &lt;=30000000 
+	   	</isEqual>		 
+	   	<isEqual property="summaryAmt1" compareValue="5" >
+	   		AND SUMMARY_AMT &gt; 30000000 
+	   	</isEqual>
+	   
+	   	<isEqual property="ts" compareValue="1" >
+	   		AND FKTS &gt; 0 and FKTS &lt;=7 
+	   	</isEqual>	
+	   	<isEqual property="ts" compareValue="2" >
+	   		AND FKTS &gt; 7 and FKTS &lt;=30 
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="3" >
+	   		AND FKTS &gt; 30 and FKTS &lt;=90 
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="4" >
+	   		AND FKTS &gt; 90 and FKTS &lt;=365 
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="5" >
+	   		AND FKTS &gt; 365 
+	   	</isEqual>
+		<!--
+		<isNotNull property="summaryAmt1"> <![CDATA[   AND SUMMARY_AMT >= #summaryAmt1# ]]> </isNotNull>
+		<isNotNull property="summaryAmt2"> <![CDATA[   AND SUMMARY_AMT <= #summaryAmt2# ]]> </isNotNull>
+		<isNotNull property="ts1"> <![CDATA[   AND FKTS >= #ts1# ]]> </isNotNull>
+		<isNotNull property="ts2"> <![CDATA[   AND FKTS <= #ts2# ]]> </isNotNull>
+		-->
+	 </select>
+	 
+	 <resultMap id="huishou" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="party_id"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="rcvDate" column="rcv_date"/>
+			<result property="jklx" column="jklx"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="padUpPrn" column="PAD_UP_PRN"/>
+			<result property="shts" column="SHTS"/>
+	</resultMap>
+    <select id="huishou" parameterClass="java.util.HashMap" resultMap="huishou">
+		SELECT * FROM (
+		SELECT P.ORG_NUM,
+		       p.party_id,
+		       P.PARTY_NUM,
+		       P.PARTY_NAME,
+		       P.CERT_NUM,
+           	   P.CERT_TYPE,
+		       TB.PRODUCT_TYPE,
+		       TB.CONTRACT_NUM,
+		       T.SUMMARY_NUM,
+		       T.SUMMARY_CURRENCY_CD,
+		       T.SUMMARY_AMT,
+		       T.JJYE,
+		       to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		       to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+		       T.FLJG,
+		       to_date(S.rcv_date,'yyyymmdd') rcv_date,
+		       (TO_DATE(TO_CHAR((SELECT X.OPERATING_DATE FROM TB_PUB_DATE X), 'yyyy-MM-dd'), 'yyyy-MM-dd') - to_date(S.rcv_date,'yyyy-mm-dd')) AS SHTS,
+           	   S.PAD_UP_PRN,P.USER_NUM,
+           	   '4'  jklx
+      FROM TB_LOAN_SUMMARY T,TB_LOAN_INFO TA,TB_CON_CONTRACT_INFO TB,sn_sup_repayment_info S,V_CSM_PARTY P
+      WHERE T.LOAN_ID = TA.LOAN_ID
+       	AND TA.CONTRACT_ID = TB.CONTRACT_ID
+       	AND T.Summary_Num=S.due_num
+       	AND nvl(S.pad_up_prn,0) &gt; 0
+       	AND P.PARTY_ID = T.PARTY_ID
+       	AND T.Summary_Status_Cd in ('02','03','04') )
+       	WHERE ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+	    <isNotNull property="partyName">  AND PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="certType">  AND CERT_TYPE = #certType# </isNotNull>
+	    <isNotNull property="certNum">    AND CERT_NUM = #certNum# </isNotNull>
+		<isNotNull property="contractNum">    AND CONTRACT_NUM = #contractNum# </isNotNull>
+		<isNotNull property="summaryNum">   AND SUMMARY_NUM = #summaryNum# </isNotNull>
+		<isNotNull property="productType">    AND PRODUCT_TYPE = #productType# </isNotNull>
+		<isNotNull property="userNum">    AND USER_NUM = #userNum# </isNotNull>
+		
+		<isNotNull property="date1">
+			AND BEGIN_DATE &gt;= 
+			to_char(to_date(#date1#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date2">
+			AND BEGIN_DATE &lt;= 
+			to_char(to_date(#date2#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    <isNotNull property="date3">
+			AND END_DATE &gt;= 
+			to_char(to_date(#date3#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+		</isNotNull>
+	    <isNotNull property="date4">
+			AND END_DATE &lt;= 
+			to_char(to_date(#date4#, 'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd')
+	    </isNotNull>
+	    
+	    <isEqual property="summaryAmt1" compareValue="1" >
+	   		AND SUMMARY_AMT &gt; 0 and SUMMARY_AMT &lt;=1000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="2" >
+	   		AND SUMMARY_AMT &gt; 1000000 and SUMMARY_AMT &lt;=5000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="3" >
+	   		AND SUMMARY_AMT &gt; 5000000 and SUMMARY_AMT &lt;=10000000	
+	   	</isEqual>		   
+	   	<isEqual property="summaryAmt1" compareValue="4" >
+	   		AND SUMMARY_AMT &gt; 10000000 and SUMMARY_AMT &lt;=30000000	
+	   	</isEqual>		 
+	   	<isEqual property="summaryAmt1" compareValue="5" >
+	   		AND SUMMARY_AMT &gt; 30000000	
+	   	</isEqual>
+	   
+	   	<isEqual property="ts" compareValue="1" >
+	   		AND SHTS &gt; 0 and SHTS &lt;=7	
+	   	</isEqual>	
+	   	<isEqual property="ts" compareValue="2" >
+	   		AND SHTS &gt; 7 and SHTS &lt;=30	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="3" >
+	   		AND SHTS &gt; 30 and SHTS &lt;=90	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="4" >
+	   		AND SHTS &gt; 90 and SHTS &lt;=365	
+	   	</isEqual>
+	   	<isEqual property="ts" compareValue="5" >
+	   		AND SHTS &gt; 365	
+	   	</isEqual>
+		<!--
+		<isNotNull property="summaryAmt1"> <![CDATA[   AND T.SUMMARY_AMT >= #summaryAmt1# ]]> </isNotNull>
+		<isNotNull property="summaryAmt2"> <![CDATA[   AND T.SUMMARY_AMT <= #summaryAmt2# ]]> </isNotNull>
+		-->
+	 </select>
+	 
+	 
+	 <resultMap id="qianxi" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="party_id"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="dftItr" column="DFT_ITR"/>
+			<result property="jklx" column="jklx"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="normalItr" column="NORMAL_ITR"/>
+			<result property="arrearItr" column="ARREAR_ITR"/>
+			<result property="punishItr" column="PUNISH_ITR"/>
+	</resultMap>
+    <select id="qianxi" parameterClass="java.util.HashMap" resultMap="qianxi">
+		 SELECT P.ORG_NUM,
+		 		p.party_id,
+           		P.PARTY_NUM,
+           		P.PARTY_NAME,
+           		TB.PRODUCT_TYPE,
+           		TB.CONTRACT_NUM,
+           		T.SUMMARY_NUM,
+           		T.SUMMARY_CURRENCY_CD,
+           		T.SUMMARY_AMT,
+           		T.JJYE,
+           		to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		        to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+           		T.FLJG,
+           		nvl(T.YQTS,0) YQTS,
+           		nvl(T.DFT_ITR,0) DFT_ITR,
+           		P.USER_NUM, 
+           		nvl(T.NORMAL_ITR,0) NORMAL_ITR,
+		       	nvl(T.ARREAR_ITR,0) ARREAR_ITR,
+		       	nvl(T.PUNISH_ITR,0) PUNISH_ITR,
+           		'5'  jklx
+     FROM TB_LOAN_SUMMARY T, TB_LOAN_INFO TA, TB_CON_CONTRACT_INFO TB,V_CSM_PARTY P
+     WHERE T.LOAN_ID = TA.LOAN_ID
+        AND TA.CONTRACT_ID = TB.CONTRACT_ID
+        AND nvl(T.DFT_ITR,0) &gt; 0
+        AND P.PARTY_ID = T.PARTY_ID
+        AND T.Summary_Status_Cd in ('02','03')
+        AND TA.ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		AND (NVL(T.ARREAR_ITR,0)+NVL(T.PUNISH_ITR,0)) &gt; 0 
+		<!--
+		AND TB.SPEC_PAYMENT_DATE &gt; TO_CHAR(BT_GET_WORKDATE, 'dd') 
+		-->
+	    <isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="certType">  AND p.CERT_TYPE = #certType# </isNotNull>
+	    <isNotNull property="certNum">    AND p.CERT_NUM = #certNum# </isNotNull>
+		<isNotNull property="contractNum">    AND TB.CONTRACT_NUM = #contractNum# </isNotNull>
+		<isNotNull property="summaryNum"> AND T.SUMMARY_NUM = #summaryNum# </isNotNull>
+		<isNotNull property="productType">    AND TB.PRODUCT_TYPE = #productType# </isNotNull>
+		<isNotNull property="userNum">    AND P.USER_NUM = #userNum# </isNotNull>
+		
+		<isNotNull property="date1">
+			AND T.BEGIN_DATE &gt;= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		</isNotNull>
+		<isNotNull property="date2">
+			AND T.BEGIN_DATE &lt;= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		</isNotNull>
+		   
+		<isNotNull property="date3">
+			AND T.END_DATE &gt;= to_date(#date3# ,'yyyy-mm-dd hh24:mi:ss')
+		</isNotNull>
+		<isNotNull property="date4">
+			AND T.END_DATE &lt;= to_date(#date4# ,'yyyy-mm-dd hh24:mi:ss')
+		</isNotNull>
+		   
+		<isEqual property="summaryAmt1" compareValue="1" >
+			AND T.SUMMARY_AMT &gt; 0 and T.SUMMARY_AMT &lt;=1000000	
+		</isEqual>		   
+		<isEqual property="summaryAmt1" compareValue="2" >
+			AND T.SUMMARY_AMT &gt; 1000000 and T.SUMMARY_AMT &lt;=5000000	
+		</isEqual>		   
+		<isEqual property="summaryAmt1" compareValue="3" >
+			AND T.SUMMARY_AMT &gt; 5000000 and T.SUMMARY_AMT &lt;=10000000	
+		</isEqual>		   
+		<isEqual property="summaryAmt1" compareValue="4" >
+			AND T.SUMMARY_AMT &gt; 10000000 and T.SUMMARY_AMT &lt;=30000000	
+		</isEqual>		 
+		<isEqual property="summaryAmt1" compareValue="5" >
+			AND T.SUMMARY_AMT &gt; 30000000	
+		</isEqual>
+		   
+		<isEqual property="ts" compareValue="1" >
+		 	AND T.YQTS &gt; 0 and T.YQTS &lt;=7	
+		</isEqual>	
+		<isEqual property="ts" compareValue="2" >
+		 	AND T.YQTS &gt; 7 and T.YQTS &lt;=30 
+		</isEqual>
+		<isEqual property="ts" compareValue="3" >
+			AND T.YQTS &gt; 30 and T.YQTS &lt;=90	
+		</isEqual>
+		<isEqual property="ts" compareValue="4" >
+			AND T.YQTS &gt; 90 and T.YQTS &lt;=365	
+		</isEqual>
+		<isEqual property="ts" compareValue="5" >
+			AND T.YQTS &gt; 365	
+		</isEqual>
+		<!--
+		<isNotNull property="summaryAmt1"> <![CDATA[   AND T.SUMMARY_AMT >= #summaryAmt1# ]]> </isNotNull>
+		<isNotNull property="summaryAmt2"> <![CDATA[   AND T.SUMMARY_AMT <= #summaryAmt2# ]]> </isNotNull>
+		<isNotNull property="ts1"> <![CDATA[   AND T.YQTS >= #ts1# ]]> </isNotNull>
+		<isNotNull property="ts2"> <![CDATA[   AND T.YQTS <= #ts2# ]]> </isNotNull>
+		-->
+	 </select>
+</sqlMap>

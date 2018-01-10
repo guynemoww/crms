@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 前置条件集 -->
+<checkconditions>
+    <condition id="C0001" name="判断字符串是否相等" checktype="eqn" checkedFieldName="#sum(#sum($v1,$v3),-454)" targetDataList="$v2" errCode="2101015-011" errMsg="$v1+$v3-454不等于$v2">
+        <sql>select count(1) v1 from tc_pub_dic</sql>
+        <sql>select count(1) v3 from tc_pub_dicsub</sql>
+        <sql><![CDATA[select count(1) v2 from tc_pub_dicsub where BIGCLASS_CD <> @bigclasscd]]></sql>
+    </condition>
+    <condition id="C0002" name="判断数字是否相等" checktype="eqn" checkedFieldName="@num" targetDataList="0" errCode="2101015-012" errMsg="@num不等于0">
+    </condition>
+    <condition id="C0003" name="判断身份证合法" checktype="idvalid" checkedFieldName="@cardId" errCode="2101015-013" errMsg="身份证号@cardId不合法">
+    </condition>
+
+    <condition id="C0004" name="当是否创业贷款为“是”时" checktype="eqs" checkedFieldName="@IS_CARVE_OUT_LOAN" targetDataList="是" errCode="2101015-011" errMsg="@IS_CARVE_OUT_LOAN等于 是"></condition>
+    <condition id="C0005" name="如提前还本违约金率不为400%，且低于参数设置值，则提示低于设定值。" checktype="ineqn" checkedFieldName="@PREPAYMENT_FOREEIT_RATE" targetDataList="400%" errCode="2101015-011" errMsg="@PREPAYMENT_FOREEIT_RATE低于设定值"></condition>
+    <condition id="C0006" name=" 当贷款利率定价方式为“浮动比例”或“浮动比例+加点浮动”时" checktype="eqn" checkedFieldName="@RATE_PRICE_KIND" targetDataList="1" errCode="2101015-011" errMsg=""></condition>
+    <condition id="C0007" name=" 当贷款利率定价方式为“浮动比例”或“浮动比例+加点浮动”时" checktype="eqn" checkedFieldName="@RATE_PRICE_KIND" targetDataList="3" errCode="2101015-011" errMsg=""></condition>
+    <condition id="C0008" name=" 当每期固定还款日存在值时" checktype="greater" checkedFieldName="@AA" targetDataList="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select count(REPAY_DAY)AA from TB_LON_LOAN_APPLICATION where loan_id='@LOAN_ID']]></sql>
+    </condition>
+    <condition id="C0009" name=" 当贷款用途选择购车时，借款人非优质职工" checktype="eqn" checkedFieldName="@AA" targetDataList="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT LOAN_PURPOSE_KIND AA FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0010" name=" 当贷款用途选择购车时，借款人非优质职工" checktype="eqn" checkedFieldName="@BB" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT WORK_CLASSES BB TB_CSM_INDV_CUSTOMER WHERE CUS_ID = @CUS_ID]]></sql>
+    </condition>
+    <condition id="C0011" name=" 当贷款用途选择购车时，借款人非优质职工" checktype="eqn" checkedFieldName="@BB" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT WORK_CLASSES BB TB_CSM_INDV_CUSTOMER WHERE CUS_ID = @CUS_ID]]></sql>
+    </condition>
+    <condition id="C0012" name=" 当贷款用途选择高等教育费时" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[  SELECT LOAN_PURPOSE_KIND AA FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0013" name=" 当贷款用途选择其他消费支出时" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[  SELECT LOAN_PURPOSE_KIND AA FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0014" name=" 当贷款用途为“提款型”时" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[ SELECT LOAN_PURPOSE_KIND AA  FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0015" name=" 当贷款用途为“非提款型”时" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[ SELECT LOAN_PURPOSE_KIND AA  FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0016" name=" 当贷款期限低于12月以内，且主担保方式不为抵押时" checktype="less" checkedFieldName="@AA" endValue="12" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT LOAN_LENGTH AA FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0017" name=" 当贷款期限低于12月以内，且主担保方式不为抵押时" checktype="ineqn" checkedFieldName="@BB" targetDataList="22" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT SECURITY_KIND BB FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </condition>
+    <condition id="C0018" name="当单车净车价在100以下(含)时" checktype="less" checkedFieldName="@AA" endValue="100" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT APPEND_FIELD_VALUE AA FROM TB_LON_APP_APPEND_INDEX_VALUE WHERE  APPEND_FIELD_NAME='BUY_CAR_NET_PRICE]]></sql>
+    </condition>
+    <condition id="C0019" name="当单车净车价在100以上(含)时" checktype="greater" checkedFieldName="@AA" startValue="100" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT APPEND_FIELD_VALUE AA FROM TB_LON_APP_APPEND_INDEX_VALUE WHERE  APPEND_FIELD_NAME='BUY_CAR_NET_PRICE]]></sql>
+    </condition>
+    <condition id="C0020" name="当经营性车辆类型为工程车辆或工程机械时" checktype="eqn" checkedFieldName="@AA" targetDataList="1;3" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[SELECT APPEND_FIELD_VALUE AA FROM TB_LON_APP_APPEND_INDEX_VALUE WHERE APPEND_FIELD_NAME='TB_LON_APP_APPEND_INDEX_VALUE']]></sql>
+    </condition>
+    <condition id="C0021" name="若借款人类型为“优质单位职工" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select WORK_CLASSES AA from TB_CSM_INDV_CUSTOMER where cusid='@CUS_ID']]></sql>
+    </condition>
+    <condition id="C0022" name="包含汽车消费贷款与综合消费贷款用途为“汽车消费”的未结清贷款笔数" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select MARITAL_STATUS AA from TB_CSM_INDV_CUSTOMER where cus_id='@CUS_ID']]></sql>
+    </condition>
+
+
+    <condition id="C0023" name="借款人和配偶是本行关系人" checktype="ge" checkedFieldName="$AA" startValue="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select count(0) AA from TB_SYS_SECURITY_USERS where ID_NO = (select certificate_code  from tb_csm_customer where cus_id = @cusid)]]></sql>
+    </condition>
+    <condition id="C0024" name="借款人和配偶是本行关系人" checktype="ge" checkedFieldName="$BB" startValue="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select count(0) BB from TB_SYS_SECURITY_USERS where ID_NO =(select c.certificate_code from TB_CSM_RELATIONSHIP r,tb_csm_customer c
+						where subject_id = @cusid and relation_kind = 'KIN' AND relation_subclass = '1'
+						and subject_id = c.cus_id)]]></sql>
+    </condition>
+    <condition id="C0025" name="借款人应为单位职工，借款人配偶应为非自雇人士" checktype="eqn" checkedFieldName="@AA" targetDataList="1" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select METIER AA from TB_CSM_INDV_CUSTOMER where cus_id='@CUS_ID']]></sql>
+    </condition>
+    <condition id="C0026" name="后台参数没有配置单一借款人授信笔数时" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置单一借款人授信笔数">
+        <sql><![CDATA[
+                SELECT
+                        COUNT(L.LOAN_NUM_UPLIMIT) A
+                    FROM
+                        TB_SYS_SECURITY_ORGANISATION O,
+                        TB_PUB_CUS_ONEBORROWERITEMS L
+                    WHERE
+                        o.Org_id = l.Org_Id
+                        AND l.app_op_id = @appOpId
+                        AND EXISTS(	SELECT
+                                        ORG_ID
+					                FROM
+						                TB_SYS_SECURITY_ORGANISATION
+                                    WHERE TB_SYS_SECURITY_ORGANISATION.ORG_ID = L.ORG_ID
+                                    START WITH TB_SYS_SECURITY_ORGANISATION.ORG_ID = @orgId
+					                CONNECT BY TB_SYS_SECURITY_ORGANISATION.ORG_CD = PRIOR TB_SYS_SECURITY_ORGANISATION.PARENT_CD)
+        ]]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0027" name="后台参数没有借款人年龄时" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置借款人年龄上下限">
+        <sql><![CDATA[select count(0) A from tb_pub_cus_oneborrowcondition where APP_OP_ID = @appOpId and ORG_ID=@orgId]]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0028" name="后台参数没有配授权时" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置业务授权">
+        <sql><![CDATA[select count(0) A from tb_pub_loan_loanapplication where APP_OP_ID = @appOpId and ORG_ID=@orgId]]></sql>
+    </condition>
+
+    <!-- line -->
+    <!-- 后台参数 -->
+    <condition id="C0029" name="单户授信金额不超过产品参数设置的上限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置单户授信金额上下限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_AMOUNT_PERSON' and limit = 'LESSEQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0043" name="单户授信金额不超过产品参数设置的下限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置单户授信金额上下限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_AMOUNT_PERSON' and limit = 'GREATEREQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0030" name="单笔授信金额不超过产品参数设置的上限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置单笔授信金额上下限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_AMOUNT' and limit = 'LESSEQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0044" name="单笔授信金额不超过产品参数设置的下限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置单笔授信金额上下限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_AMOUNT' and limit = 'GREATEREQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0031" name="额度存续期限不超过产品参数设置的上限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置额度存续期限上限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_DURATION' and limit = 'LESSEQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0045" name="额度存续期限不超过产品参数设置的下限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置额度存续期限下限">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'LINE_DURATION' and limit = 'GREATEREQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0036" name="循环类别" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置循环类别">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'CYCLE_FLAG' and limit = 'IN']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0037" name="主担保方式" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置主担保方式">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'SECURITY_KIND' and limit = 'IN']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0038" name="组合担保方式" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置组合担保方式">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'COM_SECURITY_KIND' and limit = 'IN']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0041" name="就业类别" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置就业类别">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'STAFF_CATEGORY' and limit = 'IN']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0042" name="年龄加额度存续期上限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置年龄加额度存续期">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'AGE_AND_DURATION' and limit = 'LESSEQUAL']]></sql>
+    </condition>
+    <!-- 后台参数 -->
+    <condition id="C0052" name="年龄加额度存续期下限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="后台参数没有配置年龄加额度存续期">
+        <sql><![CDATA[select count(0) A from tb_pub_application_limit where APP_OP_ID = @appOpId and ORG_ID=@orgId and EN_NAME = 'AGE_AND_DURATION' and limit = 'GREATEREQUAL']]></sql>
+    </condition>
+    <condition id="C0053" name="存在浮动比上限" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0026" errMsg="">
+        <sql><![CDATA[select count(limit_id) LIMIT_COUNT from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'LESS' and EN_NAME = 'FLOATING_RATIO']]></sql>
+    </condition>
+
+    <condition id="C0054" name="存在浮动比下限" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0027" errMsg="">
+        <sql><![CDATA[select count(limit_id) LIMIT_COUNT from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'GREATER' and EN_NAME = 'FLOATING_RATIO']]></sql>
+    </condition>
+
+    <condition id="C0055" name="存在加点幅度上限" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0028" errMsg="">
+        <sql><![CDATA[select count(limit_id) LIMIT_COUNT from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'LESS' and EN_NAME = 'FLOATING_VALUE']]></sql>
+    </condition>
+
+    <condition id="C0056" name="存在加点幅度下限" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0029" errMsg="">
+        <sql><![CDATA[select count(limit_id) LIMIT_COUNT from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'GREATER' and EN_NAME = 'FLOATING_VALUE']]></sql>
+    </condition>
+
+    <condition id="C0057" name="存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0057" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS',@enName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0058" name="存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0058" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER',@enName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0059" name="存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0059" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL',@enName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0060" name="存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0060" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL',@enName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0061" name="存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-C0061" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL',@enName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0062" name="支用贷款最长期限存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','LOAN_MAX_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0063" name="支用贷款最长期限存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','LOAN_MAX_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0064" name="支用贷款最长期限存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LOAN_MAX_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0065" name="支用贷款最长期限存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LOAN_MAX_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0066" name="支用贷款最长期限存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','LOAN_MAX_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0067" name="支用有效期限存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','LINE_EXPENSE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0068" name="支用有效期限存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','LINE_EXPENSE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0069" name="支用有效期限存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LINE_EXPENSE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0070" name="支用有效期限存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LINE_EXPENSE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0071" name="支用有效期限存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','LINE_EXPENSE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0072" name="年龄加额度存续期存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','AGE_AND_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0073" name="年龄加额度存续期存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','AGE_AND_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0074" name="年龄加额度存续期存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','AGE_AND_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0075" name="年龄加额度存续期存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','AGE_AND_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0076" name="年龄加额度存续期存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','AGE_AND_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0077" name="单户授信金额存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','LINE_AMOUNT_PERSON') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0078" name="单户授信金额存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','LINE_AMOUNT_PERSON') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0079" name="单户授信金额存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LINE_AMOUNT_PERSON') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0080" name="单户授信金额存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LINE_AMOUNT_PERSON') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0081" name="单户授信金额存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','LINE_AMOUNT_PERSON') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0082" name="单户授信金额存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','LINE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0083" name="单户授信金额存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','LINE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0084" name="单户授信金额存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LINE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0085" name="单户授信金额存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LINE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0086" name="单户授信金额存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','LINE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0087" name="额度存续期限存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','LINE_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0088" name="额度存续期限存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','LINE_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0089" name="额度存续期限存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LINE_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0090" name="额度存续期限存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LINE_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0091" name="额度存续期限存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','LINE_DURATION') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0092" name="最小变动单位存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','SMALLEST_CHANGE_UNIT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <!-- loan   -->
+    <condition id="C0093" name="单户授信金额存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','APP_OP_ACCOUNT_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0094" name="单户授信金额存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','APP_OP_ACCOUNT_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0095" name="单户授信金额存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','APP_OP_ACCOUNT_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0096" name="单户授信金额存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','APP_OP_ACCOUNT_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0097" name="单户授信金额存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','APP_OP_ACCOUNT_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0098" name="产品单笔金额存在上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS','APP_OP_SINGLE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0099" name="产品单笔金额存在下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER','APP_OP_SINGLE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0100" name="产品单笔金额存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','APP_OP_SINGLE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0101" name="产品单笔金额存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','APP_OP_SINGLE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0102" name="产品单笔金额存在等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL','APP_OP_SINGLE_AMOUNT') LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <!-- 留学贷款额度  -->
+    <condition id="C0103" name="留学贷款额度担保方式为保证或信用" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '1' or @seKind = '2' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0104" name="留学贷款额度担保方式为质押" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '4' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0105" name="留学贷款额度担保方式为抵押,受教育人关系为本人" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="3" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '3' then 1 else 0 end)+(case  when @relaWithCus = '1' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0106" name="留学贷款额度担保方式为抵押,受教育人关系为“父母”或“配偶”或“子女”或“法定监护人“,是否收入还贷比控制为否" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="4" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '3' then 1 else 0 end)+(case  when @relaWithCus = '2' or @relaWithCus = '3' or @relaWithCus = '4' or @relaWithCus = '5' then 1 else 0 end)+(case  when @incomeRepayFlag = '0' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0107" name="留学贷款额度担保方式为抵押,受教育人关系为“父母”或“配偶”或“子女”或“法定监护人“,是否收入还贷比控制为是" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="4" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '3' then 1 else 0 end)+(case  when @relaWithCus = '2' or @relaWithCus = '3' or @relaWithCus = '4' or @relaWithCus = '5' then 1 else 0 end)+(case  when @incomeRepayFlag = '1' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0108" name="标志符为要求值" checktype="eqn" checkedFieldName="$flagValue" targetDataList="@flagRequireValue" errCode="2101015-011" errMsg="" >
+        <sql><![CDATA[select nvl(@flagValue,-1) flagValue from dual]]></sql>
+    </condition>
+    <condition id="C0109" name="利率定价方式为浮动比例 或 利率定价方式为加点幅度" checktype="eqn" checkedFieldName="$rateKindValue" targetDataList="@rateKindRequireValue" errCode="2101015-011" errMsg="" >
+        <sql><![CDATA[select nvl(@rateKindValue,-1) rateKindValue from dual]]></sql>
+    </condition>
+
+    <condition id="C0110" name="联保小组人数上限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="联保小组人数上限">
+        <sql><![CDATA[select  count(1) A from TB_PUB_CUS_TGPL where unite_type=@group_kind and org_id= @org_id and pnum_up_limit is not null]]></sql>
+    </condition>
+    <condition id="C0111" name="联保小组人数下限" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="联保小组人数下限">
+        <sql><![CDATA[select  count(1) A from TB_PUB_CUS_TGPL where unite_type=@group_kind and org_id= @org_id and pnum_down_limit is not null]]></sql>
+    </condition>
+    <condition id="C0112" name="保证金查询" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="保证金查询">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_PUB_GUARANTEE_ACCOUNT_INFO WHERE APP_ID= @appId]]></sql>
+    </condition>
+    <condition id="C0116" name="担保方式选择保证" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择保证">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_LON_LOAN_APPLICATION WHERE COM_SECURITY_KIND LIKE'%2%' AND LOAN_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0117" name="担保方式选择抵押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择抵押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@appId and COM_SECURITY_KIND LIKE'%3%']]></sql>
+    </condition>
+    <condition id="C0118" name="担保方式选择质押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择质押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@appId and COM_SECURITY_KIND LIKE'%4%']]></sql>
+    </condition>
+    <condition id="C0119" name="组合担保方式选择保证金" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择保证金">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_LOAN_APPLICATION WHERE COM_SECURITY_KIND LIKE'%8%' AND LOAN_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0120" name="业务为需缴纳首付款的贷种" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="业务为需缴纳首付款的贷种">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_APPLICATION WHERE APP_OP_ID IN('C825','C811','C841','B803','E821') AND LOAN_ID=@appId]]></sql>
+    </condition>
+
+    <condition id="C0121" name="联保小组是否申请额度" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="联保小组是否申请额度">
+        <sql><![CDATA[select count(line_id) A from tb_lin_line a where a.group_id =@group_id and a.line_status not in ('3','6')]]></sql>
+    </condition>
+    <condition id="C0122" name="担保方式选择保证" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择保证">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE COM_SECURITY_KIND LIKE'%2%' AND LINE_ID=@appId]]></sql>
+    </condition>
+
+    <condition id="C0123" name="担保方式选择抵押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择抵押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE LINE_ID=@appId and COM_SECURITY_KIND LIKE'%3%']]></sql>
+    </condition>
+    <condition id="C0124" name="担保方式选择质押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择质押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE LINE_ID=@appId and COM_SECURITY_KIND LIKE'%4%']]></sql>
+    </condition>
+    <condition id="C0125" name="组合担保方式选择保证金" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择保证金">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE COM_SECURITY_KIND LIKE'%8%' AND LINE_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0126" name="组合担保方式选择全程性保证或阶段性保证" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择全程性保证或阶段性保证">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE (COM_SECURITY_KIND LIKE'%5%' OR COM_SECURITY_KIND LIKE'%6%' OR COM_SECURITY_KIND LIKE'%9%' ) AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0127" name="抵质押物权利登记信息" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择全程性保证或阶段性保证">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_PUB_SECURITY WHERE APP_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0128" name="保证+抵押+质押+保证金>=授信建议金额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="保证+抵押+质押+保证金>=授信建议金额">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE (COM_SECURITY_KIND LIKE'%2%' OR COM_SECURITY_KIND LIKE'%3%' OR COM_SECURITY_KIND LIKE'%4%' OR COM_SECURITY_KIND LIKE'%8%') AND GROUP_SECURITY_TYPE = '2' AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0129" name="额度期限存在上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL','LINE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0130" name="额度期限存在下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL','LINE_PERIOD') LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0131" name="根据放款模式判断权利登记信息是否录入" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="根据放款模式判断权利登记信息是否录入">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_LOAN_KIND_FLAG WHERE LOAN_ID =@appId AND LOAN_MODE IN ('1','2','3','4','5')]]></sql>
+    </condition>
+    <condition id="C0132" name="押品预评估价值偏离下限" checktype="greater" checkedFieldName="$downRate" startValue="0" errCode="2101015-011" errMsg="押品预评估价值偏离下限">
+        <sql><![CDATA[ select count(*) downRate
+        from TB_PUB_LOAN_COLLATERALRATIO col,TB_SYS_SECURITY_ORGANISATION org
+       where  col.diff_down_limit is not null 
+         and to_char(col.EFFECT_DATE, 'yyyyMMdd') <= @evaluation_time
+         and col.app_op_id = @appOpId
+         and col.assets_kind = @assetClasiDetails
+         and org.org_id = col.org_id
+         and col.org_id in (
+         SELECT ORG_ID
+                    FROM TB_SYS_SECURITY_ORGANISATION
+                    START WITh
+                    ORG_ID = @orgId
+                    CONNECT BY ORG_CD = prior PARENT_CD
+         )
+    ]]></sql>
+    </condition>
+    <condition id="C0133" name="押品预评估价值偏离上限" checktype="greater" checkedFieldName="$upRate" startValue="0" errCode="2101015-011" errMsg="押品预评估价值偏离上限">
+        <sql><![CDATA[ select count(*) upRate
+        from TB_PUB_LOAN_COLLATERALRATIO col,TB_SYS_SECURITY_ORGANISATION org
+       where  col.diff_up_limit is not null 
+         and to_char(col.EFFECT_DATE, 'yyyyMMdd') <= @evaluation_time
+         and col.app_op_id = @appOpId
+         and col.assets_kind = @assetClasiDetails
+         and org.org_id = col.org_id
+         and col.org_id in (
+         SELECT ORG_ID
+                    FROM TB_SYS_SECURITY_ORGANISATION
+                    START WITh
+                    ORG_ID = @orgId
+                    CONNECT BY ORG_CD = prior PARENT_CD
+         ) 
+    ]]></sql>
+    </condition>
+
+
+    <condition id="C0134" name="组合担保方式选择抵质押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择抵质押时">
+        <sql><![CDATA[ select COUNT(APPID) A
+  FROM ((SELECT LINE_ID APPID
+           FROM TB_LIN_LINE_APPLICATION
+          WHERE LINE_ID = @appId
+            and COM_SECURITY_KIND LIKE '%3%') UNION ALL
+        (SELECT LOAN_ID APPID
+           FROM TB_LON_LOAN_APPLICATION
+          WHERE LOAN_ID = @appId
+            and COM_SECURITY_KIND LIKE '%3%') UNION ALL
+        (SELECT LINE_ID APPID
+           FROM TB_LIN_LINE_APPLICATION
+          WHERE LINE_ID = @appId
+            and COM_SECURITY_KIND LIKE '%4%') UNION ALL
+        (SELECT LOAN_ID APPID
+           FROM TB_LON_LOAN_APPLICATION
+          WHERE LOAN_ID = @appId
+            and COM_SECURITY_KIND LIKE '%4%'))
+        ]]></sql>
+    </condition>
+    <condition id="C0135" name="保证之和>=授信建议金额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="保证之和>=授信建议金额">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE COM_SECURITY_KIND LIKE'%2%' AND GROUP_SECURITY_TYPE = '1' AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0136" name="抵押之和>=授信建议金额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="抵押之和>=授信建议金额">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE COM_SECURITY_KIND LIKE'%3%' AND GROUP_SECURITY_TYPE = '1' AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0137" name="质押之和>=授信建议金额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="质押之和>=授信建议金额">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE COM_SECURITY_KIND LIKE'%4%' AND GROUP_SECURITY_TYPE = '1' AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0138" name="第三方担保之和>=授信建议金额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="第三方担保之和>=授信建议金额">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE (COM_SECURITY_KIND LIKE'%5%' OR COM_SECURITY_KIND LIKE'%6%') AND GROUP_SECURITY_TYPE = '1' AND LINE_ID=@lineId]]></sql>
+    </condition>
+    <condition id="C0139" name="申请还款方式为等额本金" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="申请还款方式为等额本金">
+        <sql><![CDATA[ select count(0) A from TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@loanId and REPAY_KIND='1400' ]]></sql>
+    </condition>
+    <condition id="C0140" name="终审还款方式为等额本金" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="终审还款方式为等额本金">
+        <sql><![CDATA[ select count(0) A from TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@loanId and FINAL_REPAY_KIND='1400' ]]></sql>
+    </condition>
+
+    <condition id="C0141" name="是否为额度项下贷款" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="是否为额度项下贷款">
+        <sql><![CDATA[ select count(0) A from TB_LON_LINE_USE_INFO WHERE LOAN_ID=@loanId]]></sql>
+    </condition>
+
+    <condition id="C0142" name="是否为额度项下贷款" checktype="eqn" checkedFieldName="$rowCount" targetDataList="0" errCode="C0142" errMsg="是否为额度项下贷款">
+        <sql><![CDATA[ select count(0) rowCount from TB_LON_LINE_USE_INFO WHERE LOAN_ID=@loanId and line_kind = '3']]></sql>
+    </condition>
+
+    <condition id="C0143" name="是否强制贷前查询征信系统" checktype="eqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-011" errMsg="是否强制贷前查询征信系统">
+        <sql><![CDATA[ select nvl(IS_QUERY_CREDIT,'0') A from TB_PUB_APPLICATIONCONFIG WHERE APP_OP_ID=@appOpId]]></sql>
+    </condition>
+    <condition id="C0144" name="是否为支用个人额度" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-011" errMsg="是否为支用个人额度">
+        <sql><![CDATA[select count(t.LOAN_ID) B from TB_LON_LINE_USE_INFO t where t.LOAN_ID = @appId and t.LINE_KIND <> '1']]></sql>
+    </condition>
+    <condition id="C0145" name="需要校验贷种" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-011" errMsg="需要校验贷种">
+        <sql><![CDATA[select count(LOAN_ID) A from tb_lon_application where LOAN_ID = @loanId and app_op_id in
+            ('E821', 'C830', 'C836', 'C835', 'B803', 'C841', 'C811', 'C822',
+             'C825', 'C846', 'F818', 'F819', 'F820')]]></sql>
+    </condition>
+    <condition id="C0146" name="超出单户担保限额" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="超出单户担保限额">
+        <sql><![CDATA[SELECT COUNT(SINGLE_INSU_LIMIT_ID) A FROM TB_PUB_CUS_SINGLE_INSU_LIMIT WHERE ORG_ID =@orgId ]]></sql>
+    </condition>
+    <!--2013.2.6 by wujiaxu 新加一组贷款利率相关的前置条件 开始 -->
+    <condition id="C0147" name="老客户是否利率优惠为是" checktype="greater" checkedFieldName="$LIMIT_VALUE" startValue="0" errCode="C0147" errMsg="老客户是否利率优惠为是">
+        <sql><![CDATA[SELECT nvl(count(LIMIT_VALUE),0) LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE APP_OP_ID = @appOpId AND ROWNUM = '1' AND EN_NAME = 'IS_USE_OLE_CUSTOMER' AND LIMIT = 'IN' AND LIMIT_VALUE like '%{1}%' AND ORG_ID IN (SELECT ORG_ID FROM TB_SYS_SECURITY_ORGANISATION START WITH ORG_ID = @orgId CONNECT BY ORG_CD = prior PARENT_CD)]]></sql>
+    </condition>
+
+    <condition id="C0148" name="老客户是否利率优惠为否" checktype="greater" checkedFieldName="$LIMIT_VALUE" startValue="0" errCode="C0148" errMsg="老客户是否利率优惠为否">
+        <sql><![CDATA[SELECT nvl(count(LIMIT_VALUE),0) LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE APP_OP_ID = @appOpId AND ROWNUM = '1' AND EN_NAME = 'IS_USE_OLE_CUSTOMER' AND LIMIT = 'IN' AND LIMIT_VALUE like '%{0}%' AND ORG_ID IN (SELECT ORG_ID FROM TB_SYS_SECURITY_ORGANISATION START WITH ORG_ID = @orgId CONNECT BY ORG_CD = prior PARENT_CD)]]></sql>
+    </condition>
+
+    <condition id="C0149" name="是老客户" checktype="eqn" checkedFieldName="$oldCusFlag" targetDataList="1" errCode="C0149" errMsg="是否老客户为是">
+        <sql><![CDATA[SELECT nvl(@isRateCheaper,'0') oldCusFlag FROM dual]]></sql>
+    </condition>
+
+    <condition id="C0150" name="不是老客户" checktype="eqn" checkedFieldName="$oldCusFlag" targetDataList="0" errCode="C0150" errMsg="是否老客户为否">
+        <sql><![CDATA[SELECT nvl(@isRateCheaper,'0') oldCusFlag FROM dual]]></sql>
+    </condition>
+
+    <condition id="C0151" name="是额度下贷款" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0151" errMsg="是否额度下贷款为是">
+        <sql><![CDATA[select count(RECORD_ID) rowCount from TB_LON_LINE_USE_INFO where LOAN_ID = @loanId and LINE_KIND = '3']]></sql>
+    </condition>
+
+    <condition id="C0152" name="不是额度下贷款" checktype="eqn" checkedFieldName="$rowCount" targetDataList="0" errCode="C0152" errMsg="是否额度下贷款为否">
+        <sql><![CDATA[select count(RECORD_ID) rowCount from TB_LON_LINE_USE_INFO where LOAN_ID = @loanId and LINE_KIND = '3']]></sql>
+    </condition>
+
+    <condition id="C0153" name="当前业务品种涉及老客户利率优惠" checktype="eqn" checkedFieldName="$isOldCusCount" targetDataList="1" errCode="C0153" errMsg="当前业务品种涉及老客户利率优惠">
+        <sql><![CDATA[SELECT count(MODULE_APP_ID) isOldCusCount FROM TB_PUB_CST_MODULEAPP WHERE APP_OP_ID = @appOpId and MODULE_ID = (select FUNCTION_ID from TB_PUB_CST_MODULE where MODULE_NO = 'loan0007')]]></sql>
+    </condition>
+
+    <condition id="C0154" name="当前业务品种不涉及老客户利率优惠" checktype="eqn" checkedFieldName="$isNotOldCusCount" targetDataList="0" errCode="C0154" errMsg="当前业务品种不涉及老客户利率优惠">
+        <sql><![CDATA[SELECT count(MODULE_APP_ID) isNotOldCusCount FROM TB_PUB_CST_MODULEAPP WHERE APP_OP_ID = @appOpId and MODULE_ID = (select FUNCTION_ID from TB_PUB_CST_MODULE where MODULE_NO = 'loan0007') ]]></sql>
+    </condition>
+
+    <condition id="C0155" name="存在老客户利率优惠上限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="C0155" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESS',@oldCusEnName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0156" name="存在老客户利率优惠下限值(开)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="C0156" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATER',@oldCusEnName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0157" name="存在老客户利率优惠上限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="C0157" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'LESSEQUAL',@oldCusEnName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0158" name="存在老客户利率优惠下限值(闭)" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="C0158" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'GREATEREQUAL',@oldCusEnName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <condition id="C0159" name="存在老客户利率优惠等值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="C0159" errMsg="">
+        <sql><![CDATA[select FN_PUB_GETLIMITCOUNT(@orgId,@appOpId,'EQUAL',@oldCusEnName) LIMIT_COUNT from dual]]></sql>
+    </condition>
+
+    <!--2013.2.6 by wujiaxu 新加一组贷款利率相关的前置条件 结束 -->
+    <condition id="C0160" name="组合担保方式选择抵押或者质押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择抵押或者质押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION WHERE LINE_ID=@appId and (COM_SECURITY_KIND LIKE'%3%' or COM_SECURITY_KIND LIKE'%4%')]]></sql>
+    </condition>
+
+    <!--2013.2.24 by wujiaxu 新增前置条件：性别参数不为【不限】 开始 -->
+    <condition id="C0161" name="性别参数不为【不限】" checktype="ineqn" checkedFieldName="$paramValue" targetDataList="2" errCode="C0161" errMsg="性别参数不为【不限】">
+        <sql><![CDATA[ select nvl(FN_PUB_GET_GENDER_LIMIT(@orgId,@appOpId),'2') paramValue from dual ]]></sql>
+    </condition>
+    <!--2013.2.24 by wujiaxu 新增前置条件： 结束 -->
+    <condition id="C0162" name="现金流校验前置条件申请金额大于等于30万" checktype="greater" checkedFieldName="$A" startValue="0"  errCode="2101015-011" errMsg="现金流校验前置条件检验失败">
+        <sql><![CDATA[select count(0) A from TB_PUB_RPT_SURVEY  where app_id = @appId and cus_id = @cusId and APP_OP_KIND  in ('300301', 'B80201') and APPLY_AMOUNT >= to_number(300000)]]></sql>
+    </condition>
+    <!-- 提交-->
+    <condition id="C0163" name="是否抵押登记选择是" checktype="greater" checkedFieldName="$A" startValue="0"  errCode="C0163" errMsg="是否抵押登记选择是">
+        <sql><![CDATA[select count(0) A from TB_PUB_SECURITY  where app_id = @appId AND IS_REGISTER_OTHER_OWNER_SHIP='1']]></sql>
+    </condition>
+    <condition id="C0164" name="是否免息为是" checktype="greater" checkedFieldName="$rowCount" startValue="0"  errCode="C0164" errMsg="是否免息为是">
+        <sql><![CDATA[
+            select count(paramValue) rowCount from
+            (select nvl(FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'IN','FREEINTERESTFLAG'),'0') paramValue  from dual)
+            where paramValue like '%1%'
+        ]]></sql>
+    </condition>
+    <!--2013.2.28 新增 是否由我行调查 -->
+    <condition id="C0165" name="是否由我行调查" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="是否由我行调查">
+        <sql><![CDATA[select count(0) A from TB_LON_APPLICATION_KIND_FLAG  where  IS_PASS_REASERCH  = '1' and loan_id =@loanId ]]></sql>
+    </condition>
+    <condition id="C0166" name="额度项下调查报告大于设置日期值" checktype="greater" checkedFieldName="$A" startValue="$B"  errCode="C0166" errMsg="额度项下调查报告大于设置日期值">
+        <sql><![CDATA[select case when max(INQUIRY_DATE) is null then '19000101' else to_char(max(INQUIRY_DATE),'yyyymmdd') end A
+  from (select INQUIRY_DATE
+          from TB_PUB_RPT_SURVEY
+         where app_id in
+               (select loan_id
+                  from tb_lon_line_use_info
+                 where line_id in
+                       (select line_id
+                          from tb_lon_line_use_info
+                         where loan_id = @loanId
+                           and line_kind = '3')
+                   and line_kind = '3')
+        union all
+        select INQUIRY_DATE
+          from TB_PUB_RPT_SURVEY
+         where app_id in (select line_id
+                            from tb_lon_line_use_info
+                           where loan_id = @loanId
+                             and line_kind = '3')
+        union all
+        select INQUIRY_DATE
+          from TB_PUB_RPT_SURVEY
+         where app_id in
+               (select line_id
+                  from tb_lin_line_application
+                 where group_id in
+                       (select group_id
+                          from tb_lin_line_application
+                         where line_id in (select line_id
+                                             from tb_lon_line_use_info
+                                            where loan_id = @loanId
+                                              and line_kind = '3'))))]]></sql>
+        <sql><![CDATA[select to_char(work_date-(select nvl(sum(days),0) from tb_pub_creditinvestigation where org_id = (select cur_org_id from tb_lon_org_manage where loan_id=@loanId) and app_op_id = @appOpId and rownum = 1),'yyyymmdd') B from tb_sys_business_date where org_cd = '99']]></sql>
+    </condition>
+    <condition id="C0167" name="组合担保方式选择抵押或者质押" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-011" errMsg="组合担保方式选择抵押或者质押">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@appId and (COM_SECURITY_KIND LIKE'%3%' or COM_SECURITY_KIND LIKE'%4%')]]></sql>
+    </condition>
+
+    <!-- 留学贷款额度  -->
+    <condition id="C0168" name="“与受教育人关系”选择“父母或配偶或子女或法定监护人”、且担保方式为“抵押”、且“是否收入还贷比”选择“是”，不得超过200万元" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="4" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '3' then 1 else 0 end)+(case  when @relaWithCus = '2' or @relaWithCus = '3' or @relaWithCus = '4' or @relaWithCus = '5' then 1 else 0 end)+(case  when @incomeRepayFlag = '1' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0169" name="“与受教育人关系”选择“本人”，则额度金额不超过100万元" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @relaWithCus = '1' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0170" name="“与受教育人关系”选择“父母或配偶或子女或法定监护人”、且担保方式为“抵押”、且“是否收入还贷比”选择“否”，则额度金额不超过100万元" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="4" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '3' then 1 else 0 end)+(case  when @relaWithCus = '2' or @relaWithCus = '3' or @relaWithCus = '4' or @relaWithCus = '5' then 1 else 0 end)+(case  when @incomeRepayFlag = '0' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0171" name="若担保方式选择“保证”，则不能超过100万元" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '2' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <condition id="C0172" name="若担保方式选择“信用”，则不能超过50万元" checktype="eqn" checkedFieldName="$LIMIT_COUNT" targetDataList="2" errCode="2101015-011" errMsg="">
+        <sql><![CDATA[select (case  when @appOpId = '300103'  then 1 else 0 end)+(case  when @seKind = '1' then 1 else 0 end) LIMIT_COUNT from dual]]></sql>
+    </condition>
+    <!-- 2013.3.5 by wujiaxu 新增前置条件：提前还款是否收取违约金 -->
+    <condition id="C0173" name="提前还款是否收取违约金为【是】" checktype="eqn" checkedFieldName="$isGetPrerepayForfeit" targetDataList="1" errCode="C0173" errMsg="">
+        <sql><![CDATA[select nvl(IS_GET_PREREPAY_FORFEIT,'0') isGetPrerepayForfeit from tb_lon_loan_application where loan_id = @appId]]></sql>
+    </condition>
+    <condition id="C0174" name="关联了合作方额度 并且 不是只关联了担保公司额度" checktype="greater" checkedFieldName="$linesRowCount" startValue="$rowCount" errCode="C0174" errMsg="关联了合作方额度 并且 不是只关联了担保公司额度">
+        <sql><![CDATA[select count(RECORD_ID) linesRowCount from TB_LON_LINE_USE_INFO where LOAN_ID = @loanId and LINE_KIND = '1']]></sql>
+        <sql><![CDATA[SELECT COUNT(A.RECORD_ID) rowCount FROM TB_LON_LINE_USE_INFO A,TB_LIN_LINE B WHERE A.LINE_ID = B.LINE_ID AND A.LOAN_ID = @loanId AND A.LINE_KIND = '1' AND B.APP_OP_ID = '301801']]></sql>
+    </condition>
+    <condition id="C0175" name="留学贷款用途为提款型" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0175" errMsg="留学贷款用途为提款型">
+        <sql><![CDATA[select count(loan_id) rowCount from TB_LON_APPLICATION_KIND_FLAG where loan_id = @loanId and PURPOSE_KIND = '1']]></sql>
+    </condition>
+    <condition id="C0176" name="是留学贷款额度下贷款" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0176" errMsg="是留学贷款额度下贷款">
+        <sql><![CDATA[select count(RECORD_ID) rowCount from TB_LON_LINE_USE_INFO,TB_LIN_LINE where TB_LON_LINE_USE_INFO.LINE_ID = TB_LIN_LINE.LINE_ID AND TB_LON_LINE_USE_INFO.LOAN_ID = @loanId AND TB_LON_LINE_USE_INFO.LINE_KIND = '3' AND TB_LIN_LINE.APP_OP_ID = '300103' ]]></sql>
+    </condition>
+    <condition id="C0177" name="包含保证人担保信息" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0177" errMsg="包含保证人担保信息">
+        <sql><![CDATA[select count(app_id) rowCount from TB_PUB_GUARANTEE where APP_ID = @appId]]></sql>
+    </condition>
+    <condition id="C0178" name="包含抵质押担保信息" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0178" errMsg="包含抵质押担保信息">
+        <sql><![CDATA[select count(app_id) rowCount from TB_PUB_SECURITY where APP_ID = @appId]]></sql>
+    </condition>
+    <condition id="C0179" name="包含保证金担保信息" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0179" errMsg="包含保证金担保信息">
+        <sql><![CDATA[select count(app_id) rowCount from TB_PUB_GUARANTEE_ACCOUNT_INFO where APP_ID = @appId]]></sql>
+    </condition>
+
+    <!-- 2013.3.14 by wujiaxu 新增前置条件：贷款组合类型及组合担保方式-->
+    <condition id="C0180" name="组合担保类型是【并列】 并且 存在担保方式【保证】、【阶段性保证】、【全程性保证】" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0180" errMsg="组合担保类型是【并列】 并且 存在担保方式【保证】、【阶段性保证】、【全程性保证】">
+        <sql><![CDATA[SELECT COUNT(0) rowCount FROM TB_LON_LOAN_APPLICATION WHERE (COM_SECURITY_KIND LIKE'%2%' OR COM_SECURITY_KIND LIKE'%5%' OR COM_SECURITY_KIND LIKE'%6%') AND GROUP_SECURITY_TYPE = '1' AND LOAN_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0181" name="组合担保类型是【并列】 并且 存在担保方式【抵押】" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0181" errMsg="组合担保类型是【并列】 并且 存在担保方式【抵押】">
+        <sql><![CDATA[SELECT COUNT(0) rowCount FROM TB_LON_LOAN_APPLICATION WHERE COM_SECURITY_KIND LIKE'%3%' AND GROUP_SECURITY_TYPE = '1' AND LOAN_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0182" name="组合担保类型是【并列】 并且 存在担保方式【质押】" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0182" errMsg="组合担保类型是【并列】 并且 存在担保方式【质押】">
+        <sql><![CDATA[SELECT COUNT(0) rowCount FROM TB_LON_LOAN_APPLICATION WHERE COM_SECURITY_KIND LIKE'%4%' AND GROUP_SECURITY_TYPE = '1' AND LOAN_ID=@appId]]></sql>
+    </condition>
+    <condition id="C0183" name="组合担保类型是【加总】 并且 存在担保方式【保证】、【抵押】、【质押】、【保证金】" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="C0183" errMsg="组合担保类型是【加总】 并且 存在担保方式【保证】、【抵押】、【质押】、【保证金】">
+        <sql><![CDATA[SELECT COUNT(0) rowCount FROM TB_LON_LOAN_APPLICATION WHERE (COM_SECURITY_KIND LIKE'%2%' OR COM_SECURITY_KIND LIKE'%3%' OR COM_SECURITY_KIND LIKE'%4%' OR COM_SECURITY_KIND LIKE'%8%') AND GROUP_SECURITY_TYPE = '2' AND LOAN_ID=@appId]]></sql>
+    </condition>
+
+    <condition id="C0184" name="联保小组的贷种" checktype="greater" checkedFieldName="$A" startValue="0" errCode="C0184" errMsg="联保小组的贷种">
+        <sql><![CDATA[SELECT COUNT(0) A FROM DUAL WHERE @appOpId IN ('A801','A804','A82807')]]></sql>
+    </condition>
+
+    <condition id="C0185" name="非联保小组的贷种" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="C0185" errMsg="非联保小组的贷种">
+        <sql><![CDATA[SELECT COUNT(0) A FROM DUAL WHERE @appOpId IN ('A801','A804','A82807')]]></sql>
+    </condition>
+
+    <condition id="C0186" name="额度项下调查报告大于设置日期值" checktype="greater" checkedFieldName="$A" startValue="$B"  errCode="C0186" errMsg="额度项下调查报告大于设置日期值">
+        <sql><![CDATA[select case when max(INQUIRY_DATE) is null then '19000101' else to_char(max(INQUIRY_DATE),'yyyymmdd') end A
+  		from (select INQUIRY_DATE
+          from TB_PUB_RPT_SURVEY
+         where app_id in
+               (select loan_id
+                  from tb_lon_line_use_info
+                 where line_id in
+                       (select line_id
+                          from tb_lon_line_use_info
+                         where loan_id = @loanId
+                           and line_kind = '3')
+                   and line_kind = '3')
+        union all
+        select INQUIRY_DATE
+          from TB_PUB_RPT_SURVEY
+         where app_id in (select line_id
+                            from tb_lon_line_use_info
+                           where loan_id = @loanId
+                             and line_kind = '3'))]]></sql>
+        <sql><![CDATA[select to_char(work_date-(select nvl(sum(days),0) from tb_pub_creditinvestigation where org_id = (select cur_org_id from tb_lon_org_manage where loan_id=@loanId) and app_op_id = @appOpId and rownum = 1),'yyyymmdd') B from tb_sys_business_date where org_cd = '99']]></sql>
+    </condition>
+    <condition id="C0187" name="额度项下调查报告大于设置日期值" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="C0187" errMsg="额度项下调查报告大于设置日期值">
+        <sql><![CDATA[SELECT FN_PUB_GETINQUIRYDATE(@loanId,@appOpId) A FROM DUAL]]></sql>
+    </condition>
+
+    <condition id="C0188" name="当前业务为厦门公积金贷款" checktype="eqn" checkedFieldName="$rowCount" targetDataList="1" errCode="C0188" errMsg="当前业务为厦门公积金贷款">
+        <sql><![CDATA[SELECT COUNT(a.LOAN_ID) rowCount FROM TB_LON_APPLICATION a,TB_LON_LOAN_APPLICATION b WHERE a.LOAN_ID = b.LOAN_ID AND a.LOAN_ID = @appId AND a.APP_OP_ID = 'E821' AND b.CHARACTERISTIC_APP_TYPE = '02']]></sql>
+    </condition>
+
+    <condition id="C0189" name="业务品种为【其他小额贷款新产品】" checktype="eqn" checkedFieldName="$rowCount" targetDataList="1" errCode="C0189" errMsg="业务品种为【其他小额贷款新产品】">
+        <sql><![CDATA[select count(1) rowCount from dual where 'A82802' = @appOpId]]></sql>
+    </condition>
+
+    <condition id="C0190" name="业务品种不是【其他小额贷款新产品】" checktype="eqn" checkedFieldName="$rowCount" targetDataList="0" errCode="C0190" errMsg="业务品种不是【其他小额贷款新产品】">
+        <sql><![CDATA[select count(1) rowCount from dual where 'A82802' = @appOpId]]></sql>
+    </condition>
+
+
+
+</checkconditions>

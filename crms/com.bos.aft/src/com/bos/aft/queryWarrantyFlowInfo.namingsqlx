@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+	<resultMap class="commonj.sdo.DataObject" id="map1">
+		<result column="CREDIT_RATING_CD" property="creditRatingCd"/>
+    </resultMap>
+    <select id="queryRatingResult" parameterClass="java.util.HashMap" resultMap="map1">
+		select CREDIT_RATING_CD from TB_IRM_INTERNAL_RATING_RESULT 
+		 where 1=1
+		 <isNotNull property="partyId">
+		   and party_id = #partyId#
+		 </isNotNull>
+		   and RATING_STATE = '1'
+		   and IS_PROFESSIONAL = '2'
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map2">
+		<result column="out_eval_result" property="outEvalResult"/>
+    </resultMap>
+    <select id="queryOutEvalResult" parameterClass="java.util.HashMap" resultMap="map2">
+		select OUT_EVAL_RESULT from tb_csm_external_eval_result 
+		 where 1=1
+		 <isNotNull property="partyId">
+		   and party_id = #partyId#
+		 </isNotNull>
+		 order by EVAL_PERIODS
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map3">
+		<result column="INDEX_VALUE_DATA_TYPE" property="indexValueDataType"/>
+    </resultMap>
+    <select id="queryValue1" parameterClass="java.util.HashMap" resultMap="map3">
+		select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+f.FINANCE_STATUS_CD='02'
+<isNotNull property="partyId">
+and f.PARTY_ID = #partyId#
+</isNotNull>
+<isNotNull property="financeTypeCd">
+and f.FINANCE_TYPE_CD= #financeTypeCd#
+</isNotNull>
+and d.FINANCE_ID=f.FINANCE_ID
+and d.INDEX_CD='b013'
+order by f.FINANCE_DEADLINE desc
+    </select>
+    <select id="queryValue2" parameterClass="java.util.HashMap" resultMap="map3">
+		select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+f.FINANCE_STATUS_CD='02'
+<isNotNull property="partyId">
+and f.PARTY_ID = #partyId#
+</isNotNull>
+<isNotNull property="financeTypeCd">
+and f.FINANCE_TYPE_CD= #financeTypeCd#
+</isNotNull>
+and d.FINANCE_ID=f.FINANCE_ID
+and d.INDEX_CD='b001'
+order by f.FINANCE_DEADLINE desc
+    </select>
+    <select id="queryValue3" parameterClass="java.util.HashMap" resultMap="map3">
+		select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+f.FINANCE_STATUS_CD='02'
+<isNotNull property="partyId">
+and f.PARTY_ID = #partyId#
+</isNotNull>
+<isNotNull property="financeTypeCd">
+and f.FINANCE_TYPE_CD= #financeTypeCd#
+</isNotNull>
+and d.FINANCE_ID=f.FINANCE_ID
+and d.INDEX_CD='b089'
+order by f.FINANCE_DEADLINE desc
+    </select>
+    <select id="queryValue4" parameterClass="java.util.HashMap" resultMap="map3">
+		select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+f.FINANCE_STATUS_CD='02'
+<isNotNull property="partyId">
+and f.PARTY_ID = #partyId#
+</isNotNull>
+<isNotNull property="financeTypeCd">
+and f.FINANCE_TYPE_CD= #financeTypeCd#
+</isNotNull>
+and d.FINANCE_ID=f.FINANCE_ID
+and d.INDEX_CD='b016'
+order by f.FINANCE_DEADLINE desc
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map4">
+		<result column="PROJECT_VALUE" property="projectValue"/>
+    </resultMap>
+    <select id="queryValue5" parameterClass="java.util.HashMap" resultMap="map4">
+		select d.PROJECT_VALUE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_STATEMENT_DATA d where 
+1=1
+and f.FINANCE_STATUS_CD='02'
+<isNotNull property="partyId">
+and f.PARTY_ID = #partyId#
+</isNotNull>
+<isNotNull property="financeTypeCd">
+and f.FINANCE_TYPE_CD= #financeTypeCd#
+</isNotNull>
+and d.FINANCE_ID=f.FINANCE_ID
+and d.PROJECT_CD='00602002'
+order by f.FINANCE_DEADLINE desc
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map5">
+		<result column="CREDIT_AMT" property="creditAmt"/>
+		<result column="SPARE_AMT" property="spareAmt"/>
+		<result column="OCCUPIED_AMT" property="occuoiedAmt"/>
+    </resultMap>
+    <select id="queryGuateeValues" parameterClass="java.util.HashMap" resultMap="map5">
+		select 
+			CAST(CREDIT_AMT/10000 AS NUMERIC(20,2)) as CREDIT_AMT,
+			CAST(SPARE_AMT/10000 AS NUMERIC(20,2)) as SPARE_AMT,
+			CAST(OCCUPIED_AMT/10000 AS NUMERIC(20,2)) as OCCUPIED_AMT 
+		from TB_CRD_GUATEE_LIMIT 
+		where 1=1
+		<isNotNull property="partyId">
+		and PARTY_ID = #partyId#
+		</isNotNull>
+		and STATUS_CD in ('02','04')
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map6">
+		<result column="GE_ID" property="geId"/>
+		<result column="GI_ID" property="giId"/>
+		<result column="COOPERATION_BANK" property="cooperationBank"/>
+		<result column="APPROVED_AMOUNT" property="approvedAmount"/>
+		<result column="APPROVED_GUARANTEE_AMT" property="approvedGuaranteeAmt"/>
+		<result column="GUARANTEE_BAL" property="guaranteeBal"/>
+		<result column="GUARANTEE_HOUSEHOLDS" property="guaranteeHouseHolds"/>
+		<result column="MARGIN_RATIO" property="marginRatio"/>
+    </resultMap>
+    <select id="queryBankInfo" parameterClass="java.util.HashMap" resultMap="map6">
+		select GE_ID,
+			   GI_ID,
+			   COOPERATION_BANK,
+			   APPROVED_AMOUNT,
+			   APPROVED_GUARANTEE_AMT,
+			   GUARANTEE_BAL,
+			   GUARANTEE_HOUSEHOLDS,
+			   MARGIN_RATIO from TB_AFT_GUARANTEE_EXTERNAL 
+		 where 1=1
+		 <isNotNull property="giId">
+		   and GI_ID = #giId#
+		 </isNotNull>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="map7">
+		<result column="APPROVED_AMOUNT_SUM" property="approvedAmount"/>
+		<result column="APPROVED_GUARANTEE_AMT_SUM" property="approvedGuaranteeAmt"/>
+		<result column="GUARANTEE_BAL_SUM" property="guaranteeBal"/>
+		<result column="GUARANTEE_HOUSEHOLDS_SUM" property="guaranteeHouseHolds"/>
+		<result column="MARGIN_RATIO_SUM" property="marginRatio"/>
+    </resultMap>
+    <select id="querySum" parameterClass="java.util.HashMap" resultMap="map7">
+		select 
+		 sum(APPROVED_AMOUNT) APPROVED_AMOUNT_SUM ,
+		 sum(APPROVED_GUARANTEE_AMT) APPROVED_GUARANTEE_AMT_SUM,
+		 sum(GUARANTEE_BAL) GUARANTEE_BAL_SUM,
+		 sum(GUARANTEE_HOUSEHOLDS) GUARANTEE_HOUSEHOLDS_SUM,
+		 sum(MARGIN_RATIO) MARGIN_RATIO_SUM
+  			from TB_AFT_GUARANTEE_EXTERNAL where 1=1
+		 <isNotNull property="giId">
+		   and GI_ID = #giId#
+		 </isNotNull>
+    </select>  
+    <resultMap class="commonj.sdo.DataObject" id="isExist">
+		<result column="GI_ID" property="giId"/>
+    </resultMap>
+    <select id="queryIsExist" parameterClass="java.util.HashMap" resultMap="isExist">
+		select GI_ID,PARTY_ID from TB_AFT_GUARANTEE_INSPECT where 1=1
+		 <isNotNull property="partyId">
+		    and PARTY_ID = #partyId#
+		 </isNotNull>
+		 	and INSPECT_STATE <![CDATA[ != ]]> 4
+		 	and INSPECT_STATE <![CDATA[ != ]]> 7
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryBankInfoMap">
+		<result column="party_name" property="partyName"/>
+		<result column="RECEPTION_NAME" property="name"/>
+		<result column="RECEPTION_POST" property="post"/>
+		<result column="INSPECT_DATE" property="inspectDate"/>
+    </resultMap>
+    <select id="queryBankInfo1" parameterClass="java.util.HashMap" resultMap="queryBankInfoMap">
+		select party_name,
+        RECEPTION_NAME,
+        RECEPTION_POST,
+        INSPECT_DATE from TB_AFT_GUARANTEE_INSPECT,tb_csm_party
+where TB_AFT_GUARANTEE_INSPECT.party_id = tb_csm_party.party_id
+<isNotNull property="giId">
+and TB_AFT_GUARANTEE_INSPECT.GI_ID= #giId#
+</isNotNull>
+    </select>
+    
+   
+    
+</sqlMap>

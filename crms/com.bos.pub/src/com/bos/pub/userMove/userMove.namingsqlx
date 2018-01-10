@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chuaN -->
+<sqlMap>
+  
+  
+  <select id="findUserMoveList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select 
+    	distinct t.MOVE_ID   ,
+  		t.USER_NUM  ,
+  		t.USER_NAME,
+	  t.TARGET_ORG_NUM   ,
+	  t.ORIGINAL_ORG_NUM,
+	  t.HANDLE_ORG_NUM   ,
+ 	 t.HANDLE_USER_NUM,
+   TO_CHAR(T.MOVE_DATE, 'YYYY-MM-DD')  as MOVE_DATE
+      
+ 	 from TB_PUB_USER_MOVE t, om_organization o
+ 	 where  t.handle_user_num=#handleUserNum# 
+ 	 and 	t.handle_ORG_NUM  =#handleOrgNum#
+ 		 <isNotNull property="userNum">  and t.user_num = '$userNum$' </isNotNull>
+ 		 <isNotNull property="userName">  and t.user_name like '%$userName$%' </isNotNull>
+ 		<isNotNull property="originalOrgNum">and t.original_org_num=#originalOrgNum#</isNotNull>
+ 		 <isNotNull property="targetOrgNum"> and t.target_org_num=#targetOrgNum#</isNotNull>
+ 		 ORDER BY MOVE_DATE DESC
+	</select>
+
+ <select id="findUserList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+    	 e.userid,
+    	 e.empname,
+    	 o.orgcode ,
+    	 o.orgname,
+    	 o.orgid
+ 	 from om_employee e,om_organization o,om_emporg ome
+ 	where e.empid=ome.empid and ome.orgid=o.orgid
+ 		 <isNotNull property="userNum">  and e.userid = '$userNum$' </isNotNull>
+ 		 <isNotNull property="userName">  and e.empname like '%$userName$%' </isNotNull>
+ 		 <isNotNull property="orgNum">  and (o.orgid = '$orgNum$' or o.parentorgid='$orgNum$') </isNotNull>
+ 		  ORDER BY orgid
+	</select>
+	<resultMap id="bizList" class="java.util.HashMap">
+			<result property="applyId" column="APPLY_ID"/>
+	</resultMap>
+
+  <select id="findUserBizList" parameterClass="java.util.HashMap" resultMap="bizList">
+		select t.APPLY_ID from tb_biz_apply t where t.status_type not in('04','05','06')
+		and t.user_num=#userNum#
+    </select>
+
+<insert id="addUserMoveRecord" parameterClass="java.util.HashMap" >	
+insert into tb_pub_user_move
+  select sys_guid() as move_id,
+         e.userid as user_num,
+         (select orgcode from om_organization where orgid = #targetOrgId#) as target_org_num,
+         o.orgcode as original_org_num,
+         #handleOrgNum# as handle_org_num,
+         #handleUserNum# as handle_user_num,
+         bt_get_workdate as move_time,
+         e.empname as user_name
+    from om_organization o, om_employee e
+   where e.orgid = o.orgid
+     and e.userid = #userNum#
+	</insert>
+	
+	
+	<update id="updateUserOrg" parameterClass="java.util.HashMap" >	
+	
+	update om_employee o set o.orgid=#targetOrgId# 
+	
+	where userid=  #userNum# and o.orgid=#originalOrgId#
+	
+	
+	</update>
+	
+	<update id="updateUserOrgRelation" parameterClass="java.util.HashMap" >	
+	
+	update om_emporg o set o.orgid=#targetOrgId# 
+	where o.empid=(select empid from om_employee where userid=#userNum#) 
+	and o.orgid=#originalOrgId#
+	
+	</update>
+	
+	<update id="updateUserManagement" parameterClass="java.util.HashMap" >	
+	
+	update  tb_csm_management_team t set  t.org_num=
+	(select orgcode from om_organization where orgid=#targetOrgId#)
+	where t.user_num=#userNum# 
+	 and t.org_num=	(select orgcode from om_organization where orgid=#originalOrgId#)
+	</update>
+	
+	<delete id="updateUserManagementTeam" parameterClass="java.util.HashMap" >	
+
+	update tb_csm_management_team set org_num=
+	(select orgcode from om_organization where orgid=#targetOrgId#)
+	where user_num=#userNum#
+	and org_num=	(select orgcode from om_organization where orgid=#originalOrgId#)
+
+	</delete>
+	
+	<delete id="deleteUserOrgRule" parameterClass="java.util.HashMap" >	
+
+       delete  from ac_operatorrole t 
+       where t.orgid=#originalOrgId# and t.operatorid=(select empid from om_employee where userid=#userNum# )
+
+	</delete>
+	
+<delete id="deleteUserOrgRule2" parameterClass="java.util.HashMap" >	
+
+       delete  from om_empposition t 
+       where t.orgid=#originalOrgId# and t.empid=(select empid from om_employee where userid=#userNum# )
+
+	</delete>
+
+
+
+
+
+</sqlMap>

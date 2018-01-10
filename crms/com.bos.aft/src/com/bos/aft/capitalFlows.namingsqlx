@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zengfang -->
+<sqlMap>
+   <resultMap class="commonj.sdo.DataObject" id="queryAccountTradeList">
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="LOAN_DETAIL_ID" property="loanDetailId"/>
+        <result column="TRADE_DATE" property="tradeDate"/>
+        <result column="TRADE_AMT" property="tradeAmt"/>
+        <result column="ACCOUNT_NAME" property="accountName"/>
+        <result column="IS_INSPECTED" property="isInspected"/>
+        <result column="ACCOUNT_TRADE_LIST_ID" property="accountTradeListId"/>
+    </resultMap>
+    <select id="queryAccountTradeList" parameterClass="java.util.HashMap" resultMap="queryAccountTradeList">
+		select 
+             i.PARTY_ID,
+             i.LOAN_DETAIL_ID,
+             l.TRADE_DATE,
+             l.TRADE_AMT,
+             l.ACCOUNT_NAME,
+             l.IS_INSPECTED,
+             l.ACCOUNT_TRADE_LIST_ID
+        from 
+             TB_AFT_ACCOUNT_TRADE_LIST l
+        inner join
+             TB_LOAN_ACCOUNT_INFO i
+             on
+             l.ACCOUNT_ID=i.ACCOUNT_NUM  
+          where 
+           i.BIZ_ACCOUNT_TYPE_CD = '01'
+           and <![CDATA[ l.TRADE_AMT <0 ]]>
+		<isNotNull property="partyId">
+	    	and i.party_id = #partyId#
+	    </isNotNull>
+	    
+	    <isNotNull property="is_INSPECTED">
+	        and	(l.IS_INSPECTED not in('1','2') or l.IS_INSPECTED is  null)
+	    </isNotNull>
+	    
+	    <isNotNull property="not_INSPECTED">
+	    	and l.IS_INSPECTED is not null
+	    </isNotNull>
+	    
+    </select>
+     
+    <resultMap class="commonj.sdo.DataObject" id="getCptlFlowsForUpdate">
+         <result column="CFD_ID" property="cfdId"/>
+         <result column="CF_ID" property="cfId"/>
+   </resultMap>
+    <select id="getCptlFlowsForUpdate" parameterClass="java.util.HashMap" resultMap="getCptlFlowsForUpdate">
+		           SELECT
+		         
+                          d.CFD_ID,
+                          d.CF_ID
+                   FROM
+                         TB_AFT_CAPITAL_FLOWS_DETAIL d
+                   INNER JOIN
+                         TB_AFT_CAPITAL_FLOWS f
+                   ON
+                         d.CF_ID = f.CF_ID
+                   WHERE 
+                         1=1
+		      <isNotNull property="partyId">
+	    	       and f.PARTY_ID = #partyId#
+	          </isNotNull>
+	          
+	          <isNotNull property="status">
+	    	       and f.CF_STATE = #status#
+	          </isNotNull>
+	          
+	          <isNotNull property="cfId">
+	    	       and f.CF_ID = #cfId#
+	          </isNotNull>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="getPartyId">
+         <result column="party_id" property="partyId"/>
+   </resultMap>
+   <!-- 查询客户partyId  资金流向监控管理岗-->
+    <select id="getPartyId" parameterClass="java.util.HashMap" resultMap="getPartyId">
+		 select tacf.party_id party_id
+			from TB_AFT_CAPITAL_FLOWS tacf
+			left join TB_AFT_CAPITAL_FLOWS_DETAIL tacfd
+			on tacf.cf_id = tacfd.cf_id
+			where tacf.cf_id = #cfId#
+    </select>
+</sqlMap>

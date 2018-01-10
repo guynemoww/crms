@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="FileUploadManager" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.0" state="stateless">
+  <nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释" nodeType="note" type="note" content="文件上传管理页面流&#xD;&#xA;" title="蔡述尧&#x9;09-3-18 下午5:40">
+    <location x="45" y="316"/>
+    <size height="100" width="148"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link0" name="link0" lineType="reference" isDefault="true" type="action" actionName="enter" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>view0</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <location x="100" y="150"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" nodeType="common" type="end" contextPath="" method="forward" uri="/utp/tools/fileupload/fileupload_manager.jsp">
+    <targetConnections>link6</targetConnections>
+    <location x="738" y="150"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="102" y="186"/>
+    <figSize height="12" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="740" y="186"/>
+    <figSize height="12" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view0" name="文件上传管理主框架" displayName="fileupload_mainframe.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/fileupload/fileupload_mainframe.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link1" name="link1" lineType="reference" isDefault="true" type="action" actionName="enterUpload" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>view1</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link4" name="link4" lineType="reference" type="action" actionName="enterManager" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="criteria"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.eos.foundation.PageCond" name="page"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="227" y="150"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view0label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view0label" name="label" nodeType="label">
+    <location x="184" y="186"/>
+    <figSize height="12" width="109"/>
+    <node>view0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view1" name="文件上传" displayName="fileupload.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/fileupload/fileupload.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link2" name="link2" lineType="reference" isDefault="true" type="action" actionName="upload" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>subprocess0</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter anyType="com.primeton.ext.access.http.IUploadFile" description="" historyStateLocation="client" isArray="true" name="uploadFile"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.bos.utp.dataset.tools.AtFileupload" name="atFileupload"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="227" y="271"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view1label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view1label" name="label" nodeType="label">
+    <location x="214" y="307"/>
+    <figSize height="12" width="49"/>
+    <node>view1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="保存文件" displayName="saveFile" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link3" name="link3" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>end1</targetNode>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="224" y="375"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadManager.saveFile</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="uploadFiles" type="query" value="com.primeton.ext.access.http.IUploadFile[]" valueType="Java" pattern="reference">uploadFile</process:inputVariable>
+        <process:inputVariable id="1" name="atFileupload" type="query" value="com.bos.utp.dataset.tools.AtFileupload" valueType="DataObject" pattern="reference">atFileupload</process:inputVariable>
+        <process:inputVariable id="2" name="user" type="query" value="com.eos.data.datacontext.UserObject" valueType="Java" pattern="reference">s:userObject</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="successFiles" type="query" value="String[]" valueType="Primitive">successFiles</process:outputVariable>
+        <process:outputVariable id="1" name="retCode" type="query" value="String" valueType="Primitive">retCode</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="213" y="410"/>
+    <figSize height="12" width="49"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="查询所有文件" displayName="queryAllFile" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link5" name="link5" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>view2</targetNode>
+    </sourceConnections>
+    <targetConnections>link7</targetConnections>
+    <targetConnections>link8</targetConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="450" y="150"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadManager.queryAllFile</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="criteria" type="query" value="com.primeton.das.criteria.criteriaType" valueType="DataObject" pattern="reference">criteria</process:inputVariable>
+        <process:inputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject" pattern="reference">page</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="uploadFiles" type="query" value="com.bos.utp.dataset.tools.AtFileupload[]" valueType="DataObject">uploadFiles</process:outputVariable>
+        <process:outputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject">page</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="427" y="185"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess1</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view2" name="上传文件管理业务" displayName="fileupload_manager.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/fileupload/fileupload_manager.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link6" name="link6" lineType="reference" isDefault="true" type="action" actionName="end" dataConvertClass="">
+      <sourceNode>view2</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link8" name="link8" lineType="reference" type="action" actionName="pageQuery" dataConvertClass="">
+      <bendPoint heightToEnd="-75" heightToStart="-76" widthToEnd="76" widthToStart="-86"/>
+      <sourceNode>view2</sourceNode>
+      <targetNode>subprocess1</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link10" name="link10" lineType="reference" type="action" actionName="delete" dataConvertClass="">
+      <sourceNode>view2</sourceNode>
+      <targetNode>subprocess2</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter description="" historyStateLocation="client" isArray="false" name="isDeleteFile" primitiveType="Boolean"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link9" name="link9" lineType="reference" type="action" actionName="prepareUpdate" dataConvertClass="">
+      <sourceNode>view2</sourceNode>
+      <targetNode>subprocess4</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.bos.utp.dataset.tools.AtFileupload" name="atFileupload"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link5</targetConnections>
+    <location x="644" y="150"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view2label</nodeLabel>
+    <process:inputParameters>
+      <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="criteria"/>
+      <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.eos.foundation.PageCond" name="page"/>
+      <process:parameter description="" historyStateLocation="client" isArray="true" modelType="com.bos.utp.dataset.tools.AtFileupload" name="select_objs"/>
+    </process:inputParameters>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view2label" name="label" nodeType="label">
+    <location x="607" y="186"/>
+    <figSize height="12" width="97"/>
+    <node>view2</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link7" name="link7" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>subprocess1</targetNode>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="365" y="150"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.utp.dataset.tools.AtFileupload</process:from>
+      <process:to type="query">criteria/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">page/isCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">-2</process:from>
+      <process:to type="query">page/count</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">fileTime</process:from>
+      <process:to type="query">criteria/_order[1]/_desc</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="367" y="186"/>
+    <figSize height="12" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="删除文件" displayName="deleteFile" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>subprocess1</targetNode>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <location x="547" y="225"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadManager.deleteFile</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="uploadFiles" type="query" value="com.bos.utp.dataset.tools.AtFileupload[]" valueType="DataObject" pattern="reference">select_objs</process:inputVariable>
+        <process:inputVariable id="1" name="isDeleteFile" type="query" value="Boolean" valueType="Primitive" pattern="reference">isDeleteFile</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="success" type="query" value="Boolean" valueType="Primitive">success</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="536" y="260"/>
+    <figSize height="12" width="49"/>
+    <node>subprocess2</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end1" name="结束1" displayName="结束" type="end" contextPath="" method="forward" uri="/utp/tools/fileupload/fileupload.jsp">
+    <targetConnections>link14</targetConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="375" y="375"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end1label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end1label" name="label" nodeType="label">
+    <location x="374" y="411"/>
+    <figSize height="12" width="31"/>
+    <node>end1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess3" name="修改文件" displayName="modifyFile" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link14" name="link14" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess3</sourceNode>
+      <targetNode>end1</targetNode>
+    </sourceConnections>
+    <targetConnections>link13</targetConnections>
+    <location x="476" y="375"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess3label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadManager.updateFile</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="atFileupload" type="query" value="com.bos.utp.dataset.tools.AtFileupload" valueType="DataObject" pattern="reference">atFileupload</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="result" type="query" value="Int" valueType="Primitive">result</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess3label" name="label" nodeType="label">
+    <location x="465" y="410"/>
+    <figSize height="12" width="49"/>
+    <node>subprocess3</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess4" name="获取文件信息" displayName="getFileInfo" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link12" name="link12" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess4</sourceNode>
+      <targetNode>view4</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link9</targetConnections>
+    <location x="641" y="281"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess4label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadManager.getFileInfo</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="atFileupload" type="query" value="com.bos.utp.dataset.tools.AtFileupload" valueType="DataObject" pattern="reference">atFileupload</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="atFileupload" type="query" value="com.bos.utp.dataset.tools.AtFileupload" valueType="DataObject">atFileupload</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess4label" name="label" nodeType="label">
+    <location x="618" y="316"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess4</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view4" name="修改文件信息" displayName="fileupload_update.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/fileupload/fileupload_update.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link13" name="link13" lineType="reference" isDefault="true" type="action" actionName="update" dataConvertClass="">
+      <sourceNode>view4</sourceNode>
+      <targetNode>subprocess3</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.bos.utp.dataset.tools.AtFileupload" name="atFileupload"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link12</targetConnections>
+    <location x="644" y="375"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view4label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view4label" name="label" nodeType="label">
+    <location x="619" y="411"/>
+    <figSize height="12" width="73"/>
+    <node>view4</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="翁增仁" createTime="2008-11-25 18:59:27" date="2008-11-25Z" description="" name="上传文件管理" version="6.0"/>
+  <process:variables/>
+</process:tPageFlow>

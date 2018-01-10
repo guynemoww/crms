@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="exportAccountExcel" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign1</targetNode>
+    </sourceConnections>
+    <location x="137" y="120"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束" nodeType="common" type="end">
+    <targetConnections>link95</targetConnections>
+    <targetConnections>link46</targetConnections>
+    <location x="1035" y="270"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="String" name="downloadFile" type="query" valueType="Primitive">downloadFile</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="139" y="156"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="1037" y="306"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="实体赋值转类型" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link93" name="20" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>subprocess9</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">importCd</process:leftOperand>
+          <process:rightOperand type="literal">210</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link45" name="21" displayName="连接线" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>subprocess10</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">importCd</process:leftOperand>
+          <process:rightOperand type="literal">21</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="138" y="270"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">item/entity</process:from>
+      <process:to type="query">cre/_entity</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="110" y="306"/>
+    <figSize height="17" width="85"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess9" name="T24流水对账" displayName="getTbBatchCheckHbWbLd" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link94" name="link94" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess9</sourceNode>
+      <targetNode>invokePojo47</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link93</targetConnections>
+    <location x="369" y="270"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess9label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.queryCheckHbWb.getTbBatchCheckHbWbLd</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="map" type="query" value="java.util.HashMap" valueType="Java" pattern="reference">map</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="items" type="query" value="commonj.sdo.DataObject[]" valueType="Java">items</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess9label" name="label" nodeType="label">
+    <location x="347" y="305"/>
+    <figSize height="17" width="70"/>
+    <node>subprocess9</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo47" name="T24流水对账" displayName="导出权证Excel1" collapsed="false" nodeType="common" type="invoke" index="3" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link95" name="link95" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo47</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link94</targetConnections>
+    <location x="720" y="270"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo47label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.example.excel.ExcelUtil.exportExcel</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="exportObjects" type="query" value="commonj.sdo.DataObject[]" valueType="Java" pattern="reference">items</process:inputVariable>
+      <process:inputVariable id="1" name="exportInfo" type="expression" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="templateFilename" type="literal" value="java.lang.String" valueType="Java" pattern="reference">CheckHbWbList.xls</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">downloadFile</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo47label" name="label" nodeType="label">
+    <location x="696" y="306"/>
+    <figSize height="17" width="70"/>
+    <node>invokePojo47</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="交易日终对账" displayName="T24流水对账" collapsed="false" nodeType="common" type="invoke" index="3" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link46" name="link46" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link44</targetConnections>
+    <location x="735" y="405"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.example.excel.ExcelUtil.exportExcel</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="exportObjects" type="query" value="commonj.sdo.DataObject[]" valueType="Java" pattern="reference">items</process:inputVariable>
+      <process:inputVariable id="1" name="exportInfo" type="expression" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="templateFilename" type="literal" value="java.lang.String" valueType="Java" pattern="reference">EndDay.xls</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">downloadFile</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="710" y="441"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess10" name="交易日终对账" displayName="getTbBatchDayendCrmsLD" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link44" name="link44" displayName="link94" isDefault="true" type="transition">
+      <sourceNode>subprocess10</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link45</targetConnections>
+    <location x="384" y="405"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess10label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.queryCompare.getTbBatchDayendCrmsLD</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="map" type="query" value="java.util.HashMap" valueType="Java" pattern="reference">map</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="items" type="query" value="commonj.sdo.DataObject[]" valueType="Java">items</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess10label" name="label" nodeType="label">
+    <location x="361" y="440"/>
+    <figSize height="17" width="73"/>
+    <node>subprocess10</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="Administrator" createTime="2014-03-07 11:13:47" date="2014-03-07Z" description="" name="exportEmpExcel" version="6.3"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.utp.dataset.organization.OmOrganization" name="orgList"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="cre"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.utp.dataset.organization.OmEmployee" name="emp"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.pub.sys.LedgerEntity" name="ledger"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="" historyStateLocation="client" isArray="true" name="projectStatistics"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="" historyStateLocation="client" isArray="true" name="orgStatistics"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.pub.sys.TbOrderMessage" name="tbOrderMessages"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.pub.sys.PunishStatisticsEntity" name="tbPunishMessages"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.pub.sys.ProOrgStatisticsEntity" name="projectOrgs"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.pub.sys.ScorerStatisticsEntity" name="scorers"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="币种" historyStateLocation="client" isArray="true" name="ledCur"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="分险分类清单导出数据" historyStateLocation="client" isArray="true" name="riskTable"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="客户台账信息" historyStateLocation="client" isArray="true" name="partys"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="银团" historyStateLocation="client" isArray="true" name="conBank"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="集团客户信息" historyStateLocation="client" isArray="true" name="csmGroups"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="评级结果" historyStateLocation="client" isArray="true" name="ratingResultList"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="权证台账" historyStateLocation="client" isArray="true" name="accounts"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="综合授信和单笔单批台账" historyStateLocation="client" isArray="true" name="corpLimit"/>
+    <process:variable description="委托贷款" historyStateLocation="client" isArray="true" modelType="com.bos.pub.standingbook.account.TbEntrustedloanListEntity" name="entrustedLoans"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="" historyStateLocation="client" isArray="false" name="out"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="currencyType" primitiveType="String"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input anyType="commonj.sdo.DataObject" description="" isArray="false" name="item"/>
+    <process:input description="" isArray="false" name="test" primitiveType="String"/>
+    <process:input description="" isArray="false" name="importCd" primitiveType="String"/>
+    <process:input anyType="java.util.HashMap" description="" isArray="false" name="map"/>
+    <process:input description="" isArray="false" modelType="com.bos.pub.sys.TbOrderMessage" name="tbOrderMessage"/>
+    <process:input anyType="java.util.HashMap" description="" isArray="false" name="tbPunishMessage"/>
+    <process:input description="" isArray="false" name="kj" primitiveType="String"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output description="返回下载文件路径" isArray="false" name="downloadFile" primitiveType="String"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

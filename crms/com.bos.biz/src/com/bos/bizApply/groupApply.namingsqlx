@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lipengcheng -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <!--  获取成员综合授信业务条数之和返回方法自动计算条数     -->
+    <select id="getMemberZhsxCount" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		select r.apply_Id
+		  from tb_biz_apply r
+		  left join tb_biz_approve t
+		    on r.apply_id = t.apply_id
+		 where r.biz_type in ('02', '05')
+		   and nvl(t.become_effective_mark, '03') in ('03', '09')
+		   and nvl(t.approve_conclusion, '1') != '2'
+		   and r.status_type in ('01', '03', '09')
+		   and r.party_id = #partyId#
+    </select>
+    
+    <select id="searchZHSXInfoByMemberApplyId" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT CREDIT_TERM,CYCLE_UNIT FROM tb_Biz_Amount_Apply WHERE APPLY_ID=(
+	SELECT APPLY_ID FROM TB_BIZ_APPLY WHERE PARTY_ID=(
+		SELECT GROUP_PARTY_ID FROM TB_CSM_GROUP_MEMBER WHERE CORPORATION_PARTY_ID=(SELECT PARTY_ID FROM TB_BIZ_APPLY WHERE APPLY_ID=#applyId#)) 
+	AND BIZ_TYPE='03' AND STATUS_TYPE='01'
+)
+    </select>
+</sqlMap>

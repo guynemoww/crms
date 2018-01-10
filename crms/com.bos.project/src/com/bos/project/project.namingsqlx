@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+   <select id="findProjectList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select 
+    	PROJECT_ID,
+       PROJECT_NUM,
+       PROJECT_NAME,
+       SECU_NUM,
+     	SECU_NAME,
+      	FUND_ACCOUNT,
+       PROJECT_STATUS,
+       REMARK,
+       PACK_BAL,
+        TO_CHAR(T.START_DATE, 'YYYY-MM-DD') as START_DATE,
+       TO_CHAR(T.PACKAGE_DATE, 'YYYY-MM-DD') as PACKAGE_DATE,
+       TO_CHAR(T.END_DATE, 'YYYY-MM-DD') as END_DATE,
+       ORG_NUM,
+       USER_NUM,
+       CREATE_DATE
+ 	 from TB_CON_PROJECT t
+ 	where 1 = 1
+ 	and t.user_num=#userNum#
+         <isNotNull property="projectNum">  and t.project_num = '$projectNum$' </isNotNull>
+ 		 <isNotNull property="projectName">  and t.project_name like '%$projectName$%' </isNotNull>
+ 		   <isNotNull property="secuNum">  and t.secu_num = '$secuNum$' </isNotNull>
+ 		 <isNotNull property="secuName">  and t.secu_name like '%$secuName$%' </isNotNull>
+ 		 <isNotNull property="startDate"> 
+ 		 	<![CDATA[
+ 		 	 AND TO_CHAR(T.START_DATE,'YYYY-MM-DD HH24:MI:SS') >=#startDate#
+ 		 	 ]]>
+ 		 	  </isNotNull>
+		 <isNotNull property="endDate">  
+		 	 	<![CDATA[
+		 AND TO_CHAR(T.START_DATE,'YYYY-MM-DD HH24:MI:SS') <= #endDate#
+		  ]]>
+		  </isNotNull>
+		  <isNotNull property="projectStatus">  and t.project_status = '$projectStatus$' </isNotNull>
+		 
+	</select>
+    
+    
+    <select id="findContractList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tls.SUMMARY_NUM,
+       tcp.PARTY_NUM,
+       tcp.PARTY_NAME,
+    	tcp.cert_type,
+       tcp.cert_num,
+       tli.PRODUCT_TYPE,
+       tls.SUMMARY_AMT,
+       tls.JJYE,
+       TO_CHAR(Tls.begin_date, 'YYYY-MM-DD')as BEGIN_DATE,
+        TO_CHAR(Tls.end_date, 'YYYY-MM-DD')as END_DATE,
+       tls.ORG_NUM,
+       tls.USER_NUM,
+       tls.summary_id,
+       tli.spec_payment_date,
+       tcpr.remark,
+       tcpr.summary_status
+  from tb_loan_summary tls
+left join tb_con_project_relation tcpr on tcpr.summary_id= tls.summary_id 
+  left join tb_con_project tcpj on tcpr.project_id=tcpj.project_id  
+ left join om_organization om on om.orgcode=tcpj.org_num
+ left join v_csm_party  tcp on   tls.party_id = tcp.party_id
+left join tb_loan_info tli on tli.loan_id=tls.loan_id
+ where tls.summary_status_cd in('02','03')
+	  <isNotNull property="orgId"> and  om.orgseq like '%.$orgId$.%'</isNotNull> 
+ 	  <isNotNull property="projectId">  and tcpj.project_id= '$projectId$' </isNotNull>
+ 	  <isNotNull property="customerNum">  and tcp.party_num = '$customerNum$' </isNotNull>
+      <isNotNull property="customerName">   and tcp.party_name  like '%$customerName$%' </isNotNull>
+      <isNotNull property="summaryNum">   and tls.summary_num = '$summaryNum$' </isNotNull>
+	  <isNotNull property="userNum"> and  tls.user_num = '$userNum$' </isNotNull>
+	  <isNotNull property="startDate"><![CDATA[  AND TO_CHAR(tls.begin_date,'YYYY-MM-DD HH24:MI:SS')>=#startDate#]]>
+	  </isNotNull>
+	  <isNotNull property="endDate"> 	<![CDATA[   AND TO_CHAR(tls.begin_date,'YYYY-MM-DD HH24:MI:SS')<=#endDate#]]>
+	  </isNotNull>
+	</select>
+	
+	<!--查询待引入的借据列表-->
+	 <select id="findUnContractList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tls.SUMMARY_NUM,
+       v.PARTY_NUM,
+       v.PARTY_NAME,
+      	v.CERT_TYPE,
+      	v.CERT_NUM,
+       tli.PRODUCT_TYPE,
+       tls.SUMMARY_AMT,
+       tls.JJYE,
+       tls.tiexi_status,
+       tls.tingxi_status,
+       tls.fljg,
+       tli.currency_cd,
+       TO_CHAR(Tls.begin_date, 'YYYY-MM-DD')as BEGIN_DATE,
+        TO_CHAR(Tls.end_date, 'YYYY-MM-DD')as END_DATE,
+       tls.ORG_NUM,
+       tls.USER_NUM,
+       tls.summary_id,
+       tli.spec_payment_date
+  from tb_loan_summary tls
+   left join om_organization om on om.orgcode=tls.org_num
+ left join v_csm_party  v on  tls.party_id = v.party_id
+left join tb_loan_info tli on tli.loan_id=tls.loan_id
+where  tls.summary_status_cd in('02','03') 
+and tls.summary_id not in(select tcpr.summary_id from tb_con_project_relation tcpr where tcpr.project_id= '$projectId$' )
+	  <isNotNull property="orgId"> and  om.orgseq like '%.$orgId$.%'</isNotNull> 
+ 	  <isNotNull property="customerNum">  and v.party_num = '$customerNum$' </isNotNull>
+      <isNotNull property="customerName">   and v.party_name  like '%$customerName$%' </isNotNull>
+      <isNotNull property="summaryNum">   and tls.summary_Num = '$summaryNum$' </isNotNull>
+	  <isNotNull property="summaryNums"> and   tls.summary_Num in  $summaryNums$ </isNotNull> 
+	  <isNotNull property="userNum"> and  tls.user_num = '$userNum$' </isNotNull>
+	  <isNotNull property="startDate"> 
+	    <![CDATA[ 
+	    AND TO_CHAR(tls.begin_date,'YYYY-MM-DD HH24:MI:SS')>=#startDate#
+	    ]]>
+	    </isNotNull>
+	  <isNotNull property="endDate">
+	  	<![CDATA[
+	    AND TO_CHAR(tls.begin_date,'YYYY-MM-DD HH24:MI:SS')<=#endDate#
+	    ]]>
+	    </isNotNull>
+	
+	</select>
+	
+	<!--查询可以发送到计量的借据的数据-->	
+	 <select id="findSummaryForJL" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		 select sys_guid() as UUID,
+           TO_CHAR(BT_GET_WORKDATE, 'YYYYMMDD') as RCV_DATE,
+           TO_CHAR(T.package_date, 'YYYYMMDD') as pack_date, 
+           TO_CHAR(T.START_DATE, 'YYYYMMDD') as COMP_DATE, 
+           '3600' as LEG_PER_COD,
+           substr(tli.loan_org, 1, 2) as PRV_COD, 
+           tli.loan_org as OPN_DEP, 
+           tls.summary_num as DUE_NUM,
+           t.secu_num as SECU_NUM,
+           t.SECU_NAME as SECU_NAME,
+           t.PACK_BAL as PACK_BAL,
+           t.IN_RCV_ACC as IN_RCV_ACC,
+           IN_RCV_ACC_DEP as IN_RCV_ACC_DEP,
+           t.IN_RCV_ACC_NAME as IN_RCV_ACC_NAME,
+           t.IN_PAY_ACC as IN_PAY_ACC,
+           t.IN_PAY_ACC_DEP as IN_PAY_ACC_DEP,
+           t.IN_PAY_ACC_NAME as IN_PAY_ACC_NAME,
+           t.BAL_IN_ACC as BAL_IN_ACC,
+           t.BAL_IN_ACC_DEP as BAL_IN_ACC_DEP,
+           t.BAL_IN_ACC_NAME as BAL_IN_ACC_NAME,
+           t.ITR_IN_ACC as ITR_IN_ACC,
+           t.ITR_IN_ACC_DEP as ITR_IN_ACC_DEP,
+           t.ITR_IN_ACC_NAME as ITR_IN_ACC_NAME,
+           t.PRN_IN_ACC as PRN_IN_ACC,
+           t.PRN_IN_ACC_DEP as PRN_IN_ACC_DEP,
+           t.PRN_IN_ACC_NAME as PRN_IN_ACC_NAME,
+           '1' as AST_SECU_TYPE,
+           '0' as ITR_OWN_TYPE,
+           '0' as STS, 
+           BT_GET_WORKDATE as CREATE_TIME,
+           BT_GET_WORKDATE as UPDATE_TIME,
+           0 as TRUNC_NO,
+           tli.loan_org as TAL_DEP 
+      from tb_con_project          t,
+           tb_loan_summary         tls,
+           tb_csm_party            tcp,
+           tb_con_project_relation tcpr,
+           tb_loan_info            tli
+     where t.project_id = tcpr.project_id
+           and tcpr.summary_id = tls.summary_id
+           and tls.party_id = tcp.party_id
+           and tls.loan_id = tli.loan_id
+           and t.project_id = #projectId#
+	</select>
+	 
+	
+	 <delete id="delSummaryForJL" parameterClass="commonj.sdo.DataObject">
+	
+ 	delete from tb_sup_ast_secu_cls_pack_tmp where due_num =#SUMMARY_NUM#
+	
+	</delete>
+		
+		
+	<select id="countContract" parameterClass="java.util.HashMap">
+	
+	select * from tb_con_project_relation t where t.project_id=#projectId#
+	
+	</select>
+	
+	<insert id="insertSummaryForJL" parameterClass="commonj.sdo.DataObject">
+		 insert into tb_sup_ast_secu_cls_pack_tmp
+(UUID,RCV_DATE, pack_date, COMP_DATE, LEG_PER_COD, PRV_COD, OPN_DEP, DUE_NUM, 
+SECU_NUM, SECU_NAME, PACK_BAL, IN_RCV_ACC, IN_RCV_ACC_DEP, IN_RCV_ACC_NAME, 
+IN_PAY_ACC, IN_PAY_ACC_DEP, IN_PAY_ACC_NAME, BAL_IN_ACC, BAL_IN_ACC_DEP, BAL_IN_ACC_NAME, 
+ITR_IN_ACC, ITR_IN_ACC_DEP, ITR_IN_ACC_NAME, PRN_IN_ACC, PRN_IN_ACC_DEP, PRN_IN_ACC_NAME, 
+ast_secu_type, itr_own_type, sts, CREATE_TIME, UPDATE_TIME, TRUNC_NO, TAL_DEP)
+values
+(#UUID#,#RCV_DATE#, #PACK_DATE#, #COMP_DATE#, #LEG_PER_COD#, #PRV_COD#, #OPN_DEP#, #DUE_NUM#, #SECU_NUM#, 
+#SECU_NAME#, #PACK_BAL#, #IN_RCV_ACC#, #IN_RCV_ACC_DEP#, #IN_RCV_ACC_NAME#, #IN_PAY_ACC#,
+#IN_PAY_ACC_DEP#, #IN_PAY_ACC_NAME#, #BAL_IN_ACC#, #BAL_IN_ACC_DEP#, #BAL_IN_ACC_NAME#, #ITR_IN_ACC#,
+ #ITR_IN_ACC_DEP#, #ITR_IN_ACC_NAME#, #PRN_IN_ACC#, #PRN_IN_ACC_DEP#, #PRN_IN_ACC_NAME#, #AST_SECU_TYPE#,
+#ITR_OWN_TYPE#, #STS#, #CREATE_TIME#, #UPDATE_TIME#, #TRUNC_NO#, #TAL_DEP#
+)	
+
+</insert>
+
+
+		
+		
+		
+	 <update id="updateProjectBal" parameterClass="java.util.HashMap">
+	
+update tb_con_project set  pack_bal=                
+nvl((
+select sum(tls.jjye)from
+tb_con_project tcp,
+tb_con_project_relation tcpr,
+tb_loan_summary tls
+where tcp.project_id=tcpr.project_id  and tls.summary_id=tcpr.summary_id
+and tcp.project_id='$projectId$'),0)
+where project_id='$projectId$'
+	
+		</update>
+		
+		
+		 <select id="checkPayDate" parameterClass="java.util.HashMap">
+    	select * from  tb_loan_info tli ,tb_con_project_relation tcpr,tb_loan_summary tls
+where tcpr.summary_id=tls.summary_id and tls.loan_id=tli.loan_id 
+and tcpr.project_id=#projectId# 
+and ( 
+not exists( select  1 from tb_con_project_relation where project_id=#projectId#) 
+or
+ tli.spec_payment_date in
+(select tli.spec_payment_date from tb_loan_summary tls ,tb_loan_info tli
+where tls.loan_id=tli.loan_id and tls.summary_id=#summaryId#)
+)
+		 
+	</select>
+	
+
+</sqlMap>
+

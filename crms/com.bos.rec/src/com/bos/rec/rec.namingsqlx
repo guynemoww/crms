@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+	<resultMap id="recBase" class="java.util.HashMap">
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="recId" column="REC_ID"/>
+			<result property="recordNum" column="RECORD_NUM"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="bookletNum" column="BOOKLET_NUM"/>
+			<result property="recordType" column="RECORD_TYPE"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="businessType" column="BUSINESS_TYPE"/>
+			<result property="amt" column="AMT"/>
+			<result property="inOutDate" column="IN_OUT_DATE"/>
+			<result property="recordStatus" column="RECORD_STATUS"/>
+			<result property="mainCustManager" column="MAIN_CUST_MANAGER"/>
+			<result property="mainBank" column="MAIN_BANK"/>
+			<result property="transferPerson" column="TRANSFER_PERSON"/>
+			<result property="receivePerson" column="RECEIVE_PERSON"/>
+			<result property="lendPerson" column="LEND_PERSON"/>
+			<result property="lendDeadline" column="LEND_DEADLINE"/>
+			<result property="comeBackDate" column="COME_BACK_DATE"/>
+			<result property="remark" column="REMARK"/>
+			<result property="orgname" column="ORGNAME"/>
+	</resultMap>
+    <select id="recBaseList" parameterClass="java.util.HashMap" resultMap="recBase">
+	      SELECT T2.PARTY_NAME, T1.*, T3.ORGNAME
+	        FROM TB_REC_BASE_INFO T1
+	        LEFT JOIN V_CSM_PARTY T2
+	          ON T1.PARTY_ID = T2.PARTY_ID
+	        LEFT JOIN OM_ORGANIZATION T3
+	          ON T1.MAIN_BANK = T3.ORGCODE
+	       WHERE T1.RECORD_STATUS IN ('1', '3')
+
+		<isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		<isNotNull property="certType">  AND T2.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND T2.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		<isNotNull property="createDate">
+			 AND TRUNC(T1.CREATE_DATE) = TRUNC(TO_DATE(#createDate#,'yyyy-mm-dd hh24:mi:ss'))
+		</isNotNull>
+		<isNotNull property="recordStatus">  AND T1.RECORD_STATUS = #recordStatus# </isNotNull>
+		<isNotNull property="mainCustManager">  AND T1.MAIN_CUST_MANAGER = #mainCustManager# </isNotNull>
+		<isNotNull property="mainBank">
+		 AND T1.MAIN_BANK IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$mainBank$%')
+		</isNotNull>
+    </select>
+    <select id="recBaseListInstore" parameterClass="java.util.HashMap" resultMap="recBase">
+	      SELECT T2.PARTY_NAME, T1.*, T3.ORGNAME
+	        FROM TB_REC_BASE_INFO T1
+	        LEFT JOIN V_CSM_PARTY T2
+	          ON T1.PARTY_ID = T2.PARTY_ID
+	        LEFT JOIN OM_ORGANIZATION T3
+	          ON T1.MAIN_BANK = T3.ORGCODE
+	       WHERE T1.RECORD_STATUS ='2'
+
+		<isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		<isNotNull property="certType">  AND T2.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND T2.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		<isNotNull property="businessType">  AND T1.BUSINESS_TYPE = #businessType# </isNotNull>
+		<isNotNull property="createDate">
+			 AND TRUNC(T1.CREATE_DATE) = TRUNC(TO_DATE(#createDate#,'yyyy-mm-dd hh24:mi:ss'))
+		</isNotNull>
+		<isNotNull property="recordStatus">  AND T1.RECORD_STATUS = #recordStatus# </isNotNull>
+		<isNotNull property="mainCustManager">  AND T1.MAIN_CUST_MANAGER = #mainCustManager# </isNotNull>
+		<isNotNull property="mainBank">
+		 AND T1.MAIN_BANK IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$mainBank$%')
+		</isNotNull>
+		<isNotNull property="recordNum">  AND T1.RECORD_NUM like '%$recordNum$%' </isNotNull>
+    </select>
+    
+    <select id="recBaseListAll" parameterClass="java.util.HashMap" resultMap="recBase">
+	SELECT T2.PARTY_NAME, T1.*, T3.ORGNAME
+		        FROM TB_REC_BASE_INFO T1
+		        LEFT JOIN TB_CSM_PARTY T2
+		          ON T1.PARTY_ID = T2.PARTY_ID
+		        LEFT JOIN OM_ORGANIZATION T3
+		          ON T1.MAIN_BANK = T3.ORGCODE
+		        LEFT JOIN V_CSM_PARTY V
+		          ON V.PARTY_ID = T2.PARTY_ID
+	          LEFT JOIN TB_CSM_MANAGEMENT_TEAM MT
+	            ON MT.PARTY_ID = T1.PARTY_ID
+	             AND MT.USER_PLACING_CD = '01'
+		       WHERE 1=1
+		<isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+		<isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		<isNotNull property="businessType">  AND T1.BUSINESS_TYPE = #businessType# </isNotNull>
+		<isNotNull property="createDate">
+			 AND TRUNC(T1.CREATE_DATE) = TRUNC(TO_DATE(#createDate#,'yyyy-mm-dd hh24:mi:ss'))
+		</isNotNull>
+		<isNotNull property="recordStatus">  AND T1.RECORD_STATUS = #recordStatus# </isNotNull>
+		<isNotNull property="mainCustManager">  AND T1.MAIN_CUST_MANAGER = #mainCustManager# </isNotNull>
+		<isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		<isNotNull property="mainBank">
+		 AND T1.MAIN_BANK IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$mainBank$%')
+		</isNotNull>
+		<isNotNull property="recordNum">  AND T1.RECORD_NUM like '%$recordNum$%' </isNotNull>
+    </select>
+    
+    <resultMap id="recLog" class="java.util.HashMap">
+			<result property="itemType" column="ITEM_TYPE"/>
+			<result property="managerNum" column="MANAGER_NUM"/>
+			<result property="transferPerson" column="TRANSFER_PERSON"/>
+			<result property="lendPerson" column="LEND_PERSON"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="operId" column="OPER_ID"/>
+			<result property="recId" column="REC_ID"/>
+	</resultMap>
+    <select id="recOperLog" parameterClass="java.util.HashMap" resultMap="recLog">
+		SELECT T1.ITEM_TYPE,
+		       T1.MANAGER_NUM,
+		       T1.TRANSFER_PERSON,
+		       T1.LEND_PERSON,
+		       T1.CREATE_DATE,
+		       T1.OPER_ID,
+		       T1.REC_ID
+		  FROM TB_REC_OPER_LOG T1
+		 WHERE T1.REC_ID = #recId#
+		 ORDER BY T1.CREATE_DATE DESC
+    </select>
+    <resultMap id="approve" class="java.util.HashMap">
+			<result property="approveId" column="APPROVE_ID"/>
+	</resultMap>
+    <select id="tb_biz_approve" parameterClass="java.util.HashMap" resultMap="approve">
+		SELECT T.APPROVE_ID FROM TB_BIZ_APPROVE T WHERE T.PARTY_ID = #partyId#
+    </select>
+    
+</sqlMap>

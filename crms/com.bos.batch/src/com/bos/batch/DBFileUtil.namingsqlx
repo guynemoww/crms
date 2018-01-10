@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:CHJ -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="querySmsInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT
+			MOBILE_NUM C1,
+			MSG_INFO C2,
+			ORG_NUM C3
+		FROM
+			TB_PUB_MESSAGE
+	</select>
+    
+    <select id="queryRiskSortInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select a.summary_num C1,
+		       a.fljg C2,
+		       b.val_percent C3
+		  from tb_loan_summary   a,
+		       tb_sys_risk_param b
+		 where a.fljg = b.risk_level
+
+	</select>
+	
+    <insert id="insertFtpLog" parameterClass="java.util.HashMap">
+		insert into tb_pub_ftp_log
+		  (create_date,
+		   create_time,
+		   operate_type,
+		   local_path,
+		   remote_path,
+		   remote_host,
+		   file_name,
+		   file_type,
+		   transfer_type,
+		   operate_result,
+		   user_num,
+		   org_num,
+		   note)
+		values
+		  (#createDate#,
+		   #createTime#,
+		   #operateType#,
+		   #localPath#,
+		   #remotePath#,
+		   #remoteHost#,
+		   #fileName#,
+		   #fileType#,
+		   #transferType#,
+		   #operateResult#,
+		   #userNum#,
+		   #orgNum#,
+		   #note#)
+	</insert>
+	<select id="queryFtpLog" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select * from tb_pub_ftp_log where file_name = #fileName#
+	</select>
+</sqlMap>

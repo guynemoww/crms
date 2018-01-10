@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:kf_xdxt11 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+    <select id="queryLoanInfo" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+	    select 
+	       b.due_num,
+	       b.sts, <!--贷款状态-->
+	       b.ceas_flg, <!--停息标志-->
+	       b.prm_cls, <!--主类别-->
+	       b.ast_cls, <!--子类别-->
+	       b.deva_sts, <!--减值状态-->
+	       b.nor_itr_rate, <!--利率-->
+	       nvl(c.nor_bal_101, 0) + nvl(c.dvl_bal_102, 0) - nvl(c.res_nor, 0) as overdueCapital, <!--逾期本金-->
+	       nvl(c.out_nor_bal_209, 0) as out_nor_bal_09, <!--表外正常利息-->
+	       nvl(c.out_dft_bal_210, 0) as out_dft_bal_10, <!--表外拖欠利息-->
+	       nvl(c.in_dft_bal_207, 0) as in_dft_bal_07, <!--表内拖欠利息-->
+	       nvl(c.out_pns_bal_211, 0) as out_pns_bal_11, <!--表外罚息-->
+	       nvl(c.in_pns_bal_208, 0) as in_pns_bal_08, <!--表内罚息-->
+	       nvl(c.in_nor_bal_206, 0) as in_nor_bal_06, <!--表内正常利息-->
+	       nvl(c.nor_bal_101, 0) as nor_bal_01, <!--正常本金-->
+	       nvl(c.dvl_bal_102, 0) as dvl_bal_02, <!--减值本金本金-->
+	       nvl(c.nor_bal_101, 0) + nvl(c.dvl_bal_102, 0) as v_jjye,
+	       nvl(d.dft_prn_otd_itr, 0) as dft_prn_otd_itr,
+	       nvl(d.dft_itr_out_otd_itr, 0) as dft_itr_out_otd_itr,
+	       nvl(d.nor_itr_out_otd_itr, 0) as nor_itr_out_otd_itr,
+	       nvl(d.dft_itr_in_otd_itr, 0) as dft_itr_in_otd_itr,
+	       nvl(d.nor_itr_in_otd_itr, 0) as nor_itr_in_otd_itr
+	  from tb_sup_loan_info    b,
+	       tb_sup_account_info c
+	  left join (select due_num,
+	                    sum(dft_prn_otd_itr) dft_prn_otd_itr,
+	                    sum(dft_itr_out_otd_itr) dft_itr_out_otd_itr,
+	                    sum(nor_itr_out_otd_itr) nor_itr_out_otd_itr,
+	                    sum(dft_itr_in_otd_itr) dft_itr_in_otd_itr,
+	                    sum(nor_itr_in_otd_itr) nor_itr_in_otd_itr
+	               from tb_sup_debt_info_n
+	              group by due_num) d
+	    on d.due_num = c.due_num
+	 where c.due_num = b.due_num
+	       and b.due_num = #dueNum#
+    </select>
+    
+    <select id="queryDebtInfo" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+    	 select due_num,
+                beg_date, <!--开始日期-->
+                end_date, <!--应还款日-->
+                pay_date, <!--最后一次还款日-->
+                curr_peri, <!--当前期次-->
+                rcv_prn, <!--应收本金金额-->
+                pad_up_prn, <!--实收本金金额-->
+                rcv_nor_itr_in + rcv_nor_itr_out as rcv_nor_itr, <!--应收正常利息-->
+                pad_up_nor_itr_in + pad_up_nor_itr_out as pad_up_nor_itr, <!--实收正常利息-->
+                rcv_dft_itr_in + rcv_dft_itr_out as rcv_dft_itr, <!--应收拖欠利息-->
+                pad_up_dft_itr_in + pad_up_dft_itr_out as pad_up_dft_itr, <!--实收拖欠利息-->
+                rcv_pns_itr_in + rcv_pns_itr_out as rcv_pns_itr, <!--应收罚息-->
+                pad_up_pns_itr_in + pad_up_pns_itr_out as pad_up_pns_itr, <!--实收罚息-->
+                dft_prn_otd_itr + dft_itr_in_otd_itr + dft_itr_out_otd_itr as dft_otd_itr <!--累计未结计罚息-->
+           from tb_sup_debt_info_n
+          where due_num = #dueNum#
+                and curr_peri != -1
+                and (rcv_nor_itr_in - pad_up_nor_itr_in + rcv_nor_itr_out -	pad_up_nor_itr_out) = 0
+                and nvl(gra_prn_flag, '0') = '0' <!--本金节假日非宽限期-->
+                and nvl(gra_itr_flag, '0') = '0' <!--利息节假日非宽限期-->
+          		and ((end_date != (select tran_date from tc_sup_sys_date  where leg_per_cod='9999') and beg_date != end_date)
+          		or beg_date = end_date )
+
+    </select>
+    <select id="getOverdueDate" parameterClass="commonj.sdo.DataObject" resultClass="java.util.Date">
+	    select min(overdue_date) overdueDate
+	      from tb_loan_illegal_record n
+	     where n.summary_num = #summaryNum#
+	           and n.status = '03'
+    </select>
+    <select id="queryAllSummary" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject">
+	     select r.summary_num from tb_loan_summary r where r.summary_status_cd in ('02', '03', '04')
+    </select>
+</sqlMap>

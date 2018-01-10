@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="scale" class="java.util.HashMap">
+			<result property="scale" column="scale"/>
+	</resultMap>
+    <select id="scaleByNumber" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT T.ENTERPRISE_SCALE AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd# AND #employeesNumber# BETWEEN T.PARA_ONE_MIN AND T.PARA_ONE_MAX
+    </select>
+    <select id="scaleBySaleroom" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT T.ENTERPRISE_SCALE AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd# AND #saleroom# BETWEEN T.PARA_TWO_MIN AND T.PARA_TWO_MAX
+    </select>
+    <select id="scaleByNumberAndSaleroom" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT MAX(T.ENTERPRISE_SCALE) AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd#
+		   AND ((#employeesNumber# BETWEEN T.PARA_ONE_MIN AND T.PARA_ONE_MAX) OR
+		       (#saleroom# BETWEEN T.PARA_TWO_MIN AND T.PARA_TWO_MAX))
+    </select>
+    <select id="scaleByNumberAndAssets" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT MAX(T.ENTERPRISE_SCALE) AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd#
+		   AND ((#employeesNumber# BETWEEN T.PARA_ONE_MIN AND T.PARA_ONE_MAX) OR
+		       (#assets# BETWEEN T.PARA_THREE_MIN AND T.PARA_THREE_MAX))
+    </select>
+    <select id="scaleBySaleroomAndAssets" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT MAX(T.ENTERPRISE_SCALE) AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd#
+		   AND ((#saleroom# BETWEEN T.PARA_TWO_MIN AND T.PARA_TWO_MAX) OR
+		       (#assets# BETWEEN T.PARA_THREE_MIN AND T.PARA_THREE_MAX))
+    </select>
+    
+        <select id="scaleByAll" parameterClass="java.util.HashMap" resultMap="scale">
+		SELECT MAX(T.ENTERPRISE_SCALE) AS scale
+		  FROM TB_SYS_ENTERPRISE_PARA T
+		 WHERE T.INDUSTRIAL_CODE = #typeCd#
+		   AND (1=2
+		   	<isNotEmpty  prepend="" property="employeesNumber">OR (#employeesNumber# BETWEEN T.PARA_ONE_MIN AND T.PARA_ONE_MAX)</isNotEmpty>
+		    <isNotEmpty  prepend="" property="saleroom">OR (#saleroom# BETWEEN T.PARA_TWO_MIN AND T.PARA_TWO_MAX) </isNotEmpty>
+		    <isNotEmpty  prepend="" property="assets">OR (#assets# BETWEEN T.PARA_THREE_MIN AND T.PARA_THREE_MAX) </isNotEmpty>
+		   )
+    </select>
+</sqlMap>

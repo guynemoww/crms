@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zengfang -->
+<sqlMap>
+<!-- 贷后检查频率 -->
+	<resultMap class="commonj.sdo.DataObject" id="rateMap">
+        <result column="DEFAULT_RATE" property="defaultRate"/>
+        <result column="APPROVE_RATE" property="approveRate"/>
+        <result column="SET_RATE" property="setRate"/>
+        <result column="PARTY_TYPE_CD" property="customerTypeCd"/>
+        <result column="ORG_NUM" property="orgNum"/>
+        <result column="PARTY_NAME" property="partyName"/>
+        <result column="PARTY_NUM" property="partyNum"/>
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="IR_ID" property="irId"/>
+        <result column="CLASSIFICATION_RESULT_CD" property="classificationResultCd"/>
+        <result column="credit_rating_cd" property="creditRatingCd"/>
+        <result column="warning_level_cd" property="warningLevelCd"/>
+        <result column="list_status" property="listStatus"/>
+        <result column="is_different_place" property="isDifferentPlace"/>
+        <result column="party_id" property="partyId"/>
+    </resultMap>
+    <select id="queryInspectRate" parameterClass="java.util.HashMap" resultMap="rateMap">
+		SELECT distinct tai.DEFAULT_RATE,
+		                tai.APPROVE_RATE,
+		                tai.SET_RATE,
+		                tai.CUSTOMER_TYPE_CD,
+		                tai.ORG_NUM,
+		                tai.PARTY_NAME,
+		                tai.PARTY_NUM,
+		                tai.PARTY_ID,
+		                tai.IR_ID,
+		                cla.CLASSIFICATION_RESULT_CD,
+		                rr.credit_rating_cd,
+		                ew.warning_level_cd,
+		                li.list_status
+		  FROM TB_AFT_INSPECT_RATE tai
+		  LEFT JOIN V_OM_ORGANIZATION voo ON tai.ORG_NUM = voo.ORGCODE
+		  LEFT JOIN OM_ORGANIZATION om ON tai.ORG_NUM = om.ORGCODE
+		  LEFT JOIN (select PARTY_ID, max(cls_result) CLASSIFICATION_RESULT_CD
+		               from tb_cla_debt_detailInfo
+		              where 1 = 1
+		              group by party_id) cla ON tai.PARTY_ID = cla.PARTY_ID
+		  LEFT JOIN TB_CSM_CORPORATION corp ON tai.PARTY_ID = corp.PARTY_ID
+		  LEFT JOIN (select party_id, max(credit_rating_cd) credit_rating_cd
+		               from tb_irm_internal_rating_result
+		              group by party_id) rr on tai.party_id = rr.party_id
+		  LEFT JOIN tb_rew_csm_early_warning ew on tai.party_id = ew.party_id
+		  LEFT JOIN tb_lst_info li on tai.party_id = li.party_id
+		 where 1 = 1
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		<isNotNull property="classificationResultCd">
+   			and	    cla.CLASSIFICATION_RESULT_CD = #classificationResultCd#
+   		</isNotNull>
+   		<isNotNull property="orgName">
+   			and		om.ORGNAME like '%$orgName$%'
+   		</isNotNull>
+   		<isNotNull property="partyName">
+	    	and tai.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and tai.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+		<isNotNull property="ecifPartyNum">
+	    	and p.ECIF_PARTY_NUM like '%$ecifPartyNum$%'
+	   </isNotNull>
+	   <isNotNull property="customerTypeCd">
+	    	and tai.CUSTOMER_TYPE_CD= #customerTypeCd#
+	   </isNotNull>
+	   <isNotNull property="impt">
+	        AND tai.PARTY_ID IN (SELECT PARTY_ID FROM TB_AFT_ATTENTION_LIST)
+	   </isNotNull>
+	   <isNotNull property="setRate">
+	        AND tai.SET_RATE =#setRate#
+	   </isNotNull>
+	   <isNotNull property="creditRatingCd">
+	        AND rr.credit_rating_cd =#warningLevelCd#
+	   </isNotNull>
+	   <isNotNull property="warningLevelCd">
+	        AND ew.warning_level_cd =#warningLevelCd#
+	   </isNotNull>
+	   <isNotNull property="listStatus">
+	        AND li.list_status =#listStatus#
+	   </isNotNull>
+    </select>
+    
+    <select id="queryInspectRate2" parameterClass="java.util.HashMap" resultMap="rateMap">
+		SELECT tai.DEFAULT_RATE,
+		       tai.APPROVE_RATE,
+		       tai.SET_RATE,
+		       pp.ORG_NUM,
+		       pp.PARTY_NUM,
+		       pp.PARTY_ID,
+		       tai.IR_ID,
+		       tai.is_different_place,
+		       cla.CLASSIFICATION_RESULT_CD,
+		       rr.credit_rating_cd,
+		       ew.warning_level_cd,
+		       PP.PARTY_TYPE_CD,
+		       PP.PARTY_NAME,
+		       li.list_status,
+		       pp.party_id
+		  FROM V_CSM_PARTY PP
+		  LEFT JOIN TB_AFT_INSPECT_RATE tai ON TAI.PARTY_ID = PP.PARTY_ID
+		  LEFT JOIN tb_rew_csm_early_warning ew on tai.party_id = ew.party_id
+		  LEFT JOIN tb_lst_info li ON tai.party_id = li.party_id
+		  LEFT JOIN (select PARTY_ID, max(cls_result) CLASSIFICATION_RESULT_CD
+		               from tb_con_contract_info group by party_id) cla ON tai.PARTY_ID = cla.PARTY_ID
+		  LEFT JOIN (select party_id, max(credit_rating_cd) credit_rating_cd
+		               from tb_irm_internal_rating_result
+		              where rating_state = '03'
+		              group by party_id) rr on tai.party_id = rr.party_id
+		 where 1 = 1
+		<isNotNull property="orglevel1"><!--总行用户-->
+			and pp.org_num in (select o.orgcode from om_organization o)
+		</isNotNull>
+		<isNotNull property="orglevel2"><!--分行用户-->
+			and pp.org_num in (select o.orgcode from om_organization o where o.parentorgid = #currentorgid#)
+		</isNotNull>
+		<isNotNull property="orglevel3"><!--支行用户-->
+			and pp.org_num = #currentorgcode#
+		</isNotNull>
+		<isNotNull property="orgid">
+	    	and pp.org_num in (select orgcode from om_organization where orgseq like '%$orgid$%')
+	    </isNotNull>
+   		<isNotNull property="classificationResultCd">
+   			and cla.CLASSIFICATION_RESULT_CD = #classificationResultCd#
+   		</isNotNull>
+   		<isNotNull property="partyName">
+	    	and pp.party_name like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="setRate">
+	        and tai.set_rate = #setRate#
+	   </isNotNull>
+	   <isNotNull property="creditRatingCd">
+	        and rr.credit_rating_cd = #creditRatingCd#
+	   </isNotNull>
+	   <isNotNull property="warningLevelCd">
+	        and ew.warning_level_cd = #warningLevelCd#
+	   </isNotNull>
+	   <isNotNull property="listStatus">
+	        and li.list_status = #listStatus#
+	   </isNotNull>
+	   <isNotNull property="isDifferentPlace">
+	        and tai.is_different_place = #isDifferentPlace#
+	   </isNotNull>
+    </select>
+    
+    <select id="queryInspectRate3" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT count(*) as num
+		  FROM V_CSM_PARTY PP
+		  LEFT JOIN TB_AFT_INSPECT_RATE tai ON TAI.PARTY_ID = PP.PARTY_ID
+		  LEFT JOIN tb_rew_csm_early_warning ew on tai.party_id = ew.party_id
+		  LEFT JOIN tb_lst_info li ON tai.party_id = li.party_id
+		  LEFT JOIN (select PARTY_ID, max(cls_result) CLASSIFICATION_RESULT_CD
+		               from tb_con_contract_info group by party_id) cla ON tai.PARTY_ID = cla.PARTY_ID
+		  LEFT JOIN (select party_id, max(credit_rating_cd) credit_rating_cd
+		               from tb_irm_internal_rating_result
+		              where rating_state = '03'
+		              group by party_id) rr on tai.party_id = rr.party_id
+		 where 1 = 1
+		<isNotNull property="orglevel1"><!--总行用户-->
+			and pp.org_num in (select o.orgcode from om_organization o)
+		</isNotNull>
+		<isNotNull property="orglevel2"><!--分行用户-->
+			and pp.org_num in (select o.orgcode from om_organization o where o.parentorgid = #currentorgid#)
+		</isNotNull>
+		<isNotNull property="orglevel3"><!--支行用户-->
+			and pp.org_num = #currentorgcode#
+		</isNotNull>
+		<isNotNull property="orgid">
+	    	and pp.org_num in (select orgcode from om_organization where orgseq like '%$orgid$%')
+	    </isNotNull>
+   		<isNotNull property="classificationResultCd">
+   			and cla.CLASSIFICATION_RESULT_CD = #classificationResultCd#
+   		</isNotNull>
+   		<isNotNull property="partyName">
+	    	and pp.party_name like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="setRate">
+	        and tai.set_rate = #setRate#
+	   </isNotNull>
+	   <isNotNull property="creditRatingCd">
+	        and rr.credit_rating_cd = #creditRatingCd#
+	   </isNotNull>
+	   <isNotNull property="warningLevelCd">
+	        and ew.warning_level_cd = #warningLevelCd#
+	   </isNotNull>
+	   <isNotNull property="listStatus">
+	        and li.list_status = #listStatus#
+	   </isNotNull>
+	   <isNotNull property="isDifferentPlace">
+	        and tai.is_different_place = #isDifferentPlace#
+	   </isNotNull>
+    </select>
+    
+   	
+	<select id="findOrgdegree" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select o.orgid as ORGID, o.orgcode as ORGCODE, o.orgname as ORGNAME, o.orglevel as ORGLEVEL, o.orgdegree as ORGDEGREE
+			  from om_organization o
+			 where o.orgcode = #orgcode#
+	</select>
+</sqlMap>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+        <!-- 客户下所有已生效的批复额度之和  -->
+    <select id="getPartyAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select sum(nvl(ta.CREDIT_AMOUNT,0)) as amt from tb_biz_approve t,tb_biz_amount_approve ta  
+			where t.APPROVE_ID=ta.APPROVE_ID and t.BECOME_EFFECTIVE_MARK ='03' and t.APPROVE_CONCLUSION !='2'
+			and nvl(t.PRODUCT_TYPE,0) != '01013001' and nvl(t.PRODUCT_TYPE,0) != '01013010'
+	   		and t.PARTY_ID = #partyId#
+    </select>
+    <!-- 集团客户下所有已生效的批复额度之和  -->
+    <select id="getPartyAmtJt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select sum(nvl(ta.CREDIT_AMOUNT,0)) as amt from tb_biz_approve t,tb_biz_amount_approve ta  
+			where t.APPROVE_ID=ta.APPROVE_ID and t.BECOME_EFFECTIVE_MARK ='03' and t.APPROVE_CONCLUSION !='2'
+			and nvl(t.PRODUCT_TYPE,0) != '01013001' and nvl(t.PRODUCT_TYPE,0) != '01013010'
+	   		and t.PARTY_ID in (
+                select CORPORATION_PARTY_ID from tb_csm_group_member where GROUP_PARTY_ID = #partyId#
+        )
+    </select>
+</sqlMap>

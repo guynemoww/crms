@@ -1,0 +1,935 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="autoJobMonitor" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.0">
+  <nodes xsi:type="model:Note" id="node1" name="注释1" displayName="注释" nodeType="note" type="note" content="任务运行 状态&#xD;&#xA;0&#x9;运行&#xD;&#xA;1&#x9;成功&#xD;&#xA;2&#x9;失败&#xD;&#xA;3&#x9;等待&#xD;&#xA;4&#x9;非运行日&#xD;&#xA;5     前提依赖任务失败，未执行&#xD;&#xA;6  无任务执行&#xD;&#xA;&#xD;&#xA;" title="李磊BOS&#x9;14-6-26 下午4:46">
+    <location x="9" y="476"/>
+    <size height="195" width="197"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" collapsed="false" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link0" name="link0" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>subprocess1</targetNode>
+    </sourceConnections>
+    <location x="135" y="-20"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" nodeType="label">
+    <location x="137" y="16"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" collapsed="false" type="end">
+    <targetConnections>link10</targetConnections>
+    <targetConnections>link42</targetConnections>
+    <location x="272" y="1472"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="String" name="batchRet" type="query" valueType="Primitive">batchRet</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" nodeType="label">
+    <location x="274" y="1508"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="model:GroupNode" id="group0" name="group" grouped="true" gstart="loopstart0" gend="loopend0">
+    <location x="448" y="705"/>
+    <size height="601" width="285"/>
+    <chidren>subprocess5</chidren>
+    <chidren>assign3</chidren>
+    <chidren>subprocess4</chidren>
+    <chidren>assign1</chidren>
+    <chidren>assign4</chidren>
+    <chidren>loopstart0</chidren>
+    <chidren>loopend0</chidren>
+    <chidren>subprocess3</chidren>
+    <chidren>subprocess9</chidren>
+    <chidren>subprocess10</chidren>
+    <chidren>subprocess11</chidren>
+    <chidren>invokePojo5</chidren>
+    <chidren>invokePojo9</chidren>
+    <chidren>invokePojo10</chidren>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopstart0label" name="label" nodeType="label">
+    <location x="554" y="737"/>
+    <figSize height="17" width="73"/>
+    <node>loopstart0</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopStart" description="" id="loopstart0" name="循环执行批量" displayName="循环" grouped="true" type="loopstart" matchedName="loopend0" loopType="iterate">
+    <sourceConnections xsi:type="process:tLink" id="link19" name="link19" displayName="link7" isDefault="true" type="transition">
+      <sourceNode>loopstart0</sourceNode>
+      <targetNode>subprocess9</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link7</targetConnections>
+    <location x="578" y="705"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopstart0label</nodeLabel>
+    <process:condition/>
+    <process:iterate iterable="batchlist" iterableElement="acbatch"/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopend0label" name="label" nodeType="label">
+    <location x="566" y="1314"/>
+    <figSize height="17" width="49"/>
+    <node>loopend0</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopEnd" description="" id="loopend0" name="循环结束" displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart0">
+    <sourceConnections xsi:type="process:tLink" description="" id="link5" name="link5" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>loopend0</sourceNode>
+      <targetNode>subprocess2</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link8" name="link8" displayName="连接线" type="transition">
+      <sourceNode>loopend0</sourceNode>
+      <targetNode>switch2</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="OBJEQ">
+          <process:leftOperand type="query">existError</process:leftOperand>
+          <process:rightOperand type="literal">false</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link32</targetConnections>
+    <targetConnections>link9</targetConnections>
+    <location x="578" y="1282"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopend0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess5" name="更新任务状态" displayName="batchEndLog" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link30" name="link30" displayName="link1" isDefault="true" type="transition">
+      <sourceNode>subprocess5</sourceNode>
+      <targetNode>assign4</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link31" name="link31" displayName="link18" type="transition">
+      <sourceNode>subprocess5</sourceNode>
+      <targetNode>assign1</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>jobstatus.equals(&quot;2&quot;)&amp;&amp;context.getString(&quot;acbatch/batchErrkeep&quot;).equals(&quot;1&quot;)</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link17</targetConnections>
+    <location x="578" y="1155"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess5label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.batchmonitor.batchEndLog</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="jobkey" type="query" value="String" valueType="Primitive" pattern="reference">jobkey</process:inputVariable>
+        <process:inputVariable id="1" name="jobstatus" type="query" value="String" valueType="Primitive" pattern="reference">jobstatus</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess5label" name="label" nodeType="label">
+    <location x="555" y="1190"/>
+    <figSize height="17" width="73"/>
+    <node>subprocess5</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="批量执行异常抛出赋值" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link28" name="link28" displayName="link4" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link20</targetConnections>
+    <location x="479" y="981"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">2</process:from>
+      <process:to type="query">jobstatus</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="433" y="1017"/>
+    <figSize height="17" width="121"/>
+    <node>assign3</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess4" name="执行批量" displayName="acbatch/batchBizname" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" description="" id="link20" name="link20" displayName="link6" lineType="note" type="exception">
+      <sourceNode>subprocess4</sourceNode>
+      <targetNode>assign3</targetNode>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" id="link15" name="link15" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess4</sourceNode>
+      <targetNode>invokePojo10</targetNode>
+    </sourceConnections>
+    <targetConnections>link23</targetConnections>
+    <location x="579" y="981"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess4label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="query">acbatch/batchBizname</process:partner>
+      <process:inputVariables/>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="out1" type="query" value="String" valueType="Primitive">jobstatus</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess4label" name="label" nodeType="label">
+    <location x="568" y="1016"/>
+    <figSize height="17" width="49"/>
+    <node>subprocess4</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="赋值返回状态“2”" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link9" name="link9" displayName="连接线" lineType="inheritance" isDefault="true" type="break">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>loopend0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link31</targetConnections>
+    <location x="674" y="1155"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">&quot;2.&quot;+ __context.getString(&quot;acbatch/batchName&quot;)</process:from>
+      <process:to type="query">batchRet</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">existError</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="636" y="1191"/>
+    <figSize height="17" width="104"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign4" name="赋值返回状态“1”" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link32" name="link32" displayName="link24" isDefault="true" type="transition">
+      <sourceNode>assign4</sourceNode>
+      <targetNode>loopend0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link30</targetConnections>
+    <location x="477" y="1155"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign4label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">batchRet</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign4label" name="label" nodeType="label">
+    <location x="439" y="1191"/>
+    <figSize height="17" width="104"/>
+    <node>assign4</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="赋值查询条件" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link45" name="link45" displayName="link22" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="574" y="-20"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.dataset.batch.TbBatchTaskConfig</process:from>
+      <process:to type="query">queryGroupType/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">queryGroupType/_expr[1]/batchStatus</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">queryGroupType/_expr[1]/_op</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">batchGroup</process:from>
+      <process:to type="query">queryGroupType/_expr[2]/batchGroup</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">queryGroupType/_expr[2]/_op</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">queryGroupType/_expr[3]/batchType</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">queryGroupType/_expr[3]/_op</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">asc</process:from>
+      <process:to type="query">queryGroupType/_orderby[1]/_sort</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">batchOrder</process:from>
+      <process:to type="query">queryGroupType/_orderby[1]/_property</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.dataset.batch.TbBatchTaskConsole</process:from>
+      <process:to type="query">querycurjobType/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">batchDate</process:from>
+      <process:to type="query">querycurjobType/_expr[1]/batchDate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">querycurjobType/_expr[1]/_op</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">batchGroup</process:from>
+      <process:to type="query">querycurjobType/_expr[2]/batchGroup</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">querycurjobType/_expr[2]/_op</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">querycurjobType/_expr[3]/status</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">=</process:from>
+      <process:to type="query">querycurjobType/_expr[2]/_op</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="552" y="16"/>
+    <figSize height="17" width="73"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="查询批量组内批量" displayName="查询批量组内批量" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link38" name="link38" displayName="link14" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>invokePojo3</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand/>
+          <process:rightOperand/>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link1" name="link1" displayName="连接线" isDefault="false" type="transition">
+      <bendPoint heightToEnd="-397" heightToStart="-2" widthToEnd="180" widthToStart="180"/>
+      <bendPoint heightToEnd="-1" heightToStart="394" widthToEnd="178" widthToStart="178"/>
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>switch1</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">fullFlag</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link45</targetConnections>
+    <location x="578" y="45"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.database.DatabaseUtil.queryEntitiesByCriteriaEntity</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dsName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+      <process:inputVariable id="1" name="criteriaEntity" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">queryGroupType</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="commonj.sdo.DataObject[]" valueType="Java">batchlist</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="541" y="81"/>
+    <figSize height="17" width="97"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="model:GroupNode" id="group1" name="group1" grouped="true" gstart="loopstart1" gend="loopend1">
+    <location x="499" y="215"/>
+    <size height="193" width="181"/>
+    <chidren>invokePojo1</chidren>
+    <chidren>loopstart1</chidren>
+    <chidren>loopend1</chidren>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopstart1label" name="label" nodeType="label">
+    <location x="523" y="247"/>
+    <figSize height="17" width="133"/>
+    <node>loopstart1</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopStart" description="" id="loopstart1" name="循环去除已正确执行批量" displayName="循环" grouped="true" type="loopstart" matchedName="loopend1" loopType="iterate">
+    <sourceConnections xsi:type="process:tLink" description="" id="link33" name="link33" displayName="link8" isDefault="true" type="transition">
+      <sourceNode>loopstart1</sourceNode>
+      <targetNode>invokePojo1</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">jobinf/jobStatus</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link49</targetConnections>
+    <location x="577" y="215"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopstart1label</nodeLabel>
+    <process:condition/>
+    <process:iterate iterable="existjoblist" iterableElement="jobinf"/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopend1label" name="label" nodeType="label">
+    <location x="565" y="416"/>
+    <figSize height="17" width="49"/>
+    <node>loopend1</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopEnd" description="" id="loopend1" name="循环结束" displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart1">
+    <sourceConnections xsi:type="process:tLink" id="link50" name="link50" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>loopend1</sourceNode>
+      <targetNode>switch1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link35</targetConnections>
+    <location x="577" y="384"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopend1label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo1" name="去除已正确执行的组内批量" displayName="" grouped="true" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link35" name="link35" displayName="link10" isDefault="true" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>loopend1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link33</targetConnections>
+    <location x="578" y="298"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo1label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.data.DataContextUtil.removeObjectByPropertyValues</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="xpath" type="literal" value="java.lang.String" valueType="Java" pattern="reference">batchlist</process:inputVariable>
+      <process:inputVariable id="1" name="property" type="literal" value="java.lang.String" valueType="Java" pattern="reference">batchId</process:inputVariable>
+      <process:inputVariable id="2" name="values" type="query" value="java.lang.Object" valueType="Java" pattern="reference">jobinf/batchId</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo1label" name="label" nodeType="label">
+    <location x="517" y="334"/>
+    <figSize height="17" width="145"/>
+    <node>invokePojo1</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo3" name="查询跑批日已跑批量" displayName="查询跑批日已跑批量" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link49" name="link49" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>loopstart1</targetNode>
+    </sourceConnections>
+    <targetConnections>link38</targetConnections>
+    <location x="578" y="143"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo3label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.database.DatabaseUtil.queryEntitiesByCriteriaEntity</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dsName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+      <process:inputVariable id="1" name="criteriaEntity" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">querycurjobType</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="commonj.sdo.DataObject[]" valueType="Java">existjoblist</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo3label" name="label" nodeType="label">
+    <location x="535" y="179"/>
+    <figSize height="17" width="109"/>
+    <node>invokePojo3</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值返回状态“5”" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link27" name="link27" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>invokePojo13</targetNode>
+    </sourceConnections>
+    <targetConnections>link44</targetConnections>
+    <location x="399" y="440"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">5</process:from>
+      <process:to type="query">batchRet</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="361" y="476"/>
+    <figSize height="17" width="104"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tSwitch" id="switch1" name="空操作" displayName="空操作" collapsed="false" type="switch">
+    <sourceConnections xsi:type="process:tLink" description="" id="link44" name="无可执行的批量" displayName="无可执行的批量" isDefault="false" type="transition">
+      <sourceNode>switch1</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="NULLOREMPTY">
+          <process:leftOperand type="query">batchlist</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link51" name="link51" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>switch1</sourceNode>
+      <targetNode>invokePojo14</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link50</targetConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="575" y="440"/>
+    <size height="28" width="28"/>
+    <nodeLabel>switch1label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="switch1label" name="label" nodeType="label">
+    <location x="571" y="476"/>
+    <figSize height="17" width="37"/>
+    <node>switch1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="startBatchConsole" displayName="startBatchConsole" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>subprocess7</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link43</targetConnections>
+    <location x="576" y="510"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.acbatchconsolebiz.startBatchConsole</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="objs" type="query" value="commonj.sdo.DataObject[]" valueType="Java" pattern="reference">batchlist</process:inputVariable>
+        <process:inputVariable id="1" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="536" y="545"/>
+    <figSize height="17" width="106"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess3" name="endBatchConsole" displayName="endBatchConsole" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" description="" id="link17" name="link17" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess3</sourceNode>
+      <targetNode>subprocess5</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link12</targetConnections>
+    <targetConnections>link24</targetConnections>
+    <location x="579" y="1074"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess3label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.acbatchconsolebiz.endBatchConsole</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="batchGroup" type="query" value="String" valueType="Primitive" pattern="reference">acbatch/batchGroup</process:inputVariable>
+        <process:inputVariable id="1" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+        <process:inputVariable id="2" name="batchId" type="query" value="String" valueType="Primitive" pattern="reference">acbatch/batchId</process:inputVariable>
+        <process:inputVariable id="3" name="status" type="query" value="String" valueType="Primitive" pattern="reference">jobstatus</process:inputVariable>
+        <process:inputVariable id="4" name="soe" type="literal" value="String" valueType="Primitive" pattern="reference">end</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess3label" name="label" nodeType="label">
+    <location x="541" y="1109"/>
+    <figSize height="17" width="102"/>
+    <node>subprocess3</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess6" name="errorBatchConsole" displayName="errorBatchConsole" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link13" name="link13" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess6</sourceNode>
+      <targetNode>switch2</targetNode>
+    </sourceConnections>
+    <targetConnections>link16</targetConnections>
+    <location x="575" y="1472"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess6label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.acbatchconsolebiz.errorBatchConsole</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="objs" type="query" value="commonj.sdo.DataObject[]" valueType="Java" pattern="reference">batchlist</process:inputVariable>
+        <process:inputVariable id="1" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess6label" name="label" nodeType="label">
+    <location x="533" y="1507"/>
+    <figSize height="17" width="110"/>
+    <node>subprocess6</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess7" name="startBatchMonitor" displayName="startBatchMonitor" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link21" name="link21" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess7</sourceNode>
+      <targetNode>assign5</targetNode>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="577" y="570"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess7label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.startBatchMonitor</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="objs" type="query" value="commonj.sdo.DataObject[]" valueType="Java" pattern="reference">batchlist</process:inputVariable>
+        <process:inputVariable id="1" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="monitors" type="query" value="com.bos.dataset.batch.MonitorKey[]" valueType="DataObject">monitors</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess7label" name="label" nodeType="label">
+    <location x="537" y="605"/>
+    <figSize height="17" width="106"/>
+    <node>subprocess7</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign5" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link7" name="link7" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign5</sourceNode>
+      <targetNode>loopstart0</targetNode>
+    </sourceConnections>
+    <targetConnections>link21</targetConnections>
+    <location x="576" y="652"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign5label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">false</process:from>
+      <process:to type="query">existError</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign5label" name="label" nodeType="label">
+    <location x="578" y="688"/>
+    <figSize height="17" width="25"/>
+    <node>assign5</node>
+  </nodes>
+  <nodes xsi:type="process:tSwitch" description="" id="switch2" name="空操作1" displayName="空操作" type="switch">
+    <sourceConnections xsi:type="process:tLink" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>switch2</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link8</targetConnections>
+    <targetConnections>link13</targetConnections>
+    <location x="450" y="1472"/>
+    <size height="28" width="28"/>
+    <nodeLabel>switch2label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="switch2label" name="label" nodeType="label">
+    <location x="442" y="1508"/>
+    <figSize height="17" width="44"/>
+    <node>switch2</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="errorBacthMonitor" displayName="endBatchConsole" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link16" name="link16" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>subprocess6</targetNode>
+    </sourceConnections>
+    <targetConnections>link5</targetConnections>
+    <location x="712" y="1472"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.errorBacthMonitor</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="monitors" type="query" value="com.bos.dataset.batch.MonitorKey[]" valueType="DataObject" pattern="reference">monitors</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="670" y="1507"/>
+    <figSize height="17" width="110"/>
+    <node>subprocess2</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess9" name="endBatchConsole" displayName="endBatchConsole" collapsed="false" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" description="" id="link3" name="link3" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess9</sourceNode>
+      <targetNode>subprocess10</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link19</targetConnections>
+    <location x="576" y="765"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess9label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.acbatchconsolebiz.endBatchConsole</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="batchGroup" type="query" value="String" valueType="Primitive" pattern="reference">acbatch/batchGroup</process:inputVariable>
+        <process:inputVariable id="1" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+        <process:inputVariable id="2" name="batchId" type="query" value="String" valueType="Primitive" pattern="reference">acbatch/batchId</process:inputVariable>
+        <process:inputVariable id="3" name="status" type="literal" value="String" valueType="Primitive" pattern="reference">0</process:inputVariable>
+        <process:inputVariable id="4" name="soe" type="literal" value="String" valueType="Primitive" pattern="reference">start</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess9label" name="label" nodeType="label">
+    <location x="538" y="800"/>
+    <figSize height="17" width="102"/>
+    <node>subprocess9</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess10" name="getJobKey" displayName="endBatchConsole" collapsed="false" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess10</sourceNode>
+      <targetNode>subprocess11</targetNode>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="579" y="840"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess10label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.getJobKey</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="monitors" type="query" value="com.bos.dataset.batch.MonitorKey[]" valueType="DataObject" pattern="reference">monitors</process:inputVariable>
+        <process:inputVariable id="1" name="batchCode" type="query" value="String" valueType="Primitive" pattern="reference">acbatch/batchCode</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="jobKey" type="query" value="String" valueType="Primitive">jobkey</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess10label" name="label" nodeType="label">
+    <location x="561" y="875"/>
+    <figSize height="17" width="62"/>
+    <node>subprocess10</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess11" name="任务状态更新为“运行”" displayName="batchLog" grouped="true" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess11</sourceNode>
+      <targetNode>invokePojo9</targetNode>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="578" y="900"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess11label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.batch.batchmonitor.batchLog</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="jobkey" type="query" value="String" valueType="Primitive" pattern="reference">jobkey</process:inputVariable>
+        <process:inputVariable id="1" name="jobstatus" type="literal" value="String" valueType="Primitive" pattern="reference">0</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables/>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess11label" name="label" nodeType="label">
+    <location x="525" y="935"/>
+    <figSize height="17" width="133"/>
+    <node>subprocess11</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo5" name="logDebug" displayName="logDebug" grouped="true" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link12" name="link12" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo5</sourceNode>
+      <targetNode>subprocess3</targetNode>
+    </sourceConnections>
+    <targetConnections>link28</targetConnections>
+    <location x="483" y="1074"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo5label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.eoscommon.LogUtil.logDebug</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="message" type="literal" value="java.lang.String" valueType="Java" pattern="reference">执行批量任务{0}出错，</process:inputVariable>
+      <process:inputVariable id="1" name="cause" type="query" value="java.lang.Throwable" valueType="Java" pattern="reference">_exception</process:inputVariable>
+      <process:inputVariable id="2" name="params" type="query" value="java.lang.Object" valueType="Java" pattern="reference">acbatch/batchBizname</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo5label" name="label" nodeType="label">
+    <location x="465" y="1110"/>
+    <figSize height="17" width="59"/>
+    <node>invokePojo5</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo9" name="logDebug1" displayName="logDebug" grouped="true" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link23" name="link23" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo9</sourceNode>
+      <targetNode>subprocess4</targetNode>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="643" y="951"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo9label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.eoscommon.LogUtil.logDebug</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="message" type="literal" value="java.lang.String" valueType="Java" pattern="reference">开始执行批量任务，名称为：{0}</process:inputVariable>
+      <process:inputVariable id="1" name="cause" type="expression" value="java.lang.Throwable" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="params" type="query" value="java.lang.Object" valueType="Java" pattern="reference">acbatch/batchName</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo9label" name="label" nodeType="label">
+    <location x="621" y="987"/>
+    <figSize height="17" width="66"/>
+    <node>invokePojo9</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo10" name="logDebug2" displayName="logDebug1" collapsed="false" grouped="true" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link24" name="link24" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo10</sourceNode>
+      <targetNode>subprocess3</targetNode>
+    </sourceConnections>
+    <targetConnections>link15</targetConnections>
+    <location x="643" y="1033"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo10label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.eoscommon.LogUtil.logDebug</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="message" type="literal" value="java.lang.String" valueType="Java" pattern="reference">结束任务：{0}，执行结果： {1}</process:inputVariable>
+      <process:inputVariable id="1" name="cause" type="expression" value="java.lang.Throwable" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="params" type="query" value="java.lang.Object" valueType="Java" pattern="reference">acbatch/batchName</process:inputVariable>
+      <process:inputVariable id="3" name="param1" type="query" value="java.lang.Object" valueType="Java" pattern="reference">jobstatus</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo10label" name="label" nodeType="label">
+    <location x="621" y="1069"/>
+    <figSize height="17" width="66"/>
+    <node>invokePojo10</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo13" name="logDebug" displayName="logDebug" collapsed="false" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link42" name="link42" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo13</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link27</targetConnections>
+    <location x="276" y="440"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo13label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.eoscommon.LogUtil.logDebug</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="message" type="literal" value="java.lang.String" valueType="Java" pattern="reference">无可执行批量，退出</process:inputVariable>
+      <process:inputVariable id="1" name="cause" type="expression" value="java.lang.Throwable" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="params" type="expression" value="java.lang.Object" valueType="Java" pattern="reference">null</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo13label" name="label" nodeType="label">
+    <location x="258" y="476"/>
+    <figSize height="17" width="59"/>
+    <node>invokePojo13</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo14" name="logDebug3" displayName="logDebug" collapsed="false" type="invoke" index="3" invokeType="invoke_pojo" varArgs="true">
+    <sourceConnections xsi:type="process:tLink" id="link43" name="link43" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo14</sourceNode>
+      <targetNode>subprocess0</targetNode>
+    </sourceConnections>
+    <targetConnections>link51</targetConnections>
+    <location x="701" y="476"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo14label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.eoscommon.LogUtil.logDebug</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="message" type="literal" value="java.lang.String" valueType="Java" pattern="reference">共需要执行 {0} 个任务</process:inputVariable>
+      <process:inputVariable id="1" name="cause" type="expression" value="java.lang.Throwable" valueType="Java" pattern="reference">null</process:inputVariable>
+      <process:inputVariable id="2" name="params" type="expression" value="java.lang.Object" valueType="Java" pattern="reference">batchlist.length</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo14label" name="label" nodeType="label">
+    <location x="679" y="512"/>
+    <figSize height="17" width="66"/>
+    <node>invokePojo14</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="任务依赖判断" displayName="taskRelyJudge" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>assign2</targetNode>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="345" y="-20"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.taskRelyJudge</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="batchDate" type="query" value="String" valueType="Primitive" pattern="reference">batchDate</process:inputVariable>
+        <process:inputVariable id="1" name="batchGroup" type="query" value="String" valueType="Primitive" pattern="reference">batchGroup</process:inputVariable>
+        <process:inputVariable id="2" name="fullFlag" type="query" value="String" valueType="Primitive" pattern="reference">fullFlag</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="batchDate" type="query" value="String" valueType="Primitive">batchDate</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="322" y="15"/>
+    <figSize height="17" width="73"/>
+    <node>subprocess1</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="Ray" createTime="2010-08-28 16:40:25" date="2010-08-28Z" description="" name="批量监控记录" version="6.0"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.dataset.batch.TbBatchTaskConfig" name="batchlist"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.batch.TbBatchTaskConfig" name="acbatch"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="queryGroupType"/>
+    <process:variable description="" historyStateLocation="client" isArray="true" modelType="com.bos.dataset.batch.TbBatchTaskConsole" name="existjoblist"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="querycurjobType"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.batch.TbBatchTaskConsole" name="jobinf"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.batch.TbBatchTaskDate" name="acbatchdate"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="jobstatus" primitiveType="String"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="batchName" primitiveType="String"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.batch.TbBatchTaskConsole" name="batchConsle"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="existError" primitiveType="Boolean"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input description="批量组" isArray="false" name="batchGroup" primitiveType="String"/>
+    <process:input description="执行批量日期" isArray="false" name="batchDate" primitiveType="String"/>
+    <process:input description="是否全部执行" isArray="false" name="fullFlag" primitiveType="String"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output description="" isArray="false" name="batchRet" primitiveType="String"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+   
+    <!-- 获取额度信息： 贴现不统计，银承,保函业务敞口统计，通过保证金比例计算
+    	partyId：获取客户所有额度信息
+    	amountDetailId：获取单条批复额度信息 
+    	
+    -->
+    <select id="getCreditInfoExposure" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+<isNotEqual property="searchApply" compareValue="unsearch">
+SELECT AD.PRODUCT_TYPE,AD.AMOUNT_DETAIL_ID,NULL APP_STATUS,NVL(AD.RMB_AMT,AD.DETAIL_AMT) APP_AMT,NVL(HP.BZJBLBDY,0) APP_BZJBL,
+NULL CONTRACT_ID,ci.CONTRACT_ID OLD_CONTRACT_ID,'01' CON_STATUS,'0' CON_CYCLE,0 CON_AMT,0 CON_BZJJE,0 SUM_AMT,0 SUM_BAL
+FROM TB_BIZ_APPLY A
+INNER JOIN TB_BIZ_AMOUNT_APPLY AA ON A.APPLY_ID=AA.APPLY_ID
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPLY AD ON AA.AMOUNT_ID = AD.AMOUNT_ID
+LEFT JOIN TB_BIZ_KLYHCDHP_APPLY HP ON HP.AMOUNT_DETAIL_ID = AD.AMOUNT_DETAIL_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci on ci.AMOUNT_DETAIL_ID=ad.OLD_DETAIL_ID
+WHERE A.PARTY_ID=#partyId#
+AND A.STATUS_TYPE IN ('01','02','10')
+<isNotEmpty property="filtProductType"> 
+<iterate prepend="AND AD.PRODUCT_TYPE NOT IN" open="(" close=")" conjunction="," property="filtProductType">#filtProductType[]#</iterate>
+</isNotEmpty>
+UNION ALL
+</isNotEqual>
+<isNotEqual property="searchApprove" compareValue="unsearch">
+SELECT AD.PRODUCT_TYPE,AD.AMOUNT_DETAIL_ID,A.BECOME_EFFECTIVE_MARK APP_STATUS,NVL(AD.RMB_AMT,AD.DETAIL_AMT) APP_AMT,NVL(HP.BZJBLBDY,0) APP_BZJBL,
+ci.CONTRACT_ID,ci.OLD_CONTRACT_ID,ci.CON_STATUS,ci.CYCLE_IND_CON CON_CYCLE,NVL(CI.RMB_AMT,CI.CONTRACT_AMT) CON_AMT,NVL( bzj.BZJJE, 0 ) CON_BZJJE,LS.SUM_AMT,LS.SUM_BAL
+FROM TB_BIZ_APPROVE A
+INNER JOIN TB_BIZ_AMOUNT_APPROVE AA ON A.APPROVE_ID=AA.APPROVE_ID
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE AD ON AA.AMOUNT_ID = AD.AMOUNT_ID
+LEFT JOIN TB_BIZ_KLYHCDHP_APPLY HP ON HP.AMOUNT_DETAIL_ID = AD.AMOUNT_DETAIL_ID
+LEFT JOIN TB_CON_CONTRACT_INFO CI ON CI.AMOUNT_DETAIL_ID=AD.AMOUNT_DETAIL_ID
+LEFT JOIN (
+SELECT sr.CONTRACT_ID,SUM(s.BZJJE)BZJJE FROM TB_CON_CONTRACT_INFO c 
+INNER JOIN TB_CON_SUBCONTRACT_REL sr ON c.CONTRACT_ID=sr.CONTRACT_ID
+INNER JOIN TB_CON_SUBCONTRACT s ON sr.SUBCONTRACT_ID = s.SUBCONTRACT_ID
+WHERE 
+<isNotNull property="partyId">C.PARTY_ID=#partyId# </isNotNull>
+<isNotNull property="amountDetailId">C.AMOUNT_DETAIL_ID=#amountDetailId#</isNotNull>
+AND SUBCONTRACT_TYPE='03' 
+AND c.PRODUCT_TYPE IN ('01008002','01008010','01008001','01009001', '01009002', '01009010', '010090022', '01007014')
+GROUP BY sr.CONTRACT_ID
+)bzj ON bzj.CONTRACT_ID=CI.CONTRACT_ID
+LEFT JOIN (
+SELECT li.CONTRACT_ID,SUM(NVL(ls.RMB_AMT,li.RMB_AMT))SUM_AMT ,SUM(NVL(ls.JJYE,li.RMB_AMT))SUM_BAL  
+FROM TB_LOAN_INFO li
+INNER JOIN TB_CON_CONTRACT_INFO CI ON CI.CONTRACT_ID=li.CONTRACT_ID
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID 
+WHERE
+<isNotNull property="partyId">CI.PARTY_ID=#partyId# </isNotNull>
+<isNotNull property="amountDetailId">CI.AMOUNT_DETAIL_ID=#amountDetailId#</isNotNull>
+AND li.LOAN_STATUS!='06' AND NVL(ls.SUMMARY_STATUS_CD,'01') NOT IN  ('06','09')
+GROUP BY Li.CONTRACT_ID
+)ls ON ls.CONTRACT_ID=ci.CONTRACT_ID
+WHERE 
+<isNotNull property="partyId">A.PARTY_ID=#partyId# </isNotNull>
+<isNotNull property="amountDetailId">AD.AMOUNT_DETAIL_ID=#amountDetailId#</isNotNull>
+<isNotNull property="bizHappenType">AND A.BIZ_HAPPEN_TYPE=#bizHappenType# </isNotNull>
+<isEqual property="bizType" compareValue="dbdp">AND A.BIZ_TYPE IN ('01','04','07')</isEqual>
+<isEqual property="bizType" compareValue="zhsx">
+AND A.APPLY_MODE_TYPE='01'
+AND A.BIZ_TYPE IN ('01','02','04','07')
+</isEqual>
+AND A.APPROVE_CONCLUSION IN ('1','3')
+AND A.BECOME_EFFECTIVE_MARK !='06'
+AND NVL(ci.CON_STATUS,'01')!='06'
+<isNotEmpty property="filtProductType"> 
+<iterate prepend="AND AD.PRODUCT_TYPE NOT IN" open="(" close=")" conjunction="," property="filtProductType">#filtProductType[]#</iterate>
+</isNotEmpty>
+</isNotEqual>
+	</select>
+
+	<select id="getCreditInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT a.CYCLE_IND app_cycle,c.CYCLE_IND_CON con_cycle,NVL(a.RMB_AMT,a.DETAIL_AMT) app_amt,nvl(c.RMB_AMT,c.CONTRACT_AMT) con_amt FROM TB_BIZ_AMOUNT_DETAIL_APPROVE a
+LEFT JOIN  TB_CON_CONTRACT_INFO c  ON a.AMOUNT_DETAIL_ID=c.AMOUNT_DETAIL_ID
+WHERE a.AMOUNT_DETAIL_ID=#amountDetailId# AND c.CON_STATUS!='06'
+	</select>
+	
+	<!-- 获取排序后的纸票列表  增加纸票汇票序号排序使用-->
+    <select id="getPjList" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizPjxxApply">
+	    select a.contract_id as contractId,a.sort_order as sortOrder,a.APPLY_DETAIL_ID as applyDetailId,a.currency_Cd as currencyCd,
+	    a.CREATE_TIME as createTime,a.UPDATE_TIME as updateTime,
+	    a.AMOUNT_DETAIL_ID as amountDetailId,a.CPRQC,a.SKRQC,a.PAYEEBANKNAME,
+	    a.pjhm,a.hpje,a.hpxs,a.hpcprq,a.hpdqrq from tb_biz_pjxx_apply a 
+	    where a.amount_detail_id=#amountDetailId#
+	    and a.htbh=#htbh# 
+	    <isNull property="contractId">
+		and (a.jlzt is null or a.jlzt=#jlzt#) 
+		</isNull>
+	    <isNotNull property="contractId">
+		and a.contract_Id=#contractId#  and a.jlzt=#jlzt#
+		</isNotNull>
+	    order by a.sort_order
+   </select>
+   
+   <!-- 获取排序后的贴现列表  -->
+    <select id="getTxList" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizTxxxApply">
+    select  a.sort_order as sortOrder,a.apply_detail_id as applyDetailId,a.contract_id as contractId,a.CREATE_TIME as createTime,a.UPDATE_TIME as updateTime,a.amount_detail_id as amountDetailId,
+	a.loanid,a.takeoutacname,a.benename,a.billtype,a.billmodel,a.billno,
+	a.currsign,a.billamt,a.billbegindate,a.billenddate,a.forbidflag,
+	a.APPLY_DETAIL_ID as applyDetailId
+     from tb_biz_txxx_apply a 
+    where a.amount_detail_id=#amountDetailId#
+    order by a.sort_order
+   </select>
+</sqlMap>

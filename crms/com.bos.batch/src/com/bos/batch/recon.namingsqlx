@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lilei2 -->
+<sqlMap>
+<!--正常科目总分对账-->
+<procedure id="normSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_NORMALCHECK(#date#)
+]]>
+</procedure>
+<!--三个月以内逾期科目总分对账-->
+<procedure id="overdueWithSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_OVERBEFORECHECK(#date#)
+]]>
+</procedure>
+<!--三个月以上逾期科目总分对账-->
+<procedure id="overdueAboveSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_OVERAFTERCHECK(#date#)
+]]>
+</procedure>
+<!--呆账科目总分对账to_date(#date#,'yyyyMMdd')-->
+<procedure id="badDeSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_BADCHECK(#date#)
+]]>
+</procedure>
+<!--呆滞科目总分对账-->
+<procedure id="dullSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_DULLCHECK(#date#)
+]]>
+</procedure>
+<!--表外科目总分对账-->
+<procedure id="sheetSubjectRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_SHEETCHECK(#date#)
+]]>
+</procedure>
+<!--垫款科目总分对账-->
+<procedure id="advanceSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_ADVANCECHECK(#date#)
+]]>
+</procedure>
+<!--表内欠息科目总分对账-->
+<procedure id="interestSbj" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_INTERESTCHECK(#date#)
+]]>
+</procedure>
+<!--表外欠息科目总分对账-->
+<procedure id="interStoverSbjRecon" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_INTERESTOVERCHECK(#date#)
+]]>
+</procedure>
+<!--借据表更新-->
+<procedure id="updateDuebill" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_UPDATE_DUEBILL(#date#)
+]]>
+</procedure>
+<!--批量轧差台账-->
+<procedure id="batchNettingLedger" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_BALANCEHANDBOOK(#date#)
+]]>
+</procedure>
+<!--借据终结日期更新-->
+<procedure id="spBatchResetDuebill" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_RESET_DUEBILL(#date#)
+]]>
+</procedure>
+<!--数据清单-->
+<!--1、借据清单-->
+<procedure id="clistReport" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_DUEBILL_DATA_LIST(#date#,#verify#)
+]]>
+</procedure>
+<!--2、押品清单-->
+<procedure id="guarantyReport" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_GUARANTY_LIST(#date#)
+]]>
+</procedure>
+<!--3、台账清单-->
+<procedure id="occurReport" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_OCCUR_LIST(#date#,#verifyNum#)
+]]>
+</procedure>
+<!--4、借据清单回跑-->
+<procedure id="spBatchReloadDuebillDataList" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_RELOAD_DUEBILL_DATA_LIST(#date#,#verify#)
+]]>
+</procedure>
+<!--台帐与T24流水对账-->
+<procedure id="occurWastebookCheck" parameterClass="java.util.Map">
+<![CDATA[ 	
+call SP_BATCH_HBWBCHECK(#date#)
+]]>
+</procedure>
+<!--合同信息更新-->
+<procedure id="contractUpdate" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_CONTRACT_AMT()
+]]>
+</procedure>
+<!--俩端放款金额对比-->
+<procedure id="comparebalance" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_COMPARE_BALANCE(#date#)
+]]>
+</procedure>
+<!--逾期标识处理-->
+<procedure id="spBatchHandleOverdueFlag" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_HANDLEOVERDUEFLAG(#date#)
+]]>
+</procedure>
+<!--还款计划更新-->
+<procedure id="updateRepay" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_UPDATE_REPLAY(#date#)
+]]>
+</procedure>
+<!--外币银团借据和台帐生成-->
+<procedure id="spBatchForsyndicate" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_FORSYNDICATE(#date#)
+]]>
+</procedure>
+<!--逾期天数同步-->
+<procedure id="spBatchSynchronizeOverduedays" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_SYNCHRONIZE_OVERDUEDAYS()
+]]>
+</procedure>
+<!--放款业务异常处理-->
+<procedure id="spBatchLoanExcehandling" parameterClass="java.util.Map">
+<![CDATA[
+call SP_BATCH_LOAN_EXCEHANDLING(#date#)
+]]>
+</procedure>
+
+ <resultMap class="commonj.sdo.DataObject" id="taskDate">
+		<result column="BATCH_DATEID" property="batchDateId"/> 
+		<result column="BATCH_DATE" property="batchDate"/> 
+	    <result column="BATCH_TEMP1" property="batchTemp1"/>
+  </resultMap>
+  
+  <!--查询重置标识-->
+ <select id="queryAgainFlag" parameterClass="java.util.HashMap" resultMap="taskDate">
+<![CDATA[
+    select BATCH_DATEID,BATCH_DATE,BATCH_TEMP1 from
+     (select row_number() over (order by BATCH_DATEID) 
+     as row_number,BATCH_DATEID,BATCH_DATE,BATCH_TEMP1 from TB_BATCH_TASK_DATE ) 
+     where row_number<2
+]]>
+ </select>
+ <!--借据清单回跑条件查询-->
+ <resultMap class="commonj.sdo.DataObject" id="spReloadCondition">
+	<result column="batch_temp1" property="batchTemp1"/> 
+ </resultMap>
+ <select id="spReloadCondition" parameterClass="java.util.HashMap" resultMap="spReloadCondition">
+<![CDATA[
+ 	select batch_temp1 from tb_batch_task_date
+]]>
+ </select>
+ <resultMap class="commonj.sdo.DataObject" id="dataUnLoad">
+        <result column="UUID" property="uuid"/> 
+		<result column="DATALISTTYPE" property="datalisttype"/> 
+	    <result column="INPUTDATE" property="inputdate"/> 
+	     <result column="DATALISTPATH" property="datalistpath"/> 
+	     <result column="FILENAME" property="filename"/> 
+	     <result column="CONTENTLENGTH" property="contentlength"/>
+    </resultMap>
+	<select id="dataUnLoad" parameterClass="java.util.HashMap" resultMap="dataUnLoad">
+		
+		select UUID,DATALISTTYPE,INPUTDATE,DATALISTPATH,FILENAME,CONTENTLENGTH
+	 	FROM TB_BATCH_DATALIST_ATTACHMENT
+     	where ORG_NUM=(case when '10000'=$orgId$ then '10000' 
+					     	when $orgId$ in (select orgid from OM_ORGANIZATION where buno='0') then #orgId#
+					     	else (select to_char(PARENTORGID) from OM_ORGANIZATION where ORGID=$orgId$) end)
+       <isNotNull property="startDate">
+		  	  and INPUTDATE>=to_char(#startDate#,'yyyyMMdd')
+	   </isNotNull>
+	    <isNotNull property="endDate">
+		  	   and to_char(#endDate#,'yyyyMMdd')>=INPUTDATE
+	   </isNotNull>
+	   order by INPUTDATE desc,  DATALISTTYPE asc 
+   </select>
+   
+   <resultMap class="commonj.sdo.DataObject" id="corpCustomerTypeCd">
+     	<result column="corp_customer_type_cd" property="corpCustomerTypeCd"/>
+    </resultMap>
+     <!-- 查询客户类型 -->
+	<select id="queryCorpCustomerTypeCd" parameterClass="java.util.HashMap" resultMap="corpCustomerTypeCd">
+		<![CDATA[
+		select corp_customer_type_cd from tb_csm_corporation 
+		where party_id= #partyId#
+	    ]]>
+   </select>
+    <!--异常任务处理-->
+  <update id="batchException" parameterClass="java.util.Map">
+  <![CDATA[
+   update TB_BATCH_TASK_CONSOLE set STATUS=1 
+   where BATCH_DATE=(to_date(#date#,'yyyy-MM-dd')-1 days)
+   ]]>
+   </update>
+   
+   <update id="todayBatchException" parameterClass="java.util.Map">
+  <![CDATA[
+   update TB_BATCH_TASK_CONSOLE set STATUS=2 
+   where status=0 and BATCH_DATE=#date#
+   ]]>
+   </update>
+
+</sqlMap>

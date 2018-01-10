@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:fjh -->
+<sqlMap>
+	<resultMap class="commonj.sdo.DataObject" id="spotCorp">
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="PARTY_NUM" property="partyNum"/>
+        <result column="PARTY_NAME" property="partyName"/>
+        <result column="INDUSTRIAL_TYPE_CD" property="industrialTypeCd"/>
+        <result column="WARNING_LEVEL_CD" property="earlyWarningLevelCd"/>
+    </resultMap>
+	<select id="querySpotCorp" parameterClass="java.util.HashMap" resultMap="spotCorp">
+		SELECT
+		    tp.PARTY_ID,
+		    tp.PARTY_NUM,
+		    tp.PARTY_NAME,
+		    tc.INDUSTRIAL_TYPE_CD,
+		    trc.WARNING_LEVEL_CD
+		    
+		FROM
+		    TB_CSM_PARTY tp
+		LEFT JOIN
+		    TB_CSM_CORPORATION tc
+		ON tp.PARTY_ID=tc.PARTY_ID
+		LEFT JOIN TB_REW_CSM_EARLY_WARNING trc
+		ON tp.PARTY_ID = trc.PARTY_ID
+		WHERE
+		    1=1
+		<isNotNull property="partyId">
+		AND tp.PARTY_ID = #partyId# 
+		</isNotNull>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="sidId">
+        <result column="SID_ID" property="sidId"/>
+    </resultMap>
+	<select id="querySpotExsit" parameterClass="java.util.HashMap" resultMap="sidId">
+SELECT
+    tas.SID_ID
+FROM
+    TB_AFT_SPOT_INSPECT_DETAIL tas
+WHERE
+    <![CDATA[ tas.INSPECT_STATE < 4 ]]>
+AND tas.PARTY_ID = #partyId#
+    </select>
+     
+     
+</sqlMap>

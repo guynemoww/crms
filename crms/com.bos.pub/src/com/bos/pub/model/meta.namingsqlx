@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="selectTableRemark" parameterClass="java.util.Map" resultClass="java.util.HashMap"><![CDATA[
+    	select remarks from sysibm.systables where name=#tableName#
+    ]]>
+    </select>
+    
+	<insert id="mergeInitPubMetaCol" parameterClass="java.util.Map" >
+  merge into TB_PUB_META_COL mc using (
+      SELECT TBNAME AS TABLE_NAME,NAME AS COLUMN_NAME, REMARKS AS COMMENTS,COLTYPE AS DATA_TYPE,LENGTH AS DATA_LENGTH,SCALE AS DATA_SCALE
+        FROM SYSIBM.SYSCOLUMNS WHERE TBNAME=#tableName#) uc
+on (mc.table_name=uc.table_name and mc.col_name=uc.column_name)
+when matched then
+  update set mc.col_type=uc.data_type,
+  mc.col_length=uc.DATA_LENGTH,
+  mc.col_precision=uc.data_scale
+when not matched then 
+  insert (TABLE_NAME,COL_NAME,COL_ZHNAME,COL_TYPE,COL_LENGTH,COL_PRECISION)
+  values(uc.table_name,uc.COLUMN_NAME,(case when uc.comments IS NULL then '' else SUBSTR(uc.comments,1,MIN(150,LENGTH(uc.comments))) end),uc.data_type,uc.data_length,
+         (case when uc.data_type in ('DECIMAL','INTEGER') then uc.data_scale end)
+  )
+	</insert>
+</sqlMap>

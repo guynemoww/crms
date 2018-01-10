@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ljf -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="PROJECT_ID" javaType="string" property="projectId"/>
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PROJECT_NAME" javaType="string" property="projectName"/>
+        <result column="PROJECT_TYPE" javaType="string" property="projectType"/>
+        <result column="PROJECT_LEVEL_CD" javaType="string" property="projectLevelCd"/>
+        <result column="CREATE_TIME" javaType="string" property="createTime"/>
+        <result column="PROJECT_ADDRESS" javaType="string" property="projectAddress"/>
+        <result column="PROJECT_START_DATE" javaType="string" property="projectStartDate"/>
+        <result column="PROJECT_END_DATE" javaType="string" property="projectEndDate"/>
+        <result column="PROJECT_TOTAL_AMT" javaType="string" property="projectTotalAmt"/>
+        <result column="CAREER_MYAMT" javaType="string" property="careerMyamt"/>
+        <result column="CAREER_MYAMT_PERCENT" javaType="string" property="careerMyamtPercent"/>
+    </resultMap>
+    <select id="select_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+
+		SELECT p.PROJECT_ID,
+		       p.PARTY_ID,
+		       p.PROJECT_NAME,
+		       p.PROJECT_TYPE,
+		       p.PROJECT_LEVEL_CD,
+		       p.CREATE_TIME,
+		       p.PROJECT_ADDRESS,
+		       p.PROJECT_START_DATE,
+		       p.PROJECT_END_DATE,
+		       P.PROJECT_TOTAL_AMT,
+		       P.CAREER_MYAMT,
+		       P.CAREER_MYAMT_PERCENT
+		  FROM TB_CSM_PROJECT_INFO p
+	   where p.party_id=#partyId#
+	   <isNotNull property="thirdCrd"> 
+	   	and p.project_id not in (select a.project_id
+							  from tb_crd_project_rel       a,
+							       tb_crd_third_party_limit b
+							 where a.limit_id = b.limit_id
+							       and b.status_cd in ('01','02','03'))
+	   </isNotNull>
+	</select>
+</sqlMap>

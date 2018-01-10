@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+	<resultMap class="com.bos.pub.product.TbSysProduct" id="product">
+        <result column="PRODUCT_CD" javaType="string" property="productCd"/>
+    </resultMap>
+	<resultMap class="com.bos.pub.product.TbSysProduct" id="tbSysProduct">
+        <result column="PRODUCT_CD" javaType="string" property="productCd"/>
+        <result column="PRODUCT_ID" javaType="string" property="productId"/>
+        <result column="PRODUCT_NAME" javaType="string" property="productName"/>
+        <result column="SUPERIOR_ID" javaType="string" property="superiorId"/>
+        <result column="PRODUCT_DEPARTMENT" javaType="string" property="department" />
+        <result column="YWLB" javaType="string" property="ywlb" />
+        <result column="LEG_ORG" javaType="string" property="legOrg" />
+    </resultMap>
+    
+    <select id="queryMaxValue" parameterClass="com.bos.pub.product.TbSysProduct" resultMap="product">
+    <![CDATA[
+    
+    select #productCd# || case
+         when length(PRODUCT_CD) = 1 then
+          '00' || PRODUCT_CD
+         when length(PRODUCT_CD) = 2 then
+          '0' || PRODUCT_CD
+         else
+          PRODUCT_CD
+       end as PRODUCT_CD
+  from (select to_char(SUBSTR(max(product_cd), length(#productCd#) + 1) + 1) PRODUCT_CD
+          from tb_sys_product
+         where superior_id = #productCd#)
+    ]]>
+    </select>
+    <select id="queryMaxValueOfMax"  resultMap="product">
+    <![CDATA[
+    
+    select max(product_cd) PRODUCT_CD  from tb_sys_product where  product_level=1
+    
+    ]]>
+    </select>
+    
+    <!-- 业务字典反显专用 -->
+    <select id="queryProduct" parameterClass="java.util.HashMap" resultMap="tbSysProduct">
+    <![CDATA[
+    select *  from tb_sys_product where product_Id=#productId# or product_Cd=#productCd#
+    ]]>
+    </select>
+    
+    
+    <resultMap class="commonj.sdo.DataObject" id="poas">
+        <result column="ORG_OPERATE_AUTHORIZATION_ID" javaType="string" property="orgOperateAuthorizationId"/>
+        <result column="AUTH_ORG_NUM" javaType="string" property="authOrgNum"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+        <result column="ROLE_ID" javaType="string" property="roleId"/>
+        <result column="ROLENAME" javaType="string" property="rolename"/>
+        <result column="IS_USED" javaType="string" property="isUsed"/>
+    </resultMap>
+    <select id="queryProductOperAuth" parameterClass="java.util.HashMap" resultMap="poas">
+    select a.org_operate_authorization_id,
+	       a.auth_org_num,
+	       o.orgname,
+	       a.role_id,
+	       r.rolename,
+	       a.is_used
+	  from Tb_Sys_Operate_Authorization a, om_organization o, ac_role r
+	 where a.auth_org_num = o.orgcode
+	   and r.roleid = a.role_id
+	   <isNotNull property="orgname">
+	   and o.orgname like '%$orgname$%'
+	   </isNotNull>
+	   
+	    <isNotNull property="superadmin">
+			and (o.leg_org=#legorg# or o.leg_org is null)
+	    </isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="pors">
+        <result column="PRODUCT_ID" javaType="string" property="productId"/>
+        <result column="PRODUCT_CD" javaType="string" property="productCd"/>
+        <result column="PRODUCT_NAME" javaType="string" property="productName"/>
+        <result column="PRODUCT_LEVEL" javaType="string" property="productLevel"/>
+        <result column="DISCOUNT_IND" javaType="string" property="discountInd"/>
+        <result column="SUPERIOR_ID" javaType="string" property="superiorId"/>
+        <result column="VALIDT_DATE" javaType="string" property="validtDate"/>
+        <result column="PRODUCT_TYPE" javaType="string" property="productType"/>
+        <result column="PRODUCT_DEPARTMENT" javaType="string" property="productDepartment"/>
+        <result column="CHECKED" javaType="string" property="checked"/>
+    </resultMap>
+    <select id="queryProductWithOperRela" parameterClass="java.util.HashMap" resultMap="pors">
+    select p.product_id,
+	       p.product_cd,
+	       p.product_name,
+	       p.product_level,
+	       p.discount_ind,
+	       p.superior_id,
+	       p.validt_date,
+	       p.product_type,
+	       p.product_department,
+	       (CASE
+	         WHEN r.org_operate_authorization_id IS NULL THEN
+	          'false'
+	         ELSE
+	          'true'
+	       END) checked
+	  from Tb_Sys_Product p
+	  left join tb_sys_product_operate_rela r
+	    on p.product_cd = r.product_id
+	    and r.org_operate_authorization_id = #authId#
+	 where p.discount_ind = '1'
+	 <isNotNull property="superadmin">
+			and (leg_org=#legorg# or leg_org is null)
+	    </isNotNull>
+	 order by p.product_cd
+    </select>
+    <!-- 查询产品控制参数-->
+    <resultMap class="com.bos.pub.product.TbSysProductParam" id="pop">
+        <result column="P_ID" javaType="string" property="pId"/>
+        <result column="PARA_TYPE" javaType="string" property="paraType"/>
+        <result column="PARA_COLUMN" javaType="string" property="paraColumn"/>
+        <result column="PARA_COLUNM_NAME" javaType="string" property="paraColunmName"/>
+        <result column="PARA_COUNT_SIGN" javaType="string" property="paraCountSign"/>
+        <result column="PARA_CONTRL_LEFTVAL" javaType="string" property="paraContrlLeftval"/>
+        <result column="PARA_CONTRL_RIGTHVAL" javaType="string" property="paraContrlRigthval"/>
+        <result column="PRODUCT_ID" javaType="string" property="productId"/>
+        <result column="AUTH_ORG_NUM" javaType="string" property="authOrgNum"/>
+        <result column="PARA_STATUS" javaType="string" property="paraStatus"/>
+    </resultMap>
+    <select id="queryParamOfProduct" parameterClass="java.util.HashMap" resultMap="pop">
+    with sup_orgs as 
+    (select orgcode,orglevel from OM_ORGANIZATION t start with t.orgcode = #orgcode# connect by prior t.parentorgid = t.orgid)
+	select
+		   p.p_id,
+	       p.para_type,
+	       p.para_column,
+	       p.para_colunm_name,
+	       p.para_count_sign,
+	       p.para_contrl_leftval,
+	       p.para_contrl_rigthval,
+	       p.product_id,
+	       p.auth_org_num,
+	       p.para_status
+	  from tb_sys_product_param p
+	 where p.product_id = #productId# and p.para_type=#paraType# and p.para_status='1'
+	   and exists
+	 (select orgcode from sup_orgs s where p.auth_org_num = s.orgcode)
+	 <isNotNull property="paraColumn">
+	 	and p.para_column=#paraColumn#
+	 </isNotNull>
+
+    </select>
+     <!--查询产品树根据法人标识-->
+    <select id="queryProductInfo" parameterClass="java.util.HashMap" resultMap="tbSysProduct">
+    	select * from tb_sys_product where discount_ind='1'
+		 <isNotNull property="superadmin">
+			and (leg_org=#legorg# or leg_org is null)
+	    </isNotNull>
+    	order by sort_no asc
+    </select>
+    
+    <!--查询带有权限控的产品树-->
+    <select id="queryProductByAuth" parameterClass="java.util.HashMap" resultMap="tbSysProduct">
+    select * from(
+    with sup_pros as
+		 (select *
+		    from tb_sys_product t
+		   <isNotNull property="productCd">
+			   start with t.product_cd = #productCd#
+		  </isNotNull>
+		  connect by prior t.product_cd = t.superior_id)
+		select sp.product_id,
+		       sp.product_cd,
+		       sp.product_name,
+		       sp.product_level,
+		       sp.discount_ind,
+		       sp.superior_id,
+		       sp.product_type,
+		       sp.product_department,
+		       sp.leg_org,
+		       sp.sort_no,
+		       sp.ywlb
+		  from tb_sys_product sp
+		  <isNotNull property="productCd">
+			   where sp.product_id = #productCd#
+		  </isNotNull>
+		union
+		select s.product_id,
+		       s.product_cd,
+		       s.product_name,
+		       s.product_level,
+		       s.discount_ind,
+		       s.superior_id,
+		       s.product_type,
+		       s.product_department,
+		       s.leg_org,
+		       s.sort_no,
+		       s.ywlb
+		  from sup_pros s
+		 where s.discount_ind = '1' and exists(
+		
+		 with sup_orgs as (select *
+		                     from OM_ORGANIZATION o
+		                    start with o.orgcode = #orgcode#
+		                   connect by prior o.parentorgid = o.orgid)
+		  select pr.product_id
+		    from tb_sys_operate_authorization oa,
+		   tb_sys_product_operate_rela  pr
+		   where oa.org_operate_authorization_id =
+		         pr.org_operate_authorization_id
+		     and oa.is_used = '1'
+		     <isNotNull property="roleId">
+			   and oa.role_id=#roleId#
+			 </isNotNull>
+		     and oa.auth_org_num in (select orgcode from sup_orgs)
+		     and s.product_id = pr.product_id)
+    ) 
+    <isNotNull property="superadmin">
+		where leg_org=#legorg# or leg_org is null
+    </isNotNull>
+    
+    order by sort_no
+    </select>
+     <resultMap class="commonj.sdo.DataObject" id="spa">
+        <result column="PRODUCT_ID" javaType="string" property="productId"/>
+        <result column="PRODUCT_CD" javaType="string" property="productCd"/>
+        <result column="PRODUCT_NAME" javaType="string" property="productName"/>
+        <result column="PRODUCT_LEVEL" javaType="string" property="productLevel"/>
+        <result column="DISCOUNT_IND" javaType="string" property="discountInd"/>
+        <result column="SUPERIOR_ID" javaType="string" property="superiorId"/>
+        <result column="TXBZ" javaType="string" property="txbz"/>
+    </resultMap>
+    <select id="queryProductBySuperiorId" parameterClass="commonj.sdo.DataObject" resultMap="spa">
+    
+    	select p.product_id,
+		       p.product_cd,
+		       p.product_name,
+		       p.product_level,
+		       p.discount_ind,
+		       p.superior_id,
+		       decode(pa.para_contrl_rigthval,null,0,0,0,1) as txbz
+		  from tb_sys_product p
+		  left join tb_sys_product_param pa
+		    on p.product_id = pa.product_id
+		   and pa.para_colunm_name = '贴息标志'
+		 where p.superior_id = #superiorId#
+		 <isNotNull property="productCd">
+		 	and p.product_cd=#productCd#
+		 </isNotNull>
+		 <isNotNull property="productName">
+		 	and p.product_name like '%$productName$%'
+		 </isNotNull>
+		 <isNotNull property="discountInd">
+		 	and p.discount_ind=#discountInd#
+		 </isNotNull>
+		 <isNotNull property="productLevel">
+		 	and p.product_level=#productLevel#
+		 </isNotNull>
+		 <isNotNull property="txbz">
+		 	and decode(pa.para_contrl_rigthval,null,0,0,0,1)=#txbz#
+		 </isNotNull>
+		 
+		<isNotNull property="superadmin">
+			and (leg_org=#legorg# or leg_org is null)
+    	</isNotNull>
+    </select>
+    
+     <!--查询业务性质-->
+    <select id="queryBiztypeChange" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+    	select distinct e.APPLY_ID,e.biz_type,e.BIZ_HAPPEN_TYPE from tb_con_contract_info b,tb_biz_amount_detail_approve c,tb_biz_amount_approve d,tb_biz_approve e
+			where b.CONTRACT_ID = #contractId#
+			and b.amount_detail_id = c.amount_detail_id
+			and c.amount_id = d.amount_id
+			and d.approve_id = e.approve_id 
+    </select>
+</sqlMap>

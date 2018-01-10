@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+    <resultMap class="java.util.HashMap" id="userMap">
+       <result column="USERID" javaType="string" property="userId"/>
+       <result column="OPERATORNAME" javaType="string" property="operatorName"/>
+    </resultMap>
+	<resultMap class="com.bos.utp.dataset.organization.OmOrganization" id="omOrganization">
+        <result column="ORGID" javaType="string" property="orgid"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+        <result column="ORGCODE" javaType="string" property="orgcode"/>
+        <result column="PARENTORGID" javaType="string" property="parentorgid"/>
+    </resultMap>
+    
+    <resultMap class="com.bos.dataset.batch.TbBatchCoreOrg" id="batchOrg">
+        <result column="BRANCH_CODE" javaType="string" property="branchCode"/>
+        <result column="BRANCH_CN_ABBR_NAME" javaType="string" property="branchCnAbbrName"/>
+    </resultMap>
+    
+    <resultMap class="commonj.sdo.DataObject" id="acctOrg">
+        <result column="ORGNAME" javaType="string" property="orgName"/>
+        <result column="ORGCODE" javaType="string" property="orgNum"/>
+    </resultMap>
+    
+	<resultMap class="com.bos.utp.dataset.organization.OmEmployee" id="omEmployee">
+        <result column="EMPID" javaType="string" property="empid"/>
+        <result column="EMPID" javaType="string" property="operatorid"/>
+        <result column="EMPNAME" javaType="string" property="empname"/>
+        <result column="USERID" javaType="string" property="userid"/>
+    </resultMap>
+    
+    <!--以当前机构为父节点的机构树-->
+    <select id="childrenOrgTree" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.organization.OmOrganization">
+    <![CDATA[
+       select o.orgid,o.orgname,o.orgcode,o.parentorgid from  om_organization o  
+          connect by prior o.orgid = o.parentorgid start with o.orgid=#orgId#
+    ]]>
+    </select>
+    
+    <!--根据机构ID和角色查询符合该机构角色的操作人员-->
+    <select id="getUserNameByOrgIdRoles" parameterClass="java.util.HashMap" resultMap="userMap">
+    <![CDATA[
+       select o.userid,o.operatorname from ac_operator o,ac_operatorrole oro where o.operatorid=oro.operatorid 
+     	  	 and oro.roleid in($roles$)  and oro.orgid=#orgId#
+    ]]>
+    </select>
+    
+    <!-- 业务字典反显专用 -->
+    <select id="queryOrg" parameterClass="java.util.HashMap" resultMap="omOrganization">
+    <![CDATA[
+    select o.orgid,o.orgname,o.orgcode,o.parentorgid from  om_organization o  where orgid in ($orgid$) or orgcode in($orgcode$)
+    ]]>
+         </select>
+    <!-- 业务字典反显专用 -->
+    <select id="queryBatchOrg" parameterClass="java.util.HashMap" resultMap="batchOrg">
+    <![CDATA[
+    	SELECT b.branch_code,b.branch_cn_abbr_name FROM  Tb_Batch_Core_Org b where b.branch_code in($orgcode$)
+    ]]>
+    </select>
+    <!-- 业务字典反显专用 -->
+    <select id="queryEmployee" parameterClass="java.util.HashMap" resultMap="omEmployee">
+    <![CDATA[
+    select o.empid,o.empname,o.userid from  OM_EMPLOYEE o  where empcode in ($empid$) or userid in($userid$)
+    ]]>
+    </select>
+    <select id="queryAcctOrg" parameterClass="java.util.HashMap" resultMap="acctOrg">
+SELECT DECODE(a.col1,'1',a.ACC_ORG_ID,b.ORGNAME)orgname,a.acc_org_no ORGCODE FROM (
+SELECT DISTINCT ACC_ORG_ID,ACC_ORG_NO,COL1 FROM TB_ORG_ACC_REL WHERE ACC_ORG_NO IN ($orgIds$)
+) a
+LEFT JOIN OM_ORGANIZATION b ON a.ACC_ORG_NO=b.ORGCODE
+    </select>
+</sqlMap>

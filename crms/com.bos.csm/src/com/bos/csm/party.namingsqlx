@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+    <resultMap id="party" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="orgNum" column="ORG_NUM" />
+	</resultMap>
+	<!--统一授信客户可以引入的成员-->
+    <select id="partyList" parameterClass="java.util.HashMap" resultMap="party">
+		SELECT V.PARTY_ID,
+	       V.PARTY_NUM,
+	       V.PARTY_NAME,
+	       V.PARTY_TYPE_CD,
+	       V.CERT_TYPE,
+	       V.CERT_NUM,
+	       V.MIDDLE_CODE,
+	       MT.ORG_NUM
+	  FROM V_CSM_PARTY V
+	  JOIN tb_CSM_MANAGEMENT_TEAM MT
+	    ON V.PARTY_ID = MT.PARTY_ID
+	   AND MT.USER_PLACING_CD = '01'
+		 WHERE V.PARTY_TYPE_CD IN ('01','02','05','07')
+	<isNotNull property="partyName">  
+	  	AND V.PARTY_NAME LIKE '%$partyName$%' 
+	</isNotNull>
+	<isNotNull property="certType">  
+	  	AND V.CERT_TYPE = #certType# 
+	</isNotNull>
+	<isNotNull property="certCode">  
+	  	AND V.CERT_NUM LIKE '%$certCode$%' 
+	</isNotNull>
+	<isNotNull property="middelCode">  
+	  	AND V.MIDDLE_CODE LIKE '%$middelCode$%' 
+	</isNotNull>
+	<isNotNull property="examineState">  
+	  	AND V.EXAMINE_STATE = #examineState#
+	</isNotNull>
+	<isNotNull property="isPotentialCust">  
+	  	AND V.IS_POTENTIAL_CUST = #isPotentialCust#
+	</isNotNull>
+    </select>
+    <resultMap id="partyId" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+	</resultMap>
+    <select id="findByCert" parameterClass="java.util.HashMap" resultMap="partyId">
+		SELECT V.PARTY_ID
+		  FROM V_CSM_PARTY V
+		 WHERE 1=1 
+		<isNotEqual property="certType" compareValue="199">and  V.CERT_TYPE = #certType#and  V.CERT_NUM = #certNum#</isNotEqual>
+		<isEqual property="certType" compareValue="199"> and v.unify_society_credit_num= #certNum#</isEqual>
+    </select>
+    <!--根据上年度12月的生效年报，如果没有，则取上年度12月的生效月报；如果还没有，
+    则依次取最近一期12月的生效年报、月报，如果仍然没有，默认为中型。以上报表均取本年累计数-->
+    <select id="getValueZZC" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT * FROM (
+SELECT T3.PROJECT_VALUE/10000 AS VALUE
+FROM TB_ACC_CUSTOMER_FINANCE T1
+INNER JOIN TB_ACC_FINANCE_STATEMENT_DATA T3 ON T3.FINANCE_ID = T1.FINANCE_ID
+WHERE T1.PARTY_ID = #partyId#
+AND T1.FINANCE_STATUS_CD = '02'
+AND T3.PROJECT_CD IN ('00201067','00601095','01301059','00401057','01201057','01401055')
+ORDER BY DECODE(TO_CHAR( T1.FINANCE_DEADLINE, 'MM' ),12,0,1),T1.FINANCE_DEADLINE DESC, T1.FINANCE_TYPE_CD
+)
+WHERE ROWNUM=1
+    </select>
+    <select id="getValueXSE" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT * FROM (
+SELECT DECODE(T1.FINANCE_TYPE_CD,'4',T3.PRE_TOTAL_VALUE,T3.PROJECT_VALUE)/10000 VALUE
+FROM TB_ACC_CUSTOMER_FINANCE T1
+INNER JOIN TB_ACC_FINANCE_STATEMENT_DATA T3 ON T3.FINANCE_ID = T1.FINANCE_ID
+WHERE T1.PARTY_ID = #partyId#
+AND T1.FINANCE_STATUS_CD = '02'
+AND T3.PROJECT_CD IN ('00202001','00602001','01302001','00402016','01202001','01402023')
+ORDER BY DECODE(TO_CHAR( T1.FINANCE_DEADLINE, 'MM' ),12,0,1),T1.FINANCE_DEADLINE DESC, T1.FINANCE_TYPE_CD)
+WHERE ROWNUM=1
+    </select>
+</sqlMap>

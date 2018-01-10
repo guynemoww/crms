@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" property="dateType"/>
+    </parameterMap>
+
+    <resultMap class="commonj.sdo.DataObject" id="resultModelMap">
+        <result column="ver" property="modelVer"/>
+    </resultMap>
+
+	<update id="updateModelState" parameterClass="java.lang.String">
+UPDATE TB_IRM_RATING_MODEL SET MODEL_STATE='3',EXPIRATION_DT=SYSDATE  WHERE MODEL_TYPE_CD=#modelTypeCd# AND MODEL_STATE='2'
+	</update>
+	
+	<delete id="deleteModel" parameterClass="java.lang.String">
+DELETE TB_IRM_INDEX_SCORE WHERE INDEX_ID IN (
+SELECT INDEX_ID FROM TB_IRM_MODEL_INDEX WHERE MODEL_ID=#modelId#
+)
+	</delete>
+	
+    <select id="selectModelByType" parameterClass="commonj.sdo.DataObject" resultMap="resultModelMap">
+    	SELECT * FROM TB_IRM_RATING_MODEL WHERE MODEL_TYPE_CD= #modelTypeCd# AND MODEL_STATE='2'
+    </select>
+    
+    <select id="queryModelVer" parameterClass="java.util.HashMap" resultMap="resultModelMap">
+    	select max(rating_model_ver) ver from TB_IRM_RATING_MODEL 
+    	where MODEL_STATE = 2
+    	<isNotNull property="modelTypeCd">
+	    	and MODEL_TYPE_CD = #modelTypeCd#
+	    </isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="resultOptionMap">
+        <result column="ao_id" property="aoId"/>
+        <result column="option_type_cd" property="optionTypeCd"/>
+        <result column="adjust_option_description" property="adjustOptionDescription"/>
+        <result column="adjust_type_cd" property="adjustTypeCd"/>
+        <result column="adjust_series" property="adjustSeries"/>
+        <result column="model_number" property="modelNumber"/>
+        <result column="adjust_order" property="adjustOrder"/>
+    </resultMap>
+    <select id="queryAdjustOption" parameterClass="java.util.HashMap" resultMap="resultOptionMap">
+  		select  ao_id,
+  		        option_type_cd,
+  		        adjust_option_description,
+  		        adjust_type_cd ,
+  		        adjust_series,
+  				model_number,
+  				adjust_order
+  		from tb_irm_adjust_option where 1=1 
+  		<isNotNull property="modelNum">
+  			and model_number like '%$modelNum$%'
+  		 </isNotNull>
+  		 <isNotNull property="optionTypeCd">
+  			and adjust_type_cd != $optionTypeCd$
+  		 </isNotNull>
+  		 order by adjust_type_cd
+    </select>
+    <select id="queryAdjustOption2" parameterClass="java.util.HashMap" resultMap="resultOptionMap">
+  		select  ao_id,
+  		        option_type_cd,
+  		        adjust_option_description,
+  		        adjust_type_cd,
+  		        adjust_series,
+  				model_number,
+  				adjust_order
+  		from tb_irm_adjust_option where 1=1 
+  		<isNotNull property="modelNum">
+  			and model_number like '%$modelNum$%'
+  		 </isNotNull>
+  		 <isNotNull property="optionTypeCd">
+  			and adjust_type_cd = $optionTypeCd$
+  		 </isNotNull>
+    </select>    
+    <resultMap class="commonj.sdo.DataObject" id="resultGradeMap">
+        <result column="after_grade" property="afterGrade"/>
+    </resultMap>
+    <select id="queryBeforeGrade" parameterClass="java.util.HashMap" resultMap="resultGradeMap">
+    	select after_grade from tb_irm_overthrow_record
+    	where 1=1 
+    	<isNotNull property="applyId">
+	    	and ira_apply_id = #applyId#
+	    </isNotNull>
+    	<isNotNull property="isOverthrow">
+	    	and is_overthrow = #isOverthrow#
+	    </isNotNull>
+	    order by overthrow_dt desc    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="RatingResultMap">
+        <result column="CREDIT_RATING_CD" property="creditRatingCd"/>
+        <result column="rating_Display" property="ratingDisplay"/>
+    </resultMap>
+    <select id="queryRatingResult1" parameterClass="java.util.HashMap" resultMap="RatingResultMap">
+		select CREDIT_RATING_CD, CREDIT_RATING_DISPLAY rating_Display  
+		from TB_IRM_SCALE_DEF 
+		where 1=1 
+    	<isNotNull property="isProfessionalLoan">		
+		and  IS_PROFESSIONAL_LOAN = #isProfessionalLoan#	 
+	    </isNotNull>
+	    and CREDIT_RATING_CD not in ('D','违约')
+	    order by ORDER_NO asc	    
+    </select>
+    <select id="queryRatingResult2" parameterClass="java.util.HashMap" resultMap="RatingResultMap">
+		select CREDIT_RATING_CD, SMALL_LTD_DISPLAY rating_Display  
+		from TB_IRM_SCALE_DEF 
+		where 1=1 
+    	<isNotNull property="isProfessionalLoan">		
+		and  IS_PROFESSIONAL_LOAN = #isProfessionalLoan#	 
+	    </isNotNull>	
+	    and CREDIT_RATING_CD not in ('D','违约')
+	    order by ORDER_NO asc	    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="overRecordMap">
+        <result column="USER_NUM" property="userNum"/>
+        <result column="credit_rating_display" property="afterGrade"/>
+        <result column="OVERTHROW_REASON" property="overthrowReason"/>
+        <result column="AVAG_PD" property="avagPd"/>
+        <result column="org_NUm" property="orgNum"/>
+        <result column="IS_OVERTHROW" property="isOverthrow"/>
+        <result column="OVERTHROW_DT" property="overthrowDt"/>
+    </resultMap>
+    <select id="queryOverRecordInfo" parameterClass="java.util.HashMap" resultMap="overRecordMap">
+		select  USER_NUM,credit_rating_display,OVERTHROW_REASON,AVAG_PD  as  AVAG_PD,org_NUM,IS_OVERTHROW, to_date(to_char(OVERTHROW_DT,'yyyyMMdd'),'yyyyMMdd') as OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD,TB_IRM_SCALE_DEF
+			where 1=1
+		        and AFTER_GRADE = CREDIT_RATING_CD
+		        
+		    	<isNotNull property="applyId">		
+					and  ira_apply_id = #applyId#	 
+			    </isNotNull>
+		union 
+		select  USER_NUM,credit_rating_display,OVERTHROW_REASON,AVAG_PD as  AVAG_PD,org_NUM,IS_OVERTHROW,to_date(to_char(OVERTHROW_DT,'yyyyMMdd'),'yyyyMMdd') as OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD,TB_IRM_SCALE_DEF
+			where 1=1
+		        and AFTER_GRADE = CREDIT_RATING_CD
+	        
+	        <isNotNull property="oldApplyId">		
+	             and  ira_apply_id = #oldApplyId#	 
+	        </isNotNull>
+       
+            order by OVERTHROW_DT desc   	    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="overRecordMap2">
+        <result column="USER_NUM" property="userNum"/>
+        <result column="SMALL_LTD_DISPLAY" property="afterGrade"/>
+        <result column="OVERTHROW_REASON" property="overthrowReason"/>
+        <result column="AVAG_PD" property="avagPd"/>
+        <result column="org_NUm" property="orgNum"/>
+        <result column="IS_OVERTHROW" property="isOverthrow"/>
+        <result column="OVERTHROW_DT" property="overthrowDt"/>
+        <result column="ira_apply_id" property="iraApplyId"/>
+    </resultMap>
+    <select id="queryOverRecordInfo2" parameterClass="java.util.HashMap" resultMap="overRecordMap2">
+		select  ira_apply_id,USER_NUM,SMALL_LTD_DISPLAY,OVERTHROW_REASON,AVAG_PD as  AVAG_PD,org_NUM,IS_OVERTHROW,OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD,TB_IRM_SCALE_DEF
+			where 1=1
+		        and AFTER_GRADE = SMALL_LTD_DISPLAY
+		         and AFTER_GRADE !='aaa'
+		    	<isNotNull property="applyId">		
+					and  ira_apply_id = #applyId#	 
+			    </isNotNull>
+		union 
+		select ira_apply_id, USER_NUM,SMALL_LTD_DISPLAY,OVERTHROW_REASON,AVAG_PD as  AVAG_PD,org_NUM,IS_OVERTHROW,OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD,TB_IRM_SCALE_DEF
+			where 1=1
+		        and AFTER_GRADE = SMALL_LTD_DISPLAY
+	         and AFTER_GRADE !='aaa'
+	        <isNotNull property="oldApplyId">		
+	                        and  ira_apply_id = #oldApplyId#	 
+	        </isNotNull>
+       union
+	   select distinct a.ira_apply_id, a.USER_NUM,b.SMALL_LTD_DISPLAY,a.OVERTHROW_REASON,  c.AVAG_PD as  AVAG_PD,a.org_NUM,a.IS_OVERTHROW,a.OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD a
+			left join TB_IRM_SCALE_DEF b on a.AFTER_GRADE = b.SMALL_LTD_DISPLAY
+			left join 
+			     (select SMALL_LTD_DISPLAY , max(AVAG_PD) as AVAG_PD from TB_IRM_SCALE_DEF where SMALL_LTD_DISPLAY ='aaa' group by SMALL_LTD_DISPLAY) c
+			     on a.AFTER_GRADE = c.SMALL_LTD_DISPLAY
+			where 1=1
+		        and AFTER_GRADE ='aaa'
+	            <isNotNull property="applyId">		
+					and  ira_apply_id = #applyId#	 
+			    </isNotNull>
+		union 
+		select distinct a.ira_apply_id, a.USER_NUM,b.SMALL_LTD_DISPLAY,a.OVERTHROW_REASON,  c.AVAG_PD as  AVAG_PD,a.org_NUM,a.IS_OVERTHROW,a.OVERTHROW_DT
+			from TB_IRM_OVERTHROW_RECORD a
+			left join TB_IRM_SCALE_DEF b on a.AFTER_GRADE = b.SMALL_LTD_DISPLAY
+			left join 
+			     (select SMALL_LTD_DISPLAY , max(AVAG_PD) as AVAG_PD from TB_IRM_SCALE_DEF where SMALL_LTD_DISPLAY ='aaa' group by SMALL_LTD_DISPLAY) c
+			     on a.AFTER_GRADE = c.SMALL_LTD_DISPLAY
+			where 1=1
+		        and AFTER_GRADE ='aaa'
+	        <isNotNull property="oldApplyId">		
+	                        and  ira_apply_id = #oldApplyId#	 
+	        </isNotNull>
+       
+            order by OVERTHROW_DT desc     
+    </select>    
+    <resultMap class="commonj.sdo.DataObject" id="RatingResultsMap">
+        <result column="rec_id" property="recId"/>
+        <result column="ira_apply_id" property="applyId"/>
+        <result column="finance_model_weight" property="financeModelWeight"/>
+        <result column="non_finance_model_weigh" property="nonFinanceModelWeigh"/>                            
+        <result column="finance_model_score" property="financeModelScore"/>
+        <result column="non_finance_model_score" property="nonFinanceModelScore"/>
+        <result column="rating_tatal_score" property="ratingTatalScore"/>
+        <result column="initial_rating_cd" property="initialRatingCd"/>
+        <result column="government_adjust_score" property="governmentAdjustScore"/>
+        <result column="government_adjust_rating_cd" property="governmentAdjustRatingCd"/>
+        <result column="general_adjust_rating_cd" property="generalAdjustRatingCd"/>
+        <result column="execution_date" property="executionDate"/>                                
+    </resultMap>
+    <select id="queryRatingResultInfo" parameterClass="java.util.HashMap" resultMap="RatingResultsMap">
+		select  rec_id,ira_apply_id,finance_model_weight,non_finance_model_weigh,finance_model_score,
+				non_finance_model_score,rating_tatal_score,initial_rating_cd,government_adjust_score,
+				government_adjust_rating_cd,general_adjust_rating_cd,execution_date
+			from tb_irm_rating_engine_calc
+			where 1=1
+		    	<isNotNull property="applyId">		
+					and  ira_apply_id = #applyId#	 
+			    </isNotNull>
+			   		order by execution_date	desc	    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="overRecordsMap">
+        <result column="OR_ID" property="orId"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="OVERTHROW_REASON" property="overthrowReason"/>
+        <result column="BEFORE_GRADE" property="beforeGrade"/>                            
+        <result column="AFTER_GRADE" property="afterGrade"/>
+        <result column="IRA_APPLY_ID" property="iraApplyId"/>
+        <result column="IS_OVERTHROW" property="isOverThrow"/>
+        <result column="OVERTHROW_DT" property="overthrowDt"/>
+        <result column="ORG_NUM" property="orgNum"/>                          
+        <result column="POST_CD" property="postCd"/>                          
+    </resultMap>
+    <select id="querOverRecords" parameterClass="java.util.HashMap" resultMap="overRecordsMap">
+		select 
+			OR_ID,
+			USER_NUM,
+			OVERTHROW_REASON,
+			BEFORE_GRADE,
+			AFTER_GRADE,
+			IRA_APPLY_ID,
+			IS_OVERTHROW,
+			OVERTHROW_DT,
+			POST_CD,
+			ORG_NUM
+			from TB_IRM_OVERTHROW_RECORD
+			where 1=1
+		    	<isNotNull property="applyId">		
+					and  ira_apply_id = #applyId#	 
+			    </isNotNull>
+			   		order by OVERTHROW_DT desc	    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="custTypeCdMap">
+        <result column="REPORT_TYPE" property="customerTypeCd"/>
+        <result column="FINANCE_DEADLINE" property="financeDeadline"/>
+    </resultMap>    
+    <select id="queryTypeCdInfo" parameterClass="java.util.HashMap" resultMap="custTypeCdMap">
+    	select REPORT_TYPE,FINANCE_DEADLINE from TB_ACC_CUSTOMER_FINANCE,TB_ACC_NFD_REPORT
+			where 1=1
+			  and FINANCE_STATUS_CD = '02'
+			  and TB_ACC_CUSTOMER_FINANCE.FINANCE_TYPE_CD= '1'
+			  <isNotNull property="partyId">
+			 	 and PARTY_ID = #partyId# 
+			  </isNotNull>
+			  	 and TB_ACC_CUSTOMER_FINANCE.CUSTOMER_TYPE_CD = TB_ACC_NFD_REPORT.CUSTOMER_TYPE
+			  order by FINANCE_DEADLINE desc
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="tbIrmRatingEngineCalcMap">
+        <result column="REC_ID"                      property="recId"/>
+        <result column="FINANCE_MODEL_SCORE"         property="financeModelScore"/>
+        <result column="RATING_TATAL_SCORE"          property="ratingTatalScore"/>
+        <result column="INITIAL_RATING_CD"           property="initialRatingCd"/>
+        <result column="GOVERNMENT_ADJUST_RATING_CD" property="governmentAdjustRatingCd"/>
+        <result column="GENERAL_ADJUST_RATING_CD"    property="generalAdjustRatingCd"/>
+        <result column="NON_FINANCE_MODEL_SCORE"     property="nonFinanceModelScore"/>
+        <result column="GOVERNMENT_ADJUST_SCORE"     property="governmentAdjustScore"/>
+    </resultMap>
+    <select id="queryTbIrmRatingEngineCalc" parameterClass="java.util.HashMap" resultMap="tbIrmRatingEngineCalcMap">
+    	select REC_ID,
+    	       FINANCE_MODEL_SCORE,
+    	       RATING_TATAL_SCORE,
+    	       INITIAL_RATING_CD,
+    	       GOVERNMENT_ADJUST_RATING_CD,
+    	       GENERAL_ADJUST_RATING_CD,
+    	       NON_FINANCE_MODEL_SCORE,
+    	       GOVERNMENT_ADJUST_SCORE
+    	        from TB_IRM_RATING_ENGINE_CALC
+			where 1=1
+			  <isNotNull property="applyId">
+			 	 and IRA_APPLY_ID = #applyId# 
+			  </isNotNull>
+			  order by EXECUTION_DATE desc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="FinanceMap">
+        <result column="INDEX_CODE"      property="indexCode"/>
+        <result column="INDEX_NAME"      property="indexName"/>
+        <result column="INDEX_DESC"      property="indexDesc"/>
+        <result column="INDEX_SCORE"     property="indexScore"/>
+    </resultMap>
+    <select id="queryFinance" parameterClass="java.util.HashMap" resultMap="FinanceMap">
+    	select 	a.INDEX_SCORE,
+		      	b.INDEX_CODE,
+		        b.INDEX_NAME,
+		        b.INDEX_DESC
+        from TB_IRM_INDEX_CALC  a,TB_IRM_MODEL_INDEX b
+        where a.INDEX_ID = b.INDEX_ID
+       		  <isNotNull property="recId">
+             	 and REC_ID=#recId# 
+              </isNotNull>
+              and b.INDEX_TYPE = '01'
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="OverRecordsMap">
+        <result column="user_num"      property="userNum"/>
+        <result column="org_num"      property="orgNum"/>
+        <result column="OPINION"      property="opinion"/>
+        <result column="POST_NAME"     property="postName"/>
+        <result column="OVERTHROW_REASON"     property="overthrowReason"/>
+    </resultMap>
+    <select id="queryOverRecords" parameterClass="java.util.HashMap" resultMap="OverRecordsMap">
+    	select a.user_num,a.org_num,a.OPINION,a.POST_NAME, c.OVERTHROW_REASON from TB_WFM_WORKITEMINSTANCE a,TB_WFM_PROCESSINSTANCE b,TB_IRM_OVERTHROW_RECORD c
+where 1=1
+        and a.PROCESS_ID = b.PROCESS_ID
+        <isNotNull property="processInstId">
+        and b.PROCESS_ID = #processInstId#
+        </isNotNull>
+        <isNotNull property="applyId">
+        and b.PRODUCT_ID = #applyId#
+        </isNotNull>
+        and c.IRA_APPLY_ID = b.PRODUCT_ID
+        and c.IS_OVERTHROW = '1'
+        and a.user_num = c.user_num
+        and a.org_num =c.org_num
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="ratingCdMap">
+        <result column="OPTION_TYPE_CD"      property="optionTypeCd"/>
+        <result column="ADJUST_SERIES"      property="adjustSeries"/>
+    </resultMap>
+    <select id="queryRatingCd" parameterClass="java.util.HashMap" resultMap="ratingCdMap">
+    	select OPTION_TYPE_CD,ADJUST_SERIES 
+    from TB_IRM_ADJUST_OPTION where ADJUST_TYPE_CD = '0204' 
+    									<isNotNull property="governmentAdjustScore">
+                                       and MIN_VALUE <![CDATA[ < ]]>  #governmentAdjustScore#
+                                       </isNotNull>
+                                       <isNotNull property="governmentAdjustScore">
+                                       and MAX_VALUE <![CDATA[  >=  ]]>#governmentAdjustScore#
+                                       </isNotNull>
+    
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="orderNoMap">
+        <result column="ORDER_NO"      			property="orderNo"/>
+        <result column="CREDIT_RATING_DISPLAY"  property="creditRatingDisplay"/>
+        <result column="SMALL_LTD_DISPLAY"      property="smallLtdDisplay"/>
+    </resultMap>
+    <select id="queryOrderNo" parameterClass="java.util.HashMap" resultMap="orderNoMap">
+   	select  ORDER_NO,
+    					CREDIT_RATING_DISPLAY,
+    					SMALL_LTD_DISPLAY
+    					 from  TB_IRM_SCALE_DEF where 1=1
+    					 				 <isNotNull property="flg"> 
+                                         	and IS_PROFESSIONAL_LOAN=#flg#
+                                         </isNotNull> 
+                                         <isNotNull property="creditRatingCd"> 
+                                         	and CREDIT_RATING_CD = #creditRatingCd#
+                                         </isNotNull>
+   
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="adjustSeriesMaxMap">
+        <result column="ADJUST_SERIES_MAX"      property="adjustSeriesMax"/>
+    </resultMap>
+    <select id="queryAdjustSeriesMax" parameterClass="java.util.HashMap" resultMap="adjustSeriesMaxMap">
+   	select max(ADJUST_SERIES) ADJUST_SERIES_MAX
+from TB_IRM_ADJUST_OPTION a, TB_IRM_ADJUST_OPTIONS b
+where a.AO_ID = b.ADJ_OPT_ID
+  and option_type_cd in('01','02','04')
+      				<isNotNull property="applyId"> 
+                      and IRA_APPLY_ID=#applyId#
+                    </isNotNull> 
+   
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="adjustSeriesMinMap">
+        <result column="ADJUST_SERIES_MIN"      property="adjustSeriesMin"/>
+    </resultMap>
+    <select id="queryAdjustSeriesMin" parameterClass="java.util.HashMap" resultMap="adjustSeriesMinMap">
+   	select max(ADJUST_SERIES) ADJUST_SERIES_MIN
+from TB_IRM_ADJUST_OPTION a, TB_IRM_ADJUST_OPTIONS b
+where a.AO_ID = b.ADJ_OPT_ID
+  and option_type_cd in('03','04')
+      				<isNotNull property="applyId"> 
+                      and IRA_APPLY_ID=#applyId#
+                    </isNotNull> 
+   
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="adjustSeriesMap">
+        <result column="ORDER_NO"      property="orderNo"/>
+        <result column="CREDIT_RATING_CD"      property="creditRatingCd"/>
+        <result column="CREDIT_RATING_DISPLAY"      property="creditRatingDisplay"/>
+        <result column="SMALL_LTD_DISPLAY"      property="smallLtdDisplay"/>
+    </resultMap>
+    <select id="queryAdjustSeries" parameterClass="java.util.HashMap" resultMap="adjustSeriesMap"> 	
+	   		select ORDER_NO,CREDIT_RATING_CD,CREDIT_RATING_DISPLAY,SMALL_LTD_DISPLAY 
+	        from TB_IRM_SCALE_DEF
+	        where 1=1
+	        <isNotNull property="adjust"> 
+	          and ORDER_NO >= #adjust#
+	        </isNotNull>
+	        <isNotNull property="flg"> 
+	          and IS_PROFESSIONAL_LOAN = #flg#
+	        </isNotNull>
+	          and CREDIT_RATING_CD not in ('D','违约')
+	   
+    </select>
+    <select id="queryAdjustSeries2" parameterClass="java.util.HashMap" resultMap="adjustSeriesMap">
+   	select ORDER_NO,CREDIT_RATING_CD,CREDIT_RATING_DISPLAY,SMALL_LTD_DISPLAY 
+        from TB_IRM_SCALE_DEF
+        where 1=1
+        <isNotNull property="orderNo"> 
+          and ORDER_NO = #orderNo#
+        </isNotNull>
+    </select>
+    <select id="queryAdjustSeries3" parameterClass="java.util.HashMap" resultMap="adjustSeriesMap">
+   	select ORDER_NO,CREDIT_RATING_CD,CREDIT_RATING_DISPLAY,SMALL_LTD_DISPLAY 
+        from TB_IRM_SCALE_DEF
+        where 1=1
+        <isNotNull property="generalRatingCd"> 
+          and ORDER_NO = #generalRatingCd#
+        </isNotNull>
+    </select>
+    <select id="queryAdjustSeries4" parameterClass="java.util.HashMap" resultMap="adjustSeriesMap">
+   	select ORDER_NO,CREDIT_RATING_CD,CREDIT_RATING_DISPLAY,SMALL_LTD_DISPLAY 
+        from TB_IRM_SCALE_DEF
+        where 1=1
+        <isNotNull property="governmentRatingCd"> 
+          and ORDER_NO = #governmentRatingCd#
+        </isNotNull>
+    </select>
+    <select id="queryAdjustSeries5" parameterClass="java.util.HashMap" resultMap="adjustSeriesMap">
+   	select ORDER_NO,CREDIT_RATING_CD,CREDIT_RATING_DISPLAY,SMALL_LTD_DISPLAY 
+        from TB_IRM_SCALE_DEF
+        where 1=1
+        <isNotNull property="creditRatingCd"> 
+          and CREDIT_RATING_CD = #creditRatingCd#
+        </isNotNull>
+    </select> 
+                                   
+    <resultMap class="commonj.sdo.DataObject" id="QueryRatingModelAndVer">
+        <result column="MODEL_ID"      property="modelId"/>
+        <result column="MODEL_TYPE_CD"      property="modelTypeCd"/>
+        <result column="RATING_MODEL_VER"      property="ratingModelVer"/>
+        <result column="IRA_APPLY_ID"     property="iraApplyId"/>
+    </resultMap>
+    <select id="queryRatingModelAndVer" parameterClass="java.util.HashMap" resultMap="QueryRatingModelAndVer">
+    	SELECT TBIM.MODEL_ID , TBIM.MODEL_TYPE_CD, TBIM.RATING_MODEL_VER,IRA_APPLY_ID FROM TB_IRM_RATING_MODEL TBIM 
+			LEFT JOIN (SELECT TBIA.RATING_MODEL_CD , TBIA.RATING_MODEL_VER ,TBIA.IRA_APPLY_ID FROM TB_IRM_INTERNAL_RATING_APPLY TBIA ) AA
+			ON TBIM.MODEL_TYPE_CD = AA.RATING_MODEL_CD AND TBIM.RATING_MODEL_VER = AA.RATING_MODEL_VER
+			WHERE TBIM.MODEL_STATE = '2' AND AA.IRA_APPLY_ID IS NOT NULL
+		
+        <isNotNull property="iraApplyId">
+        and AA.IRA_APPLY_ID = #iraApplyId#
+        </isNotNull>
+    </select>    
+    
+    
+    
+      <select id="Querytbirmratingfinindex" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     	
+select t4.* from TB_IRM_INTERNAL_RATING_APPLY t1,tb_irm_rating_model t2 ,TB_IRM_MODEL_INDEX t3,tb_irm_rating_fin_index t4
+ where t1.RATING_MODEL_CD=t2.MODEL_TYPE_CD and t2.MODEL_ID=t3.MODEL_ID and t4.INDEX_CD=t3.INDEX_CODE and 
+IRA_APPLY_ID=#applyId# </select>
+    
+                                   
+    <resultMap class="commonj.sdo.DataObject" id="QueryRatingFinInfo">
+        <result column="INDEX_DATA_ID"      property="modelId"/>
+        <result column="INDEX_VALUE_DATA_TYPE"      property="indexValueDataType"/>
+        <result column="INDEX_DISP"      property="indexDisp"/>
+        <result column="MODEL_ID"     property="modelId"/>
+        <result column="INDEX_CD"      property="indexCd"/>
+        <result column="INDEX_NAME"      property="indexName"/>
+        <result column="PROPERTY_TYPE_CD"      property="propertyTypeCd"/>
+        <result column="INDEX_FORMULA"     property="indexFormula"/>
+        <result column="string_type"     property="stringType"/>
+    </resultMap>
+    <select id="queryRatingFinInfo" parameterClass="java.util.HashMap" resultMap="QueryRatingFinInfo">
+    	SELECT
+			TBRD.INDEX_DATA_ID,
+			TBRD.INDEX_VALUE_DATA_TYPE,
+			TBRD.INDEX_DISP,
+			TBRD.string_type,
+			TBMI.MODEL_ID,
+			TBFI.INDEX_CD,
+			TBFI.INDEX_NAME,
+			TBFI.PROPERTY_TYPE_CD,
+			TBFI.INDEX_FORMULA 
+			FROM TB_IRM_RATING_FIN_INDEX TBFI
+			LEFT JOIN tb_irm_model_index TBMI ON 
+			        TBMI.INDEX_CODE = TBFI.INDEX_CD
+			      AND  TBMI.INDEX_NAME = TBFI.INDEX_NAME
+			     AND  TBMI.PROPERTY_TYPE_CD  = TBFI.PROPERTY_TYPE_CD  
+			LEFT JOIN tb_irm_rating_index_data TBRD
+			ON TBMI.INDEX_CODE = TBRD.INDEX_CD  
+			LEFT JOIN TB_IRM_FINANCIAL_INFO TBFF
+			ON TBRD.FINANCIAL_INFO_ID = TBFF.FINANCIAL_INFO_ID     
+			 WHERE TBMI.INDEX_TYPE = '01'
+			 
+        <isNotNull property="modelId">
+        and MODEL_ID = #modelId#
+        </isNotNull>
+        <isNotNull property="iraApplyId">
+        and TBFF.IRA_APPLY_ID = #iraApplyId#
+        </isNotNull>
+		ORDER BY TBFI.PROPERTY_TYPE_CD ASC
+    </select>    
+                                   
+    <resultMap class="commonj.sdo.DataObject" id="QueryRatingFinInfo1">
+        <result column="INDEX_DATA_ID"      property="modelId"/>
+        <result column="INDEX_VALUE_DATA_TYPE"      property="indexValueDataType"/>
+        <result column="INDEX_DISP"      property="indexDisp"/>
+        <result column="MODEL_ID"     property="modelId"/>
+        <result column="INDEX_CD"      property="indexCd"/>
+        <result column="INDEX_NAME"      property="indexName"/>
+        <result column="PROPERTY_TYPE_CD"      property="propertyTypeCd"/>
+        <result column="INDEX_FORMULA"     property="indexFormula"/>
+        <result column="string_type"     property="stringType"/>
+    </resultMap>
+    <select id="queryRatingFinInfo1" parameterClass="java.util.HashMap" resultMap="QueryRatingFinInfo1">
+    	SELECT
+			TBRD.INDEX_DATA_ID,
+			TBRD.INDEX_VALUE_DATA_TYPE,
+			TBRD.INDEX_DISP,
+			TBRD.string_type,
+			TBMI.MODEL_ID,
+			TBFI.INDEX_CD,
+			TBFI.INDEX_NAME,
+			TBFI.PROPERTY_TYPE_CD,
+			TBFI.INDEX_FORMULA 
+			FROM TB_IRM_RATING_FIN_INDEX TBFI
+			LEFT JOIN tb_irm_model_index TBMI ON 
+			        TBMI.INDEX_CODE = TBFI.INDEX_CD
+			      AND  TBMI.INDEX_NAME = TBFI.INDEX_NAME
+			     AND  TBMI.PROPERTY_TYPE_CD  = TBFI.PROPERTY_TYPE_CD  
+			LEFT JOIN tb_irm_rating_index_data TBRD
+			ON TBMI.INDEX_CODE = TBRD.INDEX_CD  and tbrd.FINANCIAL_INFO_ID = null
+			LEFT JOIN TB_IRM_FINANCIAL_INFO TBFF
+			ON TBRD.FINANCIAL_INFO_ID = TBFF.FINANCIAL_INFO_ID     
+			 WHERE TBMI.INDEX_TYPE = '01'
+			 
+        <isNotNull property="modelId">
+        and MODEL_ID = #modelId#
+        </isNotNull>
+        <isNotNull property="iraApplyId">
+        and TBFF.IRA_APPLY_ID = #iraApplyId#
+        </isNotNull>
+
+		ORDER BY TBFI.PROPERTY_TYPE_CD ASC
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryNetAssets">
+        <result column="INDEX_VALUE_DATA_TYPE"      property="indexValueDataType"/>
+    </resultMap>
+    <select id="queryNetAssets" parameterClass="java.util.HashMap" resultMap="queryNetAssets">
+    	select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+			f.FINANCE_STATUS_CD='02'
+			<isNotNull property="partyId">
+			and f.PARTY_ID= #partyId#
+			</isNotNull>
+			and f.FINANCE_TYPE_CD='1'
+			and d.FINANCE_ID=f.FINANCE_ID
+			and d.INDEX_CD='b205'
+			order by f.FINANCE_DEADLINE desc
+    </select>
+    <select id="queryOperatingIncome" parameterClass="java.util.HashMap" resultMap="queryNetAssets">
+    	select d.INDEX_VALUE_DATA_TYPE from TB_ACC_CUSTOMER_FINANCE f,TB_ACC_FINANCE_INDEX_DATA d where 
+			f.FINANCE_STATUS_CD='02'
+			<isNotNull property="partyId">
+			and f.PARTY_ID= #partyId#
+			</isNotNull>
+			and f.FINANCE_TYPE_CD='1'
+			and d.FINANCE_ID=f.FINANCE_ID
+			and d.INDEX_CD='b059'
+			order by f.FINANCE_DEADLINE desc
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryOrgtype">
+        <result column="orgtype"      property="orgtype"/>
+    </resultMap>
+    <select id="queryOrgtype" parameterClass="java.util.HashMap" resultMap="queryOrgtype">
+    	select orgtype from om_organization where ORGId in(
+	  		select org_num from tb_csm_management_team where 1=1
+		  		<isNotNull property="partyId">
+		           and party_id=#partyId#
+		        </isNotNull>
+		        <isNotNull property="userNum">
+		           and user_num=#userNum#
+		        </isNotNull>
+		    )
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryRatingResHisRec">
+        <result column="MODEL_NAME"           property="modelName"/>
+        <result column="RATING_DT"            property="ratingDt"/>
+        <result column="IRA_APPLY_ID"         property="iraApplyId"/>
+        <result column="INITIAL_CREDIT"       property="initialCredit"/>
+        <result column="EFFECTIVE_START_DT"   property="effectiveStartDt"/>
+        <result column="EFFECTIVE_END_DT"     property="effectiveEndDt"/>
+        <result column="RATING_STATE"         property="ratingState"/>
+        <result column="USER_ID"              property="userId"/>
+        <result column="EMPNAME"              property="empname"/>
+        <result column="ORGNAME"              property="orgname"/>
+        <result column="PROJECT_ID"           property="projectId"/>
+        <result column="PROJECT_NAME"         property="projectName"/>
+        <result column="PARTY_ID"             property="partyId"/>
+        <result column="PARTY_NAME"           property="partyName"/>
+        <result column="PARTY_NUM"            property="partyNum"/>
+        <result column="RATING_MODEL_CD"      property="orgtype"/>
+        <result column="RATING_MODEL_VER"     property="ratingModelVer"/>
+    </resultMap>
+    <select id="queryRatingResHisRec" parameterClass="java.util.HashMap" resultMap="queryRatingResHisRec"> 
+		SELECT 
+		        tbrm.MODEL_NAME,
+		        TIRR.RATING_DT,
+			TIRR.IRA_APPLY_ID,
+			 case 
+			    when (TIRR.CREDIT_RATING_CD_OLD is not null or TIRR.CREDIT_RATING_CD_OLD != '') then TIRR.CREDIT_RATING_CD || '(旧)'
+			    else TIRR.CREDIT_RATING_CD
+			    end AS INITIAL_CREDIT,
+		        TIRR.EFFECTIVE_START_DT,
+		        TIRR.EFFECTIVE_END_DT,
+		        case when TIRR.RATING_STATE = '1' then  TIRR.RATING_STATE
+		        else '0'
+		        end as
+		        RATING_STATE,
+		        TIRR.USER_NUM AS  USER_ID,
+		        OMEM.EMPNAME,
+		        OMOR.ORGNAME,
+		            TBCI.PROJECT_ID AS PROJECT_ID,
+		             TBCI.PROJECT_NAME,
+		              TBCP.PARTY_ID,
+		               TBCP.PARTY_NAME,
+		                TBCP.PARTY_NUM,
+		                TIIRA.RATING_MODEL_CD,
+		                TIIRA.RATING_MODEL_VER
+		 FROM TB_IRM_INTERNAL_RATING_RESULT TIRR 
+		    LEFT JOIN TB_CSM_PROJECT_INFO  TBCI ON TIRR.PROJECT_ID = TBCI.PROJECT_ID
+		    LEFT JOIN TB_CSM_PARTY TBCP ON TIRR.PARTY_ID = TBCP.PARTY_ID
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TIRR.USER_NUM = OMEM.USERID
+		    LEFT JOIN OM_ORGANIZATION OMOR ON OMOR.ORGCODE = TIRR.ORG_NUM
+		    LEFT JOIN TB_IRM_INTERNAL_RATING_APPLY TIIRA ON TIIRA.IRA_APPLY_ID = TIRR.IRA_APPLY_ID
+		    left join tb_irm_rating_model tbrm on  TIIRA.RATING_MODEL_CD = tbrm.MODEL_TYPE_CD and TIIRA.RATING_MODEL_VER = tbrm.RATING_MODEL_VER          
+		     WHERE 1=1  
+		    <isNotNull property="partyId">
+		     and  TBCP.PARTY_ID = #partyId#
+			</isNotNull>
+			order by TIRR.RATING_DT desc
+    </select>                              
+</sqlMap>

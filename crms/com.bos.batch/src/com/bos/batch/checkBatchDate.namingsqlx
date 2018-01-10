@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <select id="batchDate" parameterClass="java.lang.String" resultClass="java.lang.String"><![CDATA[
+	select t1.batch_date,t1.batch_group  from 
+(select count(batch_date) num,batch_date,batch_group 
+from TB_BATCH_TASK_CONSOLE
+where  status = '1'
+group by batch_date,batch_group) t1,
+(select count(batch_date) num,batch_date,batch_group 
+from TB_BATCH_TASK_CONSOLE
+group by batch_date,batch_group
+) t2
+where t1.num = t2.num and t1.batch_date = t2.batch_date and t1.batch_group = t2.batch_group and t1.batch_group = #value#
+order by t1.batch_date desc
+	]]></select>
+	<update id="updateBusinessHours" parameterClass="java.util.HashMap" ><![CDATA[
+		update TB_PUB_DATE set OPERATING_DATE = #updateOperatingDate# where OPERATING_DATE = #currentOperatingDate#
+	]]></update>
+</sqlMap>

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenying -->
+<sqlMap>
+     <resultMap class="commonj.sdo.DataObject" id="startApproveManageResult">
+    	<result column="USER_NUM" property="userNum"/>
+    	<result column="ORG_NUM" property="orgNum"/>
+    	<result column="PARTY_ID" property="partyId"/>
+    	<result column="PARTY_NAME" property="partyName"/>
+    	<result column="CLA_PROPERTIES" property="claProperties"/>
+    </resultMap>
+   <resultMap class="commonj.sdo.DataObject" id="checkCurrentPosicodeResult">
+    	<result column="COUNT" property="count"/>
+    </resultMap>
+
+    <resultMap class="commonj.sdo.DataObject" id="checkResult">
+    	<result column="DEBT_COUNT" property="debtCount"/>
+    	<result column="INDEX_COUNT" property="indexCount"/>
+    </resultMap>
+    
+    <resultMap class="commonj.sdo.DataObject" id="riskSortApplyDetailInfo">
+    	<result column="debt_detailinfo_id" property="debtDetailinfoId"/>
+    	<result column="party_id" property="partyId"/>
+    	<result column="ac_apply_id" property="acApplyId"/>
+    	<result column="cla_approve_num" property="claApproveNum"/>
+    	<result column="loan_summary_id" property="loanSummaryId"/>
+    	<result column="cust_risk_type_cd" property="custRiskTypeCd"/>
+    	<result column="cla_properties" property="claProperties"/>
+    	<result column="cla_method" property="claMethod"/>
+    	<result column="last_cls_result" property="lastClsResult"/>
+    	<result column="last_cla_method" property="lastClaMethod"/>
+    	<result column="cls_result" property="clsResult"/>
+    	<result column="alc_info_id" property="alcInfoId"/>
+    	<result column="ald_info_id" property="aldInfoId"/>
+    	<result column="status" property="status"/>
+    	<result column="create_time" property="createTime"/>
+    	<result column="user_num" property="userNum"/>
+    	<result column="org_num" property="orgNum"/>
+    	<result column="generate_type_cd" property="generateTypeCd"/>
+    	<result column="contract_num" property="contractNum"/>
+    </resultMap>
+    <!-- 查询要发起的申请的信息 -->
+    <select id="queryRiskSortApplyDetailInfo" parameterClass="java.util.HashMap" resultMap="riskSortApplyDetailInfo">
+	    select t1.*
+		  from tb_cla_debt_detailInfo t1,
+		       tb_con_contract_info   t2
+		 where t1.contract_num = t2.contract_num
+		   and t1.status = '0'
+		   and t2.con_status = '03'
+		   and t1.party_id = #partyId#
+		   and (t2.user_num = #userNum#
+			     or t2.org_num in (select a.orgcode
+		           from om_organization a
+		          start with a.orgid = (select d.orgid
+		                                  from om_empposition  a,
+		                                       om_position     b,
+		                                       om_employee     c,
+		                                       om_organization d
+		                                 where a.positionid = b.positionid
+		                                   and c.empid = a.empid
+		                                   and d.orgid = a.orgid
+		                                   and d.orgcode = #orgNum#
+		                                   and c.empcode = #userNum#
+		                                   and b.posicode in ('P1211','P1105'))
+		         connect by prior a.orgid = a.parentorgid))
+    </select>
+    
+    <!-- 验证是否存在在途业务 -->
+    <resultMap class="commonj.sdo.DataObject" id="appCust">
+    	<result column="user_num" property="userNum"/>
+    	<result column="contract_num" property="contractNum"/>
+    </resultMap>
+    <select id="checkApplyCust" parameterClass="java.util.HashMap" resultMap="appCust">  
+    	select t3.contract_num,t1.user_num
+          from tb_cla_assets_classify_apply t1,
+               tb_cla_classify_delt_info    t2,
+               tb_con_contract_info t3
+         where t1.ac_apply_id = t2.ac_apply_id
+           and t2.contract_num = t3.contract_num
+           and t1.apply_status = '1'
+           and t3.con_status = '03'
+           and t3.user_num = #userNum#
+           and t2.party_id = #partyId#
+    </select>
+    
+    
+    <!-- 流程提交时，更新最新审批结果 -->
+    <update id="updateApproveResult" parameterClass="java.util.HashMap">
+    	UPDATE 
+    		tb_cla_classify_delt_info a
+   		SET a.cls_result =
+       		(SELECT approve_result
+	          FROM (SELECT a.*,
+	                       row_number() over(partition by cd_info_id ORDER BY create_time DESC) orders
+	                  FROM tb_cla_approve_detail a) b
+	         WHERE b.orders = 1
+	           AND b.cd_info_id = a.cd_info_id)
+ 		WHERE 
+ 			a.ac_apply_id = #acApplyId#
+   			AND a.cd_info_id IN (SELECT cd_info_id FROM tb_cla_approve_detail)
+    </update>
+    
+    <!-- 流程退回时，更新最新之前的审批结果 -->
+    <update id="updateApproveBeforeResult" parameterClass="java.util.HashMap">
+    	UPDATE 
+    		tb_cla_classify_delt_info a
+   		SET a.cls_result =
+       		(SELECT before_result
+	          FROM (SELECT a.*,
+	                       row_number() over(partition by cd_info_id ORDER BY create_time DESC) orders
+	                  FROM tb_cla_approve_detail a) b
+	         WHERE b.orders = 1
+	           AND b.cd_info_id = a.cd_info_id)
+ 		WHERE 
+ 			a.ac_apply_id = #acApplyId#
+   			AND a.cd_info_id IN (SELECT cd_info_id FROM tb_cla_approve_detail)
+    </update>
+    
+    <!-- 流程同意结束时，新增最新审批结果 初始状态0-->
+    <insert id="insertApproveResult" parameterClass="java.util.HashMap">
+    	insert into tb_cla_debt_detailinfo
+		    (debt_detailinfo_id,
+		     party_id,
+		     ac_apply_id,
+		     cla_approve_num,
+		     loan_summary_id,
+		     cust_risk_type_cd,
+		     cla_properties,
+		     cla_method,
+		     last_cls_result,
+		     last_cla_method,
+		     cls_result,
+		     alc_info_id,
+		     ald_info_id,
+		     status,
+		     create_time,
+		     user_num,
+		     org_num,
+		     generate_type_cd,
+		     whether_square,
+		     contract_num)
+	    select BT_GET_DATE_PRIKEY(),
+	           b.party_id,
+	           b.ac_apply_id,
+	           '',
+	           '',
+	           BT_GET_RISK_CUST_TYPE(b.party_id),
+	           '',
+	           case when #status# = '2' then b.cla_method else b.last_cla_method end cla_method,
+	           b.last_cls_result,
+	           b.last_cla_method,
+	           case when #status# = '2' then b.cls_result else b.last_cls_result end cls_result,
+	           '',
+	           '',
+	           '0',
+	           bt_get_worktime(),
+	           c.user_num,
+	           c.org_num,
+	           '',
+	           '',
+	           b.contract_num
+	      from tb_cla_classify_delt_info    b,
+	           tb_cla_assets_classify_apply c
+	     where c.ac_apply_id = b.ac_apply_id
+	       and c.apply_status = #status#
+	       and c.ac_apply_id = #acApplyId#
+    </insert>
+    
+    <!-- 更新合同分类结果 -->
+    <update id="updateConClsResult" parameterClass="java.util.HashMap"> 
+    	update tb_con_contract_info t
+		   set cls_result =
+		        (SELECT * FROM (select a.cls_result
+		           from tb_cla_debt_detailinfo a
+		          where a.contract_num = t.contract_num
+		            and a.status = '0'
+		            and a.cls_result != t.cls_result ORDER BY CREATE_TIME DESC) WHERE rownum &lt; 2)
+		 where t.con_status = '03'
+		   and exists (select 1
+		          from tb_cla_debt_detailinfo a
+		         where a.contract_num = t.contract_num
+		           and a.status = '0'
+		           and a.cls_result != t.cls_result)
+    </update>
+    
+    <!-- 更新借据分类结果 -->
+    <update id="updateLoanClsResult" parameterClass="java.util.HashMap"> 
+    	  update tb_loan_summary t
+     set fljg =
+          (SELECT * FROM (select a.cls_result
+             from tb_cla_debt_detailinfo a,
+                  tb_con_contract_info   b
+            where a.contract_num = b.contract_num
+              and b.con_status = '03'
+              and a.ac_apply_id = #acApplyId#
+              and a.status = '0'
+              and b.contract_id = t.contract_id ORDER BY a.CREATE_TIME DESC) WHERE rownum &lt; 2)
+   where t.summary_status_cd in ('02', '03')
+     and exists (select 1
+            from tb_cla_debt_detailinfo a,
+                 tb_con_contract_info   b
+           where a.contract_num = b.contract_num
+             and b.con_status = '03'
+             and a.ac_apply_id = #acApplyId#
+             and a.status = '0'
+             and b.contract_id = t.contract_id)
+    </update>
+    
+    <!-- 校验分类报告是否存在 -->
+    <select id="checkDraftReport" parameterClass="java.util.HashMap">  
+		select * from tb_pub_doc where biz_num = #acApplyId#
+    </select>
+    
+    <update id="updateClaApplyStatus" parameterClass="java.util.HashMap"> 
+    	update 
+    		tb_cla_assets_classify_apply 
+    	set 
+    		apply_status = #status#
+    	where 
+    		ac_apply_id = #acApplyId#
+    </update>
+    
+    <update id="updateClaDebtStatus" parameterClass="java.util.HashMap"> 
+    	update 
+    		tb_cla_debt_detailinfo 
+    	set 
+    		status = #status#
+    	where 
+    		contract_num in (select contract_num from 
+    			tb_cla_classify_delt_info where ac_apply_id = #acApplyId#)
+    	    and status = '1'
+    </update>
+    
+    <delete id="deleteClaApply" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_assets_classify_apply a 
+    	where
+    		ac_apply_id = #acApplyId#
+    		a.cd_info_id in (select cd_info_id 
+    					from tb_cla_classify_delt_info 
+    					where ac_apply_id = #acApplyId#)
+    		and a.posicode = #posicode#
+    </delete>
+    
+    <delete id="cleanClaApply" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_assets_classify_apply
+    	where
+    		ac_apply_id = #acApplyId#
+    </delete>
+    
+    <delete id="cleanClaCustInfo" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_classify_cust_info
+    	where
+    		ac_apply_id = #acApplyId#
+    </delete>
+    
+    <delete id="cleanClaDeltInfo" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_classify_delt_info
+    	where
+    		ac_apply_id = #acApplyId#
+    </delete>
+    
+    <delete id="cleanClaApproveDetail" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_approve_detail
+    	where
+    		cd_info_id in (select cd_info_id 
+    					from tb_cla_classify_delt_info 
+    					where ac_apply_id = #acApplyId#)
+    </delete>
+    
+    <delete id="deleteClaApprove" parameterClass="java.util.HashMap">
+    	delete 
+    		tb_cla_approve_detail a 
+    	where 
+    		a.cd_info_id in (select cd_info_id 
+    					from tb_cla_classify_delt_info 
+    					where ac_apply_id = #acApplyId#)
+    		and a.posicode = #posicode#
+    </delete>
+     <resultMap class="java.util.HashMap" id="claApproveList">
+    	<result column="posicode" property="posicode"/>
+    	<result column="approve_opinion" property="approveOpinion"/>
+    	<result column="cd_info_id" property="cdInfoId"/>
+    	<result column="user_num" property="userNum"/>
+    	<result column="org_num" property="orgNum"/>
+    	<result column="create_time" property="createTime"/>
+    	<result column="before_result" property="beforeResult"/>
+    	<result column="approve_result" property="approveResult"/>
+    </resultMap>
+    <select id="queryClaApproveDetail" parameterClass="java.util.HashMap"  resultMap="claApproveList">
+    	select 
+    		 app_detail_id, 
+    		 posicode, 
+    		 approve_result, 
+    		 approve_opinion, 
+    		 cd_info_id, 
+    		 user_num, 
+    		 org_num, 
+    		 to_char(create_time,'yyyy/MM/dd hh24:mi:ss') create_time,
+    		 before_result
+    	from
+    		tb_cla_approve_detail
+    	where
+    		cd_info_id = #cdInfoId#
+    		 <isNotNull prepend="AND" property="posicode">
+	    		posicode=#posicode#
+	    	</isNotNull>
+    	order by create_time
+    </select>
+   
+</sqlMap>

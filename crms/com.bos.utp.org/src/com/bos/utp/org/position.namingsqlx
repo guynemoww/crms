@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:刘良金 -->
+<sqlMap>
+    <parameterMap class="com.bos.utp.dataset.customview.PosiMovePara" id="moveParamMap">
+        <parameter javaType="Int" jdbcType="NUMBER" property="toPosLevel"/>
+        <parameter javaType="Int" jdbcType="NUMBER" property="fromParentPosLevel"/>
+        <parameter javaType="String" jdbcType="VARCHAR" property="toPosSeq"/>
+        <parameter javaType="String" jdbcType="VARCHAR" property="fromParentPosSeq"/>
+        <parameter javaType="String" jdbcType="VARCHAR" property="fromPosSeq"/>
+    </parameterMap>
+    <!-- 移动岗位 -->
+    <update id="movePostion" parameterMap="moveParamMap"><![CDATA[
+         UPDATE OM_POSITION T SET T.POSILEVEL=T.POSILEVEL+?-?,T.POSITIONSEQ=?||SUBSTR(T.POSITIONSEQ,LENGTH(?)+1) WHERE T.POSITIONSEQ LIKE ?
+    ]]></update>
+    
+    <parameterMap class="com.bos.utp.dataset.privilege.OmPartyrole" id="posiRoleAllowAddParam">
+        <parameter javaType="int" jdbcType="number" property="partyid"/>
+    </parameterMap>
+    <resultMap class="com.bos.utp.dataset.privilege.AcRole" id="posiRoleAllowAddResult">
+        <result column="roleid"  property="roleid"/>
+        <result column="rolename"  property="rolename"/>
+    </resultMap>
+    <!-- 查询允许增加的岗位角色 -->
+    <select id="positionRoleAllowAdd" parameterMap="posiRoleAllowAddParam" resultMap="posiRoleAllowAddResult"><![CDATA[
+		  SELECT R.ROLEID, R.ROLENAME FROM AC_ROLE R WHERE R.ROLEID NOT IN (
+            SELECT PR.ROLEID FROM OM_PARTYROLE PR WHERE ( PR.PARTYTYPE='position' OR PR.PARTYTYPE='organization'
+         OR PR.PARTYTYPE = 'duty' ) AND PR.PARTYID = ? )
+          
+    ]]></select>
+    
+     <resultMap class="com.bos.utp.dataset.privilege.AcRolefunc" id="posFuncResultMap">
+        <result column="funccode"  property="acFunction/funccode"/>
+        <result column="funcname"  property="acFunction/funcname"/>
+    </resultMap>
+    <!-- 查询岗位角色的所有功能列表 -->
+    <select id="positionRoleAll" parameterMap="posiRoleAllowAddParam" resultMap="posFuncResultMap"><![CDATA[
+          SELECT FUNCCODE, FUNCNAME FROM AC_FUNCTION WHERE  FUNCCODE IN (
+          SELECT FUNCCODE FROM AC_ROLEFUNC WHERE ROLEID IN (
+		  SELECT R.ROLEID FROM AC_ROLE R WHERE R.ROLEID IN (
+            SELECT PR.ROLEID FROM OM_PARTYROLE PR WHERE ( PR.PARTYTYPE='position' OR PR.PARTYTYPE='organization'
+         OR PR.PARTYTYPE = 'duty' ) AND PR.PARTYID = ?) ) )
+    ]]></select>
+    
+    <select id="queryOrgInfo" parameterClass="java.util.Map"  resultClass="commonj.sdo.DataObject">
+	    SELECT ORGID, ORGCODE, ORGNAME, ORGLEVEL, PARENTORGID, ORGSEQ
+  FROM OM_ORGANIZATION  WHERE orgid=#orgid#
+	</select>
+</sqlMap>

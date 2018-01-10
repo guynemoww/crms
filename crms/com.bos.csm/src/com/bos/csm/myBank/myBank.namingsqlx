@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+
+    <resultMap id="financing" class="java.util.HashMap">
+			<result property="approvalNum" column="APPROVAL_NUM"/>
+			<result property="bizType" column="BIZ_TYPE"/>
+			<result property="creditAmt" column="CREDIT_AMT"/>
+			<result property="availableAmt" column="AVAILABLE_AMT"/>
+			<result property="startDate" column="START_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+		<!-- 1.1	本行融资情况  批复-->
+    <select id="financingList" parameterClass="java.util.HashMap" resultMap="financing">
+		  SELECT DISTINCT V.PARTY_ID,
+           V.PARTY_NUM,
+           V.PARTY_NAME,
+           T.APPROVAL_NUM,
+           T.BIZ_TYPE,
+           'CNY' AS BZ,
+           TA.Credit_Amount AS CREDIT_AMT,
+           TA.Credit_Amount-TA.Credit_Avi AS AVAILABLE_AMT,
+           T.Valid_Date as start_date,
+           T.End_Date,
+           T.USER_NUM,
+           T.ORG_NUM
+      FROM TB_BIZ_APPROVE T, Tb_Biz_Amount_Approve TA, V_CSM_PARTY V
+     WHERE T.Approve_Id = TA.Approve_Id
+       AND T.PARTY_ID = V.PARTY_ID
+       AND T.BECOME_EFFECTIVE_MARK = '03'
+       AND T.APPROVE_CONCLUSION IN('1','3')
+		AND T.PARTY_ID = #partyId#
+    </select>
+    		<!-- 1.1	本行融资情况  批复合计-->
+       <select id="financingListSum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     select sum(ta.credit_amount) as credit_amt_sum,
+            sum(ta.credit_amount - ta.credit_avi) as available_amt_sum
+       from tb_biz_approve t, tb_biz_amount_approve ta
+      where t.approve_id = ta.approve_id
+        and t.become_effective_mark = '03'
+        and t.approve_conclusion in ('1', '3')
+        AND T.PARTY_ID =#partyId#
+      group by t.party_id
+    </select>
+    <resultMap id="financingYW" class="java.util.HashMap">
+    		<result property="partId" column="PARTY_ID"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="bizType" column="BIZ_TYPE"/>
+			<result property="contractAmt" column="CONTRACT_AMT"/>
+			<result property="conBalance" column="CON_BALANCE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="clsResult" column="CLS_RESULT"/>
+			<result property="bzjje" column="BZJJE"/>
+			<result property="conYuE" column="CON_YU_E"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="jjyqbj" column="JJYQBJ"/>
+			<result property="arrearItr" column="ARREAR_ITR"/>
+	</resultMap>
+		<!-- 1.1	本行融资情况  业务-->
+    <select id="financingListYW" parameterClass="java.util.HashMap" resultMap="financingYW">
+			select distinct ta.party_id,
+                tb.product_type,
+                tc.currency_cd,
+                tc.contract_num,
+                decode(ba.biz_type, '02', '综合授信项下单笔', ba.biz_type) biz_type,
+                tc.contract_amt,
+                tc.con_balance,
+                tc.con_yu_e,
+                to_char(tc.begin_date, 'yyyy-MM-dd') as begin_date,
+                to_char(tc.end_date, 'yyyy-MM-dd') as end_date,
+                bzj.bzjje,
+                tc.org_num,
+                tc.user_num,
+                tc.cls_result,
+                s.yqts,
+                s.jjyqbj,
+                s.arrear_itr
+  from tb_biz_approve               ba,
+       tb_biz_amount_approve        ta,
+       tb_biz_amount_detail_approve tb,
+       tb_con_contract_info         tc
+  left join (select sum(nvl(sub.bzjje, 0)) as bzjje, info.contract_id
+               from tb_con_subcontract     sub,
+                    tb_con_subcontract_rel rel,
+                    tb_con_contract_info   info
+              where sub.subcontract_id = rel.subcontract_id
+                and rel.contract_id = info.contract_id
+                and info.con_status = '03'
+                and info.product_type in ('01008001','01008002','01008010')
+              group by info.contract_id) bzj
+    on bzj.contract_id = tc.contract_id
+  left join (select s.contract_id,
+                    max(s.yqts) yqts,
+                    sum(s.jjyqbj) jjyqbj,
+                    sum(s.arrear_itr) arrear_itr
+               from tb_loan_summary s
+              group by s.contract_id) s
+    on s.contract_id = tc.contract_id
+ where ta.approve_id = ba.approve_id
+   and ta.amount_id = tb.amount_id
+   and tb.amount_detail_id = tc.amount_detail_id
+   and tc.con_status = '03'
+   and ba.party_id=#partyId#
+    </select>
+		<!-- 1.1	本行融资情况  业务合计-->
+       <select id="financingListYWSum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select ba.party_id,
+           sum(tc.contract_amt) as contract_amt_sum,
+           sum(tc.con_yu_e) as con_yu_e_sum,
+           sum(nvl(bzj.bzjje,0)) as bzjje_sum
+      from tb_biz_approve               ba,
+           tb_biz_amount_approve        ta,
+           tb_biz_amount_detail_approve tb,
+           tb_con_contract_info         tc
+      left join (select sum(nvl(sub.bzjje, 0)) as bzjje, info.contract_id
+                   from tb_con_subcontract     sub,
+                        tb_con_subcontract_rel rel,
+                        tb_con_contract_info   info
+                  where sub.subcontract_id = rel.subcontract_id
+                    and rel.contract_id = info.contract_id
+                    and info.con_status = '03'
+                    and info.product_type in ('01008001','01008002','01008010')
+                  group by info.contract_id) bzj
+        on bzj.contract_id = tc.contract_id
+     where ta.approve_id = ba.approve_id
+       and ta.amount_id = tb.amount_id
+       and tb.amount_detail_id = tc.amount_detail_id
+       and tc.con_status = '03'
+       and ba.party_id=#partyId#
+     group by ba.party_id
+    </select>
+    
+    <resultMap id="guarantee" class="java.util.HashMap">
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="subcontractNum" column="SUBCONTRACT_NUM"/>
+			<result property="subcontractAmt" column="SUBCONTRACT_AMT"/>
+			<result property="aviAmt" column="AVI_AMT"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="conYuE" column="CON_YU_E"/>
+			<result property="subcontractSum" column="SUBCONTRACT_SUM"/>
+	</resultMap>
+	<!--为我行客户担保信息 本行保证情况-->
+    <select id="guaranteeList" parameterClass="java.util.HashMap" resultMap="guarantee">
+		SELECT DISTINCT 
+            V.PARTY_ID,
+            V.PARTY_NAME,  
+           A.PRODUCT_TYPE,
+           a.currency_cd,
+           A.CONTRACT_NUM,
+           C.SUBCONTRACT_NUM,
+           a.con_yu_e ,
+           DECODE(C.IF_TOP_SUBCON, '1', B.SURETY_AMT, A.CONTRACT_AMT) SUBCONTRACT_AMT,
+           DECODE(C.IF_TOP_SUBCON,'1',c.zgbjxe-c.avi_amt,'0',a.CONTRACT_AMT,'0') SUBCONTRACT_SUM ,
+           DECODE(C.IF_TOP_SUBCON, '1', C.AVI_AMT, '0', '0') AVI_AMT,
+           to_char(decode(c.IF_TOP_SUBCON, '1', c.BEGIN_DATE, a.BEGIN_DATE),'yyyy-MM-dd') as BEGIN_DATE,
+           to_char(decode(c.IF_TOP_SUBCON, '1', c.END_DATE, a.END_DATE),'yyyy-MM-dd') as end_DATE
+      FROM TB_CON_CONTRACT_INFO   A,
+           TB_CON_SUBCONTRACT_REL B,
+           TB_CON_SUBCONTRACT     C,
+           TB_CON_SUB_GRT_REL     D,
+           TB_GRT_GUARANTEE_BASIC E,
+           V_CSM_PARTY            V
+     WHERE A.CONTRACT_ID = B.CONTRACT_ID
+       AND V.PARTY_ID = A.PARTY_ID
+       AND B.SUBCONTRACT_ID = C.SUBCONTRACT_ID
+       AND C.SUBCONTRACT_ID = D.SUBCONTRACT_ID
+       AND D.SURETY_ID = E.SURETY_ID
+       AND A.CON_STATUS = '03'
+       and c.subcontract_status='03'
+	 AND E.PARTY_ID =#partyId#
+    </select>
+   <!--本行保证情况合计--> 
+     <select id="mybankBzrSum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		  SELECT  e.party_id,
+          sum(DECODE(C.IF_TOP_SUBCON, '1', B.SURETY_AMT, A.CONTRACT_AMT))sum
+      FROM TB_CON_CONTRACT_INFO   A,
+           TB_CON_SUBCONTRACT_REL B,
+           TB_CON_SUBCONTRACT     C,
+           TB_CON_SUB_GRT_REL     D,
+           TB_GRT_GUARANTEE_BASIC E
+     WHERE A.CONTRACT_ID = B.CONTRACT_ID
+       AND B.SUBCONTRACT_ID = C.SUBCONTRACT_ID
+       AND C.SUBCONTRACT_ID = D.SUBCONTRACT_ID
+       AND D.SURETY_ID = E.SURETY_ID
+       AND A.CON_STATUS = '03'
+       and c.subcontract_status='03'
+       and e.party_id=#partyId#
+       group by e.party_id
+    </select>
+    
+    <resultMap id="guaranteeDY" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="subcontractNum" column="SUBCONTRACT_NUM"/>
+			<result property="subcontractAmt" column="SUBCONTRACT_AMT"/>
+			<result property="aviAmt" column="AVI_AMT"/>
+			<result property="collType" column="COLL_TYPE"/>
+			<result property="sortType" column="SORT_TYPE"/>
+			<result property="beginDate" column="Begin_Date"/>
+			<result property="endDate" column="End_Date"/>
+			<result property="zgbjxe" column="ZGBJXE"/>
+			<result property="status" column="STATUS"/>
+			<result property="subcontractSum" column="SUBCONTRACT_SUM"/>
+			<result property="conYuE" column="CON_YU_E"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+	</resultMap>
+	
+	<!--为我行客户担保信息 本行抵质押情况合计-->
+    <select id="myBankGrtSum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				select c.party_id,
+				       sum(DECODE(TS.IF_TOP_SUBCON, '1', TSR.SURETY_AMT, TC.Contract_Amt)) sum
+				  from tb_con_contract_info   tc,
+				       tb_con_subcontract_rel tsr,
+				       tb_con_subcontract     ts,
+				       tb_con_sub_grt_rel     f,
+				       tb_grt_mortgage_basic  c
+				 where tsr.contract_id = tc.contract_id
+				   and tsr.subcontract_id = ts.subcontract_id
+				   and ts.subcontract_id = f.subcontract_id
+				   and f.surety_id = c.surety_id
+				   and c.coll_type in ('01', '02')
+				   and tc.con_status = '03'
+				   and ts.subcontract_status = '03'
+				 AND TS.PARTY_ID=#partyId#
+				 group by c.party_id
+    </select>
+    
+ 	<!--为我行客户担保信息 本行抵质押情况-->
+    <select id="guaranteeListDY" parameterClass="java.util.HashMap" resultMap="guaranteeDY">
+		SELECT DISTINCT v.PARTY_ID,
+                    V.PARTY_NAME,
+                    tc.PRODUCT_TYPE,
+                    TC.CONTRACT_NUM,
+                    TS.SUBCONTRACT_NUM,
+                    DECODE(TS.IF_TOP_SUBCON,'1',TSR.SURETY_AMT,TC.Contract_Amt) SUBCONTRACT_AMT ,
+                    DECODE(TS.IF_TOP_SUBCON,'1',ts.zgbjxe-ts.avi_amt,'0',TS.SUBCONTRACT_AMT,'0') SUBCONTRACT_SUM ,
+                    TS.AVI_AMT,
+                    C.COLL_TYPE,
+                    C.SORT_TYPE,
+                    tc.con_yu_e,
+                    tc.currency_cd,
+       TO_CHAR(DECODE(TS.IF_TOP_SUBCON, '1', TS.BEGIN_DATE, TC.BEGIN_DATE),'yyyy-MM-dd') AS BEGIN_DATE,
+           TO_CHAR(DECODE(TS.IF_TOP_SUBCON, '1', TS.END_DATE, TC.END_DATE),'yyyy-MM-dd') AS END_DATE,
+         (CASE C.MORTGAGE_STATUS WHEN '09' THEN '已入库' WHEN '04' THEN '已出库' ELSE '未入库' END) STATUS,
+                    TS.ZGBJXE
+      FROM 
+           TB_CON_CONTRACT_INFO         TC,
+           TB_CON_SUBCONTRACT_REL       TSR,
+           TB_CON_SUBCONTRACT           TS, 
+           V_CSM_PARTY                  V,
+           TB_CON_SUB_GRT_REL     F,
+           TB_GRT_MORTGAGE_BASIC  C
+     WHERE
+        TSR.CONTRACT_ID = TC.CONTRACT_ID
+       AND TSR.SUBCONTRACT_ID = TS.SUBCONTRACT_ID
+       AND TS.SUBCONTRACT_ID = F.SUBCONTRACT_ID
+       AND F.SURETY_ID = C.SURETY_ID
+       AND TS.CON_PARTY_ID = V.PARTY_ID
+       AND C.COLL_TYPE IN ('01','02')
+       and tc.con_status='03'
+       and ts.subcontract_status = '03'
+		   AND TS.PARTY_ID=#partyId#
+    </select>
+    
+    
+     <!-- 1.3	被我行客户担保情况 -->
+    <resultMap id="byGuarantee" class="java.util.HashMap">
+			<result property="subcontractType" column="SUBCONTRACT_TYPE"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="subcontractNum" column="SUBCONTRACT_NUM"/>
+			<result property="subcontractAmt" column="SUBCONTRACT_AMT"/>
+			<result property="aviAmt" column="AVI_AMT"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="byGuaranteeList" parameterClass="java.util.HashMap" resultMap="byGuarantee">
+		select DISTINCT C.SUBCONTRACT_TYPE,
+                A.PRODUCT_TYPE,
+                A.CONTRACT_NUM,
+                V.PARTY_NAME,
+                C.SUBCONTRACT_NUM,
+                E.PARTY_ID,
+                E.ORG_NUM,
+                E.USER_NUM,
+		       DECODE(C.IF_TOP_SUBCON, '1', C.ZGBJXE, '0', A.CONTRACT_AMT, '0') SUBCONTRACT_AMT,
+		       DECODE(C.IF_TOP_SUBCON, '1', C.AVI_AMT, '0', '0') AVI_AMT,
+                to_char(decode(c.IF_TOP_SUBCON, '1', c.BEGIN_DATE, a.BEGIN_DATE),'yyyy-MM-dd') as BEGIN_DATE,
+        	 to_char(decode(c.IF_TOP_SUBCON, '1', c.END_DATE, a.END_DATE),'yyyy-MM-dd') as end_DATE
+		        from TB_GRT_GUARANTEE_BASIC E,TB_CON_SUB_GRT_REL D,V_CSM_PARTY V,TB_CON_SUBCONTRACT_REL B,TB_CON_CONTRACT_INFO A,TB_CON_SUBCONTRACT C
+		        where E.SURETY_ID=D.SURETY_ID
+		        and E.PARTY_ID=V.PARTY_ID
+                and A.CONTRACT_ID=B.CONTRACT_ID
+                and C.SUBCONTRACT_ID=B.SUBCONTRACT_ID
+		        and D.SUBCONTRACT_ID=B.SUBCONTRACT_ID
+		        and B.CONTRACT_ID IN (SELECT  CONTRACT_ID
+                FROM TB_CON_CONTRACT_INFO info where info.PARTY_ID=#partyId#)
+
+    </select>
+    <!-- 1.3	被我行客户担保情况  抵押 -->
+    <resultMap id="byGuaranteeDY" class="java.util.HashMap">
+    		<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="subcontractNum" column="SUBCONTRACT_NUM"/>
+			<result property="collType" column="COLL_TYPE"/>
+			<result property="sortType" column="SORT_TYPE"/>
+			<result property="subcontractAmt" column="SUBCONTRACT_AMT"/>
+			<result property="aviAmt" column="AVI_AMT"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="status" column="STATUS"/>
+			<result property="subcontractType" column="SUBCONTRACT_TYPE"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="guarantyType" column="GUARANTY_TYPE"/>
+	</resultMap>
+    <select id="byGuaranteeListDY" parameterClass="java.util.HashMap" resultMap="byGuaranteeDY">
+	SELECT DISTINCT V.PARTY_NAME,
+		   V.PARTY_ID,
+	       A.PRODUCT_TYPE,
+	       A.CONTRACT_NUM,
+	       B.SUBCONTRACT_NUM,
+	       C.COLL_TYPE,
+	       C.SORT_TYPE,
+	       DECODE(E.IF_TOP_SUBCON, '1',  D.SURETY_AMT, '0', E.SUBCONTRACT_AMT, '0') SUBCONTRACT_AMT,
+	       E.AVI_AMT,
+  			to_char(decode(e.IF_TOP_SUBCON, '1', e.BEGIN_DATE, a.BEGIN_DATE),'yyyy-MM-dd') as BEGIN_DATE,
+           to_char(decode(e.IF_TOP_SUBCON, '1', e.END_DATE, a.END_DATE),'yyyy-MM-dd') as end_DATE,
+	       ( CASE C.MORTGAGE_STATUS WHEN '09' THEN '已入库' WHEN '04' THEN '已出库' ELSE '未入库' END)STATUS,
+	       B.SUBCONTRACT_TYPE,
+	       A.GUARANTY_TYPE,
+	       A.ORG_NUM,
+     	   A.USER_NUM
+	  FROM TB_CON_CONTRACT_INFO   A,
+	       TB_CON_SUBCONTRACT     B,
+	       TB_GRT_MORTGAGE_BASIC  C,
+	       TB_CON_SUBCONTRACT_REL D,
+	       TB_CON_SUBCONTRACT     E,
+	       TB_CON_SUB_GRT_REL     F,
+	       V_CSM_PARTY            V
+	 WHERE A.CONTRACT_ID = D.CONTRACT_ID
+	   AND D.SUBCONTRACT_ID = B.SUBCONTRACT_ID
+	   AND D.SUBCONTRACT_ID = E.SUBCONTRACT_ID
+	   AND E.SUBCONTRACT_ID = F.SUBCONTRACT_ID
+	   AND F.SURETY_ID = C.SURETY_ID
+	   AND E.PARTY_ID = V.PARTY_ID
+	   AND A.CON_STATUS = '03'
+	   AND (C.COLL_TYPE = '01' OR C.COLL_TYPE = '02')
+	   AND A.PARTY_ID = #partyId#
+    </select>
+    <!-- 1.4	1.4	我行存款信息 -->
+    <resultMap id="deposit" class="java.util.HashMap">
+			<result property="accountTypeCd" column="ACCOUNT_TYPE_CD"/>
+			<result property="accountNum" column="ACCOUNT_NUM"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="balance" column="BALANCE"/>
+			<result property="perBalanceAmt" column="PER_BALANCE_AMT"/>
+			<result property="orgId" column="ORG_ID"/>
+	</resultMap>
+    <select id="depositList" parameterClass="java.util.HashMap" resultMap="deposit">
+		select * from tb_csm_deposit_info t where t.party_id = #partyId#
+    </select>
+    <!-- 1.6	违约记录 -->
+    <resultMap id="default" class="java.util.HashMap">
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="PRODUCT_TYPE"/>
+	</resultMap>
+    <select id="defaultList" parameterClass="java.util.HashMap" resultMap="default">
+		SELECT DISTINCT TB.CONTRACT_NUM, T.SUMMARY_NUM
+		  FROM TB_LOAN_SUMMARY T, TB_LOAN_INFO TA, TB_CON_CONTRACT_INFO TB
+		 WHERE T.LOAN_ID = TA.LOAN_ID
+		   AND TA.CONTRACT_ID = TB.CONTRACT_ID
+		   AND T.YQTS IS NOT NULL
+		   AND TB.PARTY_ID=#partyId#
+    </select>
+    <!-- 1.7	拒贷记录 -->
+    <resultMap id="refuse" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="applyDate" column="APPLY_DATE"/>
+			<result property="creditAmount" column="CREDIT_AMOUNT"/>
+			<result property="creditTerm" column="CREDIT_TERM"/>
+			<result property="loanUse" column="LOAN_USE"/>
+			<result property="validDate" column="VALID_DATE"/>
+			<result property="refuseReason" column="REFUSE"/>
+			<result property="remark" column="REMARK"/>
+	</resultMap>
+    <select id="refuseList" parameterClass="java.util.HashMap" resultMap="refuse">
+SELECT TB.APPROVE_ID,
+        TB.APPLY_DATE,
+        Td.CREDIT_TERM,
+        TD.CREDIT_AMOUNT,
+        TE.LOAN_USE,
+        TO_CHAR(W.FINISH_TIME, 'yyyy-MM-dd') AS VALID_DATE,
+        V.PARTY_ID,
+        V.PARTY_NAME,
+        '1' AS REFUSE,
+        W.OPINION AS REMARK
+  FROM TB_WFM_PROCESSINSTANCE       P,
+        TB_WFM_WORKITEMINSTANCE      W,
+        TB_BIZ_APPROVE               TB,
+        TB_BIZ_AMOUNT_APPROVE        TD,
+        TB_BIZ_AMOUNT_DETAIL_APPROVE TE,
+        V_CSM_PARTY                  V
+ WHERE P.PROCESS_ID = W.PROCESS_ID
+   AND W.CONCLUSION = '2'
+   AND P.PRODUCT_ID = TB.APPLY_ID
+   AND TB.APPROVE_ID = TD.APPROVE_ID
+   AND TD.AMOUNT_ID = TE.AMOUNT_ID
+   AND TB.PARTY_ID = V.PARTY_ID
+   and tb.party_Id = #partyId#
+    </select>
+</sqlMap>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="MENUNAME" javaType="string" property="text"/>
+        <result column="MENUID" javaType="string" property="id"/>
+        <result column="PARENTSID" javaType="string" property="pid"/>
+        <result column="MENUACTION" javaType="string" property="url"/>
+        <result column="ICONCLS" javaType="string" property="iconCls"/>
+        <result column="ICONPOSITION" javaType="string" property="iconPosition"/>
+        <result column="ISLEAF" javaType="string" property="isLeaf"/>
+    </resultMap>
+    
+    <!-- 用户菜单功能查询 -->
+    <select id="select_operMenu" parameterClass="java.util.HashMap" resultMap="resultMap">
+    SELECT '999999' MENUID,'我的工作' MENUNAME,'' PARENTSID,'/csm/workdesk/mywork.jsp' MENUACTION,
+    	'icon-tip' ICONCLS,'' ICONPOSITION,-3 MENULEVEL,1 DISPLAYORDER,
+		'true' ISLEAF FROM dual
+    union
+    SELECT '999998' MENUID,'我的客户' MENUNAME,'' PARENTSID,'/csm/workdesk/mycust.jsp' MENUACTION,
+    	'icon-user' ICONCLS,'' ICONPOSITION,-2 MENULEVEL,1 DISPLAYORDER,
+		'true' ISLEAF FROM dual
+    union
+    SELECT '999997' MENUID,'我的业务' MENUNAME,'' PARENTSID,'/csm/workdesk/mybusi.jsp' MENUACTION,
+    	'icon-contract' ICONCLS,'' ICONPOSITION,-1 MENULEVEL,1 DISPLAYORDER,
+		'true' ISLEAF FROM dual
+    union
+    SELECT '999990' MENUID,'-' MENUNAME,'' PARENTSID,'/csm/workdesk/mybusi.jsp' MENUACTION,
+    	'' ICONCLS,'' ICONPOSITION,0 MENULEVEL,1 DISPLAYORDER,
+		'true' ISLEAF FROM dual
+    union
+	SELECT DISTINCT AMF.MENUID,AMF.MENUNAME,AMF.PARENTSID,AMF.MENUACTION,'' ICONCLS,'' ICONPOSITION,AMF.MENULEVEL,AMF.DISPLAYORDER,
+		(CASE WHEN AMF.ISLEAF='1' THEN 'true' ELSE 'false' END) ISLEAF 
+	FROM AC_OPERATOR AO,AC_OPERATORROLE AOR,AC_ROLEFUNC ARF,AC_MENU AM,AC_MENU AMF 
+	WHERE AO.OPERATORID=AOR.OPERATORID AND AOR.ROLEID=ARF.ROLEID AND ARF.FUNCCODE=AM.FUNCCODE AND ARF.APPID=nvl(AM.APPID,1)
+		AND AM.MENUSEQ LIKE '%.'||AMF.MENUID||'.%' AND AO.OPERATORID=#operatorId# AND AO.OPERATORID=#operatorId# and AOR.Orgid=#orgid#
+		AND AOR.ROLEID IN (SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYTYPE='org' AND PARTYID=#orgid#)
+		<!-- 
+		
+		
+		-->
+	<isNotNull prepend="AND" property="id">
+        AMF.PARENTSID=#id#
+    </isNotNull>
+     ORDER BY MENULEVEL,DISPLAYORDER
+    </select>
+    
+    <!-- 判断用户是否存在批量操作员、批量调度员 -->
+    <select id="select_batchrole" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    select o.operatorid from ac_operatorrole op,ac_operator o where op.operatorid=o.operatorid and roleid in ('eosadmin','R1054') and o.userid=#userId#
+    </select>
+    
+    <!-- 更新用户登录时间 -->
+    <update id="update_operator_loginin" parameterClass="java.util.HashMap">
+    <![CDATA[
+	UPDATE ac_operator a SET a.lastlogin = sysdate
+	WHERE a.operatorid = #operatorid#
+	]]>
+	</update>
+	
+    <!-- 更新用户状态 -->
+    <update id="update_operator_status" parameterClass="java.util.HashMap">
+    <![CDATA[
+		UPDATE ac_operator a SET a.status = 'unlock'
+		WHERE a.userid = #userid#
+    ]]>
+    </update>  
+     
+</sqlMap>

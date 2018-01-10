@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+ <resultMap class="com.bos.pub.sys.TbOrderMessage" id="OrderMessageMapResult">
+        <result column="SCORE_MESSAGE_ID" javaType="string" property="scoreMessageId"/>
+        <result column="SCORE_ORG_NUMBER" javaType="string" property="scoreOrgNumber"/>
+        <result column="SCORE_ORG_NAME" javaType="string" property="scoreOrgName"/>
+        <result column="SCORE_NUMBER" javaType="string" property="scoreNumber"/>
+        <result column="SCORE_DEPARTMENT" javaType="string" property="scoreDepartment"/>
+        <result column="SCORE_NAME" javaType="string" property="scoreName"/>
+        <result column="SCORE_PROJECT_NUMBER" javaType="string" property="scoreProjectNumber"/>
+        <result column="SCORE_PROJECT_NAME" javaType="string" property="scoreProjectName"/>
+        
+        <result column="SCORE_MATTER" javaType="string" property="scoreMatter"/>
+        <result column="SPECIFIC_CONDITION_DESCRIBE" javaType="string" property="specificConditionDescribe"/>
+        <result column="SHOULD_THE_SCORING" javaType="int" property="shouldTheScoring"/>
+        <result column="REAL_SCORING" javaType="int" property="realScoring"/>
+        <result column="WHETHER_DOUBLE_SCORE" javaType="string" property="whetherDoubleScore"/>
+        <result column="STATE" javaType="string" property="state"/>
+        
+         <result column="ORG_PEOPLE_NAME" javaType="string" property="orgPeopleName"/>
+          <result column="USER_NUM" javaType="string" property="userNum"/>
+           <result column="ORG_NUM" javaType="string" property="orgNum"/>
+            <result column="ORG_PEOPLE_DEP" javaType="string" property="orgPeopleDep"/>
+            <result column="TIME" javaType="java.sql.Date" property="time"/>
+    </resultMap>
+
+<!-- 查找对应状态的计分开单-->
+   <select id="selectProject" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.TbOrderMessage">
+           select * from TB_ORDER_MESSAGE a where a.user_Num =#orgPeopleNumebr# and a.state  in('01','04','02','08')
+           <isNotNull prepend="AND" property="projectName">
+				a.score_Project_Name=#projectName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="time">
+				a.time=#time#
+			</isNotNull>
+			<isNotNull prepend="AND" property="scoreOrgName">
+				a.score_org_number=#scoreOrgName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="scoreName">
+				a.score_Name=#scoreName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="orgNum">
+				a.org_Num=#orgNum#
+			</isNotNull>
+    </select>
+    <!-- 查找申辩开单-->
+   <select id="selectVerify" parameterClass="java.util.HashMap" resultMap="OrderMessageMapResult">
+           select * from TB_ORDER_MESSAGE a where a.SCORE_NUMBER =#scoreNumber# and a.state  in('03')
+             <isNotNull prepend="AND" property="projectName">
+				a.score_Project_Name=#projectName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="time">
+				a.time=#time#
+			</isNotNull>
+			<isNotNull prepend="AND" property="scoreOrgName">
+				a.score_org_number=#scoreOrgName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="scoreName">
+				a.score_Name=#scoreName#
+			</isNotNull>
+			<isNotNull prepend="AND" property="orgNum">
+				a.org_Num=#orgNum#
+			</isNotNull>
+    </select>
+   <!-- 根据计分得到对应的处罚标准信息--> 
+     <select id="selectPunish" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.TbPunishStandardMessage">
+    	<![CDATA[
+          select  * from  TB_PUNISH_STANDARD_MESSAGE a where a.integral_start_value < #shouldScore#  and  #shouldScore#<= a.integral_end_value  
+    	]]>
+    </select>
+</sqlMap>

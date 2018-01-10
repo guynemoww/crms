@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cc -->
+<sqlMap>
+<!--客户管理 同业客户列表-->
+    <select id="select_fin_id" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    select
+	       p.party_id , 
+	       p.party_num as partyNum,
+	       p.party_name as partyName,
+	       p.ecif_party_num as ecifPartyNum,
+	       p.IS_POTENTIAL_CUST,
+	       t.english_customer__name as englishCustomerName,
+	       t.swift_bic_num as swiftBicNum,
+	       t.financial_permit_num as financialPermitNum,
+	       t.org_register_cd as orgRegisterCd,
+	       t.middle_code as middleCode,
+	       t.register_code as registerCode,
+	       t.area_type as areaType,
+	       t.unify_Society_Credit_Num as unifySocietyCreditNum
+	  from tb_csm_financial_institution t,tb_csm_party p,tb_csm_management_team m
+	  where t.party_id=p.party_id and t.party_id=m.party_id
+	  and m.user_num=#userNum#
+	  <isNotNull property="partyName">  and p.PARTY_NAME like '%$partyName$%' </isNotNull>
+	  <isNotNull property="englishCustomerName">  and t.english_customer__name like '%$englishCustomerName$%' </isNotNull>
+	  <isNotNull property="financialPermitNum">  and t.financial_permit_num =#financialPermitNum#</isNotNull>
+	  <isNotNull property="swiftBicNum">  and t.swift_bic_num =#swiftBicNum#</isNotNull>
+	  <isNotNull property="registercode">  and t.register_code like '%$registercode$%'</isNotNull>
+	  <isNotNull property="orgregistercd">  and t.org_register_cd like '%$orgregistercd$%'</isNotNull>
+	  <isNotNull property="isPotentialCust">  and p.IS_POTENTIAL_CUST =#isPotentialCust#</isNotNull>
+	  <isNotNull property="areaType">  and t.area_type =#areaType#</isNotNull>
+	  <isNotNull property="unifySocietyCreditNum">  and t.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'</isNotNull>
+    </select>
+    
+    <resultMap class="java.util.HashMap" id="finOrgIdMap">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="ECIF_PARTY_NUM" javaType="string" property="ecifPartyNum"/>
+        <result column="ENGLISH_CUSTOMER__NAME" javaType="string" property="englishCustomerName"/>
+        <result column="SWIFT_BIC_NUM" javaType="string" property="swiftBicNum"/>
+        <result column="FINANCIAL_PERMIT_NUM" javaType="string" property="financialPermitNum"/>
+        <result column="ORG_REGISTER_CD" javaType="string" property="orgRegisterCd"/>
+        <result column="MIDDLE_CODE" javaType="string" property="middleCode"/>
+        <result column="REGISTER_CODE" javaType="string" property="registerCode"/>
+        <result column="UNIFY_SOCIETY_CREDIT_NUM" javaType="string" property="unifySocietyCreditNum"/>
+        <result column="AREA_TYPE" javaType="string" property="areaType"/>
+        <result column="FINANCE_ENTERPRISE_TYPE" javaType="string" property="financeEnterpriseType"/>
+        <result column="ORG_NUM" javaType="string" property="orgNum"/>
+        <result column="USER_NUM" javaType="string" property="userNum"/>
+        <result column="CREATE_TIME" javaType="string" property="createTime"/>
+        <result column="IS_POTENTIAL_CUST" javaType="string" property="isPotentialCust"/>      
+    </resultMap>
+    
+    <!--关键信息维护 同业客户列表-->
+    <select id="select_fin_idByOrgId" parameterClass="java.util.HashMap" resultMap="finOrgIdMap">
+	 select p.party_id,
+	        p.party_num,
+	        p.party_name,
+	        p.ecif_party_num,
+	        p.IS_POTENTIAL_CUST,
+	        t.english_customer__name,
+	        t.swift_bic_num,
+	        t.financial_permit_num,
+	        t.org_register_cd,
+	        t.middle_code,
+	        t.register_code,
+	        t.area_type,
+	        t.finance_enterprise_type ,
+          	m.org_num,
+          	m.user_num ,
+          	t.unify_Society_Credit_Num,
+          	to_char(p.create_time,'yyyy-MM-dd HH:mm:ss')  as create_time
+	   from tb_csm_financial_institution t,
+	        tb_csm_party                 p,
+	        tb_csm_management_team       m
+	  where t.party_id = p.party_id
+	    and t.party_id = m.party_id
+	     AND EXISTS (SELECT *
+	          FROM OM_ORGANIZATION o
+	         WHERE o.ORGSEQ LIKE '%.$orgId$.%'
+	           AND o.ORGCODE = m.ORG_NUM)
+	  <isNotNull property="partyName">  and p.PARTY_NAME like '%$partyName$%' </isNotNull>
+	  <isNotNull property="englishCustomerName"> and t.english_customer__name like '%$englishCustomerName$%' </isNotNull>
+	  <isNotNull property="financeEnterpriseType">  and t.finance_enterprise_type =#financeEnterpriseType#</isNotNull>
+	  <isNotNull property="swiftBicNum">  and t.swift_bic_num =#swiftBicNum#</isNotNull>
+	  <isNotNull property="unifySocietyCreditNum">  and t.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'</isNotNull>
+	  <isNotNull property="areaType">  and t.area_type =#areaType#</isNotNull>
+	  <isNotNull property="registerCd">  and t.register_code like '%$registerCd$%'</isNotNull>
+	  <isNotNull property="orgRegisterCd">  and  t.org_register_cd like '%$orgRegisterCd$%'</isNotNull>
+    </select>
+    
+    <select id="query_init_fin_id" parameterClass="java.util.HashMap" resultClass="com.bos.csm.financialinstitution.financialEntity.FinancialInstitionInfo">
+		select p.party_id as partyId,
+		       p.party_num as partyNum,
+		       p.party_name as partyName,
+		       p.ecif_party_num as ecifPartyNum,
+		       p.is_potential_cust as isPotentialCust,
+		       t.finance_enterprise_type as financeEnterpriseType,
+		       t.country,
+		       t.country_basic as countryBasic,
+		       t.province,
+		       t.city,
+		       t.county,
+		       t.street,
+		       t.reg_administrative_divisions as regAdministrativeDivisions,
+		       t.register_date as registerDate,
+		       t.register_end_date as registerEndDate,
+		       t.register_assets as registerAssets,
+		       t.register_assets_currency_cd as registerAssetsCurrencyCd,
+		       t.listing_corporation as listingCorporation,
+		       t.unify_society_credit_num as unifySocietyCreditNum,
+		       (select '1'
+		          from tb_csm_group_member gm, tb_csm_party p
+		         where gm.group_party_id = p.party_id
+		           and gm.corporation_party_id = #partyId#) as groupCustomer,
+		       (select p.party_name
+		          from tb_csm_group_member gm, tb_csm_party p
+		         where gm.group_party_id = p.party_id
+		           and gm.corporation_party_id = #partyId#) as groupName,
+		       t.english_customer__name as englishCustomerName,
+		       t.swift_bic_num as swiftBicNum,
+		       t.financial_permit_num as financialPermitNum,
+		       t.org_register_cd as orgRegisterCd,
+		       t.middle_code as middleCode,
+		       t.register_code as registerCode,
+		       t.area_type as areaType,
+		       t.JY_ADDRESS AS jyAddress
+		  from tb_csm_financial_institution t,
+		       tb_csm_party                 p,
+		       tb_csm_management_team       m
+		 where t.party_id = p.party_id
+		   and t.party_id = m.party_id
+ 		   and t.party_id = #partyId#
+    </select>
+    
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="MIDDLE_CODE" javaType="string" property="middleCode"/>
+        <result column="ORG_REGISTER_CD" javaType="string" property="orgRegisterCd"/>
+        <result column="REGISTER_CODE" javaType="string" property="registerCode"/>
+        <result column="UNIFY_SOCIETY_CREDIT_NUM" javaType="string" property="unifySocietyCreditNum"/>
+        <result column="CREDIT_AMT" javaType="string" property="creditAmt"/>
+        <result column="AVAILABLE_AMT" javaType="string" property="availableAmt"/>
+        <result column="CREDIT_RATING_CD" javaType="string" property="creditRatingCd"/>
+        <result column="MAIN_USER_NUM" javaType="string" property="mainUserNum"/>
+    </resultMap>
+    
+    <!--我的客户 同业客户-->
+    <select id="query_fin_desk" parameterClass="java.util.HashMap" resultMap="resultMap">
+SELECT p.PARTY_ID,
+       p.PARTY_NUM,
+       p.PARTY_NAME,
+       f.MIDDLE_CODE,
+       f.ORG_REGISTER_CD,
+       f.REGISTER_CODE,
+       f.unify_society_credit_num,
+	   biz.credit_amt  as CREDIT_AMT,
+	   rating.OUT_EVAL_RESULT CREDIT_RATING_CD,
+   	   biz.available_amt_real as AVAILABLE_AMT,
+       (SELECT user_num FROM TB_CSM_MANAGEMENT_TEAM cmt WHERE cmt.party_id = p.party_id AND cmt.user_placing_cd = '01') as main_user_num
+FROM TB_CSM_FINANCIAL_INSTITUTION f
+LEFT JOIN V_CRD_PARTY_LIMIT biz ON biz.party_id=f.party_id
+LEFT JOIN TB_CSM_PARTY p ON f.party_id = p.party_id 
+LEFT JOIN TB_CSM_MANAGEMENT_TEAM m ON f.party_id = m.party_id
+LEFT JOIN (
+	SELECT * FROM (SELECT PARTY_ID,OUT_EVAL_RESULT,ROW_NUMBER() OVER(PARTITION BY PARTY_ID ORDER BY EVAL_DATE) xx FROM TB_CSM_EXTERNAL_EVAL_RESULT )WHERE xx=1
+) rating ON rating.PARTY_ID=f.PARTY_ID
+WHERE p.is_potential_cust = '1'
+and m.user_num = #curUserId#
+and m.org_num =#orgcode#
+     <isNotNull property="partyName">  and p.PARTY_NAME like '%$partyName$%' </isNotNull>
+	 <isNotNull property="registerCd">  and f.REGISTER_CODE=#registerCd# </isNotNull>
+	 <isNotNull property="orgRegisterCd">  and f.ORG_REGISTER_CD like '%$orgRegisterCd$%' </isNotNull>
+	 <isNotNull property="middleCode">  and f.MIDDLE_CODE like '%$middleCode$%' </isNotNull>
+	 <isNotNull property="unifySocietyCreditNum">  and f.unify_society_credit_num like '%$unifySocietyCreditNum$%' </isNotNull>
+     </select>
+</sqlMap>

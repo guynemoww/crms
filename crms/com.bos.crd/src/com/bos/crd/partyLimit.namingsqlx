@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--获取行业门类系数-->
+    <select id="getPartyLimitR" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select xs from tb_crd_xs t where t.XSLX =#typeBigCd# and t.TYPE ='R'
+		union 
+		select xs from tb_crd_xs t where t.XSLX =#typeCd# and t.TYPE ='R'
+    </select>
+    <!--本年最近月度的所有者权益-->
+    <select id="getQy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+			select nvl(ta.PROJECT_VALUE,0) as PROJECT_VALUE
+				from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+				where t.FINANCE_ID=ta.FINANCE_ID
+				and t.FINANCE_TYPE_CD='4'
+				and t.FINANCE_STATUS_CD ='02'
+				and ta.PROJECT_CD ='00201066'
+				and t.PARTY_ID= #partyId#
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--存货 （不含产成品和库存商品）-->
+    <select id="getCh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+			select nvl(ta.PROJECT_VALUE,0) as PROJECT_VALUE
+				from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+				where t.FINANCE_ID=ta.FINANCE_ID
+				and t.FINANCE_TYPE_CD='4'
+				and t.FINANCE_STATUS_CD ='02'
+				and ta.PROJECT_CD ='00201019'
+				and t.PARTY_ID=#partyId#
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--不含产成品和库存商品-->
+    <select id="getCK" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+		    select nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_TYPE_CD='4'
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00204044','00204045')
+		        and t.PARTY_ID= #partyId#
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--账龄两年（含）以上的应收款项（包括应收账款、其他应收款）-->
+    <select id="getYskx" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+		    select nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_TYPE_CD='4'
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00204040','00204042')
+		        and t.PARTY_ID= #partyId#
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--无形资产-->
+    <select id="getWxzc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+			select nvl(ta.PROJECT_VALUE,0) as PROJECT_VALUE
+				from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+				where t.FINANCE_ID=ta.FINANCE_ID
+				and t.FINANCE_TYPE_CD='4'
+				and t.FINANCE_STATUS_CD ='02'
+				and ta.PROJECT_CD ='00201051'
+				and t.PARTY_ID=#partyId#
+		    order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--土地使用权、采矿权等市场价值较高的资产   财务补充资料-->
+    <select id="getTc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (
+			select nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE
+					from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+					where t.FINANCE_ID=ta.FINANCE_ID
+					and t.FINANCE_TYPE_CD='4'
+					and t.FINANCE_STATUS_CD ='02'
+					and ta.PROJECT_CD in ('00204047','00204048')
+					and t.PARTY_ID= #partyId#
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--待处理财产损失   财务补充资料-->
+    <select id="getCs" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+			select nvl(ta.PROJECT_VALUE,0) as PROJECT_VALUE
+				from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+				where t.FINANCE_ID=ta.FINANCE_ID
+				and t.FINANCE_TYPE_CD='4'
+				and t.FINANCE_STATUS_CD ='02'
+				and ta.PROJECT_CD ='00204050'
+				and t.PARTY_ID=#partyId#
+		    order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--去年净资产收益率-->
+    <select id="getSyl0" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select nvl(t.INDEX_VALUE_DATA_TYPE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_index_data t,tb_acc_customer_finance ta
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and ta.FINANCE_TYPE_CD='1'
+			and ta.FINANCE_STATUS_CD ='02'
+			and ta.PARTY_ID=#partyId#
+			and t.INDEX_CD in('P11','JZCSYL')
+            and to_char(TA.FINANCE_DEADLINE,'yyyy') = #year#
+    </select>
+    <!--前年净资产收益率-->
+    <select id="getSyl1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select nvl(t.INDEX_VALUE_DATA_TYPE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_index_data t,tb_acc_customer_finance ta
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and ta.FINANCE_TYPE_CD='1'
+			and ta.FINANCE_STATUS_CD ='02'
+			and ta.PARTY_ID=#partyId#
+			and t.INDEX_CD in ('P11','JZCSYL')
+            and to_char(TA.FINANCE_DEADLINE,'yyyy') = #year#
+    </select>
+    <!--负债合计-->
+    <select id="getFz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (		
+			select nvl(ta.PROJECT_VALUE,0) as PROJECT_VALUE
+				from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+				where t.FINANCE_ID=ta.FINANCE_ID
+				and t.FINANCE_TYPE_CD='4'
+				and t.FINANCE_STATUS_CD ='02'
+				and ta.PROJECT_CD ='00201048'
+				and t.PARTY_ID=#partyId#
+		    order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--事业性单位额度测算-->
+    <!--近三年事业性收费资金自留部分平均值-->
+    <select id="getZlpj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select PROJECT_VALUE from (
+		    select  nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE,t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00403001','01204001','01303001','01403001')
+		        and t.PARTY_ID=#partyId#
+		        group by t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+    <!--已停止收费项目-->
+    <select id="getYtzsf" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select PROJECT_VALUE from (
+		    select  nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE,t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00403002','01204002','01303002','01403002')
+		        and t.PARTY_ID=#partyId#
+		        group by t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+        <!--上年度经费结余-->
+    <select id="getJfjy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select PROJECT_VALUE from (
+		    select  nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE,t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00403003','01204003','01303003','01403003')
+		        and t.PARTY_ID=#partyId#
+		        group by t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+        <!--专项（信贷）拨款-->
+    <select id="getZxbk" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select PROJECT_VALUE from (
+		    select  nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE,t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00403004','01204004','01303004','01403004')
+		        and t.PARTY_ID=#partyId#
+		        group by t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+        <!--全部有息债务-->
+    <select id="getYxzw" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select PROJECT_VALUE from (
+		    select  nvl(sum(ta.PROJECT_VALUE),0) as PROJECT_VALUE,t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+		        where t.FINANCE_ID=ta.FINANCE_ID
+		        and t.FINANCE_STATUS_CD ='02'
+		        and ta.PROJECT_CD in ('00403005','01204005','01303005','01403005')
+		        and t.PARTY_ID=#partyId#
+		        group by t.FINANCE_TYPE_CD,t.FINANCE_DEADLINE
+		        order by t.FINANCE_DEADLINE desc
+		) where rownum =1
+    </select>
+</sqlMap>

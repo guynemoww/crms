@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ljf -->
+<sqlMap>
+   
+    <resultMap class="java.util.HashMap" id="resultMapGroup">
+        <result column="REMIND_TYPE" javaType="string" property="remindType"/>
+        <result column="REMIND_NAME" javaType="string" property="remindName"/>
+        <result column="NUMS" javaType="string" property="num"/>
+    </resultMap>
+    
+    <!--总数查询-->
+    <select id="select_group_id" parameterClass="java.util.HashMap" resultMap="resultMapGroup">
+		select a.dictid as remind_type,
+		 	   a.dictname as remind_name,
+		       nvl(b.nums, 0) as nums
+		  from eos_dict_entry a
+		  left join (select remind_type,
+		                    count(r.remind_id) as nums
+		               from tb_tab_remind_info r,
+		               		tb_csm_management_team t
+		              where r.party_id = t.party_id
+		              and r.remind_status = '01' <!--待处理-->
+		              <!--and t.org_num = #orgCode# -->
+				      and (t.user_num = #userCode# or exists (
+                           select 1
+                            from om_organization a
+                             start with a.orgid in (select d.orgid
+                                                     from om_organization d
+                                                    where d.PARENTORGID = #orgId#
+                                                   )
+                            connect by prior a.orgid = a.parentorgid)
+			               ) <!-- 负责人岗  行长岗-->
+		              group by remind_type
+		              union
+		                select g.warn_tp_cd as remind_type,count(g.remind_id) as nums
+                  		 from tb_tab_remind_guar g, tb_csm_management_team t where g.owner_id = t.party_id 
+                  		 and g.warn_sts_cd = '01' <!--and t.org_num = #orgCode# -->
+                  		 and (t.user_num = #userCode# or exists (
+                  		      select 1
+                              from om_organization a
+                              start with a.orgid in (select d.orgid
+                                                     from om_organization d
+                                                    where d.PARENTORGID = #orgId#
+                                                   )
+                             connect by prior a.orgid = a.parentorgid ))
+                  		 group by g.warn_tp_cd
+		              
+		              ) b
+		    on b.remind_type = a.dictid
+		 where a.dicttypeid = 'XD_DHCD0015' AND a.DICTID !='09'
+		 order by a.SORTNO
+    </select>
+    
+    <!--通用检查-->
+    <select id="select_id" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true" >
+	    select a.party_id,
+		       a.party_name,
+		       b.remind_id,
+		       b.remind_type,
+		       b.create_date,
+		       b.begin_date,
+		       b.end_date,
+		       b.remind_status,
+		       t.org_num       team_org_num,
+		       t.user_num      team_user_num,
+		       s.summary_amt   new_summary_amt,
+		       s.jjyqbj        new_jjyqbj,
+		       s.arrear_itr    new_arrear_itr,
+		       s.punish_itr    new_punish_itr,
+		       s.end_date      new_end_date,
+		       s.yqts          new_yqts,
+		       c.*
+		  from tb_csm_party       a,
+		       tb_tab_remind_info b
+				  left join tb_loan_summary s
+				    on s.summary_id = b.business_id, 
+		    $tableName$		 c, 
+		    tb_csm_management_team t
+		 where a.party_id = b.party_id
+		       and t.party_id = b.party_id
+		       and b.remind_id = c.remind_id
+		       and b.remind_status != '00' <!--排除 待提醒 状态-->
+		       and (t.user_num = #userCode# or t.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgId#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+        <!-- or t.org_num in (#orgCode#) -->)
+			   <isNotNull property="partyName">
+			   	 and a.party_name like '%$partyName$%'
+			   </isNotNull>
+			   <isNotNull property="remindStatus">
+			   	 and b.remind_status='$remindStatus$'
+			   </isNotNull>
+			   <isNotNull property="stDate">
+			     and b.begin_date &gt;= to_date(substr(#stDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull>
+			   <isNotNull property="enDate">
+			   	 and b.begin_date &lt;= to_date(substr(#enDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull> 
+			   order by s.yqts
+    </select>
+    <!--通用检查 条数统计-->
+    <select id="select_id_count" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true" >
+	    select 1
+		  from tb_csm_party       a,
+		       tb_tab_remind_info b
+				  left join tb_loan_summary s
+				    on s.summary_id = b.business_id, 
+		    $tableName$		 c, 
+		    tb_csm_management_team t
+		 where a.party_id = b.party_id
+		       and t.party_id = b.party_id
+		       and b.remind_id = c.remind_id
+		       and b.remind_status != '00' <!--排除 待提醒 状态-->
+		       and (t.user_num = #userCode# or t.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgId#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or t.org_num in (#orgCode#))
+			   <isNotNull property="partyName">
+			   	 and a.party_name like '%$partyName$%'
+			   </isNotNull>
+			   <isNotNull property="remindStatus">
+			   	 and b.remind_status='$remindStatus$'
+			   </isNotNull>
+			   <isNotNull property="stDate">
+			     and b.begin_date &gt;= to_date(substr(#stDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull>
+			   <isNotNull property="enDate">
+			   	 and b.begin_date &lt;= to_date(substr(#enDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull> 
+			   order by s.yqts
+    </select>
+     <!--通用检查:备份供参考-->
+    <select id="select_id_back_up" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true" >
+	    select a.party_id,
+		       a.party_name,
+		       b.remind_id,
+		       b.remind_type,
+		       b.create_date,
+		       b.begin_date,
+		       b.end_date,
+		       b.remind_status,
+		       t.org_num       team_org_num,
+		       t.user_num      team_user_num,
+		       s.summary_amt   new_summary_amt,
+		       s.jjyqbj        new_jjyqbj,
+		       s.arrear_itr    new_arrear_itr,
+		       s.punish_itr    new_punish_itr,
+		       s.end_date      new_end_date,
+		       s.yqts          new_yqts,
+		       c.*
+		  from tb_csm_party       a,
+		       tb_tab_remind_info b
+				  left join tb_loan_summary s
+				    on s.summary_id = b.business_id, 
+		    $tableName$		 c, 
+		    tb_csm_management_team t
+		 where a.party_id = b.party_id
+		       and t.party_id = b.party_id
+		       and b.remind_id = c.remind_id
+		       and b.remind_status != '00' <!--排除 待提醒 状态-->
+			   and t.org_num = #orgCode#
+		       and (t.user_num = #userCode# or exists
+		        (select 1 from om_empposition a,
+		                    om_position    b,
+		                    om_employee    c
+		              where a.positionid = b.positionid
+		                    and a.empid = c.operatorid
+		                    and c.userid = #userCode#
+		                    <!-- and b.posicode in ('P1107', 'P1201') -->
+		                    )) <!-- 负责人岗  行长岗-->
+			   <isNotNull property="partyName">
+			   	 and a.party_name like '%$partyName$%'
+			   </isNotNull>
+			   <isNotNull property="remindStatus">
+			   	 and b.remind_status='$remindStatus$'
+			   </isNotNull>
+			   <isNotNull property="stDate">
+			     and b.begin_date &gt;= to_date(substr(#stDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull>
+			   <isNotNull property="enDate">
+			   	 and b.begin_date &lt;= to_date(substr(#enDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull> 
+			   order by s.yqts
+    </select>
+    <!--风险预警提示列表：客户经理查询-->
+    <select id="select_id_jl" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true" >
+	    select a.party_id,
+		       a.party_name,
+		       b.remind_id,
+		       b.remind_type,
+		       b.create_date,
+		       b.begin_date,
+		       b.end_date,
+		       b.remind_status,
+		       t.org_num       team_org_num,
+		       t.user_num      team_user_num,
+		       s.summary_amt   new_summary_amt,
+		       s.jjyqbj        new_jjyqbj,
+		       s.arrear_itr    new_arrear_itr,
+		       s.punish_itr    new_punish_itr,
+		       s.end_date      new_end_date,
+		       s.yqts          new_yqts,
+		       c.*
+		  from tb_csm_party       a,
+		       tb_tab_remind_info b
+				  left join tb_loan_summary s
+				    on s.summary_id = b.business_id, 
+		    $tableName$		 c, 
+		    tb_csm_management_team t
+		 where a.party_id = b.party_id
+		       and t.party_id = b.party_id
+		       and b.remind_id = c.remind_id
+		       and b.remind_status != '00' <!--排除 待提醒 状态-->
+			   and t.org_num = #orgCode#
+		       and t.user_num = #userCode# 
+			   <isNotNull property="partyName">
+			   	 and a.party_name like '%$partyName$%'
+			   </isNotNull>
+			   <isNotNull property="remindStatus">
+			   	 and b.remind_status='$remindStatus$'
+			   </isNotNull>
+			   <isNotNull property="stDate">
+			     and b.begin_date &gt;= to_date(substr(#stDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull>
+			   <isNotNull property="enDate">
+			   	 and b.begin_date &lt;= to_date(substr(#enDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull> 
+			   order by s.yqts
+    </select>
+     <!--风险预警提示列表：客户经理查询  条数统计-->
+    <select id="select_id_jl_count" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" remapResults="true" >
+	    select 1
+		  from tb_csm_party       a,
+		       tb_tab_remind_info b
+				  left join tb_loan_summary s
+				    on s.summary_id = b.business_id, 
+		    $tableName$		 c, 
+		    tb_csm_management_team t
+		 where a.party_id = b.party_id
+		       and t.party_id = b.party_id
+		       and b.remind_id = c.remind_id
+		       and b.remind_status != '00' <!--排除 待提醒 状态-->
+			   and t.org_num = #orgCode#
+		       and t.user_num = #userCode# 
+			   <isNotNull property="partyName">
+			   	 and a.party_name like '%$partyName$%'
+			   </isNotNull>
+			   <isNotNull property="remindStatus">
+			   	 and b.remind_status='$remindStatus$'
+			   </isNotNull>
+			   <isNotNull property="stDate">
+			     and b.begin_date &gt;= to_date(substr(#stDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull>
+			   <isNotNull property="enDate">
+			   	 and b.begin_date &lt;= to_date(substr(#enDate#,0,10),'yyyy-MM-dd')
+			   </isNotNull> 
+			   order by s.yqts
+    </select>
+    <select id="select_06_warn_detail" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.ews.TbRewCsmSignalList">
+		    select csm_early_warning_id,
+			       csm_signal_id,
+			       launch_date,
+			       signal_source_cd,
+			       signal_status_cd,
+			       signal_state,
+			       customer_warning_updateid,
+			       customer_warning_close,
+			       hold_date,
+			       close_date,
+			       csmwarningtypeid,
+			       party_id
+			  from tb_rew_csm_signal_list
+			 where 
+			 	   signal_status_cd in ('4','2')
+			 	   <!--signal_status_cd = '4'-->
+			       <!--and signal_source_cd = '2'-->
+			       and close_date is null
+			       and party_id = #partyId#
+
+    </select>
+     <update id="update_06_warn_detail" parameterClass="java.util.HashMap">
+		    update tb_rew_csm_signal_list 
+		    set CUSTOMER_WARNING_UPDATEID = #bizId# 
+			 where signal_status_cd = '4'
+			       and signal_source_cd = '2'
+			       and close_date is null
+			       and party_id = #partyId#
+    </update>
+    
+    
+   <select id="getReceiptNum" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select a.contract_num,
+		       b.summary_num,
+		       decode(nvl(c.product_type, '1'), '1', b.summary_num, a.contract_num) RECEIPT_NUM,
+		       decode(nvl(c.product_type, '1'), '1', b.summary_amt, a.contract_amt) RECEIPT_AMT,
+		       decode(nvl(c.product_type, '1'), '1', b.jjye, a.con_yu_e) RECEIPT_BAL
+		  from tb_con_contract_info a,
+		       tb_loan_summary      b,
+		       tb_sys_product       c
+		 where a.contract_id = b.contract_id
+		       and a.product_type = c.product_cd
+		       and b.summary_status_cd in ('02', '03', '04','07')
+		       and b.summary_num = #summaryNum#
+   </select>
+   
+     <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+        <result column="PARTY_TYPE_CD" javaType="string" property="partyTypeCd"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="REMIND_ID" javaType="string" property="remindId"/>
+        <result column="REMIND_TYPE" javaType="string" property="remindType"/>
+        <result column="REMIND_STATUS" javaType="string" property="remindStatus"/>
+        <result column="CREATE_DATE" javaType="string" property="createDate"/>
+    </resultMap>
+    <select id="select_list_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+		select 
+			p.PARTY_ID,
+	       	p.PARTY_NUM,
+	       	p.PARTY_TYPE_CD,
+	       	p.PARTY_NAME,
+	       	r.REMIND_ID,
+	       	r.REMIND_TYPE,
+	       	r.REMIND_STATUS,
+	       	r.CREATE_DATE
+	  from tb_tab_remind_info r, tb_csm_party p
+	 where r.party_id = p.party_id
+	   and (r.remind_user_num=#curUserNum# or r.remind_position in
+	 (select op.posicode
+	          from om_empposition om, om_position op, ac_operator ar
+	         where om.positionid = op.positionid
+	           and om.empid = ar.operatorid
+	           and ar.userid = #curUserNum#))
+	    <isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	    </isNotNull>
+	    <isNotNull property="remindType">
+	    	and r.REMIND_TYPE=#remindType#
+	    </isNotNull>
+	    <isNotNull property="remindStatus">
+	    	and r.REMIND_STATUS=#remindStatus#
+	    </isNotNull>
+	    <isNotNull property="stDate">
+	    	and to_char(r.CREATE_DATE,'yyyy-MM-dd HH:mm:ss')>= substr(#stDate#,0,10)
+	    </isNotNull>
+	    <isNotNull property="enDate">
+	    <![CDATA[
+	    	and to_char(r.CREATE_DATE,'yyyy-MM-dd HH:mm:ss') <=substr(#enDate#,0,10)
+	    ]]>
+	    </isNotNull>
+    </select>
+    
+     <select id="select_yp_warn_detail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		   select remind_id, warn_tp_cd, warn_sts_cd, warn_create_dt, contract_num, surety_no, 
+		   		  surety_name, warrant_no, warrant_name, warrant_end_dt, insur_no, insur_name, 
+		   		  insur_tp_cd, insur_amt, insur_end_dt, opr_org_no, opr_org_name, opr_user_no, 
+		   		  opr_user_name, apply_user_no, reason_rmk, warn_release_dt 
+		   from tb_tab_remind_guar 
+		   where opr_org_no = #orgcode# and opr_user_no = #curUserNum# 
+			<isNotNull property="stDate">
+	    	and to_char(WARN_CREATE_DT,'yyyy-MM-dd HH:mm:ss')>= substr(#stDate#,0,10)
+	        </isNotNull>
+	        <isNotNull property="enDate">
+	         <![CDATA[
+	    	and to_char(WARN_CREATE_DT,'yyyy-MM-dd HH:mm:ss') <=substr(#enDate#,0,10)
+	         ]]>
+	        </isNotNull>
+	        <isNotNull property="type">
+	    	and WARN_TP_CD=#type#
+	        </isNotNull>
+	        <isNotNull property="stsCd">
+	    	and warn_sts_cd=#stsCd#
+	        </isNotNull>
+    </select>
+    
+     <select id="select_rk_warn_detail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		 
+  select pp.product_name,yp.remind_id, yp.user_num, yp.party_name, yp.product_type, yp.contract_num, ao.operatorname,
+		   yp.begin_date, yp.end_date, yp.update_date from tb_tab_remind_ypwrk yp ,tb_tab_remind_info info, tb_csm_management_team t,ac_operator ao ,
+		   tb_sys_product pp 		 
+		   where info.party_id = t.party_id  and info.remind_id = yp.remind_id and pp.product_cd = yp.product_type and ao.userid = yp.user_num
+		 and t.org_num = #orgCode#  
+			<isNotNull property="stDate">
+	    	and to_char(yp.update_date,'yyyy-MM-dd HH:mm:ss')>= substr(#stDate#,0,10)
+	        </isNotNull>
+	        <isNotNull property="enDate">
+	         <![CDATA[
+	    	and to_char(yp.update_date,'yyyy-MM-dd HH:mm:ss') <=substr(#enDate#,0,10)
+	         ]]>
+	        </isNotNull>
+	        <isNotNull property="partyName">
+	    	and yp.party_Name like '%$partyName$%'
+	        </isNotNull>
+	       <isNotNull property="curUserNum">
+	    	and t.user_num = #curUserNum#
+	        </isNotNull>
+    </select>
+    
+</sqlMap>

@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+ 
+    <!--获取打印保证从合同数据-->
+    <select id="getBigType_GRT" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+	SUB.PARTY_ID A_ID,
+	SUB.ORG_NUM B_ID,
+    CI.PARTY_ID CON_PARTY_ID,
+    p.PARTY_NAME CON_PARTY_NAME,
+    SUB.SUBCONTRACT_ID,
+    SUB.SUBCONTRACT_NUM,
+    SUB.SUBCONTRACT_AMT,
+    SUB.BZ,
+    SUB.ZGBJXE,
+    SUB.ZFWYJBL,
+    SUB.CHANGE_PERCENT,
+    SUB.IF_TOP_SUBCON,
+    SUB.SUBCONTRACT_TYPE,
+    ci.CONTRACT_ID,
+    ci.CONTRACT_NUM,
+    ci.PRODUCT_TYPE,
+    ci.CONTRACT_AMT,
+    ci.CURRENCY_CD,
+    ci.MAIN_GUARANTY_TYPE,
+    TO_CHAR(SUB.BEGIN_DATE, 'YYYY-MM-DD') SUBBEGIN_DATE,
+    TO_CHAR(SUB.END_DATE, 'YYYY-MM-DD') SUBEND_DATE,
+    GRTREL.SURETY_ID,
+    INFO.ARBITRATE_TYPE,
+    INFO.ARBITRATE_NAME,
+    INFO.ARBITRATE_ADDRESS,
+    INFO.OTHER,
+    INFO.TOTAL_COUNT,
+    INFO.ADD_CLAUSE
+FROM TB_CON_SUBCONTRACT SUB
+INNER JOIN TB_CON_SUBCONTRACT_REL SUBREL ON SUB.SUBCONTRACT_ID = subrel.SUBCONTRACT_ID
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=subrel.CONTRACT_ID
+INNER JOIN TB_CON_SUB_GRT_REL GRTREL ON SUB.SUBCONTRACT_ID = GRTREL.SUBCONTRACT_ID
+LEFT JOIN TB_CON_ATTACHED_INFO INFO ON INFO.CONTRACT_ID = SUB.SUBCONTRACT_ID
+LEFT JOIN TB_CSM_PARTY P ON ci.party_id=p.PARTY_ID
+WHERE sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+     <select id="getBigType_BZ" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT PARTY_ID A_ID FROM TB_GRT_GUARANTEE_BASIC WHERE SURETY_ID=#suretyId#
+     </select>
+     
+     <select id="getGrt_dzy" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT gm.SURETY_ID,ROWNUM,SURETY_NO,SORT_TYPE,SURETY_NAME,OWNERSHIP_NUM,ASSESS_VALUE,p.PARTY_NAME OWNER_NAME 
+FROM TB_CON_SUB_GRT_REL sgr
+INNER JOIN TB_GRT_MORTGAGE_BASIC gm ON gm.SURETY_ID=sgr.SURETY_ID
+LEFT JOIN TB_CSM_PARTY p ON p.PARTY_ID=gm.party_id
+WHERE sgr.SUBCONTRACT_ID=#subcontractId# AND gm.COLL_TYPE=#subType#
+     </select>
+     
+     <select id="getGrt_bzj" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT gm.SURETY_ID,s.BZJJE,gm.MARGIN_RATE,gm.MARGIN_ACCOUNT,NVL(o.ORGNAME,gm.OPEN_BANK)OPEN_BANK 
+FROM TB_CON_SUBCONTRACT s
+INNER JOIN TB_CON_SUB_GRT_REL sgr ON s.SUBCONTRACT_ID=sgr.SUBCONTRACT_ID
+INNER JOIN TB_GRT_MARGIN gm ON sgr.SURETY_ID=gm.SURETY_ID
+LEFT JOIN OM_ORGANIZATION o ON o.ORGCODE=gm.OPEN_BANK
+WHERE s.SUBCONTRACT_ID=#subcontractId#
+     </select>
+
+     <select id="getGrt_wtrdzy" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT sgr.SURETY_ID,SUM(csr.SURETY_AMT) SURETY_AMT 
+FROM TB_CON_SUB_GRT_REL sgr
+INNER JOIN TB_CON_SUBCONTRACT_REL csr ON sgr.SUBCONTRACT_ID=csr.SUBCONTRACT_ID
+WHERE csr.SUBCONTRACT_ID=#subcontractId# AND csr.IF_EFFECTIVE='1' 
+AND csr.CONTRACT_ID &lt;&gt; #contractId#
+GROUP BY sgr.SURETY_ID
+     </select>
+
+    <!--获取打印主合同数据(包含主合同、利率、合同账户信息、附属信息、流动资金)-->
+    <select id="getConInfo_Product" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+	ci.PARTY_ID A_ID,
+	ci.ORG_NUM B_ID,
+	ci.CONTRACT_ID,
+	ci.AMOUNT_DETAIL_ID,
+	ci.CONTRACT_NUM,
+	ci.CONTRACT_AMT,
+	ci.CURRENCY_CD,
+	ci.PAPER_CON_NUM,
+	ci.LOAN_USE,
+	ci.TRUS_TO_PAY_FLG,
+	ci.FIRST_REPAY_TERM,
+	ci.PRODUCT_TYPE,
+	ci.CYCLE_IND_CON,
+	ci.CONTRACT_ADDRESS,
+	ci.SPEC_PAYMENT_DATE,
+	ci.CYCLE_UNIT,
+	ci.CONTRACT_TERM,
+	ci.REPAYMENT_TYPE,
+	ci.PAY_WAY ,
+	ci.MAIN_GUARANTY_TYPE,
+	ci.PREPAYMENT_PENALTY,
+	ci.PREPAY_MAKEUP_RATE,
+	TO_CHAR( ci.BEGIN_DATE, 'yyyy-MM-dd' ) BEGIN_DATE,
+	TO_CHAR( ci.END_DATE, 'yyyy-MM-dd' ) END_DATE,
+	att.ARBITRATE_TYPE,
+	att.ARBITRATE_NAME,
+	att.TOTAL_COUNT,
+	att.ADD_CLAUSE,
+	att.CONSTRAINT_INDEX
+FROM TB_CON_CONTRACT_INFO ci
+LEFT JOIN TB_CON_ATTACHED_INFO att ON ci.CONTRACT_ID = att.CONTRACT_ID
+WHERE ci.CONTRACT_NUM = #subContractNum#
+    </select>
+    
+    <!--关联银承数据-->
+    <select id="getConInfo_CDXY" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT hp.BZJBL,hp.SFBZ,hp.BZJJE,hp.TGFPDCLQX,hp.DKLL FROM TB_CON_KLYHCDHP hp WHERE hp.CONTRACT_ID =#contractId#
+    </select>
+    
+    <!--关联保函协议数据-->
+    <select id="getConInfo_BH" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+	TO_CHAR( bh.KLRQ, 'yyyy-MM-dd' ) KLRQ,
+	TO_CHAR( bh.DQRQ, 'yyyy-MM-dd' ) DQRQ,
+	bh.JCXMMC,bh.BHZL,bh.SYR,bh.BZJJE,NVL(bh.DKLL,0)/100 DKLL 
+FROM TB_CON_BH bh WHERE bh.CONTRACT_ID=#contractId#
+    </select>
+  
+    <!--获取综合授信协议-->
+    <select id="getConInfo_ZHSX" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+	credit.PARTY_ID A_ID,
+	credit.ORG_NUM B_ID,
+	credit.CONTRACT_NUM,
+	TO_CHAR( ba.VALID_DATE, 'yyyy-MM-dd' ) AS BEGIN_DATE,
+	TO_CHAR( ba.END_DATE, 'yyyy-MM-dd' ) AS END_DATE,
+	credit.CONTRACT_ID,
+	info.ARBITRATE_TYPE,
+	info.ARBITRATE_NAME,
+	info.ARBITRATE_ADDRESS,
+	info.OTHER,
+	info.TOTAL_COUNT,
+	info.ADD_CLAUSE,
+	ap.CREDIT_AMOUNT CONTRACT_AMT,
+	'CNY' CURRENCY_CD
+FROM TB_CON_CREDIT_INFO credit
+INNER JOIN TB_BIZ_APPROVE ba ON credit.APPLY_ID=ba.APPLY_ID
+LEFT JOIN TB_CON_ATTACHED_INFO info ON info.CONTRACT_ID = credit.CONTRACT_ID
+LEFT JOIN TB_BIZ_AMOUNT_APPROVE ap ON ap.APPROVE_ID=ba.APPROVE_ID
+WHERE credit.CONTRACT_NUM = #subContractNum# 
+    </select>
+    
+    
+    <select id="getBigType_ZQ" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+	ci.PARTY_ID A_ID,
+	ci.ORG_NUM B_ID,
+	ci.CONTRACT_NUM,
+	ci.CONTRACT_ID,
+	TO_CHAR( ci.BEGIN_DATE, 'yyyy-MM-dd' ) BEGIN_DATE,
+	TO_CHAR( ci.END_DATE, 'yyyy-MM-dd' ) END_DATE,
+	ci.PRODUCT_TYPE PRODUCT_TYPE,
+	ls.SUMMARY_AMT,
+	clc.OLD_SUMMARYAMT,
+	TO_CHAR( clc.OLD_END_DATE, 'yyyy-MM-dd' ) LOAN_END_DATE_OLD,
+	TO_CHAR( clc.NEW_END_DATE, 'yyyy-MM-dd' ) LOAN_END_DATE_NEW,
+	clc.OLD_YEAR_RATE,
+	clc.OLD_YEAR_RATE NEW_YEAR_RATE,
+	info.ARBITRATE_TYPE,
+	info.ARBITRATE_NAME,
+	info.ARBITRATE_ADDRESS,
+	info.OTHER,
+	info.TOTAL_COUNT,
+	info.ADD_CLAUSE,
+	clc.CHANGE_REASON,
+	clc.NEW_END_DATE,
+	'none' SEARCH_SUB
+FROM TB_CON_LOAN_CHANGE clc
+INNER JOIN TB_CON_CONTRACT_INFO ci ON clc.CONTRACT_ID = ci.CONTRACT_ID	
+INNER JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=clc.SUMMARY_ID
+LEFT JOIN TB_CON_ATTACHED_INFO info ON info.CONTRACT_ID = ci.CONTRACT_ID
+WHERE ci.CONTRACT_NUM = #subContractNum# 
+AND clc.LOAN_CHANGE_TYPE = '06'
+    </select>
+    
+    <!-- 关联固定资产合同数据
+    <select id="getConInfo_GDZC" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT
+	gd.OTHER_CONDITION1,gd.OTHER_CONDITION2,gd.OTHER_CONDITION3,gd.OTHER_CONDITION4,gd.PAY_DEPEND1,gd.PAY_DEPEND2,gd.PAY_DEPEND3,
+	DECODE( gd.PAY_WAY, '0', '1', '1', '2' ) PAY_WAY,gd.TOTAL_DEBT,gd.THIRD_GUARANT,gd.THIRD_LOAN_AMOUNT,gd.THIRD_BORROW_AMOUNT,
+	gd.STOCK_CHANGE,gd.FINANCIAL_LIMIT,gd.WYBCBL
+FROM TB_CON_GDZCDK gd 
+WHERE gd.CONTRACT_ID=#contractId#
+UNION ALL 
+SELECT
+	'' AS OTHER_CONDITION1,'' AS OTHER_CONDITION2,'' AS OTHER_CONDITION3,'' AS OTHER_CONDITION4,bg.PAY_DEPEND1,bg.PAY_DEPEND2,
+	bg.PAY_DEPEND3,DECODE( bg.PAY_WAY, '0', '1', '1', '2' ) PAY_WAY,NULL AS TOTAL_DEBT,NULL AS THIRD_GUARANT,NULL AS THIRD_LOAN_AMOUNT,
+	NULL AS THIRD_BORROW_AMOUNT,NULL AS STOCK_CHANGE,NULL AS FINANCIAL_LIMIT,bg.prepay_makeup_rate AS WYBCBL
+FROM tb_con_bgdk bg
+WHERE bg.CONTRACT_ID=#contractId#
+    </select>
+     -->
+     
+    <select id="getConInfo_PJXX" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT rownum,CPRQC,CPRZH,REMITTERBANKNAME,SKRQC,SKRZH,PAYEEBANKNAME,PJHM,HPJE,
+TO_CHAR(HPCPRQ,'yyyy-mm-dd') HPCPRQ,
+TO_CHAR(HPDQRQ,'yyyy-mm-dd') HPDQRQ
+FROM TB_BIZ_PJXX_APPLY WHERE AMOUNT_DETAIL_ID=#amountDetailId#
+    </select>
+   
+   
+    <select id="getCon_TXXX" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ROWNUM,BILLNO,BILLAMT,TAKEOUTACNAME,TAKEOUTACNO,BILLACNAME,INTERATE,
+TO_CHAR(BILLBEGINDATE,'yyyy-MM-dd')BILLBEGINDATE,
+TO_CHAR(BILLENDDATE,'yyyy-MM-dd')BILLENDDATE
+FROM TB_BIZ_TXXX_APPLY
+WHERE CONTRACT_ID=#contractId#
+    </select>
+
+    <select id="getConSubInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT s.SUBCONTRACT_TYPE,s.SUBCONTRACT_NUM,NVL(gb.PARTY_ID,s.PARTY_ID) PARTY_ID,p.PARTY_NAME SUB_PARTY_NAME,s.IF_TOP_SUBCON,s.BZJBL
+<isEqual property="searchMode" compareValue="zq">
+,p.PARTY_TYPE_CD,dict.DICTNAME SUBCONTRACT_TYPE_CN
+</isEqual>
+FROM TB_CON_SUBCONTRACT_REL sr 
+INNER JOIN TB_CON_SUBCONTRACT s ON sr.SUBCONTRACT_ID=s.SUBCONTRACT_ID
+LEFT JOIN TB_CON_SUB_GRT_REL sgr ON sgr.SUBCONTRACT_ID = sr.SUBCONTRACT_ID
+LEFT JOIN TB_GRT_GUARANTEE_BASIC gb ON gb.SURETY_ID = sgr.SURETY_ID
+LEFT JOIN TB_CSM_PARTY p ON p.PARTY_ID=NVL(gb.PARTY_ID,s.PARTY_ID)
+<isEqual property="searchMode" compareValue="zq">
+LEFT JOIN (
+SELECT DICTID,DICTNAME FROM EOS_DICT_ENTRY WHERE DICTTYPEID='XD_YWDB0131'
+)dict ON dict.DICTID=s.SUBCONTRACT_TYPE
+LEFT JOIN TB_CSM_PARTY p ON p.PARTY_ID=s.PARTY_ID
+</isEqual>
+WHERE sr.CONTRACT_ID=#contractId# AND s.SUBCONTRACT_TYPE IN('01','02','04') AND sr.IF_EFFECTIVE='1' 
+    </select>
+    <!-- AND s.SUBCONTRACT_STATUS IN('03','04','05') -->
+    
+    <select id="getCon_ZH" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT z.ZHKHJG,o.ORGNAME ZHKHJG_CN,z.ZHLX,z.ZH,z.ZHMC,ACC_STATUS FROM TB_CON_ZH z
+LEFT JOIN OM_ORGANIZATION o ON z.ZHKHJG=o.ORGCODE
+WHERE CONTRACT_ID=#contractId# 
+<isNotNull property="zhlx"> AND ZHLX = #zhlx# </isNotNull>
+<isNotNull property="accStatus"> AND ACC_STATUS = #accStatus# </isNotNull>
+    </select>
+    
+    <select id="getCon_BZJZH" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT gm.MARGIN_ACCOUNT,gm.OPEN_BANK,o.ORGNAME OPEN_BANK_CN,gm.ACC_BALANCE 
+FROM TB_CON_SUBCONTRACT_REL sr
+INNER JOIN TB_CON_SUB_GRT_REL sgr ON sgr.SUBCONTRACT_ID=sr.SUBCONTRACT_ID
+INNER JOIN TB_GRT_MARGIN gm ON gm.SURETY_ID=sgr.SURETY_ID
+LEFT JOIN OM_ORGANIZATION o ON o.orgcode=gm.OPEN_BANK
+WHERE sr.CONTRACT_ID=#contractId# AND rownum &lt; 2
+    </select>
+    
+    <select id="getCon_Repay" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT PERIODS_NUMBER,TO_CHAR(REPAY_DATE,'yyyy-mm-dd')REPAY_DATE,REPAY_AMT,REPAY_AMT/10000 REPAY_AMT_WY FROM TB_LOAN_REPAY_PLAN WHERE CONTRACT_ID=#contractId#
+ORDER BY PERIODS_NUMBER
+    </select>
+    
+     <select id="getCon_Pay" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT PERIODS_NUMBER,TO_CHAR(PAYOUT_DATE,'yyyy-mm-dd')PAYOUT_DATE,PAYOUT_AMT,PAYOUT_AMT/10000 PAYOUT_AMT_WY,LOANUSE FROM TB_CON_PAYOUT_PLAN WHERE CONTRACT_DETAIL_ID=#contractId#
+ORDER BY PERIODS_NUMBER
+    </select>
+
+</sqlMap>

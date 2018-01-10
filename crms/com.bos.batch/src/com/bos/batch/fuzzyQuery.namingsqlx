@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi 支持模糊查询 注意：字母区分大小写-->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="BATCH_CODE" property="batchCode"/>
+        <result column="BATCH_NAME" property="batchName"/>
+        <result column="BATCH_GROUP" property="batchGroup"/>
+        <result column="BATCH_ORDER" property="batchOrder"/>
+        <result column="BATCH_STATUS" property="batchStatus"/>
+        <result column="BATCH_BIZNAME" property="batchBizname"/>
+        <result column="BATCH_ID" property="batchId"/>
+    </resultMap>
+    <!--批量配置模糊查询-->
+    <select id="queryBatchConfig" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select BATCH_CODE,BATCH_NAME,BATCH_GROUP,BATCH_ORDER,BATCH_STATUS,BATCH_BIZNAME,BATCH_ID 
+		from TB_BATCH_TASK_CONFIG
+		where 1=1
+		<isNotNull property="batchCode">
+	    	and BATCH_CODE like '%$batchCode$%'
+	    </isNotNull>
+		<isNotNull property="batchName">
+	    	and BATCH_NAME like '%$batchName$%'
+	    </isNotNull>
+		<isNotNull property="batchGroup">
+	    	and BATCH_GROUP = #batchGroup#
+	    </isNotNull>
+	    <isNotNull property="batchStatus">
+	    	and BATCH_STATUS = #batchStatus#
+	    </isNotNull>
+	    order by BATCH_GROUP,BATCH_ORDER
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="batchLog">
+        <result column="SP_NAME" property="spName"/>
+        <result column="EXEC_RESULT" property="execResult"/>
+        <result column="BEG_TIME" property="begTime"/>
+        <result column="END_TIME" property="endTime"/>
+        <result column="LOG_ID" property="logId"/>
+        <result column="IN_PARA1" property="inPara1"/>
+        <result column="IN_PARA2" property="inPara2"/>
+        <result column="IN_PARA3" property="inPara3"/>
+        <result column="IN_PARA4" property="inPara4"/>
+        <result column="IN_PARA5" property="inPara5"/>
+        <result column="OUT_PARA1" property="outPara1"/>
+        <result column="OUT_PARA2" property="outPara2"/>
+        <result column="OUT_PARA3" property="outPara3"/>
+        <result column="OUT_PARA4" property="outPara4"/>
+        <result column="OUT_PARA5" property="outPara5"/>
+    </resultMap>
+    <!--批量日志模糊查询-->
+    <select id="queryBatchLog" parameterClass="java.util.HashMap" resultMap="batchLog">
+    	select SP_NAME
+    		  ,EXEC_RESULT
+    		  ,BEG_TIME
+    		  ,END_TIME
+    		  ,LOG_ID
+    		  ,IN_PARA1
+			  ,IN_PARA2
+			  ,IN_PARA3
+			  ,IN_PARA4
+			  ,IN_PARA5
+			  ,OUT_PARA1
+			  ,OUT_PARA2
+			  ,OUT_PARA3
+			  ,OUT_PARA4
+			  ,OUT_PARA5
+    	from TB_BATCH_SP_LOG
+    	where 1=1
+		<isNotNull property="execResult">
+	    	and EXEC_RESULT = #execResult#
+	    </isNotNull>
+		<isNotNull property="spName">
+	    	and SP_NAME like '%$spName$%'
+	    </isNotNull>
+	    <isNotNull property="begTime">
+	    	and BEG_TIME &gt;= #begTime#
+	    </isNotNull>
+	    <isNotNull property="endTime">
+	    	and BEG_TIME &lt;= #endTime#
+	    </isNotNull>
+	    order by BEG_TIME desc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryBatchConsole">
+        <result column="BATCH_CODE" property="batchCode"/>
+        <result column="BATCH_NAME" property="batchName"/>
+        <result column="BATCH_GROUP" property="batchGroup"/>
+        <result column="BATCH_ORDER" property="batchOrder"/>
+        <result column="STATUS" property="status"/>
+        <result column="BATCH_DATE" property="batchDate"/>
+        <result column="STARTTIME" property="starttime"/>
+        <result column="ENDTIME" property="endtime"/>
+        <result column="CONSOLE_ID" property="consoleId"/>
+    </resultMap>
+    <!--修改批量任务状态，支持模糊查询-->
+    <select id="queryBatchConsole" parameterClass="java.util.HashMap" resultMap="queryBatchConsole"><![CDATA[
+    	select b.BATCH_CODE,b.BATCH_NAME,a.BATCH_GROUP,b.BATCH_ORDER,a.STATUS,a.BATCH_DATE,a.STARTTIME,a.ENDTIME,a.CONSOLE_ID
+		from TB_BATCH_TASK_CONSOLE a,TB_BATCH_TASK_CONFIG b
+		where a.BATCH_ID=b.BATCH_ID]]>
+		<isNotNull property="batchName">
+	    	and b.BATCH_NAME like '%$batchName$%'
+	    </isNotNull>
+		<isNotNull property="batchGroup">
+	    	and a.BATCH_GROUP = #batchGroup#
+	    </isNotNull>
+	    <isNotNull property="status">
+	    	and a.STATUS = #status#
+	    </isNotNull>
+	    <isNotNull property="batchDate">
+	    	and a.BATCH_DATE = #batchDate#
+	    </isNotNull>
+		order by a.STARTTIME desc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryOneBatchConsole">
+        <result column="BATCH_CODE" property="batchCode"/>
+        <result column="BATCH_NAME" property="batchName"/>
+        <result column="BATCH_GROUP" property="batchGroup"/>
+        <result column="BATCH_ORDER" property="batchOrder"/>
+        <result column="STATUS" property="status"/>
+        <result column="BATCH_DATE" property="batchDate"/>
+        <result column="STARTTIME" property="starttime"/>
+        <result column="ENDTIME" property="endtime"/>
+        <result column="CONSOLE_ID" property="consoleId"/>
+    </resultMap>
+    <!---->
+    <select id="queryOneBatchConsole" parameterClass="java.util.HashMap" resultMap="queryOneBatchConsole"><![CDATA[
+    	select b.BATCH_CODE,b.BATCH_NAME,a.BATCH_GROUP,b.BATCH_ORDER,a.STATUS,a.BATCH_DATE,a.STARTTIME,a.ENDTIME,a.CONSOLE_ID
+		from TB_BATCH_TASK_CONSOLE a,TB_BATCH_TASK_CONFIG b
+		where a.BATCH_ID=b.BATCH_ID]]>
+		<isNotNull property="consoleId">
+	    	and a.CONSOLE_ID = #consoleId#
+	    </isNotNull>
+    </select>
+    
+    <update id="updateStatus" parameterClass="java.util.HashMap"><![CDATA[
+    	update tb_batch_task_console set STATUS=#status#  where CONSOLE_ID=#consoleId#
+    	]]>
+    </update>
+</sqlMap>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+    <select id="searchChargeLimit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT LIMIT_ID,LIMIT_TYPE,LIMIT_CAP,LIMIT_SACLE,LIMIT_AMT,UPDATE_ORG_NUM,UPDATE_USER_NUM,TO_CHAR(UPDATE_DATE,'yyyy-MM-dd') CREATE_DATE FROM TB_CRD_RISK_LIMIT2 WHERE LIMIT_CAP IS NOT NULL
+    </select>
+    
+    <select id="searchRiskLimit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT LIMIT_ID,LIMIT_TYPE,LIMIT_CODE,LIMIT_CODE_TEXT,LIMIT_AMT FROM TB_CRD_RISK_LIMIT2
+WHERE 
+<isNotNull property="limitType"> LIMIT_TYPE = #limitType#</isNotNull>
+<isNull property="limitType"> LIMIT_CAP IS NULL</isNull>
+<isNotNull property="limitCodeText"> AND LIMIT_CODE_TEXT LIKE '%'||#limitCodeText#||'%'</isNotNull>
+ORDER BY (CASE WHEN LIMIT_AMT = 0 THEN 9 ELSE 1 END),LIMIT_TYPE,LIMIT_CODE
+    </select>
+    
+    <select id="searchRiskGroup" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT GROUP_ID,GROUP_NAME,CREATE_ORG_NUM,CREATE_USER_NUM,TO_CHAR(CREATE_DATE,'yyyy-MM-dd')CREATE_DATE FROM TB_CRD_RISK_GROUP2 ORDER BY CREATE_DATE
+    </select>
+    
+    <select id="searchRiskGroupDetail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT DETAIL_ID,GROUP_ID,d.LIMIT_ID,r.LIMIT_CODE_TEXT,r.LIMIT_TYPE,r.LIMIT_CODE,d.LIMIT_AMT,TO_CHAR(r.UPDATE_DATE,'yyyy-MM-dd') UPDATE_DATE,r.UPDATE_USER_NUM,r.UPDATE_ORG_NUM 
+FROM TB_CRD_RISK_GROUP_DETAIL d
+LEFT JOIN TB_CRD_RISK_LIMIT2 r ON d.LIMIT_ID=r.LIMIT_ID
+WHERE GROUP_ID=#groupId#
+    </select>
+    
+    <select id="getApplyLimitInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT a.ORG_NUM,NVL(aa.MAIN_GUARANTY_TYPE,aa.GUARANTY_TYPE) GARANTY_TYPE,ad.PRODUCT_TYPE,ad.DETAIL_AMT AMT,null LOAN_TURN
+FROM TB_BIZ_APPLY a,TB_BIZ_AMOUNT_APPLY aa, TB_BIZ_AMOUNT_DETAIL_APPLY ad 
+WHERE a.APPLY_ID=aa.APPLY_ID AND aa.AMOUNT_ID=ad.AMOUNT_ID AND  aa.APPLY_ID=#applyId#
+    </select>
+    
+    <select id="searchRiskLimitValidAmt" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT LIMIT_ID,LIMIT_TYPE,LIMIT_CODE,LIMIT_AMT FROM TB_CRD_RISK_LIMIT2 WHERE LIMIT_TYPE = #limitType# AND LIMIT_AMT &lt;&gt; 0 
+    </select>
+    
+    <select id="saveRiskLimitValidExist" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT LIMIT_ID FROM TB_CRD_RISK_LIMIT2 WHERE LIMIT_TYPE = #limitType# AND LIMIT_CODE=#limitCode# 
+    </select> 
+    
+    <select id="saveGroupDetailValidExist" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT DETAIL_ID FROM TB_CRD_RISK_GROUP_DETAIL WHERE GROUP_ID=#groupId# AND LIMIT_ID=#limitId# 
+    </select>
+               
+  
+</sqlMap>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="finance_id" property="financeId"/>
+		<result column="party_id" property="partyId"/>
+		<result column="party_type_cd" property="partyTypeCd"/>
+		<result column="party_num" property="partyNum"/>
+		<result column="customer_type_cd" property="customerTypeCd"/>
+		<result column="finance_deadline" property="financeDeadline"/>
+		<result column="finance_status_cd" property="financeStatusCd"/>
+		<result column="finance_type_cd" property="financeTypeCd"/>
+		<result column="currency" property="currency"/>
+		<result column="regulated_ind" property="regulatedInd"/>
+		<result column="regulated_reason" property="regulatedReason"/>
+		<result column="accounting_principle" property="accountingPrinciple"/>
+		<result column="audited_ind" property="auditedInd"/>
+		<result column="audit_comment_type_cd" property="auditCommentTypeCd"/>
+		<result column="biz_license_num" property="bizLicenseNum"/>
+		<result column="audit_dept" property="auditDept"/>
+		<result column="audit_co_name" property="auditCoName"/>
+		<result column="audit_dept_comment_cd" property="auditDeptCommentCd"/>
+		<result column="audit_time" property="auditTime"/>
+		<result column="create_time" property="createTime"/>
+		<result column="update_time" property="updateTime"/>
+		<result column="caliber_cd" property="caliberCd"/>
+		<result column="user_Num" property="userNum"/>
+		<result column="org_num" property="orgNum"/>	
+    </resultMap>
+    <select id="queryFinanceReports" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select  
+    		finance_id,
+    		party_id,
+    		party_type_cd,
+			party_num,
+			customer_type_cd,
+			finance_deadline,
+			finance_status_cd,
+			finance_type_cd,
+			currency,
+			regulated_ind,
+			regulated_reason,
+			accounting_principle,
+			audited_ind,
+			audit_comment_type_cd,
+			biz_license_num,
+			audit_dept,
+			audit_co_name,
+			audit_dept_comment_cd,
+			audit_time,
+			create_time,
+			update_time,
+			caliber_cd,
+			user_Num,
+			org_num    	
+    	from tb_acc_customer_finance  where to_char(current_timestamp,'yyyy') - to_char(create_time,'yyyy') &lt; 3
+    	<isNotNull property="partyId">
+	    	and party_id = #partyId#
+	   </isNotNull>
+	   		and finance_status_cd = '02'
+	   order by  FINANCE_TYPE_CD, finance_deadline desc
+   </select>
+   <select id="queryFinances" parameterClass="java.util.HashMap" resultMap="resultMap">
+   		 select finance_id,
+	    		party_id,
+	    		party_type_cd,
+				party_num,
+				customer_type_cd,
+				finance_deadline,
+				finance_status_cd,
+				finance_type_cd,
+				currency,
+				regulated_ind,
+				regulated_reason,
+				accounting_principle,
+				audited_ind,
+				audit_comment_type_cd,
+				biz_license_num,
+				audit_dept,
+				audit_co_name,
+				audit_dept_comment_cd,
+				audit_time,
+				create_time,
+				update_time,
+				caliber_cd,
+				user_Num,
+				org_num from tb_acc_customer_finance  where 1=1
+				<isNotNull property="partyId">
+	    			and party_id = #partyId#
+	   			</isNotNull>
+	   				and FINANCE_TYPE_CD= '1'
+	   				and finance_status_cd = '02'
+	   			order by   finance_deadline desc
+   </select>
+   
+    <resultMap class="commonj.sdo.DataObject" id="queryFinInfo">						
+        <result column="INDEX_CD"  property="indexCd"/> 							
+        <result column="INDEX_NAME"  property="indexName"/>								
+        <result column="remarks"  property="remarks"/> 						
+        <result column="INDEX_VALUE_DATA_TYPE"  property="indexValueDataType"/> 							
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/>								
+        
+    </resultMap>
+    <select id="queryFinInfo"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryFinInfo">
+		select 
+		/*ROW_NUMBER() over(order by tbri.INDEX_CD) as row_num,*/
+		tbri.INDEX_CD,
+		tbri.INDEX_NAME,
+		tbii.INDEX_DISP as remarks,
+		case
+			when tbii.String_type ='00' then '分母为空'
+			when tbii.String_type ='01' then '上期值为空'
+			when tbii.String_type ='02' then '分母小于等于0且分子小于等于0'
+			when tbii.String_type ='03' then '分母小于等于0'
+			when tbii.String_type ='05' then '科目值小于等于0'
+			when tbii.String_type ='20' then '指标值缺失'
+			when tbii.String_type ='04' then  '有取上期算平均值的计算异常处理（上期有值的正常计算，上期没值的上期值取本期值处理）'
+			end as INDEX_VALUE_DATA_TYPE,
+		
+		tbfi.IRA_APPLY_ID
+		 from tb_irm_rating_index_data tbii
+		left join tb_irm_rating_fin_index tbri on tbii.INDEX_CD = tbri.INDEX_CD
+		left join tb_irm_financial_info tbfi on tbii.financial_info_id = tbfi.financial_info_id
+		where tbii.FINANCIAL_INFO_ID is not null and tbri.INDEX_CD  is not null
+		and length(nvl(tbii.string_type,''))   &gt; 0
+	    <isNotNull property="applyId">
+			   and tbfi.IRA_APPLY_ID = #applyId# 
+			</isNotNull>
+		union
+		select 
+		/*ROW_NUMBER() over(order by tbri.INDEX_CD) as row_num,*/
+		tbri.INDEX_CD,
+		tbri.INDEX_NAME,
+		tbii.INDEX_DISP as remarks,
+		to_char(tbii.INDEX_VALUE_DATA_TYPE)  INDEX_VALUE_DATA_TYPE,
+		tbfi.IRA_APPLY_ID
+		 from tb_irm_rating_index_data tbii
+		left join tb_irm_rating_fin_index tbri on tbii.INDEX_CD = tbri.INDEX_CD
+		left join tb_irm_financial_info tbfi on tbii.financial_info_id = tbfi.financial_info_id
+		where tbii.FINANCIAL_INFO_ID is not null and tbri.INDEX_CD  is not null
+		and length(nvl(tbii.string_type,'')) &lt;1	
+		 <isNotNull property="applyId">
+			   and tbfi.IRA_APPLY_ID = #applyId# 
+		</isNotNull>
+        </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryOpitionInfo">
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/> 						
+        <result column="adjustOrder"  property="adjustOrder"/> 						
+        <result column="ADJUST_TYPE_CD"  property="adjustTypeCd"/> 							
+        <result column="ADJUST_OPTION_DESCRIPTION"  property="adjustOptionDescription"/>								
+        <result column="remarks"  property="remarks"/> 						
+        <result column="checked"  property="checked"/> 											
+        
+    </resultMap>
+    <select id="queryOpitionInfo"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryOpitionInfo">
+		select 
+			IRA_APPLY_ID,
+			ROW_NUMBER() over(order by ADJUST_TYPE_CD) as adjustOrder,
+				'调整' as  ADJUST_TYPE_CD,
+			'手工调整' as ADJUST_OPTION_DESCRIPTION,
+			'1' as checked,
+			ADJUST_DESCRIBE as remarks
+			 from TB_IRM_ADJUST_OPTIONS
+			left join TB_IRM_ADJUST_OPTION
+			on ADJ_OPT_ID = AO_ID
+			where 1=1
+	    <isNotNull property="applyId">
+			   and IRA_APPLY_ID = #applyId# 
+			</isNotNull>
+        </select>
+</sqlMap>

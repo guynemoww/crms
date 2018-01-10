@@ -1,0 +1,878 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+      <!-- 白名单判断 -->
+   	<rule id="WHITE_0001" name="有准入状态的客户不能发起" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="有准入状态的客户不能发起" checkLevel="err">
+		<sql><![CDATA[select count(*) a  from tb_csm_white_customer  tt where tt.batch_number=@batchNumber  and tt.cus_status='01'   ]]></sql>
+	</rule>
+	<!-- 合同 -->
+	<rule id="RCON_0001" name="已存在生效综合授信协议" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="已生成综合授信协议或有在途综合授信业务" checkLevel="err">
+		<sql><![CDATA[select count(*) a from tb_con_credit_info where con_status in ('01','02','03') and apply_id =  @applyId   ]]></sql>
+	</rule>
+	<rule id="RCON_0002" name="存在已生效合同" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="已生成合同或有在途合同申请" checkLevel="err">
+		<sql><![CDATA[select count(*) a from tb_con_contract_info where con_status in ('01','03') and amount_detail_id =  @amountDetailId  and xy_id is null  ]]></sql>
+	</rule>
+	<rule id="RCON_0003" name="合同基本信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合同基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info r where r.contract_id =   @contractId  and r.update_time is not null ]]></sql>
+	</rule>
+	<rule id="RCON_0004" name="合同明细信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合同明细信息未填写完整" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from #tableName r where r.contract_id  =  @contractId   and r.update_time is not null]]></sql>
+	</rule>
+	
+	<rule id="RCON_0005" name="放款账户信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未添加放款账户信息" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_zh r 
+								where  r.zhlx = '0'
+						  		and r.contract_id =   @contractId   ]]></sql>
+		<condition>CCON0011</condition>
+	</rule>
+	<rule id="RCON_0006" name="选择14还款方式时未添加还款计划" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未添加还款计划" checkLevel="err">
+		<sql><![CDATA[select (select count(1) 
+				          from tb_con_repay_plan r
+				         where r.contract_id = @contractId) +
+				       
+				       (select count(1) 
+				          from tb_biz_xw_hkjh t
+				         where  t.amount_detail_id= @amountDetailId) c
+				  from dual  ]]></sql>
+		<condition>CCON0002</condition>
+	</rule>
+	<rule id="RCON_0007" name="余额为0不可添加合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复无可用余额" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_biz_approve r,tb_biz_amount_approve t where r.APPROVE_ID=t.APPROVE_ID and nvl(t.CREDIT_AVI,0)>0 AND R.APPLY_ID = @applyId   ]]></sql>
+	</rule>
+	<rule id="RCON_0008" name="授信基本信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="授信基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_credit_info r where r.contract_id =   @contractId  and r.update_time is not null ]]></sql>
+	</rule>
+	
+	
+	
+	<rule id="RCON_0009" name="担保方式选择保证时必须签署保证合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署保证合同" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t , TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '04' ]]></sql>
+		<condition>CCON0003</condition>
+	</rule>
+	<rule id="RCON_0010" name="担保方式选择抵押时必须签署抵押合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署抵押合同" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t , TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '01' ]]></sql>
+		<condition>CCON0004</condition>
+	</rule>
+	<rule id="RCON_0011" name="担保方式选择质押时必须签署质押合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署质押合同" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t ,TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '02'  ]]></sql>
+		<condition>CCON0005</condition>
+	</rule>
+	<rule id="RCON_0012" name="担保方式选择保证金时必须签署保证金协议" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署保证金协议" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t,TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '03'  ]]></sql>
+		<condition>CCON0006</condition>
+	</rule>
+	<rule id="RCON_0013" name="从合同签署不完整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同签署不完整" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_subcontract_rel r where r.contract_id =   @contractId  and  r.surety_amt is  null ]]></sql>
+	</rule>
+	<rule id="RCON_0014" name="担保总金额小于合同金额" checktype="ge"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="从合同足值校验未通过" checkLevel="err">
+		<sql><![CDATA[select sum(surety_amt)-rmb_amt   c   
+						from(
+						     select sum(decode(b.IF_TOP_SUBCON,'1',a.SURETY_AMT,'0',b.SUBCONTRACT_AMT,'0') ) surety_amt,c.rmb_amt,c.CONTRACT_ID
+						     from TB_CON_SUBCONTRACT_REL a,TB_CON_SUBCONTRACT b,TB_CON_CONTRACT_INFO c
+						     where a.SUBCONTRACT_ID=b.SUBCONTRACT_ID 
+						     and c.CONTRACT_ID=a.CONTRACT_ID 
+						     and  b.SUBCONTRACT_TYPE in('01', '02')        --抵质押 取本次担保金额之和
+						    group by c.CONTRACT_ID,c.rmb_amt
+						
+						    union all
+						
+						    select decode(b.IF_TOP_SUBCON,'1',a.SURETY_AMT,'0',c.rmb_amt,'0') surety_amt,c.rmb_amt,c.CONTRACT_ID
+						     from TB_CON_SUBCONTRACT_REL a,TB_CON_SUBCONTRACT b,TB_CON_CONTRACT_INFO c
+						     where a.SUBCONTRACT_ID=b.SUBCONTRACT_ID 
+						     and c.CONTRACT_ID=a.CONTRACT_ID
+						     and b.SUBCONTRACT_TYPE='04'                               --保证人 如果最高额 取最高保证限额 否则取主合同金额
+						
+						    union all
+						
+						    select b.BZJJE surety_amt,c.rmb_amt,c.CONTRACT_ID
+						     from TB_CON_SUBCONTRACT_REL a,TB_CON_SUBCONTRACT b,TB_CON_CONTRACT_INFO c
+						     where a.SUBCONTRACT_ID=b.SUBCONTRACT_ID 
+						     and c.CONTRACT_ID=a.CONTRACT_ID
+						     and b.SUBCONTRACT_TYPE='03'                               --保证金 取保证金金额
+						) t where t.CONTRACT_ID=@contractId group by t.rmb_amt ]]></sql>
+		<condition>CCON0007</condition>
+	</rule>
+	
+	<rule id="RCON_0015" name="抵质押合同必须有基本信息" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同基本信息不完整" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta
+						where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+						and ta.IF_TOP_SUBCON is null
+						and ta.SUBCONTRACT_TYPE != '03'
+						and ta.SUBCONTRACT_STATUS='03'
+						and t.CONTRACT_ID =@contractId  ]]></sql>
+	</rule>
+	<rule id="RCON_0016" name="有抵质押合同，必须有抵押物" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同关联信息不完整" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+							  from tb_con_subcontract_rel t
+							  inner join tb_con_sub_grt_rel ta on t.subcontract_id = ta.subcontract_id
+							  inner join (select a.surety_id from tb_grt_mortgage_basic a 
+							               union all 
+							               select a.surety_id from tb_grt_guarantee_basic a)a on a.surety_id=ta.surety_id
+							 where (ta.relation_id is null or a.surety_id is null)
+							   and t.subcontract_id is not null
+							   and t.CONTRACT_ID = @contractId
+				]]></sql>
+	</rule>
+	
+	<rule id="RCON_0017" name="担保方式选择保证时必须签署保证合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署保证合同" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t , TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '04' ]]></sql>
+		<condition>CCON0008</condition>
+	</rule>
+	<rule id="RCON_0018" name="担保方式选择抵押时必须签署抵押合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署抵押合同" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t , TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '01' ]]></sql>
+		<condition>CCON0009</condition>
+	</rule>
+	<rule id="RCON_0019" name="担保方式选择质押时必须签署质押合同" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未签署质押合同" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+						  from tb_con_subcontract_rel r, tb_con_subcontract t ,TB_CON_SUB_GRT_REL w
+						 where r.subcontract_id = t.subcontract_id
+						   and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+						   and t.IF_TOP_SUBCON is not null
+						   and r.contract_id = @contractId
+						   and t.subcontract_type = '02'  ]]></sql>
+		<condition>CCON0010</condition>
+	</rule>
+	
+	<rule id="RCON_0020" name="还款账户信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="第一还款账户信息必填" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_zh r  where r.zhlx = '1'
+						  and r.contract_id = @contractId   ]]></sql>
+		<condition>CCON0012</condition>
+	</rule>
+	<rule id="RCON_0021" name="结算账户信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未添加结算账户信息" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_zh r where r.zhlx = '2'
+						  and r.contract_id = @contractId   ]]></sql>
+		<condition>CCON0013</condition>
+	</rule>
+	<rule id="RCON_0022" name="应收账款回款专户信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未添加应收账款回款专户信息" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_zh r  where  r.zhlx = '5'
+						  and r.contract_id = @contractId   ]]></sql>
+		<condition>CCON0014</condition>
+	</rule>
+	
+	<rule id="RCON_0023" name="授信附属信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="附属信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_attached_info r where r.contract_id =   @contractId  ]]></sql>
+	</rule>
+	<rule id="RCON_0024" name="存在在途综合授信协议" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="有在途综合授信协议" checkLevel="err">
+		<sql><![CDATA[select count(*) a from tb_con_credit_info where con_status in ('01','02') and apply_id =  @applyId   ]]></sql>
+	</rule>
+	<rule id="RCON_0025" name="小微14还款方式才有不规则还款计划" checktype="eqn"  checkedFieldName="$a" targetDataList="1"  errCode="2015110-001" errMsg="合同还款方式不支持不规则还本计划" checkLevel="err">
+		<sql><![CDATA[select count(*) a from tb_con_contract_info where repayment_type like '14%' and contract_id = @contractId  ]]></sql>
+	</rule>
+	<rule id="RCON_0026" name="存在在途合同" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="有在途合同申请" checkLevel="err">
+		<sql><![CDATA[select count(*) a from tb_con_contract_info where con_status in ('01','02') and amount_detail_id =  @amountDetailId  ]]></sql>
+	</rule>
+	<rule id="RCON_0027" name="冻结批复不能发起出账" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="批复冻结不能发起出账" checkLevel="err">
+		<sql><![CDATA[select count(*) a
+					  from tb_con_contract_info         r,
+					       tb_biz_amount_detail_approve t,
+					       tb_biz_amount_approve        w,
+					       tb_biz_approve               a
+					 where r.amount_detail_id = t.amount_detail_id
+					   and t.amount_id = w.amount_id
+					   and w.approve_id = a.approve_id
+					   and a.BECOME_EFFECTIVE_MARK ='07'
+					   and r.contract_id = @contractId  ]]></sql>
+	</rule>
+	<rule id="RCON_0028" name="有最高额保证合同，从合同金额必须小于等于关联保证人担保金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同金额必须小于等于关联保证人的担保金额" checkLevel="err">
+		<sql><![CDATA[select count(1) c from (   select a.ZGBJXE jea,nvl(sum(b.surety_amt),0) jeb
+				            from TB_CON_SUBCONTRACT a,TB_CON_SUB_GRT_REL b,TB_CON_CONTRACT_INFO info,TB_CON_SUBCONTRACT_REL d
+				            where a.SUBCONTRACT_ID=b.SUBCONTRACT_ID
+				            and a.IF_TOP_SUBCON='1'
+				            and info.CONTRACT_ID=d.CONTRACT_ID
+				            and a.subcontract_status = '03'
+				            and d.SUBCONTRACT_ID=a.SUBCONTRACT_ID
+				            and a.SUBCONTRACT_TYPE='04'
+				            and info.CONTRACT_ID=@contractId
+				            group by a.ZGBJXE ) aa where aa.jea>aa.jeb  ]]></sql>
+		<condition>CCON0015</condition>
+	</rule>
+	<rule id="RCON_0029" name="有抵押合同，从合同金额必须小于等于关联抵押物担保金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同金额必须小于等于关联抵押物担保金额" checkLevel="err">
+		<sql><![CDATA[select count(1) c from   (select tt.surety_amt jea,nvl(sum(rel.SURETY_AMT),0) jeb from (                                                               
+                    select decode(ta.IF_TOP_SUBCON,'1',ta.ZGBJXE,'0',ta.SUBCONTRACT_AMT,'0') surety_amt,ta.SUBCONTRACT_ID
+                        from TB_BIZ_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,TB_CON_SUBCONTRACT_REL tb
+                        where t.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+                        and ta.SUBCONTRACT_ID = tb.SUBCONTRACT_ID
+                        and ta.SUBCONTRACT_TYPE='01'
+                        and tb.CONTRACT_ID=@contractId
+                        ) tt
+                    left join TB_CON_SUB_GRT_REL rel on tt.SUBCONTRACT_ID=rel.SUBCONTRACT_ID 
+                    group by tt.surety_amt ) aa where aa.jea>aa.jeb ]]></sql>
+             <condition>CCON0016</condition>
+	</rule>
+	<rule id="RCON_0030" name="有质押合同，从合同金额必须小于等于关联质押物担保金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同金额必须小于等于关联质押物担保金额" checkLevel="err">
+		<sql><![CDATA[select count(1) c from   (select tt.surety_amt jea,nvl(sum(rel.SURETY_AMT),0) jeb from (                                                               
+                    select decode(ta.IF_TOP_SUBCON,'1',ta.ZGBJXE,'0',ta.SUBCONTRACT_AMT,'0') surety_amt,ta.SUBCONTRACT_ID
+                        from TB_BIZ_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,TB_CON_SUBCONTRACT_REL tb
+                        where t.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+                        and ta.SUBCONTRACT_ID = tb.SUBCONTRACT_ID
+                        and ta.SUBCONTRACT_TYPE='02'
+                        and tb.CONTRACT_ID=@contractId
+                        ) tt
+                    left join TB_CON_SUB_GRT_REL rel on tt.SUBCONTRACT_ID=rel.SUBCONTRACT_ID 
+                    group by tt.surety_amt ) aa where aa.jea>aa.jeb ]]></sql>
+           <condition>CCON0017</condition>
+	</rule>
+	<rule id="RCON_0031" name="有保证金协议，从合同金额必须小于等于关联保证金金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="从合同金额必须小于等于关联保证金金额" checkLevel="err">
+		<sql><![CDATA[
+SELECT COUNT( 1 ) c FROM (
+	SELECT t.BZJJE jea,NVL( SUM( m.ACC_BALANCE ), 0 ) je
+	FROM TB_CON_SUBCONTRACT_REL ta 
+	INNER JOIN TB_CON_SUBCONTRACT t ON ta.SUBCONTRACT_ID = t.SUBCONTRACT_ID
+	LEFT JOIN TB_CON_SUB_GRT_REL rel ON rel.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+	LEFT JOIN tb_grt_margin m ON m.SURETY_ID = rel.SURETY_ID
+	WHERE ta.CONTRACT_ID = @contractId AND t.SUBCONTRACT_TYPE = '03'
+	GROUP BY t.BZJJE
+) tt
+WHERE tt.jea > tt.je
+]]></sql>
+           <condition>CCON0018</condition>
+	</rule>
+	<rule id="RCON_0032" name="有保证合同但是未勾选保证" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有保证合同但是担保方式未勾选保证" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+						  from TB_CON_SUBCONTRACT     a,
+						       TB_CON_CONTRACT_INFO   info,
+						       TB_CON_SUBCONTRACT_REL d
+						 where info.CONTRACT_ID = d.CONTRACT_ID
+						   and d.SUBCONTRACT_ID = a.SUBCONTRACT_ID
+						   and a.SUBCONTRACT_TYPE = '04'
+						   and info.guaranty_type not like '%04%'
+						   and info.CONTRACT_ID=@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0033" name="有抵押合同但是未勾选抵押" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有抵押合同但是担保方式未勾选抵押" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+						  from TB_CON_SUBCONTRACT     a,
+						       TB_CON_CONTRACT_INFO   info,
+						       TB_CON_SUBCONTRACT_REL d
+						 where info.CONTRACT_ID = d.CONTRACT_ID
+						   and d.SUBCONTRACT_ID = a.SUBCONTRACT_ID
+						   and a.SUBCONTRACT_TYPE = '01'
+						   and info.guaranty_type not like '%02%'
+						   and info.CONTRACT_ID=@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0034" name="有质押合同但是未勾选质押" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有质押合同但是担保方式未勾选质押" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+						  from TB_CON_SUBCONTRACT     a,
+						       TB_CON_CONTRACT_INFO   info,
+						       TB_CON_SUBCONTRACT_REL d
+						 where info.CONTRACT_ID = d.CONTRACT_ID
+						   and d.SUBCONTRACT_ID = a.SUBCONTRACT_ID
+						   and a.SUBCONTRACT_TYPE = '02'
+						   and info.guaranty_type not like '%03%'
+						   and info.CONTRACT_ID=@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0035" name="有保证金协议但是未勾选保证金" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有保证金协议但是担保方式未勾选保证金" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+						  from TB_CON_SUBCONTRACT     a,
+						       TB_CON_CONTRACT_INFO   info,
+						       TB_CON_SUBCONTRACT_REL d
+						 where info.CONTRACT_ID = d.CONTRACT_ID
+						   and d.SUBCONTRACT_ID = a.SUBCONTRACT_ID
+						   and a.SUBCONTRACT_TYPE = '03'
+						   and info.guaranty_type not like '%05%'
+						   and info.CONTRACT_ID=@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0036" name="放款账户和第一还款账户必须一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="放款账户和第一还款账户必须一样" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+					  from tb_con_zh r, tb_con_zh t
+					 where r.contract_id = t.contract_id
+					  and r.zhlx = '0'
+					  and t.zhlx = '1'
+					   and r.zh != t.zh
+					   and r.contract_id =@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0037" name="所有担保合同下担保物的本次担保金额之和都必须大于担保合同金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保物的本次担保金额之和必须大于等于担保合同金额" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,
+						 (select sum(nvl(SURETY_AMT,0)) as amt,SUBCONTRACT_ID from TB_CON_SUB_GRT_REL  group by SUBCONTRACT_ID) tb
+						 where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+						 and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+						 and ta.ZGBJXE>tb.amt
+						 and t.CONTRACT_ID =@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0038" name="所有担保合同下担保物本次担保金额都必须小于权利价值的可用价值" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保物本次担保金额不能大于权利价值的可用价值" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_CON_SUBCONTRACT_REL t,TB_CON_SUB_GRT_REL ta,TB_GRT_MORTGAGE_BASIC tb
+						 where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+						 and ta.SURETY_ID=tb.SURETY_ID
+						 and ta.SURETY_AMT> tb.AVI_AMT
+						 and t.OPERATION_TYPE ='02'
+						 and t.CONTRACT_ID =@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0039" name="存在在途综合授信调整或单笔批复调整时不得调整业务合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途综合授信调整或单笔批复调整" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_contract_info r ,tb_biz_amount_detail_approve a, tb_biz_amount_approve b,tb_biz_approve c,tb_biz_apply d
+						where r.amount_detail_id = a.amount_detail_id
+						and a.amount_id = b.amount_id
+						and b.approve_id = c.approve_id
+						and c.apply_id = d.old_apply_id
+						and d.status_type in ('01','02','09')
+						and r.contract_id =@contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0040" name="存在在途出账不得调整业务合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途出账" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_loan_info r  where r.loan_status in ('01','02')
+							and r.contract_id = @contractId ]]></sql>
+	</rule>
+	<rule id="RCON_0041" name="一个保证金协议金额与关联的保证金金额相等" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="保证金协议金额必须小于等于保证金账户余额" checkLevel="err">
+		<sql><![CDATA[ select count(*) c from TB_CON_SUBCONTRACT t,TB_CON_SUB_GRT_REL ta,TB_GRT_MARGIN tb,TB_CON_SUBCONTRACT_REL TD
+						 where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+						 and ta.SURETY_ID=tb.SURETY_ID
+						 and t.SUBCONTRACT_TYPE ='03'
+						 AND T.SUBCONTRACT_ID=TD.SUBCONTRACT_ID
+						 and nvl(t.BZJJE,0) > nvl(tb.ACC_BALANCE,0)
+						 and td.CONTRACT_ID=@contractId]]></sql>
+	</rule>
+	<rule id="RCON_0042" name="该笔合同下的保证金账号只能有一个账号" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="该笔合同下的保证金账号只能有一个账号" checkLevel="err">
+		<sql><![CDATA[  select decode(count(*),'0','1',count(*)) c from tb_con_contract_info t,TB_CON_SUBCONTRACT_REL ta,TB_CON_SUB_GRT_REL tb,TB_GRT_MARGIN tc
+						where t.CONTRACT_ID=ta.CONTRACT_ID
+						and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+						and tb.SURETY_ID=tc.SURETY_ID
+						and t.CONTRACT_ID =@contractId]]></sql>
+	</rule>
+	<rule id="RCON_0043" name="该笔合同下的存在未结清借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该笔合同下有未结清借据" checkLevel="err">
+		<sql><![CDATA[  select count(*) c
+						  from tb_loan_summary r, tb_loan_info t
+						 where r.loan_id = t.loan_id
+						   and r.summary_status_cd in ('01', '02', '03')
+						   and t.contract_id  =@contractId]]></sql>
+	</rule>
+	<rule id="RCON_0044" name="合同是否循环" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该笔合同为循环合同" checkLevel="err">
+		<sql><![CDATA[  select count(*) c
+						  from tb_con_contract_info r
+						 where nvl(r.cycle_ind_con, '0') = '1'
+						   and r.contract_id  =@contractId]]></sql>
+	</rule>
+	<rule id="RCON_0045" name="保证金协议金额之和必须大于等于合同金额*合同明细的保证金比例" checktype="ge"  checkedFieldName="$c" startValue="$d"  errCode="2015110-001" errMsg="保证金协议金额之和必须大于等于合同金额*合同明细的保证金比例" checkLevel="err">
+		<sql><![CDATA[  select nvl(sum(sub.bzjje), 0) c
+  						 from tb_con_subcontract sub, tb_con_subcontract_rel rel
+							  where sub.subcontract_id = rel.subcontract_id
+							    and sub.subcontract_status in ( '01','02','03')
+							    and sub.subcontract_type = '03'
+							    and rel.CONTRACT_ID = @contractId]]></sql>
+		<sql><![CDATA[  select nvl(r.contract_amt, 0) * nvl(r.bzjbl, 0)/100 d from tb_con_contract_info r
+						 		where r.contract_id  =@contractId]]></sql>
+	</rule>
+
+	<rule id="RCON_0049" name="保证金协议与保证金关联信息中的保证金类型不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="保证金协议与保证金关联信息中的保证金类型不一致" checkLevel="err">
+		<sql><![CDATA[  select count(1) c from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,TB_CON_SUB_GRT_REL tb,TB_GRT_MARGIN tc
+							where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+							and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+							and tb.SURETY_ID=tc.SURETY_ID
+							and ta.SUBCONTRACT_TYPE='03'
+							and nvl(ta.BZJLX,0)<>nvl(tc.MARGIN_SORT,1)
+							and ta.bzjlx is not null
+							and t.CONTRACT_ID  =@contractId]]></sql>
+	</rule>
+								
+	<rule id="RCON_0050" name="面谈面签合同预申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="该批复项下存在合同预申请，是否根据预申请创建合同？选取消直接创建合同" checkLevel="info">
+		<sql><![CDATA[  select count(*) c from TB_BIZ_BUSINESS_APPLY where APPLY_NUM=@bizNum]]></sql>
+	</rule>
+	<rule id="RCON_0051" name="分期贷款利率不能为0" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="分期贷款利率不能为0" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_con_contract_info r, tb_con_loanrate t
+						 where r.contract_id = t.contract_id
+						   and nvl(r.repayment_type,'0') in
+						       ('0100', '0200', '0300', '0400')
+						   and nvl(t.year_rate,0) = 0
+						   and nvl(t.rate_type,'11') = '1'
+						   and r.contract_id =@contractId]]></sql>
+	</rule>
+	<rule id="RCON_0052" name="提款计划金额与合同总金额不等" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="提款计划总金额不等于合同金额" checkLevel="err">
+		<sql><![CDATA[  select nvl((select sum(r.payout_amt) e
+						          from tb_con_payout_plan r
+						         where r.contract_detail_id = @contractId) -
+						       
+						       (select t.contract_amt f
+						          from tb_con_contract_info t
+						         where t.contract_id = @contractId),0) c
+				  		from dual]]></sql>
+	</rule>
+	<rule id="RCON_0053" name="还款计划金额与合同总金额不等" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="还款计划总金额不等于合同金额" checkLevel="err">
+		<sql><![CDATA[  select nvl((select sum(r.repay_amt) e
+						          from tb_con_repay_plan r
+						         where r.contract_id = @contractId) -
+						       
+						       (select t.contract_amt f
+						          from tb_con_contract_info t
+						         where t.contract_id = @contractId),0) c
+				  		from dual]]></sql>
+	</rule>
+	<rule id="RCON_0054" name="还款计划最后一期止期必须和合同止期一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="还款计划最后一期止期必须和合同止期一样" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+			                from dual
+			               where (select t.end_date
+			                        from tb_con_contract_info t
+			                       where t.contract_id =@contractId) !=
+			                     (select max(r.repay_date)
+			                        from tb_con_repay_plan r
+			                       where r.contract_id =@contractId)]]></sql>
+	</rule>
+	<rule id="RCON_0055" name="还款计划日期必须在合同起期和止期之间" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="还款计划日期必须在合同起期和止期之间" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_con_repay_plan r, tb_con_contract_info t
+						 where r.contract_id = t.contract_id
+						   and (r.repay_date > t.end_date or r.repay_date < t.begin_date)
+						   and t.contract_id = @contractId]]></sql>
+	</rule>
+	<rule id="RCON_0056" name="提款计划日期必须在合同起期和止期之间" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="提款计划日期必须在合同起期和止期之间" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_con_payout_plan r, tb_con_contract_info t
+						 where r.contract_detail_id = t.contract_id
+						   and (r.payout_date > t.end_date or r.payout_date < t.begin_date)
+						   and t.contract_id = @contractId]]></sql>
+	</rule>
+	
+	<!-- 一般保证合同下的每一个保证人的可用都必须大于或等于合同金额-->
+	<rule id="RCON_0057" name="一般保证合同下的每一个保证人的可用都必须大于或等于合同金额"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同：$[c]下的保证人的可用不能小于合同金额" checkLevel="err">
+		<sql><![CDATA[
+	select nvl(listagg(tb.subcontract_num,',')within group (order by tb.subcontract_num),'0')  as c
+		from tb_con_contract_info t ,tb_con_subcontract_rel ta,tb_con_subcontract tb,tb_con_sub_grt_rel tc,tb_grt_guarantee_basic td
+		where t.contract_id=ta.contract_id
+		and ta.subcontract_id=tb.subcontract_id
+		and tb.subcontract_id=tc.subcontract_id
+		and tc.surety_id=td.surety_id
+		and tb.if_top_subcon = 0 
+		and ta.operation_type ='02'
+		and t.rmb_amt > td.usable_guarantee_limit
+		and t.contract_id =@contractId
+		]]></sql>
+	</rule>
+	<rule id="RCON_0058" name="有在途批复调整时不能调整综合授信协议"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途批复调整时不能调整综合授信协议" checkLevel="err">
+		<sql><![CDATA[
+			select count(*) c from tb_biz_apply r where r.old_apply_id = @applyId and r.status_type in ('01','02')
+		]]></sql>
+	</rule>
+	<rule id="RCON_0059" name="有在途合同申请或调整时不能调整综合授信协议"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途合同申请或调整时不能调整综合授信协议" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c
+			  from tb_con_contract_info         r,
+			       tb_biz_amount_detail_approve t,
+			       tb_biz_amount_apply          a
+			 where r.amount_detail_id = t.amount_detail_id
+			   and t.amount_id = a.amount_id
+			   and a.apply_id = @applyId
+			   and r.con_status in ('01', '02')
+		]]></sql>
+	</rule>
+	<rule id="RCON_0060" name="有在途综合授信协议申请或调整时不能调整合同"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途综合授信协议申请或调整时不能调整合同" checkLevel="err">
+		<sql><![CDATA[
+			select count(*) c
+			  from tb_con_credit_info r, tb_con_contract_info t
+			 where r.old_contract_id = t.xy_id
+			   and t.contract_id = @contractId
+			   and r.con_status in ('01', '02')
+		]]></sql>
+	</rule>
+	<rule id="RCON_0061" name="提前还款基数不能大于合同金额"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="提前还款基数不能大于合同金额" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c from tb_con_contract_info r where nvl(r.prepay_js , 0)> r.contract_amt and r.contract_id = @contractId
+		]]></sql>
+	</rule>
+	
+	<rule id="RCON_0062" name="担保合同止期必须大于主合同起期"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同止期必须大于主合同起期" checkLevel="err">
+		<sql><![CDATA[
+			select count(1)c
+			  from tb_con_subcontract     a,
+			       tb_con_subcontract_rel b,
+			       tb_con_contract_info   c
+			 where a.subcontract_id = b.subcontract_id
+			   and b.contract_id = c.contract_id
+			   and a.if_top_subcon = '1'
+			   and a.end_date <c.begin_date
+			   and c.contract_id = @contractId
+		]]></sql>
+	</rule>
+	<rule id="RCON_0063" name="提前还款最低金额不能大于合同金额"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="提前还款最低金额不能大于合同金额" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c from tb_con_contract_info r where nvl(r.least_prepay_amount , 0)> r.contract_amt and r.contract_id = @contractId
+		]]></sql>
+	</rule>
+	<rule id="RCON_0064" name="合同期限大于批复期限"  checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合同期限大于批复期限" checkLevel="err">
+		<sql><![CDATA[
+				select count(1) c
+				  from tb_con_contract_info         r,
+				       tb_biz_amount_detail_approve t,
+				       tb_biz_amount_approve        a,
+				       tb_biz_approve               b
+				 where r.amount_detail_id = t.amount_detail_id
+				   and (r.end_date+0) - (r.begin_date+0)  > (t.end_date - b.valid_date)
+				   and t.amount_id = a.amount_id 
+				   and a.approve_id = b.approve_id
+				   and t.end_date is not null
+				   and b.valid_date is not null
+				   and r.contract_id =	@contractId	]]></sql>
+	</rule>
+	<rule id="RCON_0065" name="检查是否添加票据明细(银承)" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="请添加票据明细" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info a left join tb_biz_pjxx_apply b 
+				on a.amount_detail_id = b.amount_detail_id and a.contract_num =b.htbh 
+				where a.contract_id = @contractId and b.apply_detail_id is not null
+				]]></sql>
+	</rule>
+	
+	<rule id="RCON_0066" name="当前合同币种与国结建议的合同币种不匹配"  checktype="eqs"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="当前合同币种与国结建议的合同币种不匹配" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c from tb_con_gj_info t1 where t1.contract_id = @contractId and t1.loan_cur = 
+				(select decode(t2.currency_cd, 'CNY', '01','FRF', '250','DEM', '276', 'HKD', '13', 'ITL', '380', 'JPY', '27', 'KRW', '410', 'MOP', '81', 
+				'MYR', '458', 'NLG', '528', 'NZD', '554', 'AUD', '29', 'NOK', '578', 'PHP', '608', 'RUB', '643', 'SGD', '32', 'ESP', '724','SEK', '752',
+				'CHF','15','THB', '764', 'GBP', '12', 'USD', '14', 'EUR', '38', 'ATS', '040', 'OTHER', '999', 'BEF', '056', 'CAD', '28', 'TWD', '158',
+				'DKK', '208', 'FIM', '246', '99') 
+				from tb_con_contract_info t2 where t2.contract_id = @contractId)
+		]]></sql>
+	</rule>
+	<rule id="RCON_0067" name="当前合同金额与国结建议的合同金额不匹配"  checktype="eqs"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="当前合同金额与国结建议的合同金额不匹配" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c from tb_con_gj_info t1 where t1.contract_id = @contractId and t1.loan_amt = (select t2.contract_amt from tb_con_contract_info t2 where t2.contract_id = @contractId)
+		]]></sql>
+	</rule>
+	
+	<rule id="RCON_0068" name="检查银承票据总额是否等于合同金额(合同阶段)"  checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="合同金额和票据总金额不一致" checkLevel="err">
+		<sql><![CDATA[   select nvl(a.rmb_amt,0) c from tb_con_contract_info a where a.contract_id=@contractId 
+ 				]]></sql>
+		<sql><![CDATA[   select sum(nvl(b.hpje,0)) d from tb_con_contract_info a 
+				left join tb_biz_pjxx_apply b on a.amount_detail_id = b.amount_detail_id and a.contract_num = b.htbh and a.contract_id=b.contract_id
+				where a.contract_id = @contractId
+ 				]]></sql>
+	</rule>
+	
+	<rule id="RCON_0069" name="检查贴现票据总额是否等于合同金额(合同阶段)"  checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="合同金额和票据总金额不一致" checkLevel="err">
+		<sql><![CDATA[   select nvl(a.rmb_amt,0) c from tb_con_contract_info a where a.contract_id=@contractId 
+ 				]]></sql>
+		<sql><![CDATA[   select sum(nvl(b.billamt,0)) d from tb_con_contract_info a 
+				left join tb_biz_txxx_apply b on a.amount_detail_id = b.amount_detail_id
+				where a.contract_id = @contractId
+ 				]]></sql>
+	</rule>
+	
+	<rule id="RCON_0070" name="票据出票日期和到期日期必须包含在合同起始日和到期日之间(银承)"   checktype="eqn"  checkedFieldName="$num" targetDataList="0" errCode="2015110-001" errMsg="票据出票日期和到期日期必须包含在合同起始日和到期日之间" checkLevel="err">
+		<sql><![CDATA[
+			SELECT count(*) as num FROM TB_CON_CONTRACT_INFO C 
+			LEFT JOIN TB_BIZ_PJXX_APPLY T ON C.CONTRACT_NUM = T.HTBH AND C.AMOUNT_DETAIL_ID = T.AMOUNT_DETAIL_ID
+			WHERE C.CONTRACT_ID = @contractId
+			AND (C.BEGIN_DATE>T.HPCPRQ OR C.END_DATE<T.HPDQRQ)
+		]]></sql>
+	</rule>
+	
+	<rule id="RCON_0071" name="检查贴现利率是否相同"  checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="票据明细利率必须和合同利率相同" checkLevel="err">
+		<sql><![CDATA[   select nvl(a.YEAR_RATE,0) c from TB_CON_LOANRATE a where a.contract_id=@contractId 
+ 				]]></sql>
+		<sql><![CDATA[   select sum(nvl(b.interate,0))/count(*) d from tb_con_contract_info a 
+				left join tb_biz_txxx_apply b on a.amount_detail_id = b.amount_detail_id
+				where a.contract_id = @contractId
+ 				]]></sql>
+	</rule>
+	<rule id="RCON_0072" name="出票人账号应与结算账号一致(银承)"  checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="出票人账号必须与结算账号一致" checkLevel="err">
+		<sql><![CDATA[
+			SELECT COUNT(*) AS C FROM TB_CON_CONTRACT_INFO A
+			LEFT JOIN TB_BIZ_PJXX_APPLY C ON A.AMOUNT_DETAIL_ID = C.AMOUNT_DETAIL_ID AND A.CONTRACT_NUM = C.HTBH
+			WHERE A.CONTRACT_ID = @contractId
+				AND C.CPRZH <> (SELECT T.ZH FROM TB_CON_ZH T WHERE T.CONTRACT_ID = @contractId AND T.ZHLX='2')
+		]]></sql>
+	</rule>
+	
+	<rule id="RCON_0073" name="检查是否添加票据明细（贴现）" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="请添加票据明细" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info a left join tb_biz_txxx_apply b 
+				on a.amount_detail_id = b.amount_detail_id
+				where a.contract_id = @contractId and b.apply_detail_id is not null]]></sql>
+	</rule>
+	
+	<!-- 国结：出口信用证押汇 验证议付号是否重复使用 -->
+	<rule id="RCON_0074" name="出口信用证押汇验证议付号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="议付号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_ckxyzyh t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.yfh=@ywbh]]></sql>
+	</rule> 
+	
+	<!-- 国结：出口托收押汇验证托收号是否重复使用 --> 
+	<rule id="RCON_0075" name="出口托收押汇验证托收号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="托收号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_cktsyh t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.tsh=@ywbh]]></sql>
+	</rule>
+	
+	<!-- 国结：进口信用证押汇验证议付号是否重复使用 -->
+	<rule id="RCON_0076" name="进口信用证押汇验证议付号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="议付号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[
+		select count(1) c from tb_con_contract_info t1,tb_con_jkxyzyh t2 where t1.contract_id = t2.contract_id
+		and t1.con_status  != '06'
+		and t2.yfh=@ywbh]]></sql>
+	</rule>
+	
+	<!-- 国结：进口T/T押汇验证业务编号是否重复使用 -->
+	<rule id="RCON_0077" name="进口T/T押汇验证业务编号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="业务编号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_jkttyh t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.ywbh=@ywbh]]></sql>
+	</rule>
+	
+	<!-- 国结：进口代付验证业务编号是否重复使用 -->
+	<rule id="RCON_0078" name="进口代付验证业务编号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="业务编号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_jkdf t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.ywbh=@ywbh
+		]]></sql>
+	</rule>
+	
+	<!-- 国结：提货担保验审核号码是否重复使用 -->
+	<rule id="RCON_0079" name="提货担保验证审核号码是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="审核号码已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_thdb t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.fph=@ywbh
+		]]></sql>
+	</rule>
+	
+	<!-- 国结：国际福费廷验证业务编号是否重复使用 -->
+	<rule id="RCON_0080" name="国际福费廷验证业务编号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="业务编号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_gjfft t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.ywbh=@ywbh]]></sql>
+	</rule>
+	
+	<!-- 国结：国际信用证打包贷款验证信用证号是否重复使用 -->
+	<rule id="RCON_0081" name="国际信用证打包贷款验证信用证号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="信用证号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_gjxyzdbdk t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.xyzh=@ywbh
+		]]></sql>
+	</rule>
+	
+	<!-- 国结：进口代收押汇验证业务编号是否重复使用 -->
+	<rule id="RCON_0082" name="进口代收押汇验证业务编号是否重复使用" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="业务编号已经被使用，不能重复使用" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_contract_info t1,tb_con_jkdsyh t2 where t1.contract_id = t2.contract_id
+					  and t1.con_status  != '06'
+					  and t2.ywbh=@ywbh
+		]]></sql>
+	</rule>
+	
+	<rule id="RCON_0083" name="检查票据是否超过限定张数(银承)" checktype="less"  checkedFieldName="$c" endValue="100" errCode="2015110-001" errMsg="票据不能超过99张" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info a inner join tb_biz_pjxx_apply b 
+				on a.amount_detail_id = b.amount_detail_id and a.contract_num =b.htbh where a.contract_id = @contractId]]></sql>
+	</rule>
+	
+	<rule id="RCON_0084" name="检查票据是否超过限定张数(贴现)" checktype="less"  checkedFieldName="$c" endValue="100" errCode="2015110-001" errMsg="票据不能超过99张" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info a inner join tb_biz_txxx_apply b 
+				on a.amount_detail_id = b.amount_detail_id where a.contract_id = @contractId ]]></sql>
+	</rule>
+	
+	<!--从合同 -->
+	<rule id="SUBCON_0002" name="判断担保合同是否关联了在途的合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同下存在在途的业务合同信息" checkLevel="err">
+		<sql><![CDATA[
+		select nvl(count(*),0) c from (
+		select t.CONTRACT_ID from tb_con_contract_info t,tb_con_subcontract_rel ta where t.CONTRACT_ID=ta.CONTRACT_ID 
+		and t.CON_STATUS in ('01','02') and ta.SUBCONTRACT_ID=@subcontractId
+		union all
+		select t.CONTRACT_ID from tb_con_credit_info t,tb_con_subcontract_rel ta where t.CONTRACT_ID=ta.CONTRACT_ID 
+		and t.CON_STATUS in ('01','02') and ta.SUBCONTRACT_ID=@subcontractId
+		)
+		]]></sql>
+	</rule>
+	
+	<rule id="SUBCON_0007" name="保证人担保范围为本金，所关联的业务合同本金均结清时，担保合同可通过从合同调整手工失效" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="担保合同关联有生效的业务合同，不能失效！" checkLevel="err">
+		<sql><![CDATA[
+						select count(*)c
+  					from tb_con_subcontract a,  tb_con_contract_info e,tb_con_subcontract_rel d,tb_con_sub_grt_rel b
+  					left join tb_grt_guarantee_basic c on b.surety_id = c.surety_id 
+				 where a.subcontract_id = b.subcontract_id
+				   and a.subcontract_id = d.subcontract_id
+				   and d.contract_id = e.contract_id
+				   and a.subcontract_status = '03'
+				   and e.con_status = '03'
+				   and ((c.guarantee_way  ='02' and e.con_yu_e!=0)or(nvl(c.guarantee_way,'01')='01'))
+				   and a.SUBCONTRACT_ID =@subcontractId
+		]]></sql>
+	</rule>
+	
+		
+	<rule id="SUBCON_0003" name="判断抵押品为担保合同担保是否足值"  checktype="eqn"  checkedFieldName="$c" targetDataList="0"   errCode="2015110-001" errMsg="担保物的本次担保金额之和必须大于等于担保合同金额" checkLevel="err">
+		<sql><![CDATA[
+							select count(*) c
+				  from tb_con_subcontract_t tb
+				  left join (select sum(nvl(ta.surety_amt, 0)) as surety_amt,
+				                    ta.subcontract_id
+				               from tb_con_sub_tmp ta
+				              where ta.type = '1'
+				                and ta.op != 'del'
+				              group by ta.subcontract_id) ta
+				    on ta.subcontract_id = tb.subcontract_id
+				 where decode(tb.if_top_subcon, '1', tb.zgbjxe, tb.subcontract_amt)> nvl(ta.surety_amt, 0)
+				       and tb.id =@id
+		]]></sql>
+	</rule>
+	
+	<rule id="SUBCON_0004" name="判断保证人为担保合同担保是否足值"  checktype="ge"  checkedFieldName="$c" startValue="@zgbjxe"  errCode="2015110-001" errMsg="担保合同金额$[zgbjxe]不能大于保证本次担保金额之和$[c]" checkLevel="err">
+		<sql><![CDATA[
+			  select nvl(sum(tb.SURETY_AMT), 0) c
+	  from TB_GRT_GUARANTEE_BASIC ta,
+	       tb_con_sub_tmp         tb,
+	       TB_CON_SUBCONTRACT     tc,
+	       TB_CSM_PARTY           td
+	 where ta.SURETY_ID = tb.CON_SURETY_ID
+	   and tb.type = '1'
+	   and tb.op != 'del'
+	   and tb.SUBCONTRACT_ID = tc.SUBCONTRACT_ID
+	   and ta.PARTY_ID = td.PARTY_ID
+       and tb.SUBCONTRACT_ID=@subcontractId
+		]]></sql>
+	</rule>
+	
+	<!-- 判断担保合同下的合同是否足值-->
+	<rule id="SUBCON_0005" name="最高本金限额不能小于为主合同本次担保金额之和"   checktype="eqn"  checkedFieldName="$c" targetDataList="0"   errCode="2015110-001" errMsg="担保合同金额不能小于为主合同本次担保金额之和" checkLevel="err">
+		<sql><![CDATA[
+      select count(*) c
+        from tb_con_subcontract_t tc
+        left join (select sum(nvl(rel.surety_amt, 0)) surety_amt,
+                          rel.subcontract_id
+                     from tb_con_sub_tmp rel, tb_con_contract_info ta
+                    where rel.type = '2'
+                      and ta.contract_id = rel.con_surety_id
+                      and ta.con_status = '03'
+                    group by rel.subcontract_id) tb
+          on tc.subcontract_id = tb.subcontract_id
+       where decode(tc.if_top_subcon, '1', tc.zgbjxe, tc.subcontract_amt) <nvl(tb.surety_amt, 0)
+         and tc.id =@id
+		]]></sql>
+	</rule>
+	
+	<rule id="SUBCON_0006" name="担保合同止期不能小于所关联的任何主合同的起始日期"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="担保合同止期不能小于所关联的任何主合同的起始日期" checkLevel="err">
+		<sql><![CDATA[
+ 		select count(*) c
+       from tb_con_sub_tmp         rel,
+            tb_con_contract_info   tc,
+            tb_con_subcontract_t tb
+      where rel.con_surety_id = tc.contract_id
+        and tb.subcontract_id = rel.subcontract_id
+        and tc.con_status = '03'
+        and rel.type = '2'
+        and tb.if_top_subcon='1'
+        and to_char(tc.begin_date, 'YYYY-MM-DD') >to_char(tb.end_date, 'YYYY-MM-DD')
+        and tb.id = @id
+		]]></sql>
+	</rule>
+	
+	<rule id="SUBCON_FLOW" name="判断是否有在途的担保合同调整"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该笔担保合同已经在调整流程中，请不要重复提交" checkLevel="err">
+		<sql><![CDATA[
+		  select count(*)c
+		  from tb_con_subcontract_t t where t.subcontract_id=@subcontractId and t.status in('01','02')
+		]]></sql>
+	</rule>
+	
+	<!-- 增加对最高额担保合同的总金额校验，值为0可以通过 -->
+	<!-- modi by shangmf:20171017:修改增加合同状态，只查审批中，提及以及生效的合同 -->
+	<rule id="SUBCON_0008" name="判断在途或者未提交的合同下的担保合同是否超过了最高额抵质押押合同的上限"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该合同下的担保合同的担保金额超过了最高额担保合同的上限" checkLevel="err">
+		<sql><![CDATA[
+		
+	 select count(*) c from(
+     select (a.zgbjxe-b.surety_amt) minu_amt from 
+     (select ta.subcontract_id,nvl(ta.zgbjxe,0) zgbjxe from tb_con_subcontract ta where ta.subcontract_id=@subcontractId) a
+     left join
+     (select subcontract_id,sum(surety_amt) surety_amt from (
+     select tb.subcontract_id subcontract_id,nvl(tb.surety_amt,0) as surety_amt from tb_con_subcontract_rel tb,tb_con_subcontract ta,tb_con_contract_info tc
+     where   ta.subcontract_id=tb.subcontract_id and tb.contract_id=tc.contract_id and tc.con_status in ('01','02','03') and tb.subcontract_id =@subcontractId
+     ) group by subcontract_id ) b
+     on a.subcontract_id=b.subcontract_id
+     )
+     where minu_amt <  0
+		]]></sql>
+	</rule>
+	
+	<!-- 专业担保机构合作协议-->
+	<rule id="RCONDB_0001" name="明细信息未保存"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="明细信息未保存" checkLevel="err">
+		<sql><![CDATA[
+		  select count(*) c from tb_con_guarant_org_info r where r.bzjbl is  null and r.contract_id  = @contractId
+		]]></sql>
+	</rule>
+	<rule id="RCONDB_0002" name="未添加担保基金专用账户"   checktype="ineqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="未添加担保基金专用账户" checkLevel="err">
+		<sql><![CDATA[
+		  select count(1) c from tb_con_zh r where r.zhlx = '3' and r.contract_id = @contractId
+		]]></sql>
+	</rule>
+	<rule id="RCONDB_0003" name="存在在途专业担保机构合作协议申请"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="存在在途专业担保机构合作协议申请" checkLevel="err">
+		<sql><![CDATA[
+		  select count(1) c from tb_con_guarant_org_info r where r.party_id=@partyId and r.status_cd in('01','02')
+		]]></sql>
+	</rule>
+<rule id="APPAMT_0001" name="校验保证金追加金额"   checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="保证金追加金额大于保证金账户余额" checkLevel="err">
+		<sql><![CDATA[
+		  select count(1) c from   TB_CON_SUBCONTRACT     t,
+                     TB_CON_SUBCONTRACT_REL ta,
+                     tb_grt_margin          a,
+                     TB_CON_SUB_GRT_REL     rel 
+                  where  ta.SUBCONTRACT_ID = t.SUBCONTRACT_ID
+                 and a.SURETY_ID = rel.SURETY_ID
+                 and rel.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+                 and ta.CONTRACT_ID = @contractId
+                 and t.SUBCONTRACT_TYPE = '03'
+                 and a.append_flag='1' and  a.append_amt > a.ACC_BALANCE
+		]]></sql>
+	</rule>
+	<rule id="RCON_0085" name="还款计划不同期次还款日期不能一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="还款计划不同期次还款日期不能一样" checkLevel="err">
+		<sql><![CDATA[  
+			select count(*) c from (
+			select count(*)  from tb_con_repay_plan where contract_id=@contractId
+		            group by repay_date having count(*)>1)
+			]]></sql>
+	</rule>
+	<rule id="RCON_0086" name="还款计划不同期次还款日期不能一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="20160316-001" errMsg="还款计划不同期次还款日期不能一样" checkLevel="err">
+		<sql><![CDATA[  
+			select count(*) c from (
+					select count(*) from tb_con_repayplan_change where change_id=@changeId
+					and new_or_old='2' group by new_repay_date having count(*)>1)
+			]]></sql>
+	</rule>
+	<rule id="RCONJXHJ_0001" name="校验该合同是否是借新还旧合同"   checktype="ineqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该合同不是借新还旧合同，还款账户名字账户必须和放款账户名字一致" checkLevel="err">
+		<sql><![CDATA[
+		  select count(apply_id) c from tb_biz_apply where biz_happen_type = '06' and apply_id in (
+		select c.apply_id from tb_con_contract_info cci left join tb_biz_amount_detail_apply ada on cci.amount_detail_id = ada.amount_detail_id
+       left join tb_biz_amount_apply c on c.amount_id = ada.amount_id where cci.contract_id = @contractId ) 
+		]]></sql>
+	</rule>
+
+</checkrules>

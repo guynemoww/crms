@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:刘子良 -->
+<sqlMap>
+	<resultMap class="com.bos.utp.dataset.privilege.AcResourcerole" id="resourceRoleMap">
+        <result column="ROLEID" property="ROLEID"/>
+        <result column="RESOURCESTATE" property="resourcestate"/>
+    </resultMap>
+    
+    <resultMap class="com.bos.utp.dataset.privilege.AcResourcerole" id="resourceUserMap">
+        <result column="USERID" property="USERID"/>
+        <result column="RESOURCESTATE" property="resourcestate"/>
+    </resultMap>
+	
+	<!-- 根据操作员id查询所有角色对应的资源ID，以及操作权限状态 -->
+    <select id="queryResourceIDByUserId" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select RESOURCEID,RESOURCESTATE,RESOURCEIDVALUE from AC_RESOURCEROLE where PERMISSIONTYPE='R' and RESOURCEIDVALUE in(
+		    select roleid from ac_operatorrole where operatorid in(select OPERATORID from ac_operator where USERID='$userId$')
+		)
+ 	</select>
+ 	<!--查询当前登录用户的操作状态-->
+ 	<select id="queryUserStateById" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select RESOURCESTATE,RESOURCEID from AC_RESOURCEROLE where PERMISSIONTYPE='P' and RESOURCEIDVALUE=#resourceidvalue#
+ 	</select>
+ 	
+ 	<!--查询页面资源角色表中为hidden列表-->
+ 	<select id="queryHiddenResult" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select * from AC_RESOURCEROLE where PERMISSIONTYPE='R' and RESOURCESTATE='hidden'
+ 	</select>
+ 	
+ 	<!--查询页面资源角色表中为show列表-->
+ 	<select id="queryShowResult" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select * from AC_RESOURCEROLE where PERMISSIONTYPE='R' and RESOURCESTATE='show'
+ 	</select>
+ 	
+ 	
+ 	
+ 	<!-- 根据用户ID查询页面资源show列表 -->
+    <select id="queryShowListById" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select RESOURCEID,RESOURCESTATE,RESOURCEIDVALUE from AC_RESOURCEROLE where PERMISSIONTYPE='R' and RESOURCESTATE='show' and RESOURCEIDVALUE in(
+		    select roleid from ac_operatorrole where operatorid in(select OPERATORID from ac_operator where USERID=#userId#)
+		)
+ 	</select>
+ 	
+ 	<!-- 根据用户ID查询页面资源hidden列表 -->
+    <select id="queryHiddenListById" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">		
+		select RESOURCEID,RESOURCESTATE,RESOURCEIDVALUE from AC_RESOURCEROLE where PERMISSIONTYPE='R' and RESOURCESTATE='hidden' and RESOURCEIDVALUE in(
+		    select roleid from ac_operatorrole where operatorid in(select OPERATORID from ac_operator where USERID=#userId#)
+		)
+ 	</select>
+ 	
+ 	
+ 	
+ 	
+ 	<!-- 根据 PERMISSIONTYPE 以及页面资源ID 查询该页面资源所拥有的角色ID-->
+    <select id="queryShowRoleId" parameterClass="java.util.HashMap" resultMap="resourceRoleMap">
+		select  RESOURCEIDVALUE AS roleid,RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCESTATE='show' and PERMISSIONTYPE='R'
+ 	</select>
+ 	
+ 	<!-- 根据 PERMISSIONTYPE 以及页面资源ID 查询该页面资源所拥有的角色ID-->
+    <select id="queryHiddenRoleId" parameterClass="java.util.HashMap" resultMap="resourceRoleMap">
+		select  RESOURCEIDVALUE AS roleid,RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCESTATE='hidden' and PERMISSIONTYPE='R'
+ 	</select>
+ 	
+ 	<!-- 根据 PERMISSIONTYPE 以及页面资源ID 查询该页面资源所拥有的操作员ID-->
+    <select id="queryShowUserId" parameterClass="java.util.HashMap" resultMap="resourceUserMap">
+		select  RESOURCEIDVALUE AS userid ,RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCESTATE='show' and PERMISSIONTYPE='P'
+ 	</select>
+ 	
+ 	<!-- 根据 PERMISSIONTYPE 以及页面资源ID 查询该页面资源所拥有的角色ID-->
+    <select id="queryHiddenUserId" parameterClass="java.util.HashMap" resultMap="resourceUserMap">
+		select  RESOURCEIDVALUE AS userid,RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCESTATE='hidden' and PERMISSIONTYPE='P'
+ 	</select>
+ 	
+ 		
+ 	
+ 	<select id="queryCountById" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">
+		select  RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='R'
+ 	</select>
+ 	
+ 	<update id="updateResourceRole" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		update AC_RESOURCEROLE set RESOURCESTATE=#resourcestate# where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='R'
+    	]]>
+    </update>
+    
+    
+    <select id="queryUserCountById" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">
+		select  RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='P'
+ 	</select>
+ 	
+ 	<update id="updateResourceUser" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		update AC_RESOURCEROLE set RESOURCESTATE=#resourcestate# where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='P'
+    	]]>
+    </update>
+    
+    
+    <delete id="deleteResourceUser" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='P'
+    	]]>
+    </delete>
+    
+    <delete id="deleteResourceRole" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='R'
+    	]]>
+    </delete>
+    
+     <delete id="deleteResourceUserByShow" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid#  and PERMISSIONTYPE='P'  and RESOURCESTATE='show'
+    	]]>
+    </delete>
+    
+    <delete id="deleteResourceUserByHide" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid#  and PERMISSIONTYPE='P'  and RESOURCESTATE='hidden'
+    	]]>
+    </delete>
+    
+    <delete id="deleteResourceRoleByState" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid# and RESOURCESTATE=#resourcestate# and PERMISSIONTYPE='R'
+    	]]>
+    </delete>
+    
+    
+    <select id="showUserState" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">
+		select  RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='P'
+ 	</select>
+ 	
+
+    <select id="showRoleState" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.privilege.AcResourcerole">
+		select  RESOURCESTATE AS resourcestate  from AC_RESOURCEROLE where RESOURCEID=#resouceid# and RESOURCEIDVALUE=#resourceidvalue# and PERMISSIONTYPE='R'
+ 	</select>
+ 	
+ 	
+ 	 <delete id="deleteAcResourceRole" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCEROLE where  RESOURCEID=#resouceid#
+    	]]>
+    </delete>
+ 	<delete id="deleteAcResource" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from  AC_RESOURCE where  RESOURCEID=#resouceid#
+    	]]>
+    </delete>
+ 	
+</sqlMap>

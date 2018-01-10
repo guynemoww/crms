@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caohaijie -->
+<sqlMap>
+
+	<resultMap id="custList" class="java.util.HashMap">
+		<result property="partyId" column="party_id" />
+		<result property="partyName" column="party_name" />
+		<result property="certType" column="cert_type" />
+		<result property="certNum" column="cert_num" />
+		<result property="totalCredAmt" column="available_amt" />
+		<result property="sortResult" column="sortResult" />
+		<result property="sortStatus" column="sortStatus" />
+		<result property="custtype" column="custtype" />
+	</resultMap>
+	
+	<!-- 对公客户分类 ：合同客户经理和分类岗-->
+	<select id="queryRiskCustList" parameterClass="java.util.HashMap" resultMap="custList">
+			select  t.custtype,
+			       t.party_id,
+			       t.party_name,
+			       t.party_type_cd,
+			       t.cert_type,
+			       t.cert_num,
+			       t.available_amt,
+			       t.sortResult,
+			       t.claCount,
+			       case
+			         when t.claCount is null
+			              or t.claCount = 0 then
+			          '未分类'
+			         else
+			          '已分类'
+			       end sortStatus
+			  from (select t2.cust_property_status custtype,
+			               t1.party_id,
+			               t2.party_name,
+			               t2.party_type_cd,
+			               t1.cert_type,
+			               t1.cert_num,
+			               t3.user_num,
+			               t3.org_num,
+			               (select sum(a.jjye)
+			                  from tb_loan_summary a
+			                 where a.summary_status_cd in ('02', '03')
+			                       and a.party_id = t1.party_id) available_amt,
+			               (select '0' || max(to_number(cls_result))
+			                  from tb_con_contract_info
+			                 where con_status = '03'
+			                       and party_id = t1.party_id) sortResult,
+			               (select count(*)
+			                  from tb_cla_debt_detailinfo a
+			                 where a.create_time between bt_get_quar_date('begin', bt_get_workdate) and
+			                       bt_get_quar_date('end', bt_get_workdate)
+			                       and a.cla_method = 'quar'
+			                       and a.status in ('0', '2')
+			                       and a.party_id = t2.party_id) claCount
+			          from (select a.party_id,
+			                       '202' cert_type,
+			                       org_register_cd cert_num
+			                  from tb_csm_corporation a
+			                union all
+			                select a.party_id,
+			                       cert_type,
+			                       cert_num
+			                  from tb_csm_natural_person a) t1,
+			               tb_csm_party t2,
+			               tb_csm_management_team t3
+			         where t1.party_id = t3.party_id
+			               and t1.party_id = t2.party_id
+			               and exists (select 1
+			                  from tb_loan_summary c
+			                 where c.summary_status_cd in ('02', '03')
+			                       and c.party_id = t2.party_id)) t
+          where (t.user_num=#userNum#
+			     or t.org_num in (select a.orgcode
+		           from om_organization a
+		          start with a.orgid = (select d.orgid
+		                                  from om_empposition  a,
+		                                       om_position     b,
+		                                       om_employee     c,
+		                                       om_organization d
+		                                 where a.positionid = b.positionid
+		                                   and c.empid = a.empid
+		                                   and d.orgid = a.orgid
+		                                   and d.orgcode = #orgNum#
+		                                   and c.empcode = #userNum#
+		                                   and b.posicode in ('P1211'))
+		         connect by prior a.orgid = a.parentorgid))
+		        AND t.custtype = '$custFlag$'
+				<isNotNull property="certType">
+					AND t.cert_type = '$certType$'
+				</isNotNull>
+				<isNotNull property="certNum">
+					AND t.cert_num = '$certNum$'
+				</isNotNull>
+				<isNotNull property="partyName">
+					AND t.party_name LIKE '%$partyName$%'
+				</isNotNull>
+	</select>
+	
+	<!-- 小微客户分类 ：合同客户经理和监控官-->
+	<select id="queryLoanCustList" parameterClass="java.util.HashMap" resultMap="custList">
+			select t1.cla_cust_type custtype,
+			       t1.party_id,
+			       t1.party_name,
+			       t1.party_type_cd,
+			       t1.cert_type,
+			       t1.cert_num,
+			       (select sum(a.jjye)
+			          from tb_loan_summary a
+			         where a.summary_status_cd in ('02', '03')
+			               and a.party_id = t1.party_id) available_amt,
+			       (select '0' || max(to_number(cls_result))
+			          from tb_con_contract_info
+			         where con_status = '03'
+			               and party_id = t1.party_id) sortResult,
+			       case
+			         when t8.claCount is null
+			              or t8.claCount = 0 then
+			          '未分类'
+			         else
+			          '已分类'
+			       end sortStatus
+			  from v_csm_party t1,
+			       (select distinct c.party_id,
+			                        c.user_num,
+			                        c.org_num
+			          from tb_loan_summary c
+			         where c.summary_status_cd in ('02', '03')) t3
+			  left join (select a.party_id,
+			                    count(*) claCount
+			               from tb_cla_debt_detailinfo a
+			              where a.create_time between bt_get_quar_date('begin', bt_get_workdate) and
+			                    bt_get_quar_date('end', bt_get_workdate)
+			                    and a.cla_method = 'quar'
+			                    and a.status in ('0', '2')
+			              group by a.party_id) t8
+			    on t8.party_id = t3.party_id
+			 where t1.party_id = t3.party_id
+				AND (t3.user_num=#userNum#
+			     or t3.org_num in (select a.orgcode
+		           from om_organization a
+		          start with a.orgid = (select d.orgid
+		                                  from om_empposition  a,
+		                                       om_position     b,
+		                                       om_employee     c,
+		                                       om_organization d
+		                                 where a.positionid = b.positionid
+		                                   and c.empid = a.empid
+		                                   and d.orgid = a.orgid
+		                                   and d.orgcode = #orgNum#
+		                                   and c.empcode = #userNum#
+		                                   and b.posicode in ('P1105'))
+		         connect by prior a.orgid = a.parentorgid))
+		        AND t1.party_type_cd = '02'
+		         <isNotNull property="certType">
+					AND t1.cert_type = '$certType$'
+				</isNotNull>
+				<isNotNull property="certNum">
+					AND t1.cert_num = '$certNum$'
+				</isNotNull>
+				<isNotNull property="partyName">
+					AND t1.party_name LIKE '%$partyName$%'
+				</isNotNull>
+				<isNotNull property="middelCode">
+					AND t1.party_name = '$middelCode$'
+				</isNotNull>
+	</select>
+	
+	<select id="queryCustList" parameterClass="java.util.HashMap" resultMap="custList">
+			SELECT
+				'mycust' custtype,
+				t1.party_id,
+				t1.party_name,
+				t1.party_type_cd,
+				t2.cert_type,
+				t2.cert_num,
+				t4.available_amt,
+				t7.sortResult,
+				'' sortStatus
+			 FROM
+		        tb_csm_party t1,
+				(SELECT
+					party_id,
+					cert_type,
+					cert_num
+				FROM
+					tb_csm_natural_person
+		         UNION
+					SELECT
+						party_id,
+						'202' cert_type,
+						org_register_cd cert_num
+				FROM tb_csm_corporation) t2,
+		        tb_csm_management_team t3
+		        LEFT JOIN (select a.party_id,
+                    sum(a.jjye) available_amt
+	               from tb_loan_summary a
+	              where a.summary_status_cd in ('02', '03')
+	              group by party_id) t4
+		        ON t4.party_id = t3.party_id
+		         LEFT JOIN (select party_id,'0'||max(to_number(cls_result)) sortResult from tb_con_contract_info where con_status= '03' group by party_id) t7
+		        ON t7.party_id = t3.party_id
+		    WHERE
+		        t1.party_id = t2.party_id
+		        AND t1.party_id = t3.party_id
+				AND t3.user_num=#userNum#
+				AND t1.party_id = '$partyId$'
+			ORDER BY t1.create_time DESC
+	</select>
+	
+	<resultMap id="custType" class="java.util.HashMap">
+		<result property="custType" column="custType" />
+	</resultMap>
+	
+	<select id="judgeCustType" parameterClass="java.lang.String" resultMap="custType">
+		select bt_get_risk_cust_type('$partyId$') custType from dual
+	</select>
+	
+   <resultMap id="VideoParams" class="java.util.HashMap">
+		<result property="partyNum" column="party_num" />
+		<result property="acApplyNum" column="ac_apply_num" />
+		<result property="partyTypeCd" column="partyTypeCd" />
+		<result property="custType" column="cust_risk_type_cd" />
+	</resultMap>
+	
+	<select id="queryVideoParams" parameterClass="java.util.HashMap" resultMap="VideoParams">
+		select t3.party_num,
+		       t1.ac_apply_num,
+		       case
+		         when party_type_cd in ('01', '05') then
+		          '01'
+		         when party_type_cd in ('02') then
+		          '02'
+		       end partyTypeCd,
+		       t2.cust_risk_type_cd
+		  from tb_cla_assets_classify_apply t1,
+		       tb_cla_classify_cust_info    t2,
+		       tb_csm_party                 t3
+		 where t1.ac_apply_id = t2.ac_apply_id
+		   and t2.party_id = t3.party_id
+			and t1.ac_apply_id = #acApplyId#
+	</select>
+	
+	<select id="queryPosition" parameterClass="java.util.HashMap">
+		select d.orgid
+          from om_empposition  a,
+               om_position     b,
+               om_employee     c,
+               om_organization d
+         where a.positionid = b.positionid
+           and c.empid = a.empid
+           and d.orgid = a.orgid
+           and d.orgcode = #orgNum#
+           and c.empcode = #userNum#
+           and b.posicode in ('P1001')
+	</select>
+</sqlMap>

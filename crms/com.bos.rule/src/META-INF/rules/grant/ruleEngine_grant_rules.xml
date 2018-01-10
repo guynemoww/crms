@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+   
+	<!-- 授权检验-零权限校验 -->
+	<rule id="RGRANT_0001" name="根据员工Id，校验是否该员工已加入授权" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="选择的人员$[userId]已经加入授权,请操作编辑!" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_grant_mapping_m where user_id=@userId  ]]></sql>
+	</rule>
+	<rule id="RGRANT_0002" name="根据员工Id，校验该条规则是否已加入授权" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="输入的授权规则已经存在,请操作编辑!" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_grant_level_mapping where orgcode=@orgcode and product_type=@productType and is_low=@isLow and guar_type=@guarType and max_amt=@maxAmt ]]></sql>
+	</rule>
+	<rule id="RGRANT_0003" name="零权限校验-行业校验，是否在零权根行业里" checktype="less"  checkedFieldName="$c" endValue="1" errCode="2015110-001" errMsg="该客户所在的行业属于零权限汇围" checkLevel="err">
+		<sql><![CDATA[ select count(*) c
+					   from tb_csm_party cp, tb_csm_corporation cc
+					  where cp.party_id = cc.party_id
+					    and cp.party_num = @partyNum
+					    and cc.industrial_type_big_cd in
+					        (select dictid
+					           from eos_dict_entry
+					          where dicttypeid = 'CDKH0095'
+					            and (dictid like 'B%' or dictid like 'C%')
+					         ) 
+		]]></sql>
+	</rule>
+	<rule id="RGRANT_0004" name="零权限校验-融资平台校验" checktype="eqn"  checkedFieldName="$c" targetDataList="99" errCode="2015110-001" errMsg="该客户为融资平台客户" checkLevel="err">
+		<sql><![CDATA[   select nvl(cc.whether_government_finance_cor,99) c
+						    from tb_csm_party cp, tb_csm_corporation cc
+						   where cp.party_id = cc.party_id(+)
+						     and cp.party_num = @partyNum
+		]]></sql>
+	</rule>
+	<rule id="RGRANT_0005" name="零权限校验-两年内连续欠息3次以上或累计达6次以上" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该客户两年内连续欠息3次以上或累计达6次以上" checkLevel="err">
+		<sql><![CDATA[   
+				select count(1) c
+				  from tb_csm_credit_info t, tb_csm_party p
+				 where p.party_id = t.party_id
+				   and (p.party_num = @partyNum or
+				       t.party_id =
+				       (select r.relativeid_party_id
+				           from TB_CSM_NATURAL_RELATIVE r, tb_csm_party p
+				          where r.party_id = p.party_id
+				            and p.party_num = @partyNum
+				            and r.appellation = '30101') or
+				       t.party_id in
+				       (select c.control_id
+				           from tb_csm_control_info c, tb_csm_party p
+				          where c.party_id = p.party_id
+				            and p.party_num = @partyNum))
+				   and (t.dk_lxqx_times = 3 or t.dk_ljqx_times = 3 or t.djk_lxyq_times = 3 or t.djk_ljyq_times = 3)
+				   and t.query_date >=
+				       (select add_months(operating_date, -24) from tb_pub_date)
+						   
+			]]></sql>
+	</rule>
+	<rule id="RGRANT_0006" name="零权限校验-是否有本金逾期或承兑垫款" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该客户存在本金逾期或承兑垫款" checkLevel="err">
+		<sql><![CDATA[   select nvl(sum(s.jjye),0) c from tb_loan_summary s,tb_csm_party p where s.party_id=p.party_id and p.party_num=@partyNum and s.end_date<(select operating_date from tb_pub_date) ]]></sql>
+	</rule>
+	<rule id="RGRANT_0007" name="零权限校验-是否是直属支行" checktype="eqn"  checkedFieldName="$c" targetDataList="1" errCode="2015110-001" errMsg="该客户不是直属支行" checkLevel="err">
+		<sql><![CDATA[ with sup_orgs as (select * from OM_ORGANIZATION t start with t.orgcode=@orgcode connect by prior t.parentorgid=t.orgid) 
+						select decode(orgcode,'72101',1,0) c from sup_orgs where orglevel='2'
+		]]></sql>
+	</rule>
+	<rule id="RGRANT_0008" name="零权限校验-是否多头授信" checktype="less"  checkedFieldName="$c" endValue="1" errCode="2015110-001" errMsg="该客户存在多头授信" checkLevel="err">
+		<sql><![CDATA[ select decode(count(1), 0, '0', '1', '0', '1') as c
+						  from (select distinct (t.ORG_NUM)
+						          from tb_biz_apply t
+						         where t.PARTY_ID = (select party_id from tb_csm_party p where p.party_num=@partyNum))
+		]]></sql>
+	</rule>
+</checkrules>

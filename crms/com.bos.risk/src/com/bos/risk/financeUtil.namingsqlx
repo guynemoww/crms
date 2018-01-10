@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:CHJ -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <select id="queryFinanceValue" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+    <![CDATA[
+    	select
+			BT_GET_FINANCE_DATA(#partyId#,#itemName#,#customerTypeCd#,#financeTypeCd#,#financeDeadline#)
+		from 
+			dual
+    ]]>
+    </select>
+    
+      <select id="getFinanceData" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT INDEX_CD code,INDEX_VALUE_DATA_TYPE value FROM TB_ACC_FINANCE_INDEX_DATA WHERE FINANCE_ID=#financeId#
+UNION ALL 
+SELECT PROJECT_CD code,PROJECT_VALUE value FROM TB_ACC_FINANCE_STATEMENT_DATA WHERE FINANCE_ID=#financeId#
+	  </select>
+</sqlMap>

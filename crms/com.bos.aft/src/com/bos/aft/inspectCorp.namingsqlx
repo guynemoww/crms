@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zengfang -->
+<sqlMap>
+   <!-- 查询抽样客户检查名单 -->
+	<resultMap class="commonj.sdo.DataObject" id="iclCorpList">
+        <result column="ICL_CORP_ID" property="iclCorpId"/>
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="LAST_INSPECT_DT" property="lastInspectDt"/>
+        <result column="PARTY_NAME" property="partyName"/>
+        <result column="PARTY_NUM" property="partyNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+        <!-- 
+        <result column="HANDLING_ORG_ID" property="handlingOrgId"/>
+        -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/>
+        <result column="INDUSTRIAL_TYPE_CD" property="industrialTypeCd"/>
+        <result column="WARNING_LEVEL_CD" property="earlyWarningLevelCd"/>
+        <result column="USER_NUM" property="userNum"/>
+    </resultMap>
+    <resultMap class="commonj.sdo.DataObject" id="repeatCount">
+        <result column="repCount" property="repCount"/><!--重复重点客户的个数 -->
+    </resultMap>
+    <select id="queryIclCorpList" parameterClass="java.util.HashMap" resultMap="iclCorpList">
+		SELECT
+		    tai.ICL_CORP_ID,
+		    tai.PARTY_ID,
+		    tai.USER_NUM,
+		    tai.LAST_INSPECT_DT,
+		    p.PARTY_NAME,
+		    p.PARTY_NUM,
+		    m.ORG_NUM,
+		    p.PARTY_TYPE_CD,
+		    tcc.INDUSTRIAL_TYPE_CD,
+		    trc.WARNING_LEVEL_CD
+		FROM
+		    TB_AFT_INSPECT_CORP_LIST tai
+		LEFT JOIN
+		    TB_CSM_PARTY p
+		ON
+		    tai.PARTY_ID=p.PARTY_ID
+		LEFT JOIN  TB_CSM_MANAGEMENT_TEAM m 		
+     		on  tai.party_id = m.party_id
+		LEFT JOIN
+		    TB_CSM_CORPORATION tcc
+		ON
+		    tai.PARTY_ID=tcc.PARTY_ID
+		LEFT JOIN
+		    TB_REW_CSM_EARLY_WARNING trc
+		ON
+		    tai.PARTY_ID=trc.PARTY_ID
+		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where 1=1
+   		<isNotNull property="orgCode">
+   			and voo.parentorgcode = #orgCode#
+   		</isNotNull>
+		<isNotNull property="partyTypeCd">
+   			and	p.PARTY_TYPE_CD=#partyTypeCd#
+   		</isNotNull>
+   		<isNotNull property="earlyWarningLevelCd">
+   			and	trc.WARNING_LEVEL_CD=#earlyWarningLevelCd#
+   		</isNotNull>
+    </select>
+    <select id="queryInRepeatCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="repeatCount">
+		SELECT
+			 
+			ICL_CORP_ID as repCount
+		   
+		FROM
+			TB_AFT_INSPECT_CORP_LIST a
+		
+   		where 1=1
+   		<isNotNull property="partyId">
+   			and		a.PARTY_ID=#partyId#
+   		</isNotNull>
+   			and APPLY_STATUS =0
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="partyType">
+        <result column="partyType" property="partyType"/>
+    </resultMap>
+    <!--查询客户类型名称-->
+    <select id="queryPartyType" parameterClass="java.util.HashMap" resultMap="partyType">
+    	<![CDATA[
+		select DICTNAME partyType from EOS_DICT_ENTRY where DICTTYPEID='XD_KHCD0219' and DICTID=#partyTypeCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="orgNumName">
+        <result column="orgNum" property="orgNum"/>
+    </resultMap>
+    <!--查询所属机构名称-->
+    <select id="queryOrgNumName" parameterClass="java.util.HashMap" resultMap="orgNumName">
+    	<![CDATA[
+		 select ORGNAME orgNum from OM_ORGANIZATION where ORGCODE=#orgNum#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="industrialType">
+        <result column="industrialType" property="industrialType"/>
+    </resultMap>
+    <!--查询所属行业名称-->
+    <select id="queryIndustrialType" parameterClass="java.util.HashMap" resultMap="industrialType">
+    	<![CDATA[
+		  select DICTNAME industrialType  from EOS_DICT_ENTRY where DICTTYPEID='CDKH0095' and DICTID=#industrialTypeCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="earlyWarningLevel">
+        <result column="earlyWarningLevel" property="earlyWarningLevel"/>
+    </resultMap>
+    <!--查询预警级别名称-XD_DHCD4006  XD_YJCD0004 -->
+    <select id="queryEarlyWarningLevel" parameterClass="java.util.HashMap" resultMap="earlyWarningLevel">
+    	<![CDATA[
+		   select DICTNAME earlyWarningLevel from EOS_DICT_ENTRY where DICTTYPEID=#earlyWarningLevelCdDictTypeId# and DICTID=#earlyWarningLevelCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="aftloanInspectReport">
+        <result column="party_name" property="partyName"/>
+        <result column="orgname" property="orgName"/>
+    </resultMap>
+    <!--查询贷后检查报告相关信息-->
+    <select id="queryAftloanInspectReport" parameterClass="java.util.HashMap" resultMap="aftloanInspectReport">
+    	<![CDATA[
+		    select distinct tcp.party_name 
+		    				,oo.orgname
+			from TB_CSM_PARTY tcp 
+			inner join tb_csm_management_team tcmt
+			on tcp.party_id = tcmt.party_id
+			inner join OM_ORGANIZATION oo
+			on tcmt.org_num = oo.orgcode
+			where  tcp.party_id = #partyId#
+		]]>
+    </select>
+</sqlMap>

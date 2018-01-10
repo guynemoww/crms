@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+
+	<select id="getCreditLineMeaParam" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT * FROM (
+SELECT PROJECT_CD,PROJECT_VALUE FROM TB_ACC_FINANCE_STATEMENT_DATA WHERE FINANCE_ID=#financeId#
+UNION ALL 
+SELECT INDEX_CD,INDEX_VALUE_DATA_TYPE FROM TB_ACC_FINANCE_INDEX_DATA WHERE FINANCE_ID=#financeId# 
+) 
+<isNotNull property="codes">
+WHERE PROJECT_CD IN 
+<iterate property="codes" open="(" close=")" conjunction=",">#codes[]#</iterate>
+</isNotNull>
+	</select>
+	
+	<select id="getCustomerFinanceId" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT FINANCE_ID,CUSTOMER_TYPE_CD FROM TB_ACC_CUSTOMER_FINANCE WHERE PARTY_ID=#partyId# AND FINANCE_STATUS_CD='02'
+	</select>
+	
+	
+	<select id="getFinanceCount" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+		SELECT count(1) as count FROM TB_ACC_CUSTOMER_FINANCE WHERE PARTY_ID=#partyId# AND CUSTOMER_TYPE_CD in ('004','006','012','013','014') AND FINANCE_STATUS_CD='02' 
+	</select>
+	
+	<select id="getCrdPartyLimit" parameterClass="java.util.Map" resultClass="java.math.BigDecimal">
+select sum(used_amt) amt from v_crd_party_limit where party_id=#partyId#
+	</select>
+	
+	<select id="createMeaValid" parameterClass="java.lang.String" resultClass="java.lang.String">
+SELECT id FROM TB_BIZ_CREDIT_LINE_MEASURE WHERE ID=#id#
+	</select>
+	
+	<select id="getPartyCreditRatingCD" parameterClass="java.util.Map" resultClass="java.lang.String">
+SELECT CREDIT_RATING_CD FROM tb_irm_internal_rating_result WHERE PARTY_ID=#partyId# AND RATING_STATE='03'
+	</select>
+	
+	<select id="getCreditLineLimit" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT * FROM  TB_BIZ_CREDIT_LINE_LIMIT
+<isNotNull property="codes">
+WHERE CODE IN 
+<iterate property="codes" open="(" close=")" conjunction=",">#codes[]#</iterate>
+</isNotNull>
+	</select>
+	
+</sqlMap>

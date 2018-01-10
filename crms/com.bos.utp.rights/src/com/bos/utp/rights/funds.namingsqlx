@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cp -->
+<sqlMap>
+    <select  id="queryOrgFuns" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.position.OrgEntrustAccount">
+    	select 
+    	  a.entrust_acc                     as entrustAcc,
+    	  a.entrust_return_acc              as entrustReturnAcc,
+		  a.entrust_return_principal_acc    as entrustReturnPrincipalAcc,
+		  a.entrust_return_interest_acc     as entrustReturnInterestAcc,
+		  a.org_code   					    as orgCode,
+		  a.org_name						as orgName
+    	from ORG_ENTRUST_ACCOUNT a
+    	where 1=1 
+    	 <isNotNull property="orgCode"> and a.org_code = #orgCode# </isNotNull>
+    	 order by org_code desc
+    </select>
+     <select id="queryLoanSummaryInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select b.loan_id,c.party_name,a.summary_num,d.contract_num, 
+		to_char(a.begin_date,'yyyy-mm-dd') BEGIN_DATE, to_char(a.end_date,'yyyy-mm-dd') END_DATE,
+		a.summary_amt,a.jjye,b.user_num,b.org_num,a.SUMMARY_ID
+			from tb_loan_summary a,tb_loan_info b,tb_csm_party c,tb_con_contract_info d
+	        where a.loan_id = b.loan_id and a.party_id = c.party_id and b.contract_id = d.contract_id
+	         and b.user_num ='$userNum$'
+       		 and b.org_num = '$orgNum$'
+	        <isNotNull property="contractNum">  and d.contract_num = '$contractNum$' </isNotNull>
+	        <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+	        <isNotNull property="partyName">  and c.party_name like '%$partyName$%' </isNotNull>
+    </select>
+    <!--查询打印的核算借据信息-->
+     <select id="queryAplusSummaryInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select tb.due_num due_num,
+			        (to_date(tb.end_date, 'yyyy-mm-dd') -
+			        (to_date(tb.beg_date, 'yyyy-mm-dd'))) date_period,
+			        nvl(tb.amt,0) amt,
+			        nvl(tf.res_nor,0) res_nor,
+			        nvl((tf.nor_bal_101 + tf.dvl_bal_102),0) bal_nor
+			   from tb_sup_account_info tf,
+			        tb_sup_loan_info tb
+			  where tb.due_num = tf.due_num
+			    and tb.due_num=#dueNum#
+    </select>
+    <!--查询放款信息-->
+     <select id="queryCrmsLoanInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select d.ecif_party_num ecifNo,d.party_name partyName,a.summary_num summaryNum,e.product_name productName,b.contract_num contractNum,
+				 (case when b.currency_cd ='CNY' then '人民币' 
+				       when b.currency_cd ='EUR' then '欧元'  
+				       when b.currency_cd ='GBP' then '英镑'
+				       when b.currency_cd ='HKD' then '香港元'
+				       when b.currency_cd ='JPY' then '日元'
+				       when b.currency_cd ='USD' then '美元'
+				       else '不支持的币种' end ) currencyCd,
+				  b.contract_amt contractAmt,f.year_rate yearRate,
+				  to_char(c.begin_date,'yyyy-MM-dd') beginDate,to_char(c.end_date,'yyyy-MM-dd') endDate,
+				  a.summary_amt summaryAmt, 
+				   (case when b.repayment_type ='0100' then '等额本金' 
+				       when b.repayment_type ='0200' then '等额本息'  
+				       when b.repayment_type ='0300' then '阶段性等额本金'
+				       when b.repayment_type ='0400' then '阶段性等额本息'
+				       when b.repayment_type ='1100' then '按周期还息到期一次还本'
+				       when b.repayment_type ='1200' then '到期一次性还本付息' 
+				       when b.repayment_type ='1300' then '按周期还息任意还本'  
+				       when b.repayment_type ='1400' then '按周期还息按还本计划表还本'
+				       when b.repayment_type ='1410' then '按还本计划表还息按还本计划表还本'
+				       when b.repayment_type ='1500' then '利随本清'
+				       when b.repayment_type ='1700' then '等本等息'
+				       when b.repayment_type ='2100' then '预收息'
+				       else '' end ) repayType,
+				  g.zh fkzh,
+				   c.loan_org loanOrg,
+				   a.org_num 
+				from tb_loan_summary a,tb_con_contract_info b,tb_loan_info c,tb_csm_party d,tb_sys_product e,tb_loan_loanrate f,tb_loan_zh g
+				where d.party_id=b.party_id
+				and b.contract_id=c.contract_id
+				and a.loan_id =c.loan_id
+				and c.product_type = e.product_cd
+				and c.loan_id = f.loan_id
+				and c.loan_id = g.loan_id
+				and g.zhlx='0'
+				and a.summary_num=#dueNum#
+    </select>
+    <!--查询票据放款信息-->
+     <select id="queryCrmsLoanInfoPJ" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select d.ecif_party_num ecifNo,d.party_name partyName,a.summary_num summaryNum,e.product_name productName,b.contract_num contractNum,
+				 (case when b.currency_cd ='CNY' then '人民币' 
+				       when b.currency_cd ='EUR' then '欧元'  
+				       when b.currency_cd ='GBP' then '英镑'
+				       when b.currency_cd ='HKD' then '香港元'
+				       when b.currency_cd ='JPY' then '日元'
+				       when b.currency_cd ='USD' then '美元'
+				       else '不支持的币种' end ) currencyCd,
+				  b.contract_amt contractAmt,f.year_rate yearRate,
+				  to_char(c.begin_date,'yyyy-MM-dd') beginDate,to_char(c.end_date,'yyyy-MM-dd') endDate,
+				  a.summary_amt summaryAmt, 
+				   (case when b.repayment_type ='0100' then '等额本金' 
+				       when b.repayment_type ='0200' then '等额本息'  
+				       when b.repayment_type ='0300' then '阶段性等额本金'
+				       when b.repayment_type ='0400' then '阶段性等额本息'
+				       when b.repayment_type ='1100' then '按周期还息到期一次还本'
+				       when b.repayment_type ='1200' then '到期一次性还本付息' 
+				       when b.repayment_type ='1300' then '按周期还息任意还本'  
+				       when b.repayment_type ='1400' then '按周期还息按还本计划表还本'
+				       when b.repayment_type ='1410' then '按还本计划表还息按还本计划表还本'
+				       when b.repayment_type ='1500' then '利随本清'
+				       when b.repayment_type ='1700' then '等本等息'
+				       when b.repayment_type ='2100' then '预收息'
+				       else '' end ) repayType,
+				  g.zh fkzh,
+				   c.loan_org loanOrg,
+				   a.org_num 
+				from tb_loan_summary a,tb_con_contract_info b,tb_loan_info c,tb_csm_party d,tb_sys_product e,tb_loan_loanrate f,tb_loan_zh g
+				where d.party_id=b.party_id
+				and b.contract_id=c.contract_id
+				and a.loan_id =c.loan_id
+				and c.product_type = e.product_cd
+				and c.loan_id = f.loan_id
+				and c.loan_id = g.loan_id
+				and g.zhlx='2'
+				and a.summary_num=#dueNum#
+    </select>
+    <!--查询保函信息-->
+     <select id="queryBhCrmsLoanInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select d.ecif_party_num ecifNo,d.party_name partyName,a.summary_num summaryNum,e.product_name productName,b.contract_num contractNum,
+		         (case when b.currency_cd ='CNY' then '人民币' 
+		               when b.currency_cd ='EUR' then '欧元'  
+		               when b.currency_cd ='GBP' then '英镑'
+		               when b.currency_cd ='HKD' then '香港元'
+		               when b.currency_cd ='JPY' then '日元'
+		               when b.currency_cd ='USD' then '美元'
+		               else '不支持的币种' end ) currencyCd,
+		          b.contract_amt contractAmt,f.year_rate yearRate,
+		          to_char(c.begin_date,'yyyy-MM-dd') beginDate,to_char(c.end_date,'yyyy-MM-dd') endDate,
+		          a.summary_amt summaryAmt, 
+		           (case when b.repayment_type ='0100' then '等额本金' 
+		               when b.repayment_type ='0200' then '等额本息'  
+		               when b.repayment_type ='0300' then '阶段性等额本金'
+		               when b.repayment_type ='0400' then '阶段性等额本息'
+		               when b.repayment_type ='1100' then '按周期还息到期一次还本'
+		               when b.repayment_type ='1200' then '到期一次性还本付息' 
+		               when b.repayment_type ='1300' then '按周期还息任意还本'  
+		               when b.repayment_type ='1400' then '按周期还息按还本计划表还本'
+		               when b.repayment_type ='1410' then '按还本计划表还息按还本计划表还本'
+		               when b.repayment_type ='1500' then '利随本清'
+		               when b.repayment_type ='1700' then '等本等息'
+		               when b.repayment_type ='2100' then '预收息'
+		               else '不支持的还款方式' end ) repayType,
+		           c.loan_org loanOrg,
+		           a.org_num
+		        from tb_loan_summary a,tb_con_contract_info b,tb_loan_info c,tb_csm_party d,tb_sys_product e,tb_loan_loanrate f
+		        where d.party_id=b.party_id
+		        and b.contract_id=c.contract_id
+		        and a.loan_id =c.loan_id
+		        and c.product_type = e.product_cd
+		        and c.loan_id = f.loan_id
+				and a.summary_num=#dueNum#
+    </select>
+      <!--查询受托支付方信息-->
+     <select id="queryStzfCrmsLoanInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select d.party_name partyName,e.product_name productName,
+		         (case when b.currency_cd ='CNY' then '人民币' 
+		               when b.currency_cd ='EUR' then '欧元'  
+		               when b.currency_cd ='GBP' then '英镑'
+		               when b.currency_cd ='HKD' then '香港元'
+		               when b.currency_cd ='JPY' then '日元'
+		               when b.currency_cd ='USD' then '美元'
+		               else '不支持的币种' end ) currencyCd,
+		          to_char(c.begin_date,'yyyy-MM-dd') beginDate,
+		          g.zh fkzh,
+		          c.loan_org loanOrg,
+		          g.zhmc zhmc,
+		          a.rcn_stan rcnStan,
+		          h.ZHM1 ZHM1,h.ZH1 zh1,h.AMT1 amt1,h.ZHM2 ZHM2,h.ZH2 zh2,h.AMT2 amt2
+		        from tb_loan_summary a,tb_con_contract_info b,tb_loan_info c,tb_csm_party d,tb_sys_product e,tb_loan_loanrate f,tb_loan_zh g,tb_loan_stzf h
+		        where d.party_id=b.party_id
+		        and b.contract_id=c.contract_id
+		        and a.loan_id =c.loan_id
+		        and c.product_type = e.product_cd
+		        and c.loan_id = f.loan_id
+		        and c.loan_id = g.loan_id
+		        and g.zhlx='0'
+		        and c.loan_id=h.loan_id
+		        and a.summary_num=#dueNum#
+    </select>
+     <!--查询受托支付方开发商账号信息-->
+     <select id="queryStzfkfsCrmsLoanInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select p.party_name partyName, l.settle_accno settleAccno
+			  from tb_con_contract_info         r,
+			       tb_loan_info                 i,
+			       tb_biz_amount_detail_approve t,
+			       tb_biz_amount_apply          c,
+			       tb_biz_xmxx_apply            b,
+			       tb_crd_third_party_limit     l,
+			       tb_csm_party                 p
+			 where r.amount_detail_id = t.amount_detail_id
+			   and i.contract_id = r.contract_id
+			   and t.amount_id = c.amount_id
+			   and c.apply_id = b.amount_detail_id
+			   and b.project_id = l.limit_id
+			   and l.party_id = p.party_id
+			   and i.summary_num=#dueNum#
+    </select>
+       <!--查询账号信息-->
+     <select id="queryCrmsZhInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select c.zh hkzh,c.zhmc from tb_loan_info a,tb_loan_summary b,tb_loan_zh c where a.loan_id=b.loan_id and a.loan_id = c.loan_id
+				and c.zhlx='1' and b.summary_num=#dueNum#
+    </select>
+      <!--查询票据账号信息-->
+     <select id="queryCrmsZhInfoPJ" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select c.zh hkzh,c.zhmc from tb_loan_info a,tb_loan_summary b,tb_loan_zh c where a.loan_id=b.loan_id and a.loan_id = c.loan_id
+				and c.zhlx='2' and b.summary_num=#dueNum#
+    </select>
+     <!--查询打印的核算借据明细信息-->
+     <select id="queryAplusDetailInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 select  to_char(to_date(re.rcv_date,'yyyy-MM-dd'),'yyyy-MM-dd') rcv_date,
+        a.curr_peri curr_peri,
+        to_char(to_date(a.end_date,'yyyy-MM-dd'),'yyyy-MM-dd') end_date,
+        decode(a.rcv_prn - a.pad_up_prn+a.rcv_nor_itr_in-a.pad_up_nor_itr_in
+         +a.rcv_nor_itr_out-a.pad_up_nor_itr_out+a.rcv_dft_itr_in-a.pad_up_dft_itr_in
+         +a.rcv_dft_itr_out-a.pad_up_dft_itr_out+a.rcv_pns_itr_in-a.pad_up_pns_itr_in
+         +a.rcv_pns_itr_out-a.pad_up_pns_itr_out+round(a.dft_prn_otd_itr, 2)
+         +a.rcv_cpd_itr_in-a.pad_up_cpd_itr_in+a.rcv_cpd_itr_out-a.pad_up_cpd_itr_out
+         +round(a.dft_itr_in_otd_itr, 2) + round(a.dft_itr_out_otd_itr, 2) +
+         round(a.pns_itr_in_otd_itr, 2) + round(a.pns_itr_out_otd_itr, 2) +
+         round(a.cpd_itr_in_otd_itr, 2) + round(a.cpd_itr_out_otd_itr, 2) +
+         round(a.nor_itr_in_otd_itr, 2) + round(a.nor_itr_out_otd_itr, 2),0,0,
+         (to_date(tc.tran_date, 'yyyy-mm-dd')-to_date(a.end_date, 'yyyy-mm-dd'))) date_days,
+         a.pad_up_prn pad_up_prn,
+        (a.rcv_prn - a.pad_up_prn) pad_prn,
+        (a.rcv_nor_itr_in-a.pad_up_nor_itr_in
+         +a.rcv_nor_itr_out-a.pad_up_nor_itr_out
+        ) rcv_nor,
+        (a.rcv_dft_itr_in-a.pad_up_dft_itr_in
+         +a.rcv_dft_itr_out-a.pad_up_dft_itr_out
+        ) rcv_dft,
+        (a.rcv_pns_itr_in-a.pad_up_pns_itr_in
+         +a.rcv_pns_itr_out-a.pad_up_pns_itr_out
+         +round(a.dft_prn_otd_itr, 2)) dft_prn,
+        (a.rcv_cpd_itr_in-a.pad_up_cpd_itr_in
+         +a.rcv_cpd_itr_out-a.pad_up_cpd_itr_out
+         +round(a.dft_itr_in_otd_itr, 2) + round(a.dft_itr_out_otd_itr, 2) +
+         round(a.pns_itr_in_otd_itr, 2) + round(a.pns_itr_out_otd_itr, 2) +
+         round(a.cpd_itr_in_otd_itr, 2) + round(a.cpd_itr_out_otd_itr, 2) +
+         round(a.nor_itr_in_otd_itr, 2) + round(a.nor_itr_out_otd_itr, 2)) all_otd
+   from (select n.*,null from tb_sup_debt_info_n n union select * from tb_sup_debt_info_n_bkh) a, tb_sup_loan_info d, (select s.due_num,max(s.rcv_date) rcv_date,s.curr_peri from (select ri.*,null from tb_sup_repayment_info ri union select * from tb_sup_repayment_info_bkh rib) s where 
+   s.pay_prim_acct is not null group by s.due_num,s.curr_peri) re, tc_sup_sys_date tc
+  where a.due_num(+) = d.due_num
+    and a.due_num = re.due_num(+)
+    and a.curr_peri = re.curr_peri(+)
+    and a.leg_per_cod = tc.leg_per_cod
+    and d.sts != '7'
+    and a.curr_peri != '-1'
+    and d.due_num =#dueNum#
+    order by a.curr_peri
+    </select>
+    <!--查询变更表的changeId-->
+     <select id="queryChangeId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		   select change_id as change_id from tb_con_loan_change where summary_id=#summaryId# and  change_status='03' and loan_change_type='06'
+						and term_change_way in('03','04') and period_state='01'
+    </select>
+     <!--查询变更表的是否有未执行的展期变更-->
+     <select id="queryChangeCount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select count(1) num from tb_con_loan_change where summary_id=#summaryId# and  change_status='03' and loan_change_type='06'
+						and term_change_way='03' and period_state='02'
+    </select>
+     <!--查询变更表的是否有做过期限调整-->
+     <select id="queryExtendCount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select count(1) count from tb_con_loan_change where summary_id=#summaryId# and  change_status='03' and loan_change_type='19'
+						and term_change_way='04'
+    </select>
+     <!--查询变更表的是否有做过展期-->
+     <select id="queryExtendSum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select count(1) sum from tb_con_loan_change where summary_id=#summaryId# and  change_status='03' and loan_change_type='06'
+						and term_change_way='03'
+    </select>
+    <!--查询原借据的期限（第一次——-->
+     <select id="queryFirstPeriod" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select months_between(c.END_DATE,c.BEGIN_DATE) oldTerm,c.END_DATE oldEndDate from tb_loan_summary c
+		   where c.summary_id=#summaryId#
+    </select>
+    <!--查询原借据的期限-->
+     <select id="queryOldPeriod" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select months_between(c.old_end_date,to_date(#beginDate#,'yyyy/MM/dd')) oldTerm,to_char(c.old_end_date,'yyyy/MM/dd') oldEndDate from
+			(select b.old_end_date from (select a.old_end_date from tb_con_loan_change a where a.summary_id=#summaryId# and a.change_status='03' and a.loan_change_type='06'
+						and a.term_change_way='03' order by a.old_end_date asc) b where  rownum=1) c
+    </select>
+    <!--查询当前执行借据的期限-->
+     <select id="queryCurrPeriod" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select months_between(c.new_end_date,to_date(#oldEndDate#,'yyyy/MM/dd')) currTerm from
+			(select b.new_end_date from (select a.new_end_date from tb_con_loan_change a where a.summary_id=#summaryId# and a.change_status='03' and a.loan_change_type='06'
+						and a.term_change_way='03' order by a.old_end_date desc) b where  rownum=1) c
+    </select>
+      <!--查询借据展期日期-->
+     <select id="queryCalutePeriod" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select months_between(to_date(#extendDate#,'yyyy/MM/dd'),to_date(#oldEndDate#,'yyyy/MM/dd')) caclTerm from dual
+    </select>
+    <!-- 算期限-->
+    <select id="getTerm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select (case
+			         when #oldTerm# > 60 then
+			          '长'
+			         when #oldTerm# > 12 then
+			          '中'
+			         else
+			          '短'
+			       end) oldType
+			  from dual
+    </select> 
+     <!--打印回单信息-->
+     <select id="printDetailInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select b.orgname orgname,c.summary_num summary_num,c.jjye jjye,d.party_name party_name,b.orgcode orgcode from tb_loan_info a,om_organization b,tb_loan_summary c,tb_csm_party d where a.loan_org=b.orgcode
+					and a.loan_id=c.loan_id
+					and d.party_id=c.party_id
+					and c.summary_num=#dueNum#
+    </select>
+     <!--查询账户信息-->
+     <select id="printAccountDetailInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		   select a.ZHM1 ZHM1,a.ZH1,b.ZH ZH,b.ZHMC ZHMC,c.loan_amt LOAN_AMT,c.currency_cd CURRENCY_CD from tb_loan_stzf a,tb_loan_zh b,tb_loan_info c where a.loan_id=b.loan_id 
+		   and b.zhlx='0' and a.loan_id=c.loan_id  and a.loan_id=#loanId#
+    </select>
+    <select id="queryCurrSybjlx" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT NVL(NOR_BAL_101,0)+NVL(DVL_BAL_102,0) bj,tq.*
+FROM TB_SUP_ACCOUNT_INFO a
+LEFT JOIN (
+SELECT
+SUM((RCV_NOR_ITR_IN+
+RCV_DFT_ITR_IN+
+RCV_PNS_ITR_IN+
+RCV_CPD_ITR_IN+
+RCV_NOR_ITR_OUT+
+RCV_DFT_ITR_OUT+
+RCV_PNS_ITR_OUT+
+RCV_CPD_ITR_OUT+
+round(DFT_PRN_OTD_ITR,2)+
+round(DFT_ITR_IN_OTD_ITR,2)+
+round(DFT_ITR_OUT_OTD_ITR,2)+
+round(PNS_ITR_IN_OTD_ITR,2)+
+round(PNS_ITR_OUT_OTD_ITR,2)+
+round(CPD_ITR_IN_OTD_ITR,2)+
+round(CPD_ITR_OUT_OTD_ITR,2))-
+(PAD_UP_NOR_ITR_IN+
+PAD_UP_DFT_ITR_IN+
+PAD_UP_PNS_ITR_IN+
+PAD_UP_CPD_ITR_IN+
+PAD_UP_NOR_ITR_OUT+
+PAD_UP_DFT_ITR_OUT+
+PAD_UP_PNS_ITR_OUT+
+PAD_UP_CPD_ITR_OUT)) tq_lx,
+SUM(RCV_PRN-PAD_UP_PRN) tq_bj
+FROM TB_SUP_DEBT_INFO_N
+WHERE DUE_NUM=#dueNum#
+)tq ON 1=1
+WHERE DUE_NUM=#dueNum#
+    </select>
+    
+   	<select id="queryWtdkInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT DECODE(ci.currency_cd,'CNY','人民币','EUR','欧元','GBP','英镑','HKD','香港元','JPY','日元','USD','美元','不支持的币种')CURRENCY_CD,
+wtr.PARTY_ID,wtr.PARTY_NAME WTR_NAME,p.PARTY_ID,p.PARTY_NAME OTHER_NAME,zh.zh OTHER_ACCT,dgwt.WTR,dswt.WTR,ci.CONTRACT_ID
+FROM TB_LOAN_SUMMARY LS
+INNER JOIN TB_CON_CONTRACT_INFO CI ON LS.CONTRACT_ID=CI.CONTRACT_ID
+LEFT JOIN TB_LOAN_WTDK dgwt ON dgwt.LOAN_ID=ls.LOAN_ID
+LEFT JOIN TB_BIZ_XW_APPROVE dswt ON dswt.AMOUNT_DETAIL_ID=ci.AMOUNT_DETAIL_ID
+LEFT JOIN TB_CON_ZH zh ON zh.CONTRACT_ID=ci.CONTRACT_ID AND ZHLX='1'
+LEFT JOIN TB_CSM_PARTY p ON p.PARTY_ID=ci.PARTY_ID
+LEFT JOIN TB_CSM_PARTY wtr ON wtr.PARTY_ID=NVL(dgwt.WTR,dswt.WTR)
+WHERE ls.SUMMARY_NUM=#summaryNum#
+    </select>
+    
+	<select id="queryWtrAccInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT PRN_SETT_ACC,ITR_SETT_ACC FROM aplus.TB_SUP_LOAN_INFO_ENTR_INFO WHERE DUE_NUM=#summaryNum#
+    </select>
+    
+	<select id="queryRepayWitness" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT RCV_DATE,DUE_NUM,STAN,SUM(bj+lx) amt,SUM(bj)bj,sum(lx)lx,sum(fx)fx,sum(fl)fl,sum(tq)tq FROM (
+SELECT RCV_DATE,DUE_NUM,STAN,
+NVL(PAD_UP_PRN,0)+NVL(PAD_UP_OFT_PRN,0) BJ,
+NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_CPD_ITR_IN,0)
++NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0)+NVL(PAD_UP_PNS_ITR_OUT,0)+NVL(PAD_UP_CPD_ITR_OUT,0) 
++NVL(PAD_UP_OFT_ITR,0) LX,
+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_OUT,0) FX,
+NVL(PAD_UP_CPD_ITR_IN,0)+NVL(PAD_UP_CPD_ITR_OUT,0) FL,
+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_OUT,0) TQ
+FROM TB_SUP_REPAYMENT_INFO WHERE DUE_NUM=#summaryNum# 
+<isNotNull property="rcvDate">AND RCV_DATE = #rcvDate#</isNotNull>
+<isNotNull property="stan">AND STAN = #stan#</isNotNull>
+UNION ALL
+SELECT RCV_DATE,DUE_NUM,STAN,
+NVL(PAD_UP_PRN,0)+NVL(PAD_UP_OFT_PRN,0) BJ,
+NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_CPD_ITR_IN,0)
++NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0)+NVL(PAD_UP_PNS_ITR_OUT,0)+NVL(PAD_UP_CPD_ITR_OUT,0) 
++NVL(PAD_UP_OFT_ITR,0) LX,
+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_OUT,0) FX,
+NVL(PAD_UP_CPD_ITR_IN,0)+NVL(PAD_UP_CPD_ITR_OUT,0) FL,
+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_OUT,0) TQ
+FROM TB_SUP_REPAYMENT_INFO_BKH WHERE DUE_NUM=#summaryNum#
+<isNotNull property="rcvDate">AND RCV_DATE= #rcvDate#</isNotNull>
+<isNotNull property="stan">AND STAN = #stan#</isNotNull>
+) GROUP BY RCV_DATE,DUE_NUM,STAN
+ORDER BY RCV_DATE,DUE_NUM,STAN DESC
+    </select>
+    <select id="queryPjjjinfo" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+    select a.product_type product_type from tb_loan_info a,tb_loan_summary b where a.loan_id=b.loan_id and b.summary_num=#summaryNum#
+    </select>
+      <!--查询账号信息   存单质押扣划-->
+     <select id="queryCrmsZhInfoForZykh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select tgf.cuacno as hkzh,tbs.party_name as zhmc 
+			from tb_cd_zykh_apply tcza,tb_grt_mortgage_basic tgmb,tb_grt_freeze tgf,tb_csm_party tbs
+			where tcza.surety_no = tgmb.surety_no
+			and tgmb.surety_id = tgf.surety_id
+			and tgmb.party_id = tbs.party_id
+			and tcza.hx_flow_no = #stan#
+    </select>
+    
+</sqlMap>

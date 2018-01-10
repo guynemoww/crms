@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:吕健豪 -->
+<sqlMap>
+   
+     <select id="select_id" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+    	select  pos.POSINAME,
+		   emp.EMPID,
+		   emp.EMPNAME,
+		   emp.USERID,
+		   po.ORGID,
+		   pos.POSICODE,
+		   org.orglevel,
+		   org.orgcode,
+		   org.orgname
+		   from OM_POSITION pos ,
+		   OM_EMPPOSITION po,
+		   OM_EMPLOYEE emp ,
+		   OM_ORGANIZATION org
+   		where emp.empid=po.empid 
+   		      and pos.positionID=po.positionID  
+   		      and org.orgid=po.orgid
+   		      and emp.userId = 
+   		      (
+   		      	select mt.user_num from TB_CSM_MANAGEMENT_TEAM mt where mt.party_id = #partyId# and USER_ROLE_CD = '01'
+   		      )
+   		      and (pos.POSICODE='P1001')
+    </select>
+</sqlMap>

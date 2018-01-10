@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="updateCorporation" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="7.0.0.0">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <location x="60" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束" type="end">
+    <targetConnections>link13</targetConnections>
+    <targetConnections>link14</targetConnections>
+    <location x="885" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="String" name="errorMsg" type="query" valueType="Primitive">errorMsg</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="62" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="887" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo1" name="12002000013A06公司客户基本信息维护" displayName="12002000013A06公司客户基本信息维护" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" description="" id="link12" name="link12" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>assign2</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>null==retDataObject||!&quot;00000000000000&quot;.equals(retDataObject.get(&quot;ReturnCode&quot;))</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link14" name="link14" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="735" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo1label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.socket.EsbSocketService.socketDataObject</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="serviceCodeScene" type="literal" value="java.lang.String" valueType="Java" pattern="reference">RQ12002000013BODY06</process:inputVariable>
+      <process:inputVariable id="1" name="iEsbAppHeadRq" type="query" value="com.bos.pub.socket.service.request.base.EsbAppHeadRq" valueType="Java" pattern="reference">iEsbAppHeadRq</process:inputVariable>
+      <process:inputVariable id="2" name="dataObject" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">dataObject6</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="commonj.sdo.DataObject" valueType="Java">retDataObject</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo1label" name="label" nodeType="label">
+    <location x="636" y="96"/>
+    <figSize height="17" width="220"/>
+    <node>invokePojo1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign6" name="DataObject6" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link3" name="link3" displayName="link5" isDefault="true" type="transition">
+      <sourceNode>assign6</sourceNode>
+      <targetNode>invokePojo2</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <location x="222" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign6label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">300050</process:from>
+      <process:to type="query">dataObject6/rqsStmId</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">party/ecifPartyNum</process:from>
+      <process:to type="query">dataObject6/cstNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">party/partyName</process:from>
+      <process:to type="query">dataObject6/cstNm</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">party/partyName</process:from>
+      <process:to type="query">dataObject6/fullNm</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/englishName</process:from>
+      <process:to type="query">dataObject6/enNm</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/industrialTypeSamllCd</process:from>
+      <process:to type="query">dataObject6/idyCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/industrialTypeCd</process:from>
+      <process:to type="query">dataObject6/idyInvlCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">enterpriseScaleGx</process:from>
+      <process:to type="query">dataObject6/entpMgtSclCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/nationalTaxNo</process:from>
+      <process:to type="query">dataObject6/natTaxRgstCtfNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/governmentTentNo</process:from>
+      <process:to type="query">dataObject6/lclTaxRgstCtfNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/employeesNumber</process:from>
+      <process:to type="query">dataObject6/empeNum</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/middelCode</process:from>
+      <process:to type="query">dataObject6/oldLoanCardNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/registerAssets</process:from>
+      <process:to type="query">dataObject6/rgstTch</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/registerAssetsCurrencyCd</process:from>
+      <process:to type="query">dataObject6/rgstCcy</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/orgRegisterCd</process:from>
+      <process:to type="query">dataObject6/orgInstCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/businessScope</process:from>
+      <process:to type="query">dataObject6/bsnScop</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/registrCd</process:from>
+      <process:to type="query">dataObject6/bsnLcsNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/areaType</process:from>
+      <process:to type="query">dataObject6/dmstInd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">m:userObject/userId</process:from>
+      <process:to type="query">iEsbAppHeadRq/tranTellerNo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">m:userObject/attributes/orgcode</process:from>
+      <process:to type="query">iEsbAppHeadRq/branchId</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">loAdrArrays[1]/adrCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">210</process:from>
+      <process:to type="query">loAdrArrays[1]/adrTp</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/streetAddress</process:from>
+      <process:to type="query">loAdrArrays[1]/strAdr</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/nationalityCd</process:from>
+      <process:to type="query">loAdrArrays[1]/ctyCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/provinceCd</process:from>
+      <process:to type="query">provCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/district</process:from>
+      <process:to type="query">dstcCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/cityCd</process:from>
+      <process:to type="query">cityCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/district</process:from>
+      <process:to type="query">admnRgonCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">null==provCd?null:provCd.substring(0,6)</process:from>
+      <process:to type="query">loAdrArrays[1]/provCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">null==dstcCd?null:dstcCd.substring(0,6)</process:from>
+      <process:to type="query">loAdrArrays[1]/dstcCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">null==cityCd?null:cityCd.substring(0,6)</process:from>
+      <process:to type="query">loAdrArrays[1]/cityCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">null==admnRgonCd?null:admnRgonCd.substring(0,6)</process:from>
+      <process:to type="query">loAdrArrays[1]/admnRgonCd</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">attachedInfo/addressValue</process:from>
+      <process:to type="query">loAdrArrays[1]/offcAdr</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/registrationType</process:from>
+      <process:to type="query">dataObject6/rgstTp</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/isGroupCust</process:from>
+      <process:to type="query">dataObject6/grpCstFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/whetherGovernmentFinanceCor</process:from>
+      <process:to type="query">dataObject6/fncPltfmFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/listingCorporation</process:from>
+      <process:to type="query">dataObject6/listCoFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/focusCustomer</process:from>
+      <process:to type="query">dataObject6/imptCstFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/whetherImpExp</process:from>
+      <process:to type="query">dataObject6/imprExprtRghtFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/isRealEstateDev</process:from>
+      <process:to type="query">dataObject6/esttDvlpmFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/countrysideEnterprise</process:from>
+      <process:to type="query">dataObject6/rrlEntpFlg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">corporation/stockholderOfBank</process:from>
+      <process:to type="query">dataObject6/bnkHshFlg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign6label" name="label" nodeType="label">
+    <location x="200" y="96"/>
+    <figSize height="17" width="73"/>
+    <node>assign6</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="关键人信息数组" displayName="关键人信息数组" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link0" name="link0" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>invokePojo1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="555" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.socket.util.EsbSocketUtil.setDataObject</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dataObject" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">dataObject6</process:inputVariable>
+      <process:inputVariable id="1" name="arrayName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">esbBodyEcifRqGKeyPrsnInfArrays</process:inputVariable>
+      <process:inputVariable id="2" name="array" type="query" value="java.lang.Object[]" valueType="Java" pattern="reference">keyPrsnInfArray</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="524" y="96"/>
+    <figSize height="17" width="85"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo2" name="所在地址数组" displayName="所在地址数组" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo2</sourceNode>
+      <targetNode>invokePojo7</targetNode>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="356" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo2label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.socket.util.EsbSocketUtil.setDataObject</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dataObject" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">dataObject6</process:inputVariable>
+      <process:inputVariable id="1" name="arrayName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">esbBodyEcifRqGLoAdrArrays</process:inputVariable>
+      <process:inputVariable id="2" name="array" type="query" value="java.lang.Object[]" valueType="Java" pattern="reference">loAdrArrays</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo2label" name="label" nodeType="label">
+    <location x="331" y="96"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo2</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo3" name="查询客户下所有的股东信息" displayName="查询用户下所有业务" collapsed="false" type="invoke" index="3" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" description="" id="link20" name="股东不为空" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>invokePojo4</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="NOTNULLANDEMPTY">
+          <process:leftOperand type="query">rows</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link8" name="link8" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="65" y="328"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo3label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.eos.foundation.database.DatabaseExt.queryByNamedSql</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dsName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+      <process:inputVariable id="1" name="nameSqlId" type="literal" value="java.lang.String" valueType="Java" pattern="reference">com.bos.csm.corporation.tbCsmRelatedInfo.findGDList</process:inputVariable>
+      <process:inputVariable id="2" name="parameterObject" type="query" value="java.lang.Object" valueType="Java" pattern="reference">map</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.Object[]" valueType="Java">rows</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo3label" name="label" nodeType="label">
+    <location x="4" y="364"/>
+    <figSize height="17" width="145"/>
+    <node>invokePojo3</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>invokePojo3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="61" y="220"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">party/partyId</process:from>
+      <process:to type="query">map/partyId</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="63" y="256"/>
+    <figSize height="17" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo4" name="将股东信息放入数组" displayName="根据数据对象返回关键人信息数组" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+    </sourceConnections>
+    <targetConnections>link20</targetConnections>
+    <location x="225" y="328"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo4label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.csm.ecif.toCSM.couverArray</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="rows" type="query" value="java.lang.Object[]" valueType="Java" pattern="reference">rows</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.bos.pub.socket.service.request.EsbBodyEcifRqGKeyPrsnInfArray[]" valueType="Java">keyPrsnInfArray</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo4label" name="label" nodeType="label">
+    <location x="182" y="364"/>
+    <figSize height="17" width="109"/>
+    <node>invokePojo4</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo5" name="工信部企业规模转码" displayName="企业规模转码成标准数据" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link7" name="link7" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo5</sourceNode>
+      <targetNode>invokePojo6</targetNode>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <targetConnections>link8</targetConnections>
+    <location x="225" y="227"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo5label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.csm.ecif.toCSM.getEnterpriseScaleGx</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="enterpriseScaleGx" type="query" value="java.lang.String" valueType="Java" pattern="reference">corporation/enterpriseScaleGx</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">enterpriseScaleGx</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo5label" name="label" nodeType="label">
+    <location x="182" y="263"/>
+    <figSize height="17" width="109"/>
+    <node>invokePojo5</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo6" name="将联系信息放入数组" displayName="根据对公附属数据对象返回联系信息数组" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo6</sourceNode>
+      <targetNode>assign6</targetNode>
+    </sourceConnections>
+    <targetConnections>link7</targetConnections>
+    <location x="226" y="135"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo6label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.csm.ecif.toCSM.connectCorpArray</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="attachedInfo" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">attachedInfo</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.bos.pub.socket.service.request.EsbBodyEcifRqGCtcInfArray[]" valueType="Java">ctcInfArrays</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo6label" name="label" nodeType="label">
+    <location x="183" y="171"/>
+    <figSize height="17" width="109"/>
+    <node>invokePojo6</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo7" name="联系信息数组" displayName="联系信息数组" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo7</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="456" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo7label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.socket.util.EsbSocketUtil.setDataObject</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="dataObject" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">dataObject6</process:inputVariable>
+      <process:inputVariable id="1" name="arrayName" type="literal" value="java.lang.String" valueType="Java" pattern="reference">esbBodyEcifRqGCtcInfArrays</process:inputVariable>
+      <process:inputVariable id="2" name="array" type="query" value="java.lang.Object[]" valueType="Java" pattern="reference">ctcInfArrays</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo7label" name="label" nodeType="label">
+    <location x="431" y="96"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo7</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="errorMsg" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link13" name="link13" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link12</targetConnections>
+    <location x="885" y="180"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">retDataObject/ReturnCode</process:from>
+      <process:to type="query">returnCode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">retDataObject/ReturnMsg</process:from>
+      <process:to type="query">returnMsg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">&quot;调用ECIF接口异常,错误码:&quot;+returnCode+&quot;,错误信息:&quot;+returnMsg</process:from>
+      <process:to type="query">errorMsg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="871" y="216"/>
+    <figSize height="17" width="57"/>
+    <node>assign2</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="ganquan" createTime="2015-08-04 23:19:00" date="2015-08-04Z" description="" name="updateKeyCorporation" version="7.0.0.0"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.pub.sys.EcifRq12002000013BODY06" name="dataObject6"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.base.EsbAppHeadRq" description="" historyStateLocation="client" isArray="false" name="iEsbAppHeadRq"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.EsbBodyEcifRqGKeyPrsnInfArray" description="" historyStateLocation="client" isArray="true" name="keyPrsnInfArray"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.EsbBodyEcifRqGLoAdrArray" description="" historyStateLocation="client" isArray="true" name="loAdrArrays"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.EsbBodyEcifRqGCtcInfArray" description="" historyStateLocation="client" isArray="true" name="ctcInfArrays"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.EsbBodyEcifRqGKeyPrsnInfArray" description="" historyStateLocation="client" isArray="false" name="keyPrsnInf"/>
+    <process:variable anyType="java.util.HashMap" description="" historyStateLocation="client" isArray="false" name="map"/>
+    <process:variable description="省份代码" historyStateLocation="client" isArray="false" name="provCd" primitiveType="String"/>
+    <process:variable description="区县代码" historyStateLocation="client" isArray="false" name="dstcCd" primitiveType="String"/>
+    <process:variable description="城市代码" historyStateLocation="client" isArray="false" name="cityCd" primitiveType="String"/>
+    <process:variable description="行政区域代码" historyStateLocation="client" isArray="false" name="admnRgonCd" primitiveType="String"/>
+    <process:variable anyType="commonj.sdo.DataObject" description="" historyStateLocation="client" isArray="false" name="retDataObject"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="returnCode" primitiveType="String"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="returnMsg" primitiveType="String"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input description="" isArray="false" modelType="com.bos.dataset.csm.TbCsmCorporation" name="corporation"/>
+    <process:input description="" isArray="false" modelType="com.bos.dataset.csm.TbCsmParty" name="party"/>
+    <process:input description="" isArray="false" modelType="com.bos.dataset.csm.TbCsmAttachedInfo" name="attachedInfo"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output description="" isArray="false" name="errorMsg" primitiveType="String"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

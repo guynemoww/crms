@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:CHJ -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+    <!-- 全部任务 -->
+    <select id="allTask" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.batch.TbBatchTaskConfig">
+		select
+	   	  batch_id batchId,
+		  batch_code batchCode,
+		  batch_name batchName,
+		  batch_startdate batchStartdate,
+		  batch_enddate batchEnddate,
+		  batch_status batchStatus,
+		  batch_des batchDes,
+		  batch_logfiledir batchLogfiledir,
+		  batch_bizname batchBizname,
+		  batch_type batchType,
+		  batch_errkeep batchErrkeep,
+		  batch_temp1 batchTemp1,
+		  batch_temp2 batchTemp2,
+		  batch_temp3 batchTemp3,
+		  batch_temp4 batchTemp4,
+		  batch_temp5 batchTemp5,
+		  batch_group batchGroup,
+		  batch_logfilename batchLogfilename,
+		  batch_order batchOrder,  
+		  createtime createTime,
+		  updatetime updateTime
+		from
+			tb_batch_task_config
+		where
+			batch_status = '1'
+		<isNotNull property="batchId">
+	    	and batch_Id = #batchId#
+	    </isNotNull>
+		order by batch_order
+    </select>
+    
+    <!-- 查询任务 -->
+    <select id="queryTask" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.batch.TbBatchTaskConfig">
+		select
+	   	  batch_id batchId,
+		  batch_code batchCode,
+		  batch_name batchName,
+		  batch_startdate batchStartdate,
+		  batch_enddate batchEnddate,
+		  batch_status batchStatus,
+		  batch_des batchDes,
+		  batch_logfiledir batchLogfiledir,
+		  batch_bizname batchBizname,
+		  batch_type batchType,
+		  batch_errkeep batchErrkeep,
+		  batch_temp1 batchTemp1,
+		  batch_temp2 batchTemp2,
+		  batch_temp3 batchTemp3,
+		  batch_temp4 batchTemp4,
+		  batch_temp5 batchTemp5,
+		  batch_group batchGroup,
+		  batch_logfilename batchLogfilename,
+		  batch_order batchOrder,  
+		  createtime createTime,
+		  updatetime updateTime
+		from
+			tb_batch_task_config
+		where
+			1=1
+		<isNotNull property="batchStatus">
+	    	and batch_status = #batchStatus#
+	    </isNotNull>
+		<isNotNull property="batchId">
+	    	and batch_Id = #batchId#
+	    </isNotNull>
+		<isNotNull property="batchGroup">
+	    	and batch_group = #batchGroup#
+	    </isNotNull>
+		order by batch_order
+    </select>
+    
+    <!-- 未完成的任务 -->
+    <select id="notFinishedTask" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.batch.TbBatchTaskConfig">
+		select 
+		      batch_id batchId,
+			  batch_code batchCode,
+			  batch_name batchName,
+			  batch_startdate batchStartdate,
+			  batch_enddate batchEnddate,
+			  batch_status batchStatus,
+			  batch_des batchDes,
+			  batch_logfiledir batchLogfiledir,
+			  batch_bizname batchBizname,
+			  batch_type batchType,
+			  batch_errkeep batchErrkeep,
+			  batch_temp1 batchTemp1,
+			  batch_temp2 batchTemp2,
+			  batch_temp3 batchTemp3,
+			  batch_temp4 batchTemp4,
+			  batch_temp5 batchTemp5,
+			  batch_group batchGroup,
+			  batch_logfilename batchLogfilename,
+			  batch_order batchOrder,  
+			  createtime createTime,
+			  updatetime updateTime
+		  from 
+		  	tb_batch_task_config
+		 where 
+		 	batch_status = '1'
+		   and batch_id not in (select a.batch_id
+		                          from tb_batch_task_console a
+		                         where a.batch_date = bt_get_workdate
+		                           and a.status = '1')
+		 order by batch_order
+    </select>
+    
+     <!-- 已完成的任务 -->
+    <select id="finishedTask" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.batch.TbBatchTaskConfig">
+		select 
+		      batch_id batchId,
+			  batch_code batchCode,
+			  batch_name batchName,
+			  batch_startdate batchStartdate,
+			  batch_enddate batchEnddate,
+			  batch_status batchStatus,
+			  batch_des batchDes,
+			  batch_logfiledir batchLogfiledir,
+			  batch_bizname batchBizname,
+			  batch_type batchType,
+			  batch_errkeep batchErrkeep,
+			  batch_temp1 batchTemp1,
+			  batch_temp2 batchTemp2,
+			  batch_temp3 batchTemp3,
+			  batch_temp4 batchTemp4,
+			  batch_temp5 batchTemp5,
+			  batch_group batchGroup,
+			  batch_logfilename batchLogfilename,
+			  batch_order batchOrder,  
+			  createtime createTime,
+			  updatetime updateTime
+		  from 
+		  	tb_batch_task_config
+		 where 
+		 	batch_status = '1'
+		   and batch_id in (select a.batch_id
+		                          from tb_batch_task_console a
+		                         where a.batch_date = bt_get_workdate
+		                           and a.status = '1')
+		 order by batch_order
+    </select>
+    
+    <select id="queryTaskMonitor" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select
+			job_id jobId,
+			job_code jobCode,
+			job_name jobName,
+			job_des jobDes,
+			job_status jobStatus,
+			job_frequncy jobFrequncy,
+			job_fathercode jobFathercode,
+			job_starttime jobStarttime,
+			job_endtime jobEndtime,
+			job_temp2 jobTemp2,
+			job_temp1 jobTemp1,
+			job_temp3 jobTemp3,
+			job_temp4 jobTemp4,
+			job_temp5 jobTemp5,
+			job_logfilepath jobLogfilepath,
+			job_bizname jobBizname,
+			job_batchgroup jobBatchgroup,
+			job_batchtype jobBatchtype,
+			job_errkeep jobErrkeep,
+			job_batchdate jobBatchdate,
+			temp temp,
+			job_batchorder jobBatchorder,
+			createtime createtime,
+			updatetime updatetime
+		from
+			TB_BATCH_TASK_MONITOR
+    </select>
+    
+    <!-- 当天已经存在的任务 -->
+    <select id="queryTaskConsole" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		 select 
+		     *
+		  from 
+		  	tb_batch_task_console
+		 where 
+		   batch_date = #batchDate#
+		   and batch_id = #batchId#
+    </select>
+    
+     <!-- 更新中断后的等待/运行任务 -->
+    <update id="updateOtherTaskConsole" parameterClass="java.util.HashMap">
+    	update 
+    		tb_batch_task_console 
+    	set 
+    		status = #status#
+    	where 
+	    	batch_date = #batchDate#
+	    	and status in ('0','3')
+    </update>
+    
+    <!-- 更新中断后的等待/运行任务 -->
+    <update id="updateOtherTaskMonitor" parameterClass="java.util.HashMap">
+    	update 
+    		tb_batch_task_monitor
+    	set 
+    		job_status = #status#
+    	where 
+	    	job_batchdate = #batchDate#
+	    	and job_status in ('0','3')
+    </update>
+    
+    
+</sqlMap>

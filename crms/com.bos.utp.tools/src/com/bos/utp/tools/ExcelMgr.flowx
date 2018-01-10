@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="ExcelMgr.flowx" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.0" state="stateless">
+  <nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释" nodeType="note" type="note" content="通用的Excel导入导出管理" title="徐松林&#x9;09-1-19 下午2:17">
+    <location x="62" y="150"/>
+    <size height="61" width="148"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link0" name="link0" lineType="reference" isDefault="true" type="action" actionName="begin" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>view1</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <location x="60" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" nodeType="common" type="end" contextPath="" method="forward" uri="/utp/tools/excel/excel_mgr.jsp">
+    <targetConnections>link1</targetConnections>
+    <location x="639" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="62" y="96"/>
+    <figSize height="12" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="641" y="96"/>
+    <figSize height="12" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view0" name="通用的Excel导入导出管理" displayName="excel_mgr.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/excel/excel_mgr.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link2" name="link2" lineType="reference" isDefault="true" type="action" actionName="importExcel" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>subprocess0</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter anyType="com.primeton.ext.access.http.IUploadFile" description="" historyStateLocation="client" isArray="false" name="dictItemFile"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" name="dataObjName" primitiveType="String"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="350" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view0label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view0label" name="label" nodeType="label">
+    <location x="292" y="96"/>
+    <figSize height="12" width="139"/>
+    <node>view0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="importExcel" displayName="importExcel" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="492" y="61"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="2" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.ExcelMgr.importExcel</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="excelFile" type="query" value="String" valueType="Primitive" pattern="reference">dictItemFile/filePath</process:inputVariable>
+        <process:inputVariable id="1" name="dataObjName" type="query" value="String" valueType="Primitive" pattern="reference">dataObjName</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="retCode" type="query" value="String" valueType="Primitive">retCode</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="472" y="96"/>
+    <figSize height="12" width="67"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view1" name="通用Excel导入标签页面" displayName="excel_manager.jsp" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/excel/excel_manager.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link3" name="link3" lineType="reference" isDefault="true" type="action" actionName="tab" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>view0</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="208" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view1label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view1label" name="label" nodeType="label">
+    <location x="156" y="96"/>
+    <figSize height="12" width="127"/>
+    <node>view1</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="徐松林" createTime="2009-01-15 14:01:43" date="2009-01-15Z" description="通用的Excel导入工具" name="ExcelMgr" version="6.0"/>
+  <process:variables/>
+  <process:inputParameters/>
+</process:tPageFlow>

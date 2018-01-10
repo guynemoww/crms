@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="LoanAfterResult">
+    	<result column="AFTER_LOAN_INFO_ID" property="afterLoanInfoId"/>
+    	<result column="INFO_DT" property="infoDt"/>
+    	<result column="PRIOR_CHECK_DT" property="priorCheckDt"/>
+    	<result column="NEXT_CHECK_DT" property="nextCheckDt"/>
+    	<result column="INFO_STATUS" property="infoStatus"/>
+    	<result column="INFO_TYPE_CD" property="infoTypeCd"/>
+    	<result column="ORG_NUM" property="orgNum"/>
+    	<result column="INFO_COMMENT" property="infoComment"/>
+    	<result column="PARTY_ID" property="partyId"/>
+    	<result column="CONTRACT_ID" property="contractId"/>
+    	<result column="USER_NUM" property="userNum"/>
+    	<result column="INFO_OBJECT_TYPE_CD" property="infoObjectTypeCd"/>
+    	<result column="POSI_CODE" property="posiCode"/>
+    	<result column="ORG_LEVEL" property="orgLevel"/>
+    	<result column="party_name" property="partyName"/>
+    	<result column="party_Num" property="partyNum"/>
+    </resultMap>
+    <select id="queryLoanAfterInfo" parameterClass="java.util.HashMap" resultMap="LoanAfterResult">
+    	select  AFTER_LOAN_INFO_ID,
+	INFO_DT,
+	PRIOR_CHECK_DT,
+	NEXT_CHECK_DT,
+	INFO_STATUS,
+	INFO_TYPE_CD,
+	ORG_NUM,
+	INFO_COMMENT,
+	TB_AFT_AFTER_LOAN_INFO.PARTY_ID,
+	CONTRACT_ID,
+	USER_NUM,
+	INFO_OBJECT_TYPE_CD,
+	POSI_CODE,
+	ORG_LEVEL,
+	party_name,
+	party_NUM
+	from TB_AFT_AFTER_LOAN_INFO,TB_CSM_PARTY
+            where 1=1
+            and TB_AFT_AFTER_LOAN_INFO.party_ID = TB_CSM_PARTY.party_ID
+            <isNotNull prepend="AND" property="afterLoanInfoId">
+                AFTER_LOAN_INFO_ID = #afterLoanInfoId#
+            </isNotNull>
+    </select>
+    <select id="queryLoanAfterList" parameterClass="java.util.HashMap" resultMap="LoanAfterResult">
+    select  AFTER_LOAN_INFO_ID,
+	INFO_DT,
+	PRIOR_CHECK_DT,
+	NEXT_CHECK_DT,
+	INFO_STATUS,
+	INFO_TYPE_CD,
+	ORG_NUM,
+	INFO_COMMENT,
+	TB_AFT_AFTER_LOAN_INFO.PARTY_ID,
+	CONTRACT_ID,
+	USER_NUM,
+	INFO_OBJECT_TYPE_CD,
+	POSI_CODE,
+	ORG_LEVEL,
+	party_name,
+	party_NUM
+	from TB_AFT_AFTER_LOAN_INFO,TB_CSM_PARTY
+            where 1=1
+            and TB_AFT_AFTER_LOAN_INFO.party_ID = TB_CSM_PARTY.party_ID
+            <isNotNull prepend="AND" property="userNum">
+            	USER_NUM= #userNum#
+            </isNotNull>
+           and INFO_OBJECT_TYPE_CD = 0
+           and INFO_STATUS in (0,1)
+	union
+	select  AFTER_LOAN_INFO_ID,
+		INFO_DT,
+		PRIOR_CHECK_DT,
+		NEXT_CHECK_DT,
+		INFO_STATUS,
+		INFO_TYPE_CD,
+		ORG_NUM,
+		INFO_COMMENT,
+		TB_AFT_AFTER_LOAN_INFO.PARTY_ID,
+		CONTRACT_ID,
+		USER_NUM,
+		INFO_OBJECT_TYPE_CD,
+		POSI_CODE,
+		ORG_LEVEL,
+		party_name,
+		party_NUM
+		from TB_AFT_AFTER_LOAN_INFO,TB_CSM_PARTY
+	            where 1=1
+	            and TB_AFT_AFTER_LOAN_INFO.party_ID = TB_CSM_PARTY.party_ID
+	            and POSI_CODE in (SELECT
+	                            op.posicode
+	                        FROM
+	                            om_empposition oe,
+	                            om_position op,
+	                            om_employee o
+	                        WHERE
+	                            oe.empid=o.empid
+	                        AND oe.positionid=op.positionid
+	                        <isNotNull prepend="AND" property="orgid">
+	                            oe.orgid=#orgid#
+	                        </isNotNull>
+	                        <isNotNull prepend="AND" property="userNum">
+	                            o.userid=#userNum#
+	                        </isNotNull>
+	                        )
+	            <isNotNull prepend="AND" property="orgLevel">
+	                ORG_LEVEL = #orgLevel# 
+	            </isNotNull>
+	            and INFO_OBJECT_TYPE_CD = 1 
+	            and INFO_STATUS in (0,1)
+    </select>
+    <select id="selectLoanAfterList" parameterClass="java.util.HashMap" resultMap="LoanAfterResult">
+   select distinct a.AFTER_LOAN_INFO_ID,
+				a.INFO_DT,
+				a.PRIOR_CHECK_DT,
+				a.NEXT_CHECK_DT,
+				a.INFO_STATUS,
+				a.INFO_TYPE_CD,
+				a.ORG_NUM,
+				a.INFO_COMMENT,
+				a.PARTY_ID,
+				a.CONTRACT_ID,
+				a.USER_NUM,
+				a.INFO_OBJECT_TYPE_CD,
+				a.POSI_CODE,
+				a.ORG_LEVEL,
+				a.party_name,
+				a.party_NUM
+   	from ( select  AFTER_LOAN_INFO_ID,
+			INFO_DT,
+			PRIOR_CHECK_DT,
+			NEXT_CHECK_DT,
+			INFO_STATUS,
+			INFO_TYPE_CD,
+			ORG_NUM,
+			INFO_COMMENT,
+			TB_AFT_AFTER_LOAN_INFO.PARTY_ID,
+			CONTRACT_ID,
+			USER_NUM,
+			INFO_OBJECT_TYPE_CD,
+			POSI_CODE,
+			ORG_LEVEL,
+			party_name,
+			party_NUM
+			from TB_AFT_AFTER_LOAN_INFO,TB_CSM_PARTY
+		            where 1=1
+		            and TB_AFT_AFTER_LOAN_INFO.party_ID = TB_CSM_PARTY.party_ID
+		            <isNotNull prepend="AND" property="userNum">
+		            	USER_NUM= #userNum#
+		            </isNotNull>
+		           and INFO_OBJECT_TYPE_CD = 0
+		           and INFO_STATUS in (0,1)
+			union
+			select distinct AFTER_LOAN_INFO_ID,
+				INFO_DT,
+				PRIOR_CHECK_DT,
+				NEXT_CHECK_DT,
+				INFO_STATUS,
+				INFO_TYPE_CD,
+				ORG_NUM,
+				INFO_COMMENT,
+				TB_AFT_AFTER_LOAN_INFO.PARTY_ID,
+				CONTRACT_ID,
+				USER_NUM,
+				INFO_OBJECT_TYPE_CD,
+				POSI_CODE,
+				ORG_LEVEL,
+				party_name,
+				party_NUM
+				from TB_AFT_AFTER_LOAN_INFO,TB_CSM_PARTY
+			            where 1=1
+			            and TB_AFT_AFTER_LOAN_INFO.party_ID = TB_CSM_PARTY.party_ID
+			            and POSI_CODE in (SELECT
+			                            op.posicode
+			                        FROM
+			                            om_empposition oe,
+			                            om_position op,
+			                            om_employee o
+			                        WHERE
+			                            oe.empid=o.empid
+			                        AND oe.positionid=op.positionid
+			                        <isNotNull prepend="AND" property="orgid">
+			                            oe.orgid=#orgid#
+			                        </isNotNull>
+			                        <isNotNull prepend="AND" property="userNum">
+			                            o.userid=#userNum#
+			                        </isNotNull>
+			                        )
+			            <isNotNull prepend="AND" property="orgLevel">
+			                ORG_LEVEL = #orgLevel# 
+			            </isNotNull>
+			            and INFO_OBJECT_TYPE_CD = 1 
+			            and INFO_STATUS in (0,1)
+			   ) a
+			   where 1=1
+				    <isNotNull prepend="AND" property="infoStatus">
+	           			a.INFO_STATUS = #infoStatus#
+		            </isNotNull>
+		            <isNotNull prepend="AND" property="partyName">
+				        a.party_name like '%$partyName$%'
+				    </isNotNull>
+				    <isNotNull prepend="AND" property="infoDtEnd">
+				        a.INFO_DT <![CDATA[ <= ]]> #infoDtEnd#
+				    </isNotNull>
+				    <isNotNull prepend="AND" property="infoDtStart">
+				        a.INFO_DT <![CDATA[ >= ]]> #infoDtStart#
+				    </isNotNull>
+				    <isNotNull prepend="AND" property="infoTypeCd">
+				        a.INFO_TYPE_CD = #infoTypeCd#
+				    </isNotNull>
+				    <isNotNull prepend="AND" property="dayNum">
+				        (Days(a.NEXT_CHECK_DT)-Days(current timestamp)) <![CDATA[ < ]]> #dayNum#
+				    </isNotNull>
+				    order by a.INFO_DT desc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryOrgInfo">
+        <result column="ORGID"  property="orgId"/>
+        <result column="PARENTORGID" property="parentOrgId"/>
+        <result column="ORGCODE" property="orgCode"/>
+        <result column="BUNO"  property="buno"/>
+    </resultMap>
+    <select id="queryOrgInfo"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryOrgInfo">
+	    select 
+	      ORGID,
+	      PARENTORGID,
+	      ORGCODE,
+	      BUNO
+		 from 
+		      OM_ORGANIZATION
+		  where 1=1
+		  <isNotNull property="orgId">
+	       and	ORGID=#orgId#  
+	      </isNotNull>
+	</select>
+	
+    <resultMap class="commonj.sdo.DataObject" id="queryAfterPromptInfo">
+    	<result column="AFTER_LOAN_INFO_ID" property="afterLoanInfoId"/>
+    	<result column="INFO_DT" property="infoDt"/>
+    	<result column="PRIOR_CHECK_DT" property="priorCheckDt"/>
+    	<result column="NEXT_CHECK_DT" property="nextCheckDt"/>
+    	<result column="INFO_STATUS" property="infoStatus"/>
+    	<result column="INFO_TYPE_CD" property="infoTypeCd"/>
+    	<result column="ORG_NUM" property="orgNum"/>
+    	<result column="INFO_COMMENT" property="infoComment"/>
+    	<result column="PARTY_ID" property="partyId"/>
+    	<result column="CONTRACT_ID" property="contractId"/>
+    	<result column="USER_NUM" property="userNum"/>
+    	<result column="INFO_OBJECT_TYPE_CD" property="infoObjectTypeCd"/>
+    	<result column="POSI_CODE" property="posiCode"/>
+    	<result column="ORG_LEVEL" property="orgLevel"/>
+    	<result column="party_name" property="partyName"/>
+    	<result column="party_Num" property="partyNum"/>
+    </resultMap>
+    <select id="queryAfterPromptInfo"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryAfterPromptInfo">
+	    select 
+		distinct 
+		A.AFTER_LOAN_INFO_ID,
+		A.INFO_DT,
+		A.PRIOR_CHECK_DT,
+		A.NEXT_CHECK_DT,
+		A.INFO_STATUS,
+		A.INFO_TYPE_CD,
+		A.ORG_NUM,
+		A.INFO_COMMENT,
+		A.PARTY_ID,
+		A.CONTRACT_ID,
+		A.USER_NUM,
+		A.INFO_OBJECT_TYPE_CD,
+		A.POSI_CODE,
+		A.ORG_LEVEL,
+		B.party_name,
+		B.party_NUM
+		from TB_AFT_AFTER_LOAN_INFO A ,
+		TB_CSM_PARTY B ,
+		V_OM_ORGANIZATION voo  
+		where 1=1 
+		and  a.org_num = voo.ORGCODE 
+		and a.party_id = b.party_id 
+		and a.INFO_STATUS in (0,1)
+		<isNotNull prepend="AND" property="infoStatus">
+   			a.INFO_STATUS = #infoStatus#
+        </isNotNull>
+        <isNotNull prepend="AND" property="partyName">
+	        b.party_name like '%$partyName$%'
+	    </isNotNull>
+	    <isNotNull prepend="AND" property="infoDtEnd">
+	        <![CDATA[ a.INFO_DT  <= to_date(#infoDtEnd#,'yyyy-MM-dd hh24:mi:ss') ]]> 
+	    </isNotNull>
+	    <isNotNull prepend="AND" property="infoDtStart">
+	        <![CDATA[ a.INFO_DT  >= to_date(#infoDtStart#,'yyyy-MM-dd hh24:mi:ss') ]]> 
+	    </isNotNull>
+	    <isNotNull prepend="AND" property="infoTypeCd">
+	        a.INFO_TYPE_CD = #infoTypeCd#
+	    </isNotNull>
+	    <isNotNull property="orgcode">
+	    	and voo.parentorgcode = #orgcode#
+	    </isNotNull>
+	    order by a.INFO_DT desc
+	</select>
+</sqlMap>

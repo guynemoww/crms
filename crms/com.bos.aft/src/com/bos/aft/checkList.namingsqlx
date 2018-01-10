@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:xiaoxia -->
+<sqlMap>
+    <select id="findCheckList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select *
+		  from (select mt.user_num,
+		               mt.org_num,
+		               p.party_id,
+		               p.party_num,
+		               p.party_name,
+		               p.party_type_cd,
+		             (case when  x.REMIND_STATUS='02' then 1 else 0 end) as REMIND_STATUS,
+		               ew.warning_level_cd,
+		               (case
+		                 when p.party_type_cd = '01' then
+		                  '202'
+		                 when p.party_type_cd = '02' then
+		                  np.cert_type
+		                 else
+		                  ''
+		               end) as cert_type,
+		               (case
+		                 when p.party_type_cd = '01' then
+		                  cc.org_register_cd
+		                 when p.party_type_cd = '02' then
+		                  np.cert_num
+		                 else
+		                  ''
+		               end) as cert_num,
+		               x.remind_type as remind,
+		            
+		               x.last_date,
+		               x.re_num
+		          from tb_csm_party p
+		          left join tb_rew_csm_early_warning ew on p.party_id = ew.party_id
+		          left join tb_csm_corporation cc on p.party_id = cc.party_id
+		          left join tb_csm_natural_person np on p.party_id = np.party_id,
+		         tb_csm_management_team mt,
+		         (select distinct r.party_id,r.REMIND_STATUS,
+		                                                                 r.remind_type,
+		                                                                 r.end_date as last_date,
+		                                                                 (case
+		                                                                   when r.remind_type = '01' then
+		                                                                    r01.receipt_num
+		                                                                   when r.remind_type = '02' then
+		                                                                    ''
+		                                                                   when r.remind_type = '14' then
+		                                                                    r14.contract_num
+		                                                                   when r.remind_type = '15' then
+		                                                                    r15.receipt_num
+		                                                                   else
+		                                                                    null
+		                                                                 end) as re_num
+		                                                   from tb_tab_remind_info r
+		                                                   left join tb_tab_firstcheck_remind r01 on r.remind_id =
+		                                                                                             r01.remind_id
+		                                                   left join tb_tab_daycheck_remind r02 on r.remind_id =
+		                                                                                           r02.remind_id
+		                                                   left join tb_tab_important_remind r14 on r.remind_id =
+		                                                                                            r14.remind_id
+		                                                   left join tb_tab_beforecheck_remind r15 on r.remind_id =
+		                                                                                              r15.remind_id
+		                                                  where r.remind_type in
+		                                                        ('01', '02', '14', '15') and r.REMIND_STATUS in ('01','02')) x
+		        
+		         where p.party_id = mt.party_id
+		           and p.party_id = x.party_id
+		           and mt.user_placing_cd = '01') a
+		 where 1 = 1
+			 and a.org_num in (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%') 
+		 	<isNotNull property="orglevel1"><!--总行用户-->
+			   and a.org_num in (SELECT O.ORGCODE FROM OM_ORGANIZATION O 
+		                       )
+		   </isNotNull>
+		   <isNotNull property="orglevel2"><!--分行用户-->
+			   and a.org_num in (select o.orgcode from om_organization o where o.parentorgid = #currentorgid#)
+		   </isNotNull>
+		   <isNotNull property="orglevel3"><!--支行用户-->
+			   and a.org_num = #currentorgcode#
+		   </isNotNull>
+		   <isNotNull property="orglevel4"><!--总行小企业信贷中心-->
+			   and a.org_num in (select o.orgcode from om_organization o where o.orgdegree = '2')
+		   </isNotNull>
+		 <isNotNull property="orgid">
+	    	and a.org_num in (select orgcode from om_organization where orgseq like '%$orgid$%')
+	     </isNotNull>
+	     <isNotNull property="userNum">
+	    	and a.user_num = #userNum#
+	     </isNotNull>
+  		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="stDate">  and to_char(a.last_date,'yyyy-MM-dd') =  substr(#stDate#,0,10) </isNotNull>
+ 	<!--	 <isNotNull property="enDate">  <![CDATA[and to_char(a.last_date,'yyyy-MM-dd') <= #enDate#]]> </isNotNull>-->
+ 		 <isNotNull property="remindType">  and a.remind = '$remindType$' </isNotNull>
+ 		 <isNotNull property="remindStatus">  and a.REMIND_STATUS = '$remindStatus$' </isNotNull>
+ 		 
+ 		 	order by a.REMIND_STATUS asc,  a.last_date desc
+	</select>
+	
+	<!--查询当前用户的机构信息-->
+	<select id="findCurrentOrgInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	        select o.orgid as ORGID, o.orgcode as ORGCODE, o.orgname as ORGNAME, o.orglevel as ORGLEVEL, o.orgdegree as ORGDEGREE
+			  from om_organization o
+			 where o.orgcode = #orgcode#
+	</select>
+	
+	<!--查询是否有客户经理岗位-->
+    <select id="findPos" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select pp.posicode POSICODE
+			  from om_employee e, om_empposition ep, om_position pp, om_organization o
+			 where ep.empid = e.empid 
+			   and ep.orgid = o.orgid
+			   and ep.positionid = pp.positionid
+			   and pp.posicode = 'P1001'
+			   and e.empcode = #empcode#
+			   and o.orgcode = #orgcode#
+    </select>
+	
+</sqlMap>

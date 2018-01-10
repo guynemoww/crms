@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+    <resultMap id="naturalPerson" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="isPotentialCust" column="IS_POTENTIAL_CUST"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="isFarmer" column="IS_FARMER" />
+			<result property="thirdCustTypeCd" column="THIRD_CUST_TYPE_CD" />
+			<result property="isThirdCust" column="IS_THIRD_CUST" />
+			<result property="phoneNumber" column="PHONE_NUMBER" />
+			<result property="unitAdress" column="UNIT_ADRESS" />
+	</resultMap>
+	<!--客户管理自然人客户列表-->
+    <select id="naturalPersonList" parameterClass="java.util.HashMap" resultMap="naturalPerson">
+		SELECT T1.*, T2.*, T3.*
+		  FROM TB_CSM_MANAGEMENT_TEAM T1
+		  JOIN TB_CSM_PARTY T2 ON T1.PARTY_ID = T2.PARTY_ID
+		  JOIN TB_CSM_NATURAL_PERSON T3 ON T1.PARTY_ID = T3.PARTY_ID
+		 WHERE T2.PARTY_TYPE_CD = '02'
+		 and t1.user_placing_cd='01'
+		 AND T1.USER_NUM = #userNum#
+		AND T1.org_NUM = #orgNum#
+		 <isNotNull property="partyNum">  AND T2.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		 <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND T3.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+		 <isNotNull property="certNum">  AND T3.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		 <isNotNull property="isPotentialCust">  AND T2.IS_POTENTIAL_CUST LIKE '%$isPotentialCust$%' </isNotNull>
+		 <isNotNull property="isFarmer">  AND T3.IS_FARMER LIKE '%$isFarmer$%' </isNotNull>
+		 <isNotNull property="isPotentialCust">  AND T2.IS_POTENTIAL_CUST LIKE '%$isPotentialCust$%' </isNotNull>
+		 <isNotNull property="phoneNumber">  AND T3.PHONE_NUMBER LIKE '%$phoneNumber$%' </isNotNull>
+		 <isNotNull property="unitAdress">  AND T3.UNIT_ADRESS LIKE '%$unitAdress$%' </isNotNull>
+		 order by t3.create_time desc
+    </select>
+    
+    <resultMap id="relativeCorp" class="java.util.HashMap">
+   			<result property="naturalRelativeId" column="NATURAL_RELATIVE_ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERTIFICATE_TYPE_CD" />
+			<result property="certNum" column="CERT_ID" />
+			<result property="appellation" column="APPELLATION" />
+			<result property="remark" column="REMARK" />
+			<result property="custRela" column="CUST_RELA" />
+			<result property="partyTypeCd" column="CUST_TYPE" />
+			<result property="partnerCompany" column="partnerCompany" />
+			<result property="partnerPhoneNum" column="partnerPhoneNum" />
+	</resultMap>
+    <select id="relativeListCorp" parameterClass="java.util.HashMap" resultMap="relativeCorp">
+		SELECT T.NATURAL_RELATIVE_ID,
+		       T.APPELLATION,
+		       T.CERTIFICATE_TYPE_CD,
+		       T.CERT_ID,
+		       V.PARTY_ID,
+		       V.PARTY_NUM,
+		       T.PARTY_NAME,
+		       T.CUST_TYPE,
+		       T.REMARK,
+		       T.CUST_RELA,
+		       T.partnerCompany,
+		       T.partnerPhoneNum
+		  FROM TB_CSM_NATURAL_RELATIVE T
+		  left join V_CSM_PARTY V on T.RELATIVEID_PARTY_ID = V.PARTY_ID
+		 WHERE T.PARTY_ID = #partyId#
+		 AND V.PARTY_TYPE_CD != '02'
+    </select>
+    <resultMap id="relative" class="java.util.HashMap">
+   			<result property="naturalRelativeId" column="NATURAL_RELATIVE_ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERTIFICATE_TYPE_CD" />
+			<result property="certNum" column="CERT_ID" />
+			<result property="appellation" column="APPELLATION" />
+			<result property="remark" column="REMARK" />
+			<result property="custRela" column="CUST_RELA" />
+			<result property="partyTypeCd" column="CUST_TYPE" />
+			<result property="partnerCompany" column="partnerCompany" />
+			<result property="partnerPhoneNum" column="partnerPhoneNum" />
+	</resultMap>
+	<!--查询对私关系个人客户列表-->
+    <select id="relativePsnList" parameterClass="java.util.HashMap" resultMap="relative">
+		SELECT T.NATURAL_RELATIVE_ID,
+		       T.APPELLATION,
+		       T.CERTIFICATE_TYPE_CD,
+		       T.CERT_ID,
+		       V.PARTY_ID,
+		       V.PARTY_NUM,
+		       T.PARTY_NAME,
+		       T.CUST_TYPE,
+		       T.REMARK,
+		       T.CUST_RELA,
+		       T.partnerCompany,
+		       T.partnerPhoneNum
+		  FROM TB_CSM_NATURAL_RELATIVE T
+		  left join V_CSM_PARTY V on T.RELATIVEID_PARTY_ID = V.PARTY_ID
+		 WHERE T.PARTY_ID = #partyId# AND T.CUST_TYPE='02'
+    </select>
+    <!--查询对私关系公司客户列表-->
+    <select id="relativeOrgList" parameterClass="java.util.HashMap" resultMap="relative">
+		SELECT T.NATURAL_RELATIVE_ID,
+		       T.APPELLATION,
+		       T.CERTIFICATE_TYPE_CD,
+		       T.CERT_ID,
+		       V.PARTY_ID,
+		       V.PARTY_NUM,
+		       T.PARTY_NAME,
+		       T.CUST_TYPE,
+		       T.REMARK,
+		       T.CUST_RELA,
+		       T.partnerCompany,
+		       T.partnerPhoneNum
+		  FROM TB_CSM_NATURAL_RELATIVE T
+		  left join V_CSM_PARTY V on T.RELATIVEID_PARTY_ID = V.PARTY_ID
+		 WHERE T.PARTY_ID = #partyId# AND T.CUST_TYPE='01'
+    </select>
+    
+    <!--
+    SELECT T.NATURAL_RELATIVE_ID,
+		       T.APPELLATION,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       V.PARTY_ID,
+		       V.PARTY_NUM,
+		       V.PARTY_NAME,
+		       V.PARTY_TYPE_CD,
+		       T.REMARK,
+		       T.CUST_RELA,
+		       T.partnerCompany,
+		       T.partnerPhoneNum
+		  FROM TB_CSM_NATURAL_RELATIVE T, V_CSM_PARTY V
+		 WHERE T.RELATIVEID_PARTY_ID = V.PARTY_ID
+			AND T.PARTY_ID = #partyId#
+	-->
+    
+    <resultMap id="credit" class="java.util.HashMap">
+   			<result property="id" column="ID"/>
+   			<result property="partyId" column="PARTY_ID"/>
+   			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="infoSrc" column="INFO_SRC"/>
+			<result property="queryDate" column="QUERY_DATE" />
+			<result property="title" column="TITLE" />
+			<result property="letterOfPresentation" column="LETTER_OF_PRESENTATION" />
+			<result property="djkLxyqTimes" column="DJK_LXYQ_TIMES" />
+			<result property="djkLjyqTimes" column="DJK_LJYQ_TIMES" />
+			<result property="dkLxqxTimes" column="DK_LXQX_TIMES" />
+			<result property="dkLjqxTimes" column="DK_LJQX_TIMES" />
+			<result property="sxbjYqCondition" column="SXBJ_YQ_CONDITION" />
+	</resultMap>
+	
+	<!--自然人客户信用信息-->
+    <select id="creditList" parameterClass="java.util.HashMap" resultMap="credit">
+		SELECT T2.PARTY_NUM,T2.PARTY_ID,T2.PARTY_NAME,
+					T.ID,
+			       T.PARTY_ID,
+			       T.INFO_SRC,
+			       T.QUERY_DATE,
+			       T.LETTER_OF_PRESENTATION,
+			       T.TITLE,
+			       T.DJK_LXYQ_TIMES,
+			       T.DJK_LJYQ_TIMES,
+			       T.DK_LXQX_TIMES,
+			       T.DK_LJQX_TIMES,
+			       T.SXBJ_YQ_CONDITION
+		  FROM TB_CSM_CREDIT_INFO T
+		  LEFT JOIN TB_CSM_PARTY T2 ON T2.PARTY_ID = T.PARTY_ID
+		 WHERE T.PARTY_ID = #partyId#
+    </select>
+    
+    <resultMap id="additive" class="java.util.HashMap">
+   			<result property="id" column="ID"/>
+   			<result property="partyId" column="PARTY_ID"/>
+   			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="title" column="TITLE"/>
+			<result property="detailInfo" column="DETAIL_INFO" />
+	</resultMap>
+    <select id="additiveList" parameterClass="java.util.HashMap" resultMap="additive">
+		SELECT T.ID,
+		       T2.PARTY_ID,
+		       T2.PARTY_NUM,
+		       T2.PARTY_NAME,
+		       T.TITLE,
+		       T.DETAIL_INFO
+		  FROM TB_CSM_ADDITIVE_INFO T
+		  LEFT JOIN TB_CSM_PARTY T2
+		    ON T2.PARTY_ID = T.PARTY_ID
+		 WHERE T.PARTY_ID = #partyId#
+    </select>
+    
+    <resultMap id="changeInfo" class="java.util.HashMap">
+   			<result property="modifyId" column="MODIFY_ID"/>
+   			<result property="modifyColumn" column="MODIFY_COLUMN"/>
+   			<result property="originalModifyValue" column="ORIGINAL_MODIFY_VALUE"/>
+			<result property="createTime" column="CREATE_TIME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="processId" column="PROCESS_ID" />
+			<result property="modifyEntity" column="MODIFY_ENTITY" />
+			<result property="newModifyValue" column="NEW_MODIFY_VALUE" />
+	</resultMap>
+    <select id="changeList" parameterClass="java.util.HashMap" resultMap="changeInfo">
+		SELECT T.MODIFY_ID,
+		       T.MODIFY_COLUMN,
+		       T.ORIGINAL_MODIFY_VALUE,
+		       T.CREATE_TIME,
+		       T.PARTY_ID,
+		       T.PROCESS_ID,
+		       T.MODIFY_ENTITY,
+		       T.NEW_MODIFY_VALUE
+		  FROM TB_CSM_MODIFY_INFO T
+		 WHERE T.PARTY_ID = #partyId#
+		   AND T.PROCESS_ID = #processInstId#
+    </select>
+    
+    
+    <select id="manageList" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+    	SELECT T.USER_NUM || '_' || T1.OPERATORNAME || '_' || oo.orgcode || '_' ||
+		       oo.orgname
+		  FROM TB_CSM_MANAGEMENT_TEAM T, AC_OPERATOR T1, om_organization oo
+		 WHERE T1.USERID = T.USER_NUM
+		   and T.Org_Num = oo.orgcode
+		   AND T.PARTY_ID =  #partyId#
+		   AND T.USER_PLACING_CD = '01'
+		   and T.User_Num!=#userNum#
+    </select>
+    
+    <!--违约记录-->
+    <select id="illegalList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    select 
+       a.party_id,
+       d.party_num,
+       d.party_name,
+       c.contract_num,
+       a.summary_num,
+       a.overdue_capi+a.overdue_itr + a.overdue_pns_itr + a.dft_otd_itr as yq_amt,
+       to_char(a.overdue_date,'yyyy-mm-dd')overdue_date,
+       to_char(a.repay_date, 'yyyy-mm-dd') repay_date,
+       a.remark,
+       a.user_num,
+       a.org_num
+  from tb_loan_illegal_record a,
+       tb_loan_summary        b,
+       tb_con_contract_info   c,
+       tb_csm_party           d
+ where a.summary_num = b.summary_num
+   and b.contract_id = c.contract_id
+   and a.party_id = d.party_id
+   and a.party_id=#partyId#
+	</select>
+	
+    <select id="whiteCustomerList" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.csm.TbCsmWhiteCustomer">
+		SELECT  t1.CUSTOMER_ID as customerId,T1.CUS_NAME AS cusName , t1.total_limit as totalLimit , t1.BATCH_NUMBER as batchNumber ,
+		t1.ecif_party_num as ecifPartyNum ,t1.rate as rate ,t1.cert_num as certNum ,t1.DEL_WHITE as delWhite ,t1.manage_user as manageUser,
+		t1.MANAGE_ORG as manageOrg,t1.JOB_RANK as jobRank,t1.INCOME as income,t1.PARTY_ID as partyId ,t1.cus_status as cusStatus
+		  FROM TB_CSM_WHITE_CUSTOMER T1
+		 where 1=1
+		 <isNotNull property="cusName">  AND T1.CUS_NAME LIKE '%$cusName$%' </isNotNull>
+		 <isNotNull property="ecifPartyNum">  AND T1.ecif_party_num LIKE '%$ecifPartyNum$%' </isNotNull>
+		  <isNotNull property="batchNumber">  AND T1.BATCH_NUMBER =#batchNumber# </isNotNull>
+		   <isNotNull property="delWhite">  AND T1.DEL_WHITE =#delWhite#  </isNotNull>
+		    <isNotNull property="cusStatus">  AND T1.CUS_STATUS =#cusStatus# </isNotNull>
+		     <isNotNull property="orgNum">  AND T1.org_Num =#orgNum# </isNotNull>
+		 order by t1.create_time desc
+    </select>
+    
+</sqlMap>

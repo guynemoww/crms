@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cp -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="queryLoanInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select a.CURRENCY_CD CURRENCY_CD,a.LOAN_ORG LOAN_ORG,b.ZH ZH,b.ZHMC ZHMC,a.PRODUCT_TYPE PRODUCT_TYPE,a.USER_NUM USER_NUM,a.party_id PARTY_ID from tb_loan_info a,tb_loan_zh b
+    	 where a.loan_id=b.loan_id and b.zhlx='1' and summary_num=#summaryNum#
+    </select>
+     <select id="querySummaryInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select c.ecif_party_num,a.contract_num,c.party_name,b.summary_num,b.loan_amt,a.con_yu_e,d.jjye,b.begin_date,b.end_date,d.summary_status_cd,b.loan_id
+		 from tb_con_contract_info a,tb_loan_info b,tb_csm_party c,tb_loan_summary d where a.contract_id=b.contract_id and a.party_id=c.party_id
+		 and b.loan_id=d.loan_id
+		 <isNotNull property="contractNum"> 
+ 		 	and a.contract_num=#contractNum#
+ 		</isNotNull>
+ 		<isNotNull property="ecifPartyNum"> 
+ 		 	and c.ecif_party_num=#ecifPartyNum#
+ 		</isNotNull>
+ 		order by summary_num desc
+    </select>
+     <select id="queryAccountInfo" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+    		SELECT listagg(a.zh,',') WITHIN GROUP (ORDER BY a.ZHLX) ZH FROM TB_LOAN_ZH a WHERE a.ZHLX  in('1','6','7')  AND a.LOAN_ID=#loanId#
+			GROUP BY a.LOAN_ID
+    </select>
+    <select id="queryCredInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select  distinct
+              tp.ecif_party_num as ecifPartyNum,
+               tf.contract_num   as contractNum,
+               tp.party_name     as custName,
+               tf.contract_term  as term,
+               to_char(tf.begin_date,'yyyy-mm-dd') as conStartDate,
+               to_char(tf.end_date,'yyyy-mm-dd') as conEndDate,
+               tf.repayment_type as repaymentType,
+               tf.con_status     as conStatus,
+               tl.year_rate      as rate,
+               tf.contract_amt   as totalLimit,
+               tf.con_yu_e       as conUsedLimit,
+               tf.con_balance    as aviLimit,
+               th.zh             as payAccNo
+          from tb_csm_party         tp, 
+               tb_con_contract_info tf,
+               tb_con_loanrate      tl,
+               tb_con_zh            th
+         where tp.party_id = tf.party_id
+           and tf.contract_id = tl.contract_id
+           and tf.contract_id = th.contract_id
+           and tf.product_type='02003013'
+           and tf.con_status='03'
+           and th.zhlx='0'
+           and tp.ecif_party_num = #ecifPartyNum#
+           order by contractNum desc
+    </select>
+    <select id="queryPayProInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	 select a.loan_org,a.summary_num,b.party_name,a.loan_amt,a.begin_date,a.end_date,c.year_rate,c.year_rate * (1 + c.overdue_rate_up_proportion / 100) over_rate,a.repay_type
+			 from tb_loan_info a,tb_csm_party b,tb_loan_loanrate c
+			 where a.party_id=b.party_id and a.loan_id=c.loan_id
+			 and a.summary_num=#dueNum# order by begin_date desc
+			 <!-- 网贷暂时不需要
+			 and to_char(a.begin_date,'yyyyMMdd')=#begDate# and to_char(a.end_date,'yyyyMMdd')=#endDate#-->
+    </select>
+    <select id="queryLoanOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	 select a.loan_org from tb_loan_info a where a.summary_num=#dueNum#
+    </select>
+    <!--查询合同信息-->
+   <select id="getContractInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  
+		  contract_id         as contractId,
+		  amount_detail_id    as amountDetailId,
+		  contract_num        as contractNum,
+		  contract_address    as contractAddress,
+		  party_id            as partyId,
+		  old_contract_id     as oldContractId,
+		  currency_cd         as  currencyCd,
+		  contract_amt        as contractAmt,
+		  contract_term       as  contractTerm,
+		  cycle_unit          as  cycleUnit,
+		  begin_date          as  beginDate,
+		  end_date            as  endDate,
+		  contract_date       as  contractDate,
+		  loan_use            as  loanUse,
+		  guaranty_type       as  guarantyType,
+		  loan_turn           as  loanTurn,
+		  user_num            as  userNum,
+		  org_num             as  orgNum,
+		  create_time         as  createTime,
+		  update_time         as  updateTime,
+		  product_type        as  productType,
+		  con_status          as  conStatus,
+		  trus_to_pay_flg     as  trusToPayFlag,
+		  stop_pay_flg        as  stopPayFlg,
+		  spec_payment_date   as  specPaymentDate,
+		  exchange_rate       as  exchangeRate,
+		  rmb_amt             as  rmbAmt,
+		  con_balance         as  conBalance,
+		  cycle_ind_con       as  cycleIndCon,
+		  repayment_type      as  repaymentType,
+		  tk_date             as  tkDate,
+		  holiday_flg         as  holidayFlg,
+		  main_guaranty_type  as  mainGuarantyType,
+		  xy_id               as  xyId,
+		  paper_con_num       as  paperConNum,
+		  internal_days       as  internalDays,
+		  cls_result          as  clsResult,
+		  if_data_move        as  ifDataMove,
+		  first_repay_term    as  firstRepayTerm,
+		  con_yu_e            as  conYuE,
+		  pay_way             as  payWay,
+		  pay_depend1         as  payDepend1,
+		  pay_depend2         as  payDepend2,
+		  pay_depend3         as  payDepend3,
+		  prepayment_penalty  as  prepaymentPenalty,
+		  prepay_makeup_rate  as  prepayMakeupRate,
+		  least_prepay_amount as  leastPrepayAmount,
+		  prepay_js           as  prepayJs,
+		  bzjbl               as  bzjbl,
+		  crd_cent            as  crdCent,
+		  apply_mode_type     as  applyModeType,
+		  low_risk_biz_type   as  lowRiskBizType,
+		  agricul_loans       as  agriculLoans
+		from tb_con_contract_info  tf 
+		where tf.contract_num = #contractNum#	
+    </select>
+    
+   <!--还款流水查询-->
+   <select id="queryRepayLoanInList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	  SELECT *
+		 FROM (
+		  select
+		       tsf.rcv_date           as  repaymentDate,
+		       tsf.opn_dep            as  orgNum,
+		       tsf.due_num            as  dueNum,
+		       tsf.brw_name           as  custName,
+		       tsf.pay_prim_acct      as  repaymentAccount,
+		       tsf.pay_prim_name      as  repaymentAccountName,
+		       (tsf.cur_prm_pay_typ || tsf.cur_ast_pay_typ ) as repaymentType,
+		       tsf.beg_date           as  loanBeginDate,
+       		   tsf.end_date           as  loanEndDate, 
+		       tsf.pad_up_prn         as  realCapitalAmt,
+		       tsf.pad_up_pent_prn    as  advanceCapitalAmt,
+		       tsf.pad_up_nor_itr_in  as  realBnNorInterest,
+		       tsf.pad_up_dft_itr_in  as  realBnDelInterest,
+		       tsf.pad_up_pns_itr_in  as  realBnOverInterest,
+		       tsf.pad_up_cpd_itr_in  as  realBnComInterest,
+		       tsf.pad_up_nor_itr_out as  realBwNorInterest,
+		       tsf.pad_up_dft_itr_out as  realBwDelInterest,
+		       tsf.pad_up_pns_itr_out as  realBwOverInterest,
+		       tsf.pad_up_cpd_itr_out as  realBwComInterest,
+		       tsf.pad_up_pent_icm    as  penaltyForAdv,
+		       tsf.pad_up_oft_prn     as  verificationAmt,
+		       tsf.pad_up_oft_itr     as  verificationInterest,
+		       tsf.oft_acr_itr_bal    as  verificationYjInterest,
+		       tsf.stan               as  stan       
+		 from TB_SUP_REPAYMENT_INFO tsf where tsf.due_num = #dueNum#
+		 union
+		 select
+		       tsf.rcv_date           as  repaymentDate,
+		       tsf.opn_dep            as  orgNum,
+		       tsf.due_num            as  dueNum,
+		       tsf.brw_name           as  custName,
+		       tsf.pay_prim_acct      as  repaymentAccount,
+		       tsf.pay_prim_name      as  repaymentAccountName,
+		       (tsf.cur_prm_pay_typ || tsf.cur_ast_pay_typ ) as repaymentType,
+		       tsf.beg_date           as  loanBeginDate,
+       		   tsf.end_date           as  loanEndDate,          
+		       tsf.pad_up_prn         as  realCapitalAmt,
+		       tsf.pad_up_pent_prn    as  advanceCapitalAmt,
+		       tsf.pad_up_nor_itr_in  as  realBnNorInterest,
+		       tsf.pad_up_dft_itr_in  as  realBnDelInterest,
+		       tsf.pad_up_pns_itr_in  as  realBnOverInterest,
+		       tsf.pad_up_cpd_itr_in  as  realBnComInterest,
+		       tsf.pad_up_nor_itr_out as  realBwNorInterest,
+		       tsf.pad_up_dft_itr_out as  realBwDelInterest,
+		       tsf.pad_up_pns_itr_out as  realBwOverInterest,
+		       tsf.pad_up_cpd_itr_out as  realBwComInterest,
+		       tsf.pad_up_pent_icm    as  penaltyForAdv,
+		       tsf.pad_up_oft_prn     as  verificationAmt,
+		       tsf.pad_up_oft_itr     as  verificationInterest,
+		       tsf.oft_acr_itr_bal    as  verificationYjInterest,
+		       tsf.stan               as  stan       
+		from TB_SUP_REPAYMENT_INFO_BKH tsf where tsf.due_num = #dueNum#)
+		     where repaymentDate  between #begDate# and #endDate#
+		     ORDER BY repaymentDate, dueNum, stan DESC
+   </select>
+   	<!--查询客户名下是否有未结清或者逾期的贷款-->
+	<select id="queryCustomerSummary" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    select *
+		  from tb_loan_summary ts, tb_con_contract_info tf
+		 where ts.party_id = tf.party_id
+		   and ts.summary_status_cd in ('03', '07')
+		   and tf.contract_num = #contractNum#
+	</select> 
+    
+</sqlMap>
+
+
+

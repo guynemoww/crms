@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ailoule -->
+<sqlMap>
+     <resultMap class="com.bos.pub.decision.TbPubGrantRule" id="ruleResult">
+        <result column="PID" javaType="string" property="pid"/>
+        <result column="RID" javaType="string" property="rid"/>
+        <result column="RNAME" javaType="string" property="rname"/>
+        <result column="RNOTE" javaType="string" property="rnote"/>
+        <result column="RIND" javaType="string" property="rind"/>
+        <result column="RTYPE" javaType="string" property="rtype"/>
+        <result column="RLEVEL" javaType="decimal" property="rlevel"/>
+        <result column="RSTATUS" javaType="string" property="rstatus"/>
+        <result column="RVERSION" javaType="decimal" property="rversion"/>
+        <result column="CREATE_TIME" javaType="string" property="createTime"/>
+        <result column="UPDATE_TIME" javaType="string" property="updateTime"/>
+    </resultMap>
+     <select id="selectPunish" parameterClass="java.util.HashMap" resultMap="ruleResult">
+    	<![CDATA[
+         SELECT r.* FROM Tb_Pub_Grant_Rule r INNER JOIN TB_PUB_GRANT_PACKAGE p on r.PID = p.PID WHERE p.PNAME = 'bos_grant_biz' AND r.RSTATUS = '2'
+    	]]>
+    </select>
+
+        <select id="ruleParamQuery" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			 select paramname name,enname id,PARAMDICTTYPE dictType  from Tb_Pub_Grant_Param
+		 </select>  
+         <update id="copyRule" parameterClass="java.util.HashMap">
+    	<![CDATA[
+         update tb_pub_grant_rule set rcontent=clob((select rcontent from tb_pub_grant_rule  where rid=#pid#)),rtest=clob((select rtest from tb_pub_grant_rule  where rid=#pid#)) where rid=#rid#
+         ]]>
+    </update>
+         <update id="updateRuleStatusSetRid" parameterClass="java.util.HashMap">
+    	<![CDATA[
+  			update tb_pub_grant_rule set rstatus=#status2# where rid=#rid#
+         ]]>
+    </update>
+             <update id="updateRuleStatusSetRidGetRind" parameterClass="java.util.HashMap">
+    	<![CDATA[
+  			update tb_pub_grant_rule set rstatus=#status1# where rind in (select rind from tb_pub_grant_rule where rid=#rid#) and rid!=#rid#
+         ]]>
+    </update>
+    <!-- 新增决策表 -->
+	<insert id="insertDeciTable" parameterClass="java.util.Map" >
+		insert into TB_PUB_DECI_TABLE(tid, tname, CREATE_TIME) values(#tid#, #tname#, #create_time#)
+	</insert>
+    <!-- 新增决策表表头 -->
+	<insert id="insertDeciTableHead" parameterClass="java.util.Map" >
+		insert into TB_PUB_DECI_TABLE_HEAD(tid, hid, hname, htype, hcolnum, hop, CREATE_TIME)
+		values(#tid#, #hid#, #hname#, #htype#, #hcolnum#, #hop#, #create_time#)
+	</insert>
+    <!-- 新增决策表单元格 -->
+	<insert id="insertDeciTableCol" parameterClass="java.util.Map" >
+		insert into TB_PUB_DECI_TABLE_COL(tid, cid, crow, ccol, cval) values(#tid#, #cid#, #crow#, #ccol#, #cval#)
+	</insert>
+	<insert id="insertRuleLogs" parameterClass="java.util.Map" >
+		insert into TB_PUB_GRANT_LOGS(PROCESSID,CREATEDATE,LOGNAME,RULE) values(#PROCESSID#,current timestamp,#LOGNAME#,#RULE#)
+	</insert>
+</sqlMap>

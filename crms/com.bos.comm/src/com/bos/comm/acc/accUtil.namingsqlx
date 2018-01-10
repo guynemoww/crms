@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:C_ture -->
+<sqlMap>
+	<select id="selectIndexValueByFinanceId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE FINANCE_ID=#FINANCE_ID#
+	</select>
+	<select id="selectIndexValueByPartyId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE D.FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+	<select id="selectIndexValueByPartyIds" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE D.FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.FINANCE_DEADLINE  = #FINANCE_DEADLINE# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+	<select id="selectFinanceDatasByFinanceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT  CUSTOMER_TYPE_CD,
+			FINANCE_DEADLINE,
+			FINANCE_STATUS_CD,
+			FINANCE_TYPE_CD,
+			REGULATED_IND,
+			REGULATED_REASON,
+			AUDITED_IND,
+			AUDIT_COMMENT_TYPE_CD,
+			BIZ_LICENSE_NUM,
+			AUDIT_DEPT,
+			AUDIT_CO_NAME,
+			AUDIT_DEPT_COMMENT_CD,
+			CALIBER_CD,
+			PARTY_ID,
+			FINANCE_ID 
+	FROM 	TB_ACC_CUSTOMER_FINANCE 
+	WHERE FINANCE_ID=#financeId# 
+	</select>
+	<select id="selectProjectDatasByFinanceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT PROJECT_CD,
+	       PROJECT_VALUE 
+	FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+	WHERE FINANCE_ID=#financeId#
+	</select>
+	<select id="selectProjectDatasByPartyId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT PROJECT_CD,
+	       PROJECT_VALUE 
+	FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+	WHERE FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.FINANCE_DEADLINE  &lt;= #FINANCE_DEADLINE# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+</sqlMap>

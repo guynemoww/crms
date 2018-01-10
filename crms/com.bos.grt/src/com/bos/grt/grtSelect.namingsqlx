@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:menglei -->
+<sqlMap>
+    
+    <resultMap class="commonj.sdo.DataObject" id="resultValidIntegrityMap">
+        <result column="CONTRACT_ID" javaType="string" property="contractId"/>
+        <result column="SUBCONTRACT_ID" javaType="string" property="subcontractId"/>
+        <result column="SURETY_ID" javaType="string" property="suretyId"/>
+        <result column="SORT_TYPE" javaType="string" property="sortType"/>
+        <result column="SUBCONTRACT_TYPE_CD" javaType="string" property="subcontractTypeCd"/>
+        <result column="IS_NEED_INSURE" javaType="string" property="isNeedInsure"/>
+        <result column="IF_OTHER_COMMON" javaType="string" property="ifOtherCommon"/>
+    </resultMap>
+    
+    <!--根据押品编号查询相应的押品信息 -->
+    <select id="selectMortgageBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	  select basic.SURETY_ID suretyId,party.PARTY_NUM partyNum,party.PARTY_NAME partyName,card.cert_num certNum,card.cert_type certType,
+    	  	basic.SURETY_NO suretyNo,basic.SORT_TYPE sortType,basic.ORG_NUM orgNum,basic.USER_NUM userNum,
+    	  	to_char(basic.CREATE_TIME,'yyyy-mm-dd')  as createTime,to_char(basic.UPDATE_TIME,'yyyy-mm-dd')  as  updateTime
+			from TB_CSM_PARTY  party,TB_GRT_MORTGAGE_BASIC  basic ,
+			(
+			    select 
+                    f.party_id ,
+			        case when f.area_type=1 then f.org_register_cd else f.register_code  end as cert_num,
+			        case when f.area_type=1 then '20001' else '20100'  end as cert_type
+			
+			    from TB_GRT_MORTGAGE_BASIC t, tb_csm_financial_institution f
+			    where t.party_id = f.party_id 
+			
+			    union all
+			
+			    select 
+                      c.party_id,
+			          case when c.area_type=1 then c.org_register_cd else c.registr_cd  end as cert_num,
+			          case when c.area_type=1 then '20001' else '20100'  end as cert_type
+			     from TB_GRT_MORTGAGE_BASIC t, tb_csm_corporation c
+			     where t.party_id = c.party_id
+			
+			    union all
+			    select 
+                      p.party_id,
+			          p.cert_num,
+			          p.cert_type
+			    from TB_GRT_MORTGAGE_BASIC t, tb_csm_natural_person p
+			    where t.party_id = p.party_id
+			) card
+			where  party.PARTY_ID=basic.PARTY_ID
+            and card.party_id=basic.PARTY_ID
+			<isNotNull prepend=""  property="suretyId">
+    			and basic.SURETY_ID=#suretyId#
+    		</isNotNull>
+    		<isNotNull prepend=""  property="partyId">
+    			and basic.partyId=#partyId#
+    		</isNotNull>
+			order by basic.UPDATE_TIME desc
+    </select>
+    
+    <!--押品管理 押品查询列表-->
+    <select id="getGrtMortgageBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			    	 select a.*,p.party_name,
+			       to_char(c.reg_due_date, 'yyyy-MM-dd') reg_due_date,
+			       to_char(c.card_reg_date, 'yyyy-MM-dd') card_reg_date,
+			       c.register_certi_no,
+			       c.surety_key_id,
+			       (case a.mortgage_status when '09' then '已入库' when '04' then '已出库'  else  '未入库' end) status 
+			       from tb_grt_mortgage_basic a
+			 left join tb_grt_card_mortagage b on b.surety_id=a.surety_id
+			 left join tb_grt_reg_card c on c.surety_key_id=b.surety_key_id
+			 left join v_csm_party p on p.party_id=a.party_id
+			 where a.mortgage_status!='06'
+			 	<isNotNull prepend=""  property="orgNum">and a.ORG_NUM =#orgNum#</isNotNull>
+			 	<isNotNull prepend=""  property="userNum">and a.user_num =#userNum#</isNotNull>
+                <isNotNull prepend=""  property="certType">and p.cert_type = #certType#</isNotNull>
+		    	<isNotNull prepend=""  property="certNum">and p.cert_num=#certNum#</isNotNull>
+		    	<isNotNull prepend=""  property="partyName">and p.PARTY_NAME like '%$partyName$%'</isNotNull>
+	    		<isNotNull prepend=""  property="status">and a.MORTGAGE_STATUS=#status#</isNotNull>
+	    		<isNotNull prepend=""  property="saveOrg">and c.save_org=#saveOrg#</isNotNull>
+	    	order by a.UPDATE_TIME desc
+    </select>
+    
+    
+    <!--查询权证信息-->
+    <select id="getGrtRegCardInfo" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.grt.TbGrtRegCard">
+    	 	select c.REGISTER_CERTI_NO,c.REG_ORG_NAME,c.REG_ORG_MONEY,to_char(c.CARD_REG_DATE,'yyyy-MM-dd') as CARD_REG_DATE,to_char(c.REG_DUE_DATE,'yyyy-MM-dd') as REG_DUE_DATE,c.SAVE_ORG
+				from TB_GRT_CARD_MORTAGAGE m ,TB_GRT_REG_CARD c
+				where   m.SURETY_KEY_ID=c.SURETY_KEY_ID
+				and m.SURETY_ID=#suretyId#
+    </select>
+    
+    <!--校验存单账号、存单号、存入日、到期日是否存在-->
+    <select id="validateDeposit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select de.* from TB_GRT_MORTGAGE_BASIC basic,TB_GRT_DEPOSIT de
+			where basic.SURETY_ID=de.SURETY_ID
+			and basic.SURETY_NO = #suretyNo#
+    </select>
+    
+    
+    <!--押品出入库通知书-->
+    <select id="printInStore" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select distinct basic.SORT_TYPE,
+		       basic.COLL_TYPE,
+		       v.PARTY_NAME,
+		       card.REGISTER_CERTI_NO,
+		       basic.CURRENCY_CD,
+		       basic.MORTGAGE_VALUE,
+		       card.SURETY_KEY_ID,
+		       to_char(card.REG_DUE_DATE, 'yyyy-MM-dd') REG_DUE_DATE,
+		       to_char(card.CARD_REG_DATE, 'yyyy-MM-dd') CARD_REG_DATE,
+		       info.CONTRACT_NUM,
+		       BASIC.OWNERSHIP_NUM,
+		       card.user_num,
+		       card.org_num,
+		       card.card_type,
+               v.party_num,
+               basic.mybank_affirm_value
+		  from TB_GRT_REG_CARD       card,
+		       TB_GRT_CARD_MORTAGAGE m,
+		       TB_GRT_MORTGAGE_BASIC basic,
+		       V_CSM_PARTY           v,
+		       TB_CON_CONTRACT_INFO  info
+		 where card.SURETY_KEY_ID = m.SURETY_KEY_ID
+		   and basic.SURETY_ID = m.SURETY_ID
+		   and info.CONTRACT_ID = m.CONTRACT_ID
+		   and v.PARTY_ID = basic.PARTY_ID
+		   and card.SURETY_KEY_ID = #suretyKeyId#
+    </select>
+    
+     <!--押品附属权证列表-->
+    <select id="printWithoutMain" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	       select card.register_certi_no,card.card_type,v.PARTY_NAME from TB_GRT_REG_CARD card ,V_CSM_PARTY v  
+    	       where card.party_id = v.party_id and card.main_surety_key_id = #suretyKeyId#
+    </select>
+    
+    <!--押品出库时间-->
+    <select id="getOutDate" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	<!--select to_char(CREATE_TIME,'yyyy-MM-dd') CREATE_TIME,OUT_REASON from (
+			SELECT * FROM TB_GRT_OUT_DETAIL where SURETY_KEY_ID=#suretyKeyId#   order by CREATE_TIME desc ) where  rownum=1
+			-->
+	select to_char(CREATE_TIME,'yyyy-MM-dd') CREATE_TIME,OUT_REASON,OUT_NO AS NNO,to_char(UPDATE_TIME,'yyyy-MM-dd') UPDATE_TIME from (
+	SELECT b.OUT_NO,A.CREATE_TIME,A.UPDATE_TIME,A.OUT_REASON FROM TB_GRT_OUT_DETAIL A ,TB_GRT_OUT B  where A.OUT_ID = B.OUT_ID AND A.SURETY_KEY_ID=#suretyKeyId#   order by A.UPDATE_TIME desc ) where  rownum=1
+    </select>
+    <!--押品入库时间-->
+    <select id="getInDate" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	<!--select to_char(CREATE_TIME,'yyyy-MM-dd') CREATE_TIME from (
+			SELECT * FROM TB_GRT_IN_DETAIL where SURETY_KEY_ID=#suretyKeyId#   order by CREATE_TIME desc ) where  rownum=1 -->
+	  select to_char(CREATE_TIME,'yyyy-MM-dd') CREATE_TIME ,IN_NO AS NNO,to_char(UPDATE_TIME,'yyyy-MM-dd') UPDATE_TIME from (
+      SELECT B.IN_NO,A.CREATE_TIME,A.UPDATE_TIME FROM TB_GRT_IN_DETAIL A , TB_GRT_IN B where A.IN_ID = B.IN_ID AND A.SURETY_KEY_ID=#suretyKeyId#   order by A.UPDATE_TIME desc ) where  rownum=1
+    </select>
+    
+    <select id="getContractInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select v.PARTY_NAME,info.PAPER_CON_NUM contract_num,card.IN_OUT_NO,tt.subcontract_num 
+			from TB_CON_CONTRACT_INFO info,TB_GRT_CARD_MORTAGAGE m,V_CSM_PARTY v,TB_GRT_REG_CARD card,tb_con_subcontract_rel rr ,tb_con_subcontract tt
+			where info.CONTRACT_ID=m.CONTRACT_ID
+			and card.SURETY_KEY_ID=m.SURETY_KEY_ID
+			and v.PARTY_ID=info.PARTY_ID
+			and rr.contract_id = info.contract_id
+            and tt.subcontract_id = rr.subcontract_id
+		    and card.SURETY_KEY_ID=#suretyKeyId#
+    </select>
+    
+    <select id="getProcessInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select c.org_name,
+		       c.activity_name,
+		       c.user_name,
+		       c.opinion,
+		       to_char(c.finish_time, 'yyyy-MM-dd') finish_time
+		  from tb_grt_out_detail       a,
+		       tb_wfm_processinstance  b,
+		       tb_wfm_workiteminstance c
+		 where b.product_id = a.out_id
+		   and c.process_id = b.process_id
+		   and a.surety_key_id = #suretyKeyId#  
+    </select>
+    
+</sqlMap>

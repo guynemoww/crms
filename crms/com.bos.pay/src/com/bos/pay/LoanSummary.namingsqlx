@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <select id="queryLoanSummary" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				select t.loan_id,
+			       ta.summary_id,
+			       ta.jjye,
+			       ta.summary_amt,
+			       t.product_type,
+			       ta.summary_currency_cd,
+			       ta.summary_status_cd,
+			       ta.summary_num,
+			       ta.org_num,
+			       ta.user_num,
+			       ta.party_id,
+			       r.year_rate,
+			       ta.begin_date,
+			       ta.end_date,
+			       ta.RCN_STAN,
+			       ta.NFT_NO,
+			       t.trus_to_pay_flg
+			  from tb_loan_info t, tb_loan_summary ta , tb_loan_loanrate r 
+			 where t.LOAN_ID = ta.LOAN_ID
+			 and r.loan_id = t.loan_Id
+			 and t.loan_status != '06'
+   		<isNotNull property="contractId">  and t.CONTRACT_ID= '$contractId$' </isNotNull>
+    </select>
+    
+     <!--从计量系统查询流水信息-->   
+    <select id="queryJLHKLSList" parameterClass="java.util.HashMap" resultClass="com.bos.pub.meta.TbPubDate">
+    <![CDATA[
+    select * from (
+select 
+a.due_num,
+0 as xh ,
+a.rcv_date as jhhkr,
+'CNY' as bz, 
+0 as rcv_prn,
+0 as rcv_itr,
+0 as  rcv_PNS_ITR,
+a.PAD_UP_PRN as pad_prn,
+0 as  pad_itr,
+PNS_ITR as PNS_ITR,
+0 as whbj,
+ a.rcv_date,
+a.period
+   from (
+select v.PAD_UP_PRN,v.RCV_DATE,v.PNS_ITR,v.DUE_NUM,v.PERIOD
+from dailypayview v 
+ where v.due_num=#summarynum# and v.period=-1 order by v.RCV_DATE
+  ) a  
+union  
+select 
+b.due_num,
+to_number(dense_rank() over(order by b.period)) as xh,
+to_char(b.curr_peri) as jhhkr,
+'CNY' as bz,
+b.rcv_prn,
+b.rcv_itr,
+b.rcv_PNS_ITR,
+b.pad_prn,
+b.pad_itr,
+b.PNS_ITR as PNS_ITR,
+b.whbj,
+b.rcv_date,
+b.period
+ from (
+select   v.due_num,
+n.CURR_PERI,
+n.rcv_prn as  rcv_prn,
+(n.rcv_nor_itr_in+n.rcv_nor_itr_out+n.rcv_dft_itr_in+n.rcv_dft_itr_out) as  rcv_itr,
+(n.rcv_pns_itr_in+n.rcv_pns_itr_out) as rcv_PNS_ITR,
+v.pad_up_prn as pad_prn,
+v.pad_itr as  pad_itr,
+v.PNS_ITR as PNS_ITR,
+0 as whbj,
+ v.period,
+ v.rcv_date
+from dailypayview v 
+left join tb_sup_debt_info_n n on v.due_num=n.due_num and v.period=n.curr_peri
+where v.due_num=#summarynum# and v.period<>-1   order by v.RCV_DATE
+ ) b   ) order by xh asc ,rcv_date asc
+ ]]>
+    </select>
+ <!--从计量系统查询回单信息-->   
+    <select id="queryJLList" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.pay.TbLoanSummary">
+    	select * from(
+    	select a.due_num,
+               to_char(to_date(a.rcv_date,'yyyy-MM-dd'),'yyyy-MM-dd') rcv_date,
+               a.STAN,
+               round(sum(a.pad_up_prn),2) as rmbAmt, 
+               round(sum(a.pad_up_nor_itr_in + a.pad_up_dft_itr_in +
+                   a.pad_up_nor_itr_out + a.pad_up_dft_itr_out),2) as chlx, 
+               sum(a.pad_up_pns_itr_in + a.pad_up_pns_itr_out) as chfx 
+          from tb_sup_repayment_info_hs a
+          where a.due_num in($summaryNum$)
+          <isNotNull property="startDate" prepend=""> 
+		 		 	AND to_date(a.rcv_date,'yyyyMMdd') >=to_date(#startDate#,'yyyy-MM-dd')
+		 	</isNotNull>
+			<isNotNull property="endDate" prepend=""> 
+			 	<![CDATA[
+	 			 AND to_date(a.rcv_date,'yyyyMMdd') <=to_date(#endDate#,'yyyy-MM-dd')
+			    ]]>
+		  	</isNotNull>
+         group by due_num, a.rcv_date,a.STAN
+         union all
+         select a.due_num,
+               to_char(to_date(a.rcv_date,'yyyy-MM-dd'),'yyyy-MM-dd') rcv_date,
+               a.STAN,
+               sum(a.pad_up_prn) as  rmbAmt, 
+               sum(a.pad_up_nor_itr_in + a.pad_up_dft_itr_in +
+                   a.pad_up_nor_itr_out + a.pad_up_dft_itr_out) as chlx, 
+               sum(a.pad_up_pns_itr_in + a.pad_up_pns_itr_out) as chfx 
+          from tb_sup_repayment_info a
+          where a.due_num in($summaryNum$)
+          <isNotNull property="startDate" prepend=""> 
+		 		 	AND to_date(a.rcv_date,'yyyyMMdd') >=to_date(#startDate#,'yyyy-MM-dd')
+		 	</isNotNull>
+			<isNotNull property="endDate" prepend=""> 
+			 	<![CDATA[
+	 			 AND to_date(a.rcv_date,'yyyyMMdd') <=to_date(#endDate#,'yyyy-MM-dd')
+			    ]]>
+		  	</isNotNull>
+          group by due_num, a.rcv_date,a.STAN
+		 ) order by  rcv_date desc
+    </select>
+    
+ 	<!--查找回单信息列表-->   
+     <select id="queryHdList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select s.summary_num,p.PARTY_NAME,zh.ZH,zh.ZHMC,r.YEAR_RATE
+			    from tb_loan_summary s ,TB_CSM_PARTY p,TB_LOAN_ZH zh,TB_LOAN_LOANRATE r
+			    where s.USER_NUM=#userNum#
+			    and s.PARTY_ID=p.PARTY_ID
+			    and zh.ZHLX='1'
+			    and zh.LOAN_ID=s.LOAN_ID
+			    and s.LOAN_ID=r.LOAN_ID
+    	<isNotNull property="partyName"> 
+ 		 	and p.PARTY_NAME like '%$partyName$%'
+ 		</isNotNull>
+    	<isNotNull property="summaryNum"> 
+ 		 	and s.SUMMARY_NUM like '%$summaryNum$%'
+ 		</isNotNull>
+    </select>
+    
+    <select id="queryMoneyUse" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.money_use_id,t.pay_use,t.pay_object,to_char(t.pay_time,'yyyy-mm-dd') as pay_time ,t.pay_way,
+		t.apply_amount,t.is_fit_deal,ta.party_name
+		 from tb_loan_money_use t,tb_csm_party ta
+		where t.party_id=ta.party_id
+   		<isNotNull property="summaryId">  and t.summary_id= '$summaryId$' </isNotNull>
+    </select>
+    <select id="getApplyIdByLoanId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t.APPLY_ID from tb_biz_approve t,TB_BIZ_AMOUNT_APPROVE ta,TB_BIZ_AMOUNT_DETAIL_APPROVE tb,TB_CON_CONTRACT_INFO tc,TB_LOAN_INFO td
+		where t.APPROVE_ID=ta.APPROVE_ID
+		and ta.AMOUNT_ID=tb.AMOUNT_ID
+		and tb.AMOUNT_DETAIL_ID=tc.AMOUNT_DETAIL_ID
+		and tc.CONTRACT_ID=td.CONTRACT_ID
+    	and td.loan_id = #loanId#
+    </select>
+    
+    <select id="getLoanMonths" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ceil(months_between(r.end_date,r.begin_date)) loanmonth from tb_loan_info r where r.loan_id = #loanId#
+    </select>
+    <select id="getIsJxhj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select c.biz_happen_type,c.apply_id,t.agricul_loans
+		  from tb_loan_info                 r,
+		       tb_con_contract_info         t,
+		       tb_biz_amount_detail_approve a,
+		       tb_biz_amount_approve        b,
+		       tb_biz_approve               c
+		 where r.contract_id = t.contract_id
+		   and t.amount_detail_id = a.amount_detail_id
+		   and a.amount_id = b.amount_id
+		   and b.approve_id = c.approve_id
+		   and r.loan_id = #loanId#
+    </select>
+    
+    <update id="updateDiankuan" parameterClass="java.util.Map" >
+		update tb_loan_diankuan r set r.dealflag = '2' where r.billnum = #billnum#
+	</update>
+	
+	 <select id="getHpTotalAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  sum(r.loan_amt) a  from tb_loan_hp_amt r where r.loan_id =#loanId#
+    </select>
+	 <select id="getTxFlag" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select count(1) c
+		  from tb_biz_tx                    r,
+		       tb_biz_amount_apply          t,
+		       tb_biz_amount_detail_approve a,
+		       tb_con_contract_info         c,
+		       tb_loan_info                 l
+		 where r.apply_id = t.apply_id
+		   and t.amount_id = a.amount_id
+		   and a.amount_detail_id = c.amount_detail_id
+		   and c.con_status = '03'
+		   and c.contract_id = l.contract_id
+		   and l.loan_id = #loanId#
+    </select>
+	 <select id="getMoneyUseR" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		 <![CDATA[
+		   select count(*) c
+		     from tb_loan_summary r
+		    where r.summary_id = #summaryId#
+		      and r.summary_amt < (select sum(t.apply_amount)
+		                             from tb_loan_money_use t
+		                            where t.summary_id = #summaryId#
+		                            group by t.summary_id)
+   		]]>
+    </select>
+    <update id="updateSummaryInfo" parameterClass="java.util.Map" >
+    	<![CDATA[
+    		update tb_loan_summary r set r.rcn_stan = #rcnStan# where r.summary_num = #summaryNum#
+    	]]>
+	</update>
+	<update id="updateStatus" parameterClass="java.util.Map" >
+		<![CDATA[
+    	update tb_loan_summary r set r.back_cd = #backCd# where r.summary_num = #summaryNum#
+    	]]>
+	</update>
+	<select id="querySummaryInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select org_num,rcn_stan,begin_date,summary_id from tb_loan_summary  where summary_num = #summaryNum#
+    	]]>
+	</select>
+	<select id="querySysDate" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select OPERATING_DATE from tb_pub_date
+    	]]>
+	</select>
+	<select id="getChageInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		<![CDATA[
+    	select b.CHANGE_ID,b.LOAN_CHANGE_TYPE,b.CONTRACT_ID,b.PARTY_ID,b.SUMMARY_ID,c.SUMMARY_NUM,c.LOAN_ID,to_char(b.change_date,'yyyy-MM-dd') CHANGE_DATE 
+    	 from tb_con_loan_change b,tb_loan_summary c
+    	 where c.summary_id=b.summary_id and b.loan_change_type in('11','15','18') and
+		b.change_date>=to_date(#beginDate#,'YYYY-MM-DD HH24:mi:ss') 
+		and b.change_date<=to_date(#endDate#,'YYYY-MM-DD HH24:mi:ss')
+		and c.summary_id=#summaryId#
+		 order by b.change_date desc
+    	]]>
+	</select>
+	<select id="queryEmpOrgInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select decode(times,1,2,2,3,3,4,4,5,5,1,1) times, org_emp orgEmp from org_emp_mapping where org_num=#orgNum#
+    	]]>
+	</select>
+		<select id="queryOrgAccInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select ACC_ORG_NO from TB_ORG_ACC_REL where OPR_ORG_NO=#oprOrgNo# AND STATUS=#status#
+    	]]>
+	</select>
+	<update id="updateEmpOrgInfo" parameterClass="java.util.HashMap">
+		<![CDATA[
+			update org_emp_mapping set times=#times# where org_num=#orgNum#
+    	]]>
+	</update>
+	<select id="queryRelativeInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    		select a.apply_mode_type applyModeType,d.guaranty_type guarantyType,f.loan_amt loanAmt,f.exchange_rate exchangeRate,d.product_type productType
+			from tb_biz_apply a,tb_biz_amount_apply b,tb_biz_amount_detail_apply c,tb_con_contract_info d,tb_loan_info f 
+			where c.amount_detail_id = d.amount_detail_id and
+			 a.apply_id = b.apply_id and
+			 b.amount_id = c.amount_id and 
+			 d.contract_id = f.contract_id
+			 and f.loan_id=#loanId#
+    	]]>
+	</select>
+	 <update id="updateSummaryStaus" parameterClass="java.util.Map" >
+    	<![CDATA[
+    		update tb_loan_summary a set a.back_cd='10' where a.summary_num=(select b.summary_num from tb_loan_info b where b.loan_id=#loanId#)
+    	]]>
+	</update>
+	<select id="queryLoanOpr" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    		select user_num as userNum from tb_loan_summary where summary_num=#summaryNum#
+    	]]>
+	</select>
+	<!-- add by shangmf:记表外账时使用SQL -->
+	<select id="queryOrgAccInfoOffBalance" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select ACC_ORG_NO from TB_ORG_ACC_REL where OPR_ORG_NO=#oprOrgNo# AND STATUS=#status# AND col2 = '8'
+    	]]>
+	</select>
+	<select id="queryEmpOrgInfoOffBalance" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	select decode(times,1,2,2,3,3,4,4,5,5,1,1) times, org_emp orgEmp from org_emp_mapping where org_num=#orgNum#
+    	]]>
+	</select>
+	<select id="getAccOrgName" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+		<![CDATA[
+SELECT NVL(o.ORGNAME,ACC_ORG_ID) ORG_NAME 
+FROM TB_ORG_ACC_REL r
+LEFT JOIN OM_ORGANIZATION o ON r.ACC_ORG_NO=o.ORGCODE
+WHERE r.ACC_ORG_NO=#orgNum#
+    	]]>
+	</select>
+	<select id="getMaxBaseRate" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		<![CDATA[
+    	select max(INT_RATE) maxRate from tb_sys_basic_rate where INT_RATE_CD in('1','2','3','4','5') and status='1'
+    	]]>
+	</select>
+	<select id="getbettweenBaseRate" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		<![CDATA[
+    	select max(INT_RATE) maxRate from tb_sys_basic_rate where INT_RATE_CD=(
+    		select 
+    		 case
+                       when ceil(months_between(b.end_date, b.begin_date)) <= 6 then
+                        '1'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 6
+                            and ceil(months_between(b.end_date, b.begin_date)) <= 12 then
+                        '2'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 12
+                            and ceil(months_between(b.end_date, b.begin_date)) <= 36 then
+                        '3'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 36
+                            and ceil(months_between(b.end_date, b.begin_date)) <= 60 then
+                        '4'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 60 then
+                        '5'
+                     end INT_RATE_CD
+             from tb_con_contract_info b where b.contract_id=#contractId#
+    	) and status='1'
+    	]]>
+	</select>
+</sqlMap>

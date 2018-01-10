@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sqlMap>
+    <!--计算单值分数 -->
+    <select id="getIrmScoreOne" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select c.index_score from tb_irm_index_model a,tb_irm_index_define b,tb_irm_index_param c
+	       where a.model_id = #model_id#
+	         and a.model_stats = '1'
+	         and a.bigmold_index_id = b.bigmold_index_id
+	         and b.smallmold_index_id = c.smallmold_index_id
+	         and b.define_stats = '1'
+	         and c.smallmold_index_id = #smallmold_index_id#
+	         and c.param_stats = '1'
+	         and c.index_param_min &lt;= #index_param#
+	         and c.index_param_max &gt;= #index_param#
+    </select>
+	 <!--获取秒贷秒贷额度 -->
+    <select id="getIrmScoreRank" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.limit_id,a.limit_rank_min,a.limit_rank_max from tb_irm_secondloan_limit a 
+	       where a.limit_score_min &lt;= #limit_score#
+	         and a.limit_score_max &gt;= #limit_score#   
+    </select>
+    
+    <!--根据业务关系获取利率决策表分值 -->
+    <select id="getIrmScoreDecision" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.decision_score from tb_irm_interest_decision a
+	       where a.client_rank_id = #client_rank_id#
+	         and a.index_score_min &lt;= #limit_score#
+	         and a.index_score_max &gt;= #limit_score#
+	         and a.decision_stats = '1'
+    </select>
+    <!--获取利率决策系数 -->
+    <select id="getIrmScoreCoefficient" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.coefficient_rank_key from tb_irm_interest_coefficient a
+	       where a.decision_score_min &lt;= #decision_score#
+	         and a.decision_score_max &gt;= #decision_score#
+	         and a.coefficient_stats = '1'
+    </select>
+</sqlMap>

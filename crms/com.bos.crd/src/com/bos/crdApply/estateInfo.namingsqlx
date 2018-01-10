@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:kf_xdxt11 -->
+<sqlMap>
+     <resultMap id="party" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="isPotentialCust" column="IS_POTENTIAL_CUST"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD" />
+			<result property="registrCd" column="REGISTR_CD" />
+			<result property="partyTypeCd" column="PARTY_TYPE_CD" />
+			<result property="middleCode" column="MIDDLE_CODE" />
+	</resultMap>
+    <select id="getEstateList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select b.project_id,
+		       b.party_id,
+		       b.project_name,
+		       b.project_type,
+		       b.project_level_cd,
+		       b.remark,
+		       b.create_time,
+		       b.update_time,
+		       b.project_address,
+		       b.project_total_amt,
+		       b.career_myamt,
+		       b.currency_cd,
+		       b.project_start_date,
+		       b.project_end_date,
+		       b.construction_land_permit_num,
+		       b.construction_permit_num,
+		       b.eia_permit_num,
+		       b.other_permit,
+		       b.other_permit_num,
+		       b.planning_permit_no,
+		       b.project_file,
+		       b.project_pledge,
+		       b.career_myamt_percent,
+		       b.project_start_user_num,
+		       b.project_unit,
+		       a.rel_id,
+		       c.party_num
+		  from tb_crd_project_rel  a,
+		       tb_csm_project_info b,
+		       tb_csm_party        c
+		 where a.project_id = b.project_id
+		       and b.party_id = c.party_id
+			<isNotNull property="LIMIT_ID">  
+				and a.limit_id = '$LIMIT_ID$' 
+			</isNotNull>
+    </select>
+</sqlMap>

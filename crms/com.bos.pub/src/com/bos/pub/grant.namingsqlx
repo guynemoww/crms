@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+
+	   <resultMap class="com.bos.pub.decision.TbPubGrantRule" id="ruleResult">
+        <result column="RID"  property="rid"/>
+        <result column="PID"  property="pid"/>
+        <result column="RNAME"  property="rname"/>
+        <result column="RIND"  property="rind"/>
+        <result column="RNOTE"  property="rnote"/>
+        <result column="RTYPE"  property="rtype"/>
+        <result column="RLEVEL"  property="rlevel"/>
+        <result column="RSTATUS" property="rstatus"/>
+        <result column="RVERSION"  property="rversion"/>
+        <result column="RCONTENT" property="rcontent"/>
+         <result column="USER_NUM"  property="userNum"/>
+         <result column="ORG_NUM"  property="orgNum"/>
+          <result column="RRIND"  property="rrind"/>
+          <result column="RORG_NUM"  property="rorgNum"/>
+        <result column="CREATE_TIME"  property="createTime"/>
+        <result column="UPDATE_TIME"  property="updateTime"/>
+        <result column="RTEST"  property="rtest"/>
+    	 <result column="RESULTTYPE"  property="resulttype"/>
+    </resultMap>
+	
+	<insert id="updateRuleContent" parameterClass="java.util.Map" >
+		update TB_PUB_GRANT_RULE set update_time=current_timestamp,rcontent=#rcontent# where rid=#rid#
+	</insert>
+	<insert id="updateRuleTest" parameterClass="java.util.Map" >
+		update TB_PUB_GRANT_RULE set rtest=#rtest# where rid=#rid#
+	</insert>
+	<insert id="updateRule" parameterClass="com.bos.pub.decision.TbPubGrantRule" >
+		update TB_PUB_GRANT_RULE set resulttype=#resulttype#,rnote=#rnote#,rstatus=#rstatus#,rname=#rname# where rid=#rid#
+	</insert>
+	<!-- 修改： 不再查询授权表规则关联表/select b.*  from tb_pub_grant_table_rule a,tb_pub_grant_rule b where a.rind = b.rind and a.pid =#pid# 
+		授权表规则关联表仍然需要，因为在展现授权表时，会要求 以一张列表形式展现，且表头为关联的规则。
+	-->
+	<!--
+		 修改:	select b.*  from tb_pub_grant_table a,tb_pub_grant_rule b where a.tid = b.pid and b.rtype!='04' and b.rstatus='2' and a.pid =#pid#
+		 
+		   		   
+  		   select rname,rtype,rstatus,rind from   tb_pub_grant_rule where rname in(select rind from tb_pub_grant_table_rule where pid =#pid#) 
+  		   union  all 
+  		   select rname,rtype,rstatus,rind from   tb_pub_grant_rule where rtype='02' and rstatus='2'
+  		   
+	-->
+	<select id="selectRuleListByPid" parameterClass="java.util.Map" resultClass="com.bos.pub.decision.TbPubGrantRule">
+  		 
+  		
+  		   select b.*  from tb_pub_grant_rule b where  b.rtype!='04' and b.rstatus='2' and b.rorg_num in ('BS001',#orgcode#,'10000')
+  		   <isNotNull property="rname">and b.rname like '%$rname$%'</isNotNull>  
+  		   <isNotNull property="rtype">and b.rtype=#rtype#</isNotNull>  
+  		   <isNotNull property="rstatus">and b.rstatus=#rstatus#</isNotNull>  
+  		   <isNotNull property="ruletype">and b.pid=#ruletype#</isNotNull>  
+  		   
+    </select>
+    <select id="selectOM_ORGANIZATION" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.organization.OmOrganization">
+  		 select orgseq orgseq from OM_ORGANIZATION where orgcode=#orgcode#
+    </select>
+    <select id="selectTbPubGrantTableCol" parameterClass="java.util.Map" resultClass="com.bos.pub.decision.TbPubGrantTableCol">
+		 select tid tid,rind rind,pid pid,torg torg,tposition tposition,tuser tuser,tname tname,tvalue, user_num userNum,org_num orgNum,create_time createTime from Tb_Pub_Grant_Table_Col where torg in(select orgid from OM_ORGANIZATION where orgseq like '$orgseq$%') 
+		 <isNotNull property="rind">and rind like '%$rind$%'</isNotNull>  
+		 <isNotNull property="tname">and tname=#tname#</isNotNull>  
+		 <isNotNull property="tvalue">and tvalue=#tvalue#</isNotNull>  
+    </select>
+	<select id="selectGrantTableCols" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+		select c.rind, c.torg,c.tname,c.tvalue,o.orgid,o.orgcode,o.orglevel,o.orgname from tb_pub_grant_table t
+		join tb_pub_grant_table_col c on c.pid=t.pid
+		join om_organization o on o.orgid=c.torg
+		where t.pind=#grantTableInd# and t.pstatus='1' and o.orgid in ($orgids$)
+		order by o.orglevel
+    </select>
+    
+    
+     <select id="selectGrantRule" parameterClass="java.util.Map"	resultMap="ruleResult">
+     	select * from tb_pub_grant_rule where pid=#pid# 
+     	<isNotNull property="orgNum">and rorg_num=#orgNum#</isNotNull>  
+     	<isNotNull property="rtype">and rtype=#rtype#</isNotNull>  
+     	<isNotNull property="rstatus">and rstatus=#rstatus#</isNotNull>
+     	<isNotNull property="rname">and rname like '%$rname$%'</isNotNull>
+     </select>
+     
+   <select id="selectAllRuleByPtype" parameterClass="com.bos.pub.decision.TbPubGrantRule" resultMap="ruleResult">
+     	select * from tb_pub_grant_rule where pid in( select pid from Tb_Pub_Grant_Package where  ptype=#ptype#)
+     </select>
+     
+</sqlMap>

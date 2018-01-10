@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+	<resultMap id="loanSummary" class="java.util.HashMap">
+			<result property="summaryId" column="SUMMARY_ID"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="productCd" column="PRODUCT_CD"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="contractAmt" column="CONTRACT_AMT"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="jjje" column="SUMMARY_AMT"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="ljfx" column="LJFX"/>
+			<result property="dftItr" column="DFT_ITR"/>
+			<result property="jjyqbj" column="JJYQBJ"/>
+			<result property="linkmanName" column="LINKMAN_NAME"/>
+			<result property="linkmanPhone" column="LINKMAN_PHONE"/>
+	</resultMap>
+    <select id="loanSummaryList" parameterClass="java.util.HashMap" resultMap="loanSummary">
+    <!--如果是表外业务，查询的是合同编号和合同ID，表内业务查询借据编号和借据ID-->
+SELECT
+(CASE TSP.PRODUCT_TYPE WHEN '2' THEN TB.CONTRACT_ID ELSE T.SUMMARY_ID END) SUMMARY_ID,
+(CASE TSP.PRODUCT_TYPE WHEN '2' THEN TB.CONTRACT_NUM ELSE T.SUMMARY_NUM END) SUMMARY_NUM,
+TSP.PRODUCT_TYPE,
+V.PARTY_NAME,
+TC.PRODUCT_CD,
+TA.CURRENCY_CD,
+TB.CONTRACT_AMT,
+T.BEGIN_DATE,
+T.END_DATE,
+T.SUMMARY_AMT,
+T.JJYE,
+T.FLJG,
+T.YQTS, 
+T.LJFX,
+T.JJYQBJ,
+T.DFT_ITR,
+V.LINKMAN_NAME,
+V.LINKMAN_PHONE,	
+T.ORG_NUM,
+T.USER_NUM
+FROM TB_LOAN_SUMMARY T
+LEFT JOIN TB_LOAN_INFO TA ON T.LOAN_ID = TA.LOAN_ID
+LEFT JOIN TB_CON_CONTRACT_INFO TB ON TA.CONTRACT_ID = TB.CONTRACT_ID
+LEFT JOIN TB_BIZ_PRODUCT_INFO TC ON TB.PRODUCT_TYPE = TC.PRODUCT_CD
+LEFT JOIN V_CSM_PARTY V ON T.PARTY_ID = V.PARTY_ID
+LEFT JOIN TB_SYS_PRODUCT TSP ON TSP.PRODUCT_CD=TA.PRODUCT_TYPE
+WHERE T.SUMMARY_STATUS_CD = '03'
+<isNotNull property="summaryNum"> AND T.SUMMARY_NUM = #summaryNum#</isNotNull>
+<isNotNull property="contractNum"> AND TB.CONTRACT_NUM = #contractNum#</isNotNull>
+<isNotNull property="partyId"> AND V.PARTY_ID = #partyId#</isNotNull>
+<isNotNull property="userNum"> AND T.USER_NUM = #userNum#</isNotNull>
+<isNotNull property="partyName"> AND V.PARTY_NAME = #partyName#</isNotNull>
+<isNotNull property="certNum"> AND V.CERT_NUM = #certNum#</isNotNull>
+<isNotNull property="orgNum"> AND T.ORG_NUM = #orgNum#</isNotNull>
+<isNotNull property="certType"> AND V.CERT_TYPE = #certType#</isNotNull>
+<isNotNull property="receiptNum"> AND (T.SUMMARY_NUM LIKE '%$receiptNum$%' or TB.CONTRACT_NUM LIKE '%$receiptNum$%')</isNotNull>
+    </select>
+    
+    <select id="queryTbCltRegisterInfo" parameterClass="java.util.HashMap" resultMap="loanSummary">
+      <!--如果是表外业务，查询的是合同编号和合同ID，表内业务查询借据编号和借据ID-->
+		SELECT 
+		DISTINCT
+	  (CASE  TSP.PRODUCT_TYPE WHEN '2' THEN  TB.CONTRACT_ID ELSE   T.SUMMARY_ID END)AS SUMMARY_ID,
+          (CASE  TSP.PRODUCT_TYPE WHEN '2' THEN  TB.CONTRACT_NUM ELSE   T.SUMMARY_NUM END)AS   SUMMARY_NUM,
+	            TSP.PRODUCT_TYPE,
+	           V.PARTY_NAME,
+	           TC.PRODUCT_CD,
+	           TA.CURRENCY_CD,
+	           TB.CONTRACT_AMT,
+	           T.SUMMARY_AMT,
+	           T.JJYE,
+		       T.FLJG,
+		       T.YQTS, 
+		       T.LJFX,
+               T.DFT_ITR,
+               T.JJYQBJ,
+	           T.BEGIN_DATE,
+       		   T.END_DATE,
+	           V.LINKMAN_NAME,
+		       V.LINKMAN_PHONE
+	      FROM TB_LOAN_SUMMARY      T,
+	           TB_LOAN_INFO         TA,
+	           TB_CON_CONTRACT_INFO TB,
+	           TB_BIZ_PRODUCT_INFO  TC,
+	           V_CSM_PARTY          V,
+	           TB_CLT_PROJECT_LIST L,
+               TB_SYS_PRODUCT TSP
+	     WHERE T.LOAN_ID = TA.LOAN_ID
+	       AND T.PARTY_ID = V.PARTY_ID
+	       AND TA.CONTRACT_ID = TB.CONTRACT_ID
+	       AND TB.PRODUCT_TYPE = TC.PRODUCT_CD
+               AND TSP.PRODUCT_CD=TB.PRODUCT_TYPE
+	       AND( L.CONTRACT_ACCTLIST_NUM =T.SUMMARY_ID OR  L.CONTRACT_ACCTLIST_NUM =TB.CONTRACT_ID)
+		 <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND V.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+		 <isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		 <isNotNull property="contractNum">  AND TB.CONTRACT_NUM LIKE '%$contractNum$%' </isNotNull>
+		 <isNotNull property="summaryNum">  AND T.SUMMARY_NUM LIKE '%$summaryNum$%' </isNotNull>
+		 <isNotNull property="orgNum">
+		 AND T.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$orgNum$%')
+		 </isNotNull>
+		 <isNotNull property="collectionType"> 
+		 	 and l.clt_id in(select c.clt_id from TB_CLT_REGISTER_INFO c where c.collection_type=#collectionType#)
+		 </isNotNull>
+		 <isNotNull property="startDate"> 
+		 <![CDATA[
+		 	 and l.clt_id in(select c.clt_id from TB_CLT_REGISTER_INFO c where c.collection_date>=to_date(substr(#startDate#,0,10),'yyyy-MM-dd'))
+		 ]]>
+		 </isNotNull>
+		 <isNotNull property="endDate"> 
+		 <![CDATA[
+		 	 and l.clt_id in(select c.clt_id from TB_CLT_REGISTER_INFO c where c.collection_date<=to_date(substr(#endDate#,0,10),'yyyy-MM-dd'))
+		 ]]>	 
+		 </isNotNull>
+		  
+    </select>
+    
+    <resultMap id="register" class="java.util.HashMap">
+    		<result property="cltId" column="CLT_ID"/>
+			<result property="collectionDate" column="COLLECTION_DATE"/>
+			<result property="collection_type" column="COLLECTION_TYPE"/>
+			<result property="collectionObject" column="COLLECTION_OBJECT"/>
+			<result property="collectionPhone" column="COLLECTION_PHONE"/>
+			<result property="collectionPlace" column="COLLECTION_PLACE"/>
+			<result property="collectionDesc" column="COLLECTION_DESC"/>
+			<result property="analyseOpinion" column="ANALYSE_OPINION"/>
+			<result property="createUserNum" column="CREATE_USER_NUM"/>
+	</resultMap>
+	
+	<!--催收历史记录-->
+    <select id="registerListByPo" parameterClass="java.util.HashMap" resultMap="register">
+					SELECT T2.CLT_ID,
+		       T2.COLLECTION_DATE,
+		       T2.COLLECTION_TYPE,
+		       T2.COLLECTION_OBJECT,
+		       T2.COLLECTION_PHONE,
+		       T2.COLLECTION_PLACE,
+		       T2.COLLECTION_DESC,
+		       T2.ANALYSE_OPINION,
+		       T2.CREATE_USER_NUM
+		  FROM TB_CLT_PROJECT_LIST T1,
+		       TB_CLT_REGISTER_INFO T2
+		 where T1.CLT_ID = T2.CLT_ID
+		 	and T1.CONTRACT_ACCTLIST_NUM = #summaryId#
+		 ORDER BY T2.COLLECTION_DATE DESC
+    </select>
+</sqlMap>

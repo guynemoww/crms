@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+	<!-- 业务申请 -->
+	<rule id="RBIZ_0001" name="客户存在在途授信业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的综合授信业务，不允许重复申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_apply where party_id = @partyId and status_type in ('01','02') and biz_type in( '02','03','05')]]></sql>
+	</rule>
+
+	<rule id="RBIZ_0002" name="客户存在已生效授信业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有已生效的综合授信业务，不允许再次申请" checkLevel="err">
+		<sql><![CDATA[SELECT count(*) c FROM TB_BIZ_APPROVE WHERE PARTY_ID = @partyId AND BIZ_TYPE IN ('02','03','05') AND APPROVE_CONCLUSION in( '1','3') and become_effective_mark in( '03','08','09')  ]]></sql>
+	</rule>
+	<rule id="RBIZ_0003" name="未保存基本信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未保存基本信息" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_amount_apply where apply_id = @applyId  and  currency_cd is not null]]></sql>
+	</rule>
+	
+	<rule id="RBIZ_0004" name="未添加明细信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未添加明细信息" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_amount_detail_apply r,tb_biz_amount_apply t  where r.amount_id = t.amount_id and  t.apply_id = @applyId  and  r.detail_amt is not null]]></sql>
+	</rule>
+	<rule id="RBIZ_0005" name="业务申请监管报送数据未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="监管报送数据未保存" checkLevel="err">
+		<sql><![CDATA[select count(1) c from  tb_biz_yesorno_apply where apply_id =  @applyId  ]]></sql>
+		<condition>CBIZ0010</condition>
+	</rule>
+	<rule id="RBIZ_0006" name="担保方式选择保证时必须录入保证人信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入保证人信息" checkLevel="err">
+		<sql><![CDATA[select (select count(1) c from tb_biz_grt_rel r where r.apply_id = @applyId and r.surety_type in ('04','05'))+
+
+			(select count(1) d from tb_biz_grt_maxloancon_apply t where t.apply_id = @applyId and t.re_type  in ('04','05')) c from dual ]]></sql>
+		<condition>CBIZ0001</condition>
+	</rule>
+	<rule id="RBIZ_0007" name="担保方式选择抵押时必须录入抵押信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入抵押信息" checkLevel="err">
+		<sql><![CDATA[select (select count(1) c from tb_biz_grt_rel r where r.apply_id = @applyId   and r.surety_type = '01')+
+			(select count(1) d from tb_biz_grt_maxloancon_apply t where t.apply_id = @applyId and t.re_type ='01') c from dual
+  		]]></sql>
+		<condition>CBIZ0002</condition>
+	</rule>
+	<rule id="RBIZ_0008" name="担保方式选择质押时必须录入质押信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入质押信息" checkLevel="err">
+		<sql><![CDATA[select (select count(1) c from tb_biz_grt_rel r where r.apply_id = @applyId  and r.surety_type = '02')+
+			(select count(1) d from tb_biz_grt_maxloancon_apply t where t.apply_id = @applyId and t.re_type ='02') c from dual ]]></sql>
+		<condition>CBIZ0003</condition>
+	</rule>
+	<rule id="RBIZ_0011" name="同一业务品种和币种不能录多笔" checktype="eqn"  checkedFieldName="$a" targetDataList="0"  errCode="2015110-001" errMsg="同一业务品种和币种不能录多笔" checkLevel="err">
+		<sql><![CDATA[select count(0) as a from tb_biz_amount_detail_apply r where r.amount_id = @amountId and r.currency_cd=@currencyCd and r.product_Type = @productType   ]]></sql>
+	</rule>
+	<rule id="RBIZ_0012" name="担保方式选择保证金时必须录入保证金信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入保证金信息" checkLevel="err">
+		<sql><![CDATA[select (select count(1) c from tb_biz_grt_rel r where r.apply_id = @applyId and r.surety_amt is not null and r.surety_type = '03')+
+			(select count(1) d from tb_biz_grt_maxloancon_apply t where t.apply_id = @applyId and t.re_type ='03') c from dual  ]]></sql>
+		<condition>CBIZ0005</condition>
+	</rule>
+	<rule id="RBIZ_0013" name="明细信息未填写完整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="明细信息未填写完整" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_amount_detail_apply r,tb_biz_amount_apply t  where r.amount_id = t.amount_id and  t.apply_id = @applyId  and  r.detail_amt is null]]></sql>
+	</rule>
+	
+	<!-- 代码留痕     and ta.mortgage_status='03'  and (ta.assess_value is null  or  ta.UPDATE_TIME is null)-->
+	<rule id="RBIZ_0014" name="担保信息未填写完整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保信息未填写完整" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_BIZ_GRT_REL t,TB_GRT_MORTGAGE_BASIC ta
+			            where t.SURETY_ID=ta.SURETY_ID
+			            and ta.mortgage_status='03'  and (ta.assess_value is null  or  ta.UPDATE_TIME is null)
+			            and ta.COLL_TYPE not in ('03','04','05')
+			            and t.APPLY_ID=@applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0015" name="权利价值不能大于评估价值" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有担保物的权利价值大于评估价值" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_BIZ_GRT_REL t,TB_GRT_MORTGAGE_BASIC ta
+				            where t.SURETY_ID=ta.SURETY_ID
+				            and nvl(ta.assess_value,0 ) <  nvl(ta.MORTGAGE_VALUE,0)
+				            and t.APPLY_ID=@applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0016" name="小微14还款方式才有不规则还款计划" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="该笔业务还款方式不支持添加还款计划" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_biz_amount_detail_apply r, tb_biz_amount_apply t
+						 where r.amount_id = t.amount_id
+						   and r.repayment_type like '14%'
+						   and t.apply_id = @applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0017" name="是否联保小组客户" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="非联保小组成员不能申请中小企业联保贷款" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c from tb_csm_guar_memeber  r where r.status = '03' and r.related_cust_party_id = @partyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0018" name="是否单笔低风险" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="非单笔低风险不能申请该业务品种贷款" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c from tb_biz_apply r , tb_biz_amount_apply t where r.apply_id = t.apply_id and r.apply_mode_type = '02'
+ 						and t.amount_id = @amountId]]></sql>
+	</rule>
+	<rule id="RBIZ_0019" name="是否单笔低风险" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="统一授信成员只能发起低风险或银团贷款" checkLevel="err">
+		<sql><![CDATA[	select count(*) c from tb_csm_group_company t,tb_csm_group_member ta 
+						where t.PARTY_ID=ta.GROUP_PARTY_ID
+						and t.STATUS ='03'
+						and ta.CORPORATION_PARTY_ID=@partyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0020" name="是否填写贴息信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未填写贴息信息" checkLevel="err">
+		<sql><![CDATA[	select count(*) c from  tb_biz_tx x 
+							where  x.apply_id =@applyId]]></sql>
+		<condition>CBIZ0006</condition>
+	</rule>
+	<rule id="RBIZ_0021" name="是否填写流动资金测算" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未填写流动资金测算信息" checkLevel="err">
+		<sql><![CDATA[	select count(*) c from  tb_sys_flow_test x 
+							where  x.apply_id =@applyId]]></sql>
+		<condition>CBIZ0007</condition>
+	</rule>
+	<rule id="RBIZ_0022" name="内部银团币种和明细一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="内部银团成员信息币种必须和业务明细币种一样" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c 
+						  from tb_biz_bank_member_apply t, tb_biz_bank_struct_apply ta ,tb_biz_amount_detail_apply tb,tb_biz_amount_apply tt
+						 where t.SYNDICATED_STRUCT_ID = ta.SYNDICATED_STRUCT_ID
+			             and tb.amount_id = tt.amount_id
+			             and ta.apply_id = tt.apply_id
+			             and t.currency_cd != tb.currency_cd
+						 and ta.APPLY_ID = @applyId]]></sql>
+		<condition>CBIZ0008</condition>
+	</rule>
+	<rule id="RBIZ_0023" name="内部银团金额之和和明细金额一样" checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="内部银团成员信息金额之和必须等于业务明细金额" checkLevel="err">
+		<sql><![CDATA[	select t.detail_amt c
+						  from tb_biz_amount_detail_apply t, tb_biz_amount_apply ta
+						 where t.AMOUNT_ID = ta.AMOUNT_ID
+						   and ta.APPLY_ID =@applyId]]></sql>
+		<sql><![CDATA[	select sum(t.promise_amount) d
+						  from tb_biz_bank_member_apply t, tb_biz_bank_struct_apply ta
+						 where t.SYNDICATED_STRUCT_ID = ta.SYNDICATED_STRUCT_ID
+						   and ta.APPLY_ID =@applyId]]></sql>
+		<condition>CBIZ0008</condition>
+	</rule>
+	<rule id="RBIZ_0024" name="批复已冻结" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="批复已冻结" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_approve r where r.BECOME_EFFECTIVE_MARK = '07' and r.apply_id = @applyId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0025" name="未添加协办客户经理" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未填写完整岗位责任模块信息" checkLevel="err">
+		<sql><![CDATA[	select count(*) c from tb_biz_xb t where t.BIZ_ID = @applyId and t.xb_num is not null ]]></sql>
+		<condition>CBIZ0009</condition>
+	</rule>
+	<rule id="RBIZ_0026" name="统一授信成员未完成不允许提交" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有统一授信成员未完成提交" checkLevel="err">
+		<sql><![CDATA[	select count(*) c from tb_biz_apply t where t.APPLY_ID in (
+						    select ty.apply_id from (
+						        select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+						        where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+						        and th.PARTY_ID=t.GROUP_PARTY_ID
+						        and th.STATUS='03'
+						        and t.GROUP_PARTY_ID = @partyId
+						        and ta.PARTY_ID=te.PARTY_ID
+						        and te.USER_PLACING_CD ='01'
+						        and te.USER_NUM=tf.USERID
+						        and te.ORG_NUM=tg.ORGCODE
+						        ) tz left join 
+						        (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+						            where tb.APPLY_ID=td.APPLY_ID
+						            and tb.biz_type in('02','05','04','06')
+						            and tb.STATUS_TYPE in ('01','03','09')
+						            and tb.APPLY_ID not in
+						            (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+						            where tb.APPLY_ID=td.APPLY_ID
+						            and tb.biz_type in('02','05','04','06')
+						            and tb.OLD_APPLY_ID is not null) 
+						            and tb.apply_id not in(
+						                select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+						            )
+						        ) ty 
+						        on tz.PARTY_ID=ty.PARTY_ID
+						) and  t.BIZ_TYPE in('05','06') and t.STATUS_TYPE in ('01','02')]]></sql>
+	</rule>
+	<rule id="RBIZ_0027" name="客户未评级" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户无生效评级信息" checkLevel="err">
+		<sql><![CDATA[	select count(1) c
+						  from TB_IRM_INTERNAL_RATING_APPLY
+						 where PARTY_ID = @partyId
+						   and RATING_STATE = '03']]></sql>
+	</rule>
+	<rule id="RBIZ_0028" name="有保证信息必须勾选保证" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有保证信息担保方式必须勾选保证" checkLevel="err">
+		<sql><![CDATA[	select count(1) c
+							  from Tb_Grt_Guarantee_Basic a, TB_BIZ_GRT_REL b, tb_biz_amount_apply r
+							 where a.SURETY_ID = b.SURETY_ID
+							   and b.apply_id = r.apply_id
+							   and r.guaranty_type not like '%04%'
+								and b.APPLY_ID = @applyId
+								and a.guarantee_Type='04'
+								]]></sql>
+	</rule>
+	<rule id="RBIZ_0029" name="有抵押信息必须勾选抵押" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有抵押信息担保方式必须勾选抵押" checkLevel="err">
+		<sql><![CDATA[	select count(*) c       
+						 from TB_GRT_MORTGAGE_BASIC a,TB_BIZ_GRT_REL b,tb_biz_amount_apply r
+						 where a.SURETY_ID=b.SURETY_ID
+						 and b.apply_id = r.apply_id
+						 and a.COLL_TYPE='01'
+						 and r.guaranty_type not like '%02%'
+						 and b.APPLY_ID = @applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0030" name="有质押信息必须勾选质押" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有质押信息担保方式必须勾选质押" checkLevel="err">
+		<sql><![CDATA[	select count(*) c       
+						 from TB_GRT_MORTGAGE_BASIC a,TB_BIZ_GRT_REL b,tb_biz_amount_apply r
+						 where a.SURETY_ID=b.SURETY_ID
+						 and b.apply_id = r.apply_id
+						 and a.COLL_TYPE='02'
+						 and r.guaranty_type not like '%03%'
+						 and b.APPLY_ID = @applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0031" name="有保证金信息必须勾选保证金" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有保证金信息担保方式必须勾选保证金" checkLevel="err">
+		<sql><![CDATA[	select count(1)  c            
+						 from TB_GRT_MARGIN a,TB_BIZ_GRT_REL b,tb_biz_amount_apply r
+						 where a.SURETY_ID=b.SURETY_ID
+						 and b.apply_id = r.apply_id
+						 and r.guaranty_type not like '%05%'
+						 and b.APPLY_ID= @applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0032" name="是否单笔" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="银承承兑汇票只能申请单笔业务" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c from tb_biz_apply r , tb_biz_amount_apply t where r.apply_id = t.apply_id and r.biz_type = '01'
+ 						and t.amount_id = @amountId]]></sql>
+	</rule>
+	<rule id="RBIZ_0033" name="小贷审批有条件同意" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有条件同意必须填写审批条件才能提交" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c
+						  from tb_biz_attached r
+						 where r.apply_id = @applyId
+						   and r.attached_desc is not null
+						   and r.attached_type = '01']]></sql>
+	</rule>
+	<rule id="RBIZ_0034" name="借新还旧申请额度不得大于借据余额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="借新还旧申请额度不得大于借据余额" checkLevel="err">
+		<sql><![CDATA[	  select count(*) c
+			                from tb_biz_amount_detail_apply r,
+			                     tb_biz_amount_apply        t,
+			                     tb_biz_summary             a,
+			                     tb_loan_summary            b
+			               where r.amount_id = t.amount_id
+			                 and t.apply_id = a.apply_id
+			                 and a.summary_id = b.summary_id
+			                 and nvl(r.detail_amt, 0) > nvl(b.jjye, 0)
+			                 and t.apply_id =@applyId]]></sql>
+		<condition>CBIZ0011</condition>
+	</rule>
+	<rule id="RBIZ_0035" name="内部银团金额之和和银团总金额一样" checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="内部银团成员信息金额之和必须等于银团结构中贷款总金额" checkLevel="err">
+		<sql><![CDATA[	select r.syndicated_loan_amt c from tb_biz_bank_struct_apply r  where r.apply_id  =@applyId]]></sql>
+		<sql><![CDATA[	select sum(t.promise_amount) d
+						  from tb_biz_bank_member_apply t, tb_biz_bank_struct_apply ta
+						 where t.SYNDICATED_STRUCT_ID = ta.SYNDICATED_STRUCT_ID
+						   and ta.APPLY_ID =@applyId]]></sql>
+		<condition>CBIZ0008</condition>
+	</rule>
+	<rule id="RBIZ_0036" name="内部银团结构币种和明细一样" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="内部银团结构币种必须和业务明细币种一样" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c 
+						  from tb_biz_bank_struct_apply ta ,tb_biz_amount_detail_apply tb,tb_biz_amount_apply tt
+						 where tb.amount_id = tt.amount_id
+			             and ta.apply_id = tt.apply_id
+			             and ta.currency_cd != tb.currency_cd
+						 and ta.APPLY_ID = @applyId]]></sql>
+		<condition>CBIZ0008</condition>
+	</rule>
+	<rule id="RBIZ_0037" name="批复有在途合同申请或调整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复有在途合同申请或调整" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c
+						  from tb_con_contract_info         r,
+						       tb_biz_amount_detail_approve a,
+						       tb_biz_amount_approve        b
+						 where r.amount_detail_id = a.amount_detail_id
+						   and a.amount_id = b.amount_id
+						   and r.con_status in ('01', '02')
+						   and b.approve_id = @approveId]]></sql>
+	</rule>
+	<rule id="RBIZ_0038" name="批复有在途综合授信协议申请或调整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="批复有在途综合授信协议申请或调整" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c
+						  from tb_con_credit_info r
+						 where r.con_status in ('01', '02')
+						   and r.apply_id = @applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0039" name="存在在途出账时不得调整批复" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途出账时不得调整批复" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c
+						  from tb_loan_info                 l,
+						       tb_con_contract_info         r,
+						       tb_biz_amount_detail_approve a,
+						       tb_biz_amount_approve        b
+						 where l.contract_id = r.contract_id
+						   and r.amount_detail_id = a.amount_detail_id
+						   and a.amount_id = b.amount_id
+						   and l.loan_status in ('01','02')
+						   and b.approve_id = @approveId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0040" name="银团贷款必须录入银团信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="银团贷款必须录入银团信息" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c
+						  from tb_biz_apply             r,
+						       tb_biz_bank_struct_apply a,
+						       tb_biz_bank_member_apply b
+						 where r.apply_id = a.apply_id
+						   and b.syndicated_struct_id = a.syndicated_struct_id
+						   and r.is_bank_team_loan = '1'
+						   and r.apply_id = @applyId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0041" name="拒贷业务必须录入拒贷信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="必须录入拒贷信息" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c from tb_biz_refuse_info r where r.apply_id = @applyId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0042" name="统一授信成员存在在途综合授信或非银团非低风险的单笔业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="统一授信成员存在在途综合授信或非银团非低风险的单笔业务" checkLevel="err">
+		<sql><![CDATA[	 select count(*) c from tb_biz_apply t,tb_csm_group_member ta 
+							 where t.PARTY_ID=ta.CORPORATION_PARTY_ID
+							 and nvl(t.IS_BANK_TEAM_LOAN,0） = 0 
+							 and t.LOW_RISK_BIZ_TYPE is null
+							 and t.STATUS_TYPE in ('01','02')
+							 and ta.GROUP_PARTY_ID =@partyId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0043" name="统一授信成员综合授信期限不能大于统一授信综合授信的期限" checktype="ge"  checkedFieldName="$d" startValue="$c"  errCode="2015110-001" errMsg="统一授信成员综合授信期限不能大于统一授信综合授信的期限" checkLevel="err">
+		<sql><![CDATA[	 select max(ty.credit_term) c from (
+						      select ta.party_id from tb_csm_group_member t,tb_csm_party ta,tb_csm_management_team te,tb_csm_group_company th
+						      where t.corporation_party_id=ta.party_id
+						      and th.party_id=t.group_party_id
+						            and th.status='03'
+						      and t.group_party_id = (select party_id from tb_biz_apply where apply_id=@applyId)
+						      and ta.party_id=te.party_id
+						      and te.user_placing_cd ='01'
+						      ) tz left join 
+						      (select tb.party_id,td.credit_term from tb_biz_apply tb,tb_biz_amount_apply td
+						                where tb.apply_id=td.apply_id
+						                and tb.biz_type in('02','05')
+						                and tb.status_type in ('01','03','09')
+						                and tb.apply_id not in
+						                (select tb.old_apply_id from tb_biz_apply tb,tb_biz_amount_apply td
+						                where tb.apply_id=td.apply_id
+						                and tb.biz_type in('02','05')
+						                and tb.old_apply_id is not null) 
+						                and tb.apply_id not in(
+						                  select apply_id from tb_biz_approve t where t.become_effective_mark in('04','05','06')
+						                )
+						      ) ty 
+						      on tz.party_id=ty.party_id ]]></sql>
+			<sql><![CDATA[select CREDIT_TERM d from tb_biz_amount_apply where APPLY_ID=@applyId
+  			]]></sql>
+	</rule>
+	<rule id="RBIZ_0044" name="存在在途的单笔业务申请，不能进行综合授信申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途的单笔业务申请或调整" checkLevel="err">
+		<sql><![CDATA[	 select  count(*) c from tb_biz_apply r where r.status_type in ('01','02') and r.biz_type = '01' and r.party_id =@partyId ]]></sql>
+	</rule>
+	<rule id="RBIZ_0045" name="委托贷款必须录入委托人账号信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="委托贷款必须录入委托人账号信息" checkLevel="err">
+		<sql><![CDATA[  select count(*) c
+							    from (select a.amount_detail_id, a.wtxm_id
+							            from tb_biz_wtdk_apply a
+							          union all
+							          select b.amount_detail_id, b.wtxm_id
+							            from tb_Biz_Xw_Apply b) r,
+							         tb_csm_entrust_account t,
+							         tb_biz_amount_detail_apply a,
+							         tb_biz_amount_apply b
+							   where r.wtxm_id = t.acc_id
+							     and r.amount_detail_id = a.amount_detail_id
+							     and a.amount_id = b.amount_id
+							     and b.apply_id = @applyId
+			]]></sql>
+	</rule>
+	<rule id="RBIZ_0046" name="存在在途批复调整时不得调整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复已有在途业务" checkLevel="err">
+		<sql><![CDATA[	select count(*) c
+						  from tb_biz_apply r
+						 where r.status_type in ('01', '02')
+						   and r.old_apply_id =@applyId]]></sql>
+	</rule>
+	<rule id="RBIZ_0047" name="存在合同状态不为040506的合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该明细存在有效合同不能删除" checkLevel="err">
+		<sql><![CDATA[	select count(1) c from tb_con_contract_info r where r.amount_detail_id = @oldDetailId and r.con_status in('01','02','03')]]></sql>
+	</rule>
+		<rule id="RBIZ_0048" name="客户存在冻结综合授信" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户存在冻结批复，不允许发起综合授信" checkLevel="err">
+		<sql><![CDATA[SELECT count(*) c from tb_biz_approve ta where ta.PARTY_ID = @partyId 
+           and ta.BECOME_EFFECTIVE_MARK = '07'
+	       and ta.APPROVE_CONCLUSION IN ('1', '3')]]></sql>
+	</rule>
+	<rule id="RBIZ_0049" name="客户存在在途额度冻解冻业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的解冻额度业务，不允许重复申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+              from tb_biz_jd_dj_flow t
+              where t.isjd = '0'
+              and t.happen_type= '02'
+              and t.amount_id =@amountId]]></sql>
+	</rule>
+	<rule id="RBIZ_0050" name="该批复明细下存在生效的借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复明细下存在生效的借据" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+								  from tb_con_contract_info r, tb_loan_summary t
+								 where r.amount_detail_id = @oldDetailId
+								   and r.contract_id = t.contract_id
+								   and t.summary_status_cd in ('01', '02', '03')]]></sql>
+	</rule>
+	<rule id="RBIZ_0051" name="该批复下存在生效的借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复下存在生效的借据" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+                  from tb_con_contract_info r, tb_loan_summary t,tb_biz_amount_detail_approve a , tb_biz_amount_approve b
+                 where 
+                  r.amount_detail_id = a.amount_detail_id 
+                 and a.amount_id = b.amount_id
+                   and r.contract_id = t.contract_id
+                   and t.summary_status_cd in ('01', '02', '03')
+                   and b.approve_id = @approveId]]></sql>
+	</rule>
+	<rule id="RBIZ_0052" name="该批复下存在生效的合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复下存在生效的合同" checkLevel="err">
+		<sql><![CDATA[select count(1) c
+	                  from tb_con_contract_info r, tb_biz_amount_detail_approve a , tb_biz_amount_approve b
+	                 where 
+	                  r.amount_detail_id = a.amount_detail_id 
+	                 and a.amount_id = b.amount_id
+	                   and r.con_status in ('03')
+	                   and b.approve_id = @approveId]]></sql>
+	</rule>
+	<rule id="RBIZ_0053" name="客户存在在途授信业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的综合授信业务，不允许重复申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_apply where party_id = @partyId and status_type in ('01','02') and biz_type in( '02','03','05')]]></sql>
+	</rule>
+	<rule id="RBIZ_0054" name="一笔批复只能使用一种贴息方式" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="多个贴息主体贴息方式必须一样" checkLevel="err">
+		<sql><![CDATA[
+		              select count(*) c from tb_biz_tx r , tb_biz_tx t 
+		              where r.apply_id = t.apply_id 
+		              and r.apply_id = @applyId 
+		              and r.txfs!= t.txfs
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0055" name="多个贴息主体贴息比例不能超过100%" checktype="le"  checkedFieldName="$c" endValue="100"  errCode="2015110-001" errMsg="多个贴息主体贴息比例之和不能超过100%" checkLevel="err">
+		<sql><![CDATA[
+		              select nvl(sum(r.txbl),0) c  from tb_biz_tx r where r.apply_id = @applyId 
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0056" name="按固定金额贴息：只能支持一个贴息主体" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="按固定金额贴息：只能支持一个贴息主体" checkLevel="err">
+		<sql><![CDATA[
+		              select count(*) c from tb_biz_tx r where r.apply_id= @applyId and r.txfs = '02' 
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0057" name="未录入项目额度信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入合作项目额度信息" checkLevel="err">
+		<sql><![CDATA[
+		              select count(*) c from tb_Biz_Xmxx_Apply r where r.amount_detail_id= @applyId
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0058" name="未录入家庭财务信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未录入家庭财务信息" checkLevel="err">
+		<sql><![CDATA[
+		              select count(1) c
+						  from (select r.apply_id
+						          from tb_biz_family_finance r
+						         where r.apply_id = @applyId
+						        union
+						        select t.party_id
+						          from tb_acc_customer_finance t
+						         where t.party_id =  @applyId
+						           and t.finance_status_cd = '02')
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0059" name="抚州分行才能发起农户联保贷款" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="抚州分行才能发起农户联保贷款" checkLevel="err">
+		<sql><![CDATA[
+                select count(1) c
+				  from tb_biz_amount_apply r, tb_biz_apply t
+				 where r.amount_id = @amountId
+				   and r.apply_id = t.apply_id
+				   and t.org_num in (select o.orgcode
+				                        from om_organization o
+				                       start with o.orgcode = '77400'
+				                      connect by o.parentorgid = prior orgid)
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0060" name="非本行员工" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="非本行员工" checkLevel="err">
+		<sql><![CDATA[
+                select count(1) c from  tb_csm_natural_person r where nvl(r.is_bank_employee,'0')='1' and r.party_id = @partyId
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0061" name="存在在途循环通/续接贷业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途循环通/续接贷业务" checkLevel="err">
+		<sql><![CDATA[
+               select count(*) c
+                                  from tb_biz_summary r, tb_biz_apply t
+                                 where r.apply_id = t.apply_id
+                                   and t.status_type in ('01', '02')
+                                   and r.summary_id = @summaryId
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0062" name="成员存在在途业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="成员存在在途业务" checkLevel="err">
+		<sql><![CDATA[
+               select count(1) c
+				  from tb_biz_apply r, tb_csm_group_member t
+				 where r.party_id = t.corporation_party_id
+				   and r.status_type in ('01', '02')
+				   and r.biz_type in ('05', '06')
+				   and t.group_party_id = @partyId
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0063" name="合作方额度可用额度不足" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合作方额度可用额度不足" checkLevel="err">
+		<sql><![CDATA[
+               select count(*) c
+				  from tb_biz_amount_apply        r,
+				       tb_biz_amount_detail_apply t,
+				       tb_biz_xmxx_apply          a,
+				       v_crd_third_party_limit    b
+				 where r.amount_id = t.amount_id
+				   and r.apply_id = a.amount_detail_id
+				   and a.project_id = b.limit_id
+				   and nvl(t.rmb_amt, 0) > nvl(b.available_amt, 0)
+				   and r.apply_id =  @applyId
+		]]></sql>
+	</rule>
+	<rule id="RBIZ_0064" name="调整后批复金额不能小于调整前金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="调整后批复明细金额不能小于调整前明细已用金额" checkLevel="err">
+		<sql><![CDATA[
+                  select count(1) c
+				    from tb_biz_amount_apply r,
+				         tb_biz_amount_detail_apply t,
+				         (select sum(nvl(t1.con_yu_e, 0)) con_yu_e, t1.amount_detail_id
+				            from tb_con_contract_info t1
+				           where t1.con_status = '03'
+				           group by t1.amount_detail_id) t2
+				   where r.amount_id = t.amount_id
+				     and t.old_detail_id = t2.amount_detail_id
+				     and nvl(t2.con_yu_e, 0) > nvl(t.detail_amt, 0)
+				     and r.apply_id = @applyId
+
+		]]></sql>
+	</rule>
+	   <rule id="RBIZ_0065" name="票据号存在" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该票据已经存在" checkLevel="err">
+        <sql><![CDATA[select count(*) c from TB_BIZ_PJXX_APPLY tbpa where tbpa.pjhm = @pjhm]]></sql>
+    </rule>
+       <rule id="RBIZ_0066" name="票据号存在" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该票据已经存在" checkLevel="err">
+        <sql><![CDATA[select count(*) c from TB_BIZ_TXXX_APPLY tbpaa where tbpaa.billno = @billno]]></sql>
+    </rule>
+    <rule id="RBIZ_0067" name="校验业务下是否有未价值审核的押品" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该笔业务下有未价值审核的押品" checkLevel="err">
+		<sql><![CDATA[	 
+		select count(*) c from (    select ta.MYBANK_AFFIRM_VALUE  from TB_BIZ_GRT_REL t,TB_GRT_MORTGAGE_BASIC ta
+                  where t.SURETY_ID=ta.SURETY_ID
+                  and ta.mortgage_status='03'
+  		            and ta.COLL_TYPE  in ('01','02')  and t.APPLY_ID= @applyId
+			             ) ds  where ds.MYBANK_AFFIRM_VALUE in (0.0)]]></sql>
+	</rule>
+	<rule id="RBIZ_0068" name="检查是否能添加对应类型票据" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="只能添加同一类型的票据信息" checkLevel="err">
+        <sql><![CDATA[select count(*) c from tb_biz_pjxx_apply tbpa where tbpa.amount_detail_id =@amountDetailId and tbpa.htbh=@contractNum and tbpa.hpxs = @hpxs]]></sql>
+    </rule>
+    <rule id="RBIZ_0069" name="检查是否能添加对应类型票据" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="只能添加同一类型的票据信息" checkLevel="err">
+        <sql><![CDATA[select count(*) c from TB_BIZ_TXXX_APPLY tbpa where tbpa.amount_detail_id =@amountDetailId and tbpa.billmodel = @hpxs]]></sql>
+    </rule>
+    <rule id="RBIZ_0070" name="银承通和银行承兑汇票业务互斥，只能做其一" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="银承通和银行承兑汇票业务互斥，只能做其一" checkLevel="err">
+        <sql><![CDATA[select count(*) c from tb_biz_apply y where y.status_type <> '06' and y.product_type = @productType and y.party_id =@partyId]]></sql>
+    </rule>
+    <rule id="RBIZ_0071" name="该客户的银行认定企业规模信息尚未完善，请先做企业规模认定业务" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="该客户的银行认定企业规模信息尚未完善，请先做企业规模认定业务" checkLevel="err">
+		<sql><![CDATA[SELECT count(*) c FROM TB_CSM_CORPORATION WHERE PARTY_ID=@partyId AND BANK_SCALE_IDENTIFY IS NOT NULL]]></sql>
+	</rule>
+	<rule id="RBIZ_0072" name="检查是否可以修改票据信息(银承)" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该票据已经出账,不可操作" checkLevel="err">
+		<sql><![CDATA[SELECT count(*) c FROM TB_BIZ_PJXX_APPLY a
+						LEFT JOIN TB_LOAN_HP_AMT  b ON a.APPLY_DETAIL_ID = b.APPLY_DETAIL_ID
+						LEFT JOIN TB_LOAN_SUMMARY c ON b.SUMMARY_NUM = c.SUMMARY_NUM
+						WHERE  a.amount_detail_id= @amountDetailId and a.htbh=@contractNum
+						AND c.SUMMARY_STATUS_CD NOT IN ('06','09')]]></sql>
+	</rule>
+	<rule id="RBIZ_0073" name="小微条线产品不可发起综合授信类业务" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="小微条线产品不可发起综合授信类业务" checkLevel="err">
+        <sql><![CDATA[select count(*) c from tb_sys_product t where t.product_department in ('2','3','5') and t.product_cd = @productCd]]></sql>
+    </rule>
+    <rule id="RBIZ_0074" name="公司或国结产品请走低风险或综合授信业务" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="公司或国结产品请走低风险或综合授信业务" checkLevel="err">
+        <sql><![CDATA[select count(*) c from tb_sys_product t where t.product_department in ('1','4') and t.product_cd = @productCd]]></sql>
+    </rule>
+    <rule id="RBIZ_0075" name="对私产品是否有按揭合作商" checktype="eqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="对私产品是否有按揭合作商" checkLevel="err">
+        <sql><![CDATA[select count(*) c from tb_biz_apply y where y.busi_partner='1' and y.apply_id=@applyId]]></sql>
+    </rule>
+	<rule id="RBIZ_0076" name="检查是否可以修改票据信息(贴现)" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该票据已经出账,不可操作" checkLevel="err">
+		<sql><![CDATA[SELECT count(*) c FROM TB_BIZ_TXXX_APPLY a
+						LEFT JOIN TB_LOAN_HP_AMT  b ON a.APPLY_DETAIL_ID = b.APPLY_DETAIL_ID
+						LEFT JOIN TB_LOAN_SUMMARY c ON b.SUMMARY_NUM = c.SUMMARY_NUM
+						WHERE a.APPLY_DETAIL_ID = @applyDetailId
+						AND c.SUMMARY_STATUS_CD NOT IN ('06','09')]]></sql>
+	</rule>
+	
+	<rule id="RBIZ_0077" name="客户存在在途额度冻冻结业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的额度冻结业务，请先处理在途业务" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_wfm_processinstance 
+              where processdefname in('com.bos.bps.irm.fina_cust_irm_control_mccb','com.bos.bps.irm.fina_cust_irm_control_bcfm','com.bos.bps.irm.fina_cust_irm_control_pwfm') 
+              and process_status = 'run' 
+              and product_id =  @amountId
+              ]]></sql>
+	</rule>    
+	<rule id="RBIZ_0078" name="解冻冻结原因未保存" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="解冻/冻结操作中未保存解冻/冻结原因" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_amount_approve a,tb_biz_jd_dj_flow b
+				where a.frz_num = b.frz_num
+				and a.amount_id = @amountId
+				and b.frz_reason is null
+              ]]></sql>
+	</rule> 
+	
+	<rule id="RBIZ_0080" name="低风险业务担保方式控制" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="该业务担保方式至少应有[保证金]并且不能选择[信用]" checkLevel="err">
+		<sql><![CDATA[
+				SELECT COUNT(*) c FROM TB_BIZ_AMOUNT_APPLY WHERE APPLY_ID=@applyId AND  ','||GUARANTY_TYPE||',' NOT LIKE '%,01,%' AND ','||GUARANTY_TYPE||',' LIKE '%05%'
+              ]]></sql>
+	</rule> 
+	<rule id="RBIZ_0081" name="低风险业务担保方式控制" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="该业务担保方式至少应有[质押]并且不能选择[信用]" checkLevel="err">
+		<sql><![CDATA[
+				SELECT COUNT(*) c FROM TB_BIZ_AMOUNT_APPLY WHERE APPLY_ID=@applyId AND  ','||GUARANTY_TYPE||',' NOT LIKE '%,01,%' AND ','||GUARANTY_TYPE||',' LIKE '%03%'
+              ]]></sql>
+	</rule> 
+	<rule id="RBIZ_0082" name="低风险业务担保方式控制" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="该业务担保方式至少应有[保证]并且不能选择[信用]" checkLevel="err">
+		<sql><![CDATA[
+				SELECT COUNT(*) c FROM TB_BIZ_AMOUNT_APPLY WHERE APPLY_ID=@applyId AND  ','||GUARANTY_TYPE||',' NOT LIKE '%,01,%' AND ','||GUARANTY_TYPE||',' LIKE '%04%'
+              ]]></sql>
+	</rule>
+	<rule id="RBIZ_0083" name="银承产品" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="申请业务是否有银承或国内保函产品" checkLevel="err">
+		<sql><![CDATA[
+			 select count(*) c from (
+					select  td.product_type productType,
+		        	ta.biz_type bizType ,
+		        	tp.guaranty_type guarantyType
+		       	from 
+		         	tb_biz_apply ta,
+		         	tb_biz_amount_apply tp,
+		         	tb_biz_amount_detail_apply td
+		        where ta.apply_id = tp.apply_id
+		         	and tp.amount_id = td.amount_id 
+		         	and ta.apply_id=@applyId
+		         	and (td.product_type like '01008%' or td.product_type like '01009%')
+		         	) m
+              ]]></sql>
+	</rule>
+	<rule id="RBIZ_0084" name="银承、保函业务担保方式需要选择保证金" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="银承或保函业务担保方式请选择[保证金]" checkLevel="err">
+		<sql><![CDATA[
+			 select count(*) c from (
+					select  td.product_type productType,
+		        	ta.biz_type bizType ,
+		        	tp.guaranty_type guarantyType
+		       	from 
+		         	tb_biz_apply ta,
+		         	tb_biz_amount_apply tp,
+		         	tb_biz_amount_detail_apply td
+		        where ta.apply_id = tp.apply_id
+		         	and tp.amount_id = td.amount_id 
+		         	and ta.apply_id=@applyId
+		         	and (td.product_type like '01008%' or td.product_type like '01009%')
+		         	) m  where  m.guarantytype like '%05%'
+              ]]></sql>
+	</rule>  
+	<rule id="RBIZ_0085" name="存在在途的单笔业务申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在在途的单笔业务申请或调整" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_biz_apply r where r.party_id = @partyId AND r.status_type in ('01','02') and r.biz_type IN('01','04')]]></sql>
+	</rule>
+	
+	<rule id="RBIZ_0086" name="检查贴现票据总额是否等于申请金额(业务申请阶段)"  checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="申请金额和票据总金额不一致" checkLevel="err">
+		<sql><![CDATA[   
+			select a.credit_amount  c from tb_biz_amount_apply  a where a.apply_id=@applyId
+ 		]]></sql>
+		<sql><![CDATA[   
+		select sum(nvl(d.billamt,0)) d from tb_biz_txxx_apply d  where d.amount_detail_id=(
+		select b.amount_detail_id from tb_biz_amount_apply a,tb_biz_amount_detail_apply b 
+		where a.amount_id=b.amount_id and a.apply_id=@applyId )
+ 		]]></sql>
+	</rule>
+	
+	<rule id="RBIZ_0087" name="检查贴现票据信息是否已填写(业务申请阶段)"  checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="无票据明细信息，请检查" checkLevel="err">
+		<sql><![CDATA[   
+		select count(1) c  from tb_biz_txxx_apply d  where d.amount_detail_id=(
+		select b.amount_detail_id from tb_biz_amount_apply a,tb_biz_amount_detail_apply b 
+		where a.amount_id=b.amount_id and a.apply_id=@applyId )
+ 		]]></sql>
+	</rule>
+	
+	<rule id="RBIZ_0088" name="检查贴现票据利率是否与申请利率相等(业务申请阶段)"  checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="票据利率与申请利率不相等，请检查" checkLevel="err">
+		<sql><![CDATA[   
+		select nvl(d.INTERATE,0) c  from tb_biz_txxx_apply d  where d.amount_detail_id=(
+		select b.amount_detail_id from tb_biz_amount_apply a,tb_biz_amount_detail_apply b 
+		where a.amount_id=b.amount_id and a.apply_id=@applyId ) and rownum=1
+ 		]]></sql>
+ 		<sql><![CDATA[   
+	    select nvl(e.year_rate,0) d from tb_biz_amount_loanrate_apply e 
+	    where e.amount_detail_id=(select b.amount_detail_id from tb_biz_amount_apply a,tb_biz_amount_detail_apply b 
+		where a.amount_id=b.amount_id and a.apply_id=@applyId )
+ 		]]></sql>
+ 		
+	</rule>
+	
+	<rule id="RBIZ_0089" name="本息合计金额以或者本次的扣款金额未保存" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="本息合计金额以或者本次的扣款金额未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_cd_zykh_apply a
+        				where  a.zykh_id = @zykhId
+        				and (a.kh_amt is null
+        				or a.bxhj_amt is null)
+              ]]></sql>
+	</rule> 
+	
+	<rule id="RBIZ_0090" name="该借据有在途的质押扣划，不允许再次发起质押扣划" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该借据有在途的质押扣划，不允许再次发起质押扣划" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_cd_zykh_apply a
+               			 where  a.loan_summary = @summaryNum
+                		 and (a.status = '01' or a.status = '02')
+              ]]></sql>
+	</rule> 
+	
+</checkrules>

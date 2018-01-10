@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="OperlogManager" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.0" state="stateless">
+  <nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释" nodeType="note" type="note" content="操作日志管理,可以归档、清除和删除业务日志&#xD;&#xA;日志配置&#xD;&#xA;" title="刘良金&#x9;08-9-9 上午11:03">
+    <location x="33" y="345"/>
+    <size height="76" width="193"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link0" name="link0" lineType="reference" isDefault="true" type="action" actionName="query" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="criteria"/>
+        <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.eos.foundation.PageCond" name="page"/>
+      </process:inputParameters>
+      <process:serviceParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link12" name="link12" lineType="reference" type="action" actionName="config" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>view0</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <location x="135" y="55"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="137" y="91"/>
+    <figSize height="12" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>subprocess3</targetNode>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="135" y="152"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.utp.dataset.tools.AtOperlog</process:from>
+      <process:to type="query">criteria/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">page/isCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">-2</process:from>
+      <process:to type="query">page/count</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">opertime</process:from>
+      <process:to type="query">criteria/_order[1]/_desc</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="137" y="188"/>
+    <figSize height="12" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view1" name="日志结果页面" displayName="log_manager.jsp" type="view" contextPath="" contributionName="通用工具" method="forward" uri="/utp/tools/log/log_manager.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link3" name="link3" lineType="reference" isDefault="false" type="action" actionName="pageQuery" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>assign1</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+      <process:serviceParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link5" name="link5" lineType="reference" isDefault="false" type="action" actionName="cleanup" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>subprocess1</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters/>
+      <process:serviceParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link8" name="link8" lineType="reference" isDefault="true" type="action" actionName="backup" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>assign3</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters/>
+      <process:serviceParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link7" name="link7" lineType="reference" type="action" actionName="delete" dataConvertClass="">
+      <sourceNode>view1</sourceNode>
+      <targetNode>subprocess2</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="391" y="270"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view1label</nodeLabel>
+    <process:inputParameters>
+      <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="criteria"/>
+      <process:parameter description="" historyStateLocation="client" isArray="false" modelType="com.eos.foundation.PageCond" name="page"/>
+      <process:parameter description="" historyStateLocation="client" isArray="true" modelType="com.bos.utp.dataset.tools.AtOperlog" name="select_objs"/>
+    </process:inputParameters>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view1label" name="label" nodeType="label">
+    <location x="366" y="306"/>
+    <figSize height="12" width="73"/>
+    <node>view1</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end1" name="日志结果页面" displayName="AtOperlogQuery.jsp" nodeType="common" type="end" contextPath="" contributionName="通用工具" method="forward" uri="/utp/tools/log/log_manager.jsp" variableUri="false">
+    <targetConnections>link13</targetConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="589" y="55"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end1label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end1label" name="label" nodeType="label">
+    <location x="567" y="91"/>
+    <figSize height="12" width="73"/>
+    <node>end1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess3" name="查询所有日志" displayName="queryAtOperlogs" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess3</sourceNode>
+      <targetNode>view1</targetNode>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="263" y="152"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess3label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.OperlogManager.queryOperlogs</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="criteria" type="query" value="com.primeton.das.criteria.criteriaType" valueType="DataObject" pattern="reference">criteria</process:inputVariable>
+        <process:inputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject" pattern="reference">page</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="atoperlogs" type="query" value="com.bos.utp.dataset.tools.AtOperlog[]" valueType="DataObject">atoperlogs</process:outputVariable>
+        <process:outputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject">page</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess3label" name="label" nodeType="label">
+    <location x="240" y="187"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess3</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="566" y="187"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="查询所有日志" displayName="queryAtOperlogs" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>end1</targetNode>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <targetConnections>link17</targetConnections>
+    <targetConnections>link9</targetConnections>
+    <location x="589" y="152"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.OperlogManager.queryOperlogs</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="criteria" type="query" value="com.primeton.das.criteria.criteriaType" valueType="DataObject" pattern="reference">criteria</process:inputVariable>
+        <process:inputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject" pattern="reference">page</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="atoperlogs" type="query" value="com.bos.utp.dataset.tools.AtOperlog[]" valueType="DataObject">atoperlogs</process:outputVariable>
+        <process:outputVariable id="1" name="page" type="query" value="com.eos.foundation.PageCond" valueType="DataObject">page</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="清除业务日志" displayName="cleanupAtOperlog" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link16" name="link16" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>assign2</targetNode>
+    </sourceConnections>
+    <targetConnections>link5</targetConnections>
+    <location x="255" y="270"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.OperlogManager.cleanupAtOperlog</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="criteria" type="query" value="com.primeton.das.criteria.criteriaType" valueType="DataObject" pattern="reference">criteria</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="retCode" type="query" value="String" valueType="Primitive">retCode</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="232" y="305"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess1</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess6" name="归档业务日志" displayName="backupOperlog" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess6</sourceNode>
+      <targetNode>subprocess0</targetNode>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="492" y="152"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess6label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.OperlogManager.backupOperlog</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="criteria" type="query" value="com.primeton.das.criteria.criteriaType" valueType="DataObject" pattern="reference">criteria</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="retCode" type="query" value="String" valueType="Primitive">retCode</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess6label" name="label" nodeType="label">
+    <location x="469" y="187"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess6</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="删除业务日志" displayName="deleteOperlogs" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link17" name="link17" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>subprocess0</targetNode>
+    </sourceConnections>
+    <targetConnections>link7</targetConnections>
+    <location x="589" y="270"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.utp.tools.OperlogManager.deleteOperlogs</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="atoperlogs" type="query" value="com.bos.utp.dataset.tools.AtOperlog[]" valueType="DataObject" pattern="reference">select_objs</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="retCode" type="query" value="String" valueType="Primitive">retCode</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="566" y="305"/>
+    <figSize height="12" width="73"/>
+    <node>subprocess2</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="494" y="241"/>
+    <figSize height="12" width="25"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link9" name="link9" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>subprocess0</targetNode>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="492" y="205"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.utp.dataset.tools.AtOperlog</process:from>
+      <process:to type="query">criteria/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">page/isCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">-2</process:from>
+      <process:to type="query">page/count</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">opertime</process:from>
+      <process:to type="query">criteria/_order[1]/_desc</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>subprocess3</targetNode>
+    </sourceConnections>
+    <targetConnections>link16</targetConnections>
+    <location x="135" y="270"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.utp.dataset.tools.AtOperlog</process:from>
+      <process:to type="query">criteria/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">page/isCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">-2</process:from>
+      <process:to type="query">page/count</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">opertime</process:from>
+      <process:to type="query">criteria/_order[1]/_desc</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="137" y="306"/>
+    <figSize height="12" width="25"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>subprocess6</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link8</targetConnections>
+    <location x="389" y="152"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">com.bos.utp.dataset.tools.AtOperlog</process:from>
+      <process:to type="query">criteria/_entity</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">true</process:from>
+      <process:to type="query">page/isCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">-2</process:from>
+      <process:to type="query">page/count</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">opertime</process:from>
+      <process:to type="query">criteria/_order[1]/_desc</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="391" y="188"/>
+    <figSize height="12" width="25"/>
+    <node>assign3</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view0" name="配置日志页面" displayName="log_config_info.jsp" collapsed="false" type="view" contextPath="" contributionName="com.bos.utp.tools" method="forward" uri="/utp/tools/log/log_config_info.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link13" name="" lineType="reference" isDefault="true" type="action" actionName="end1" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>end1</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <targetConnections>link12</targetConnections>
+    <location x="375" y="55"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view0label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view0label" name="label" nodeType="label">
+    <location x="350" y="91"/>
+    <figSize height="12" width="73"/>
+    <node>view0</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="刘良金" createTime="2008-08-20 09:05:16" date="2008-08-20Z" description="" name="操作日志管理" version="6.0"/>
+  <process:variables/>
+  <process:inputParameters/>
+</process:tPageFlow>

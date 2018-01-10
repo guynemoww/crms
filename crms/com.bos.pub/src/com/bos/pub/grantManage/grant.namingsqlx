@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="GRANT_ID" javaType="string" property="grantId"/>
+        <result column="ORGCODE" javaType="string" property="orgcode"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+        <result column="PRODUCT_TYPE" javaType="string" property="productType"/>
+        <result column="PRODUCT_NAME" javaType="string" property="productName"/>
+        <result column="IS_LOW" javaType="string" property="isLow"/>
+        <result column="GUAR_TYPE" javaType="string" property="guarType"/>
+        <result column="AUTH_LV" javaType="string" property="authLv"/>
+        <result column="MAX_AMT" javaType="string" property="maxAmt"/>
+        <result column="POSICODE" javaType="string" property="posicode"/>
+        <result column="POSINAME" javaType="string" property="posiname"/>
+        <result column="PERSON_LV" javaType="string" property="personLv"/>
+        <result column="CREATE_DATE" javaType="string" property="createDate"/>
+    </resultMap>
+    <select id="select_grant_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+        
+	    select m.grant_id,
+           m.orgcode,
+           o.orgname,
+           m.product_type,
+           p.product_name,
+           m.is_low,
+           m.guar_type,
+           m.max_amt,
+           m.auth_lv,
+           m.posicode,
+           op.posiname,
+           m.person_lv,
+           m.create_date
+      from tb_grant_level_mapping m
+      left join om_organization o on o.orgcode=m.orgcode
+      left join tb_sys_product p on p.product_cd=m.product_type
+      left join om_position op on op.posicode=m.posicode
+      where 1=1 
+    	<isNotNull property="legOrg">
+    		and o.LEG_ORG = #legOrg#
+    	</isNotNull>
+    	<isNotNull property="isLow">
+    		and m.is_low = #isLow#
+    	</isNotNull>
+    	<isNotNull property="grantId">
+    		and m.grant_id = #grantId#
+    	</isNotNull>
+    	<isNotNull property="orgname">
+    		and o.orgname like '%$orgname$%'
+    	</isNotNull>
+    	<isNotNull property="productType">
+    		and p.product_name like '%$productType$%'
+    	</isNotNull>
+    </select>
+    
+    <delete id="delete_level_id" parameterClass="java.lang.String">
+    	delete from tb_grant_level_mapping where orgcode = #orgcode#
+    </delete>
+    
+    <resultMap class="java.util.HashMap" id="resultMap2">
+        <result column="G_ID" javaType="string" property="gId"/>
+        <result column="USER_ID" javaType="string" property="userId"/>
+        <result column="OPERATORNAME" javaType="string" property="userName"/>
+        <result column="MAX_AMT" javaType="string" property="maxAmt"/>
+    </resultMap>
+    <select id="select_grans_m_id" parameterClass="java.util.HashMap" resultMap="resultMap2">
+	     select 
+	     		g.g_id, 
+	     		g.user_id, 
+	     		p.operatorname, 
+	     		g.max_amt
+		  from tb_grant_mapping_m g, ac_operator p
+		 where g.user_id = p.userid
+		<isNotNull property="userName">
+			and p.operatorname like '%$userName$%'
+		</isNotNull>
+		<isNotNull property="gId">
+			and g.g_id = #gId#
+		</isNotNull>
+     </select>
+     
+        <resultMap class="java.util.HashMap" id="resultMap6">
+          <result column="ORGCODE" javaType="string" property="orgcode"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+        <result column="INACCOUNT" javaType="string" property="inaccount"/>
+        <result column="INACCOUNTNAME" javaType="string" property="inaccountname"/>
+        <result column="INACCOUNTSTATUS" javaType="string" property="inaccountstatus"/>
+    </resultMap>
+    <select id="select_orginlist" parameterClass="java.util.HashMap" resultMap="resultMap6">
+	   	     select a.orgcode,a.orgname,a.inaccount,a.inaccountname,a.inaccountstatus from tb_org_in_account a  where 1=1	
+		<isNotNull property="gId">
+			and a.orgcode = #gId#
+		</isNotNull>
+     </select>
+     
+      <resultMap class="java.util.HashMap" id="resultMap5">
+        <result column="ORGCODE" javaType="string" property="orgcode"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+        <result column="INACCOUNT" javaType="string" property="inaccount"/>
+        <result column="INACCOUNTNAME" javaType="string" property="inaccountname"/>
+        <result column="INACCOUNTSTATUS" javaType="string" property="inaccountstatus"/>
+    </resultMap>
+    <select id="select_org_inaccount" parameterClass="java.util.HashMap" resultMap="resultMap5">
+	     select a.orgcode,a.orgname,a.inaccount,a.inaccountname,a.inaccountstatus from tb_org_in_account a  where 1=1
+		<isNotNull property="orgName">
+			and a.orgname like '%$orgName$%'
+		</isNotNull>
+		<isNotNull property="inAccount">
+			and a.inaccount = #inAccount#
+		</isNotNull>
+     </select>
+     
+     
+     <delete id="delete_grant_m_id" parameterClass="java.lang.String">
+    	delete from tb_grant_mapping_m
+    </delete>
+     
+     
+    <resultMap class="java.util.HashMap" id="resultMap3">
+        <result column="USERID" javaType="string" property="userId"/>
+        <result column="EMPNAME" javaType="string" property="userName"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+    </resultMap>
+     <select id="select_grans_employee_id" parameterClass="java.util.HashMap" resultMap="resultMap3">
+     
+     select oe.userid, oe.empname, g.orgname
+	  from om_employee oe, om_emporg eg, om_organization g
+	 where oe.empid = eg.empid
+	   and eg.orgid = g.orgid
+	   and g.orgdegree = '2' 
+	   <isNotNull property="userName">
+	   	and oe.empname like '%$userName$%'
+	   </isNotNull>
+     </select>
+     
+      <resultMap class="java.util.HashMap" id="resultMap4">
+          <result column="ORGCODE" javaType="string" property="orgcode"/>
+        <result column="ORGNAME" javaType="string" property="orgname"/>
+    </resultMap>
+     <select id="select_orgid" parameterClass="java.util.HashMap" resultMap="resultMap4">
+   select orgcode,orgname from om_organization where 1=1
+
+	   <isNotNull property="orgName">
+	   	and orgname like '%$orgName$%'
+	   </isNotNull>
+     </select>
+     
+     
+     
+</sqlMap>

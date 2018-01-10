@@ -1,0 +1,47 @@
+package com.bos.pub.entity.name;
+
+public interface GrtTableName {
+	String TB_GRT_BILL = "com.bos.dataset.grt.TbGrtBill";
+	String TB_GRT_BOND = "com.bos.dataset.grt.TbGrtBond";
+	String TB_GRT_BUILDING = "com.bos.dataset.grt.TbGrtBuilding";
+	String TB_GRT_CARD_MORTAGAGE = "com.bos.dataset.grt.TbGrtCardMortagage";
+	String TB_GRT_CBJYQ = "com.bos.dataset.grt.TbGrtCbjyq";
+	String TB_GRT_CKTS = "com.bos.dataset.grt.TbGrtCkts";
+	String TB_GRT_COMMON_PERSON = "com.bos.dataset.grt.TbGrtCommonPerson";
+	String TB_GRT_CREDITSAFE = "com.bos.dataset.grt.TbGrtCreditsafe";
+	String TB_GRT_DELETE_INTEGRITY = "com.bos.dataset.grt.TbGrtDeleteIntegrity";
+	String TB_GRT_DEPOSIT = "com.bos.dataset.grt.TbGrtDeposit";
+	String TB_GRT_DEPOT = "com.bos.dataset.grt.TbGrtDepot";
+	String TB_GRT_FUND = "com.bos.dataset.grt.TbGrtFund";
+	String TB_GRT_GOODS = "com.bos.dataset.grt.TbGrtGoods";
+	String TB_GRT_GUARANTEE_BASIC = "com.bos.dataset.grt.TbGrtGuaranteeBasic";
+	String TB_GRT_HOUSE = "com.bos.dataset.grt.TbGrtHouse";
+	String TB_GRT_IN = "com.bos.dataset.grt.TbGrtIn";
+	String TB_GRT_INMARKETSTOCK = "com.bos.dataset.grt.TbGrtInmarketstock";
+	String TB_GRT_IN_DETAIL = "com.bos.dataset.grt.TbGrtInDetail";
+	String TB_GRT_LANBILL = "com.bos.dataset.grt.TbGrtLanbill";
+	String TB_GRT_LANDUSE = "com.bos.dataset.grt.TbGrtLanduse";
+	String TB_GRT_LICENSE = "com.bos.dataset.grt.TbGrtLicense";
+	String TB_GRT_MACHINE = "com.bos.dataset.grt.TbGrtMachine";
+	String TB_GRT_MANAGEMONEY = "com.bos.dataset.grt.TbGrtManagemoney";
+	String TB_GRT_MARGIN = "com.bos.dataset.grt.TbGrtMargin";
+	String TB_GRT_MORTGAGE_BASIC = "com.bos.dataset.grt.TbGrtMortgageBasic";
+	String TB_GRT_MYBANK_ASSESS = "com.bos.dataset.grt.TbGrtMybankAssess";
+	String TB_GRT_OTHER_PROPERTY = "com.bos.dataset.grt.TbGrtOtherProperty";
+	String TB_GRT_OUT = "com.bos.dataset.grt.TbGrtOut";
+	String TB_GRT_OUTER_ASSESS = "com.bos.dataset.grt.TbGrtOuterAssess";
+	String TB_GRT_OUT_DETAIL = "com.bos.dataset.grt.TbGrtOutDetail";
+	String TB_GRT_QTSYQ = "com.bos.dataset.grt.TbGrtQtsyq";
+	String TB_GRT_QTZYZC = "com.bos.dataset.grt.TbGrtQtzyzc";
+	String TB_GRT_RECEIVABLES = "com.bos.dataset.grt.TbGrtReceivables";
+	String TB_GRT_REG_CARD = "com.bos.dataset.grt.TbGrtRegCard";
+	String TB_GRT_RESOURCEPROFIT = "com.bos.dataset.grt.TbGrtResourceprofit";
+	String TB_GRT_REST_PROFIT = "com.bos.dataset.grt.TbGrtRestProfit";
+	String TB_GRT_ROAD_BRIDGE = "com.bos.dataset.grt.TbGrtRoadBridge";
+	String TB_GRT_SORTARGUMENTS = "com.bos.dataset.grt.TbGrtSortarguments";
+	String TB_GRT_STOCK = "com.bos.dataset.grt.TbGrtStock";
+	String TB_GRT_TXJYQ = "com.bos.dataset.grt.TbGrtTxjyq";
+	String TB_GRT_VALID_INTEGRITY = "com.bos.dataset.grt.TbGrtValidIntegrity";
+	String TB_GRT_VALUE_APPROVE = "com.bos.dataset.grt.TbGrtValueApprove";
+	String TB_GRT_VEHICLE = "com.bos.dataset.grt.TbGrtVehicle";
+}

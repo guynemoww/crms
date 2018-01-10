@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+
+	 <select id="getCleanTakeMoneyOther" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ci.CONTRACT_NUM,ls.SUMMARY_NUM,cp.PARTY_NAME,cp.CERT_TYPE,cp.CERT_NUM,ci.PRODUCT_TYPE
+FROM TB_ASSET_CLEAN_TAKE_MONEY ctm 
+LEFT JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=ctm.SUMMARY_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN V_CSM_PARTY cp ON cp.PARTY_ID=ls.PARTY_ID
+WHERE ctm.id=#planId#
+	 </select>
+	 
+	 <select id="createCleanTakeMoneyInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ls.SUMMARY_ID,ls.SUMMARY_AMT,ls.JJYE,ls.BEGIN_DATE,ls.END_DATE,ls.NORMAL_ITR,ls.ARREAR_ITR,ls.PUNISH_ITR,ls.YQTS,ls.TINGXI_STATUS
+,(SELECT COUNT(*)||'' FROM TB_ASSET_VERIFY_OFF vo WHERE SUMMARY_ID=ls.SUMMARY_ID AND EXISTS(SELECT ID FROM TB_ASSET_HANDLE_PLAN WHERE id=vo.ID AND STATUS NOT IN('40')))CON_VERIFY
+FROM TB_LOAN_SUMMARY ls 
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN TB_LOAN_LOANRATE lr ON lr.LOAN_ID=ls.LOAN_ID
+WHERE ls.SUMMARY_ID=#summaryId#
+	 </select>
+	
+	<update id="updateCleanTakeLawAmtAndBal" parameterClass="java.lang.String">
+UPDATE TB_ASSET_CLEAN_TAKE_LAW SET (LAW_AMT,LAW_BAL) =
+(SELECT SUM(NVL(CONTRACT_AMT,0))amt,SUM(NVL(CON_PUNISH_ITR,0)+NVL(CON_ARREAR_ITR,0)+NVL(CON_NORMAL_ITR,0)) itr 
+FROM TB_ASSET_CLEAN_TAKE_LAW_CON WHERE TB_ASSET_CLEAN_TAKE_LAW_CON.ID=TB_ASSET_CLEAN_TAKE_LAW.ID)
+WHERE id = #planId#
+	</update>
+	 
+</sqlMap>

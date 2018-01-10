@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:fengjiahui -->
+<sqlMap>
+   <!-- 查询重点客户检查名单 -->
+	<resultMap class="commonj.sdo.DataObject" id="monitorCorpMap">
+        <result column="PARTY_ID" property="partyId"/><!--客户名单ID -->
+        <result column="MONITORING_LIST_ID" property="monitoringListId"/><!-- -->
+        <result column="MONITORING_DATE" property="monitoringDate"/><!--关注日期 -->
+        <result column="MONITORING_LEVEL_CD" property="monitoringLevelCd"/><!--监控级别 -->
+        <result column="USER_NUM" property="userNum"/><!--经办人 -->
+       
+        <result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    
+    </resultMap>
+
+     
+    <resultMap class="commonj.sdo.DataObject" id="reCount">
+        <result column="repeayCount" property="repeayCount"/><!--重复重点客户的个数 -->
+    </resultMap>
+    <select id="queryMonitoringCorp" parameterClass="java.util.HashMap" resultMap="monitorCorpMap">
+		SELECT
+		    m.MONITORING_LIST_ID,
+		    m.PARTY_ID,
+		    m.MONITORING_DATE,
+		    m.MONITORING_LEVEL_CD,
+		    m.USER_NUM,
+		    p.PARTY_NUM,
+		    p.PARTY_NAME,
+		    p.PARTY_TYPE_CD,
+		    mc.ORG_NUM
+		   
+		FROM
+   			TB_AFT_KEY_MONITORING_LIST m  
+       	inner join   TB_CSM_PARTY p
+        	on   p.party_id = m.party_Id  
+        inner join  TB_CSM_MANAGEMENT_TEAM mc 		
+     		on  m.party_id = mc.party_id
+        LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            mc.ORG_NUM = voo.ORGCODE
+        WHERE 
+            voo.parentorgcode = #orgCode# 		
+    </select>
+
+
+ 	<select id="queryRepeayCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="reCount">
+		SELECT
+			 
+			MONITORING_LIST_ID as repeayCount
+		   
+		FROM
+			TB_AFT_KEY_MONITORING_LIST a
+		
+   		where 1=1
+   		<isNotNull property="partyId">
+   			and		a.PARTY_ID=#partyId#
+   		</isNotNull>
+   		
+    </select>
+</sqlMap>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:fjh -->
+<sqlMap>
+   <resultMap class="commonj.sdo.DataObject" id="flowConclusion">
+     	<result column="POST_CD" property="postCd"/>
+     	<result column="NEXT_POST_NUM" property="nextPostNum"/>
+     	<result column="OPINION" property="opinion"/>
+     	<result column="CONCLUSION" property="conclusion"/>
+     	<result column="PROCESS_ID" property="processId"/>
+    </resultMap>
+     <!-- 查询最近检查ID -->
+	<select id="queryFlowConclusion" parameterClass="java.util.HashMap" resultMap="flowConclusion">
+			select 
+				ww.POST_CD,
+				ww.NEXT_POST_NUM,
+				ww.OPINION,
+				ww.CONCLUSION,
+				ww.PROCESS_ID
+			from TB_WFM_WORKITEMINSTANCE ww
+			where 1=1
+			<isNotNull property="nextPostNum">
+		  	 and ww.NEXT_POST_NUM = #nextPostNum#
+		  	</isNotNull>
+		  	<isNotNull property="processId">
+		  	 and ww.PROCESS_ID = #processId#
+		  	</isNotNull>
+		  	order by ww.FINISH_TIME asc
+   </select>
+</sqlMap>

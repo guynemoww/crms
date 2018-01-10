@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    
+    <!--获取打印抵押 质押数据(包含最高额)-->
+    <select id="printDYZY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    select v.PARTY_ID,v.PARTY_NAME,basic.ORG_NUM,sub.SUBCONTRACT_NUM,v.PARTY_TYPE_CD,v.CERT_TYPE,v.CERT_NUM,sub.IF_TOP_SUBCON,basic.SORT_TYPE,sub.JGGZRBLDJ,sub.ZFWYJBL,
+        to_char(sub.BEGIN_DATE,'yyyy-MM-dd') SUBBEGIN_DATE,to_char(sub.END_DATE,'yyyy-MM-dd') SUBEND_DATE,sub.ZGBJXE,sub.SUBCONTRACT_NUM,info.ARBITRATE_TYPE,
+        info.ARBITRATE_NAME,info.ARBITRATE_ADDRESS,info.ADD_CLAUSE,info.TOTAL_COUNT,info.OTHER,v1.PARTY_NAME as JPARTY_NAME,sub.PAPER_CON_NUM
+		from TB_CON_SUBCONTRACT sub,TB_CON_SUB_GRT_REL rel,TB_GRT_MORTGAGE_BASIC basic,V_CSM_PARTY v,TB_CON_ATTACHED_INFO info,V_CSM_PARTY V1
+		where sub.SUBCONTRACT_ID=rel.SUBCONTRACT_ID
+		and rel.SURETY_ID=basic.SURETY_ID
+        and info.CONTRACT_ID=sub.SUBCONTRACT_ID
+		and v.PARTY_ID=basic.PARTY_ID
+		and sub.SUBCONTRACT_STATUS='03'
+        and sub.CON_PARTY_ID=v1.PARTY_ID
+		and sub.SUBCONTRACT_TYPE=#subContractType#
+		and sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <select id="printDYZYLinkContract" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select info.PAPER_CON_NUM,info.CONTRACT_NUM,info.PRODUCT_TYPE,info.CURRENCY_CD,info.CONTRACT_AMT,rate.YEAR_RATE,to_char(info.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(info.END_DATE,'yyyy-MM-dd') END_DATE,
+		    att.ARBITRATE_TYPE,att.ARBITRATE_NAME,att.ARBITRATE_ADDRESS,att.OTHER,att.TOTAL_COUNT,att.ADD_CLAUSE,info.CONTRACT_ADDRESS
+		from TB_CON_CONTRACT_INFO info,TB_CON_SUBCONTRACT_REL rel,TB_CON_SUBCONTRACT sub,TB_CON_LOANRATE rate,TB_CON_ATTACHED_INFO att
+		where info.CONTRACT_ID=rel.CONTRACT_ID
+		and info.CONTRACT_ID=rate.CONTRACT_ID
+		and info.CONTRACT_ID=att.CONTRACT_ID
+		and rel.SUBCONTRACT_ID=sub.SUBCONTRACT_ID
+		and info.CON_STATUS='03'
+		and sub.SUBCONTRACT_STATUS='03'
+		and sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--获取打印主合同数据(包含主合同、利率、合同账户信息、附属信息、流动资金)-->
+    <select id="printZHT" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select con.*,att.ARBITRATE_TYPE,att.ARBITRATE_NAME,att.ARBITRATE_ADDRESS,att.OTHER,att.TOTAL_COUNT,att.ADD_CLAUSE,ld.PAY_DEPEND1,ld.PAY_DEPEND2,ld.PAY_DEPEND3,
+                    ld.LEAST_PREPAY_AMOUNT,ld.PREPAY_JS,ld.PREPAY_MAKEUP_RATE,decode(ld.PAY_WAY,'0','（一）','1','（二）') PAY_WAY from (
+		select info.PAPER_CON_NUM,info.PARTY_ID,info.CONTRACT_ID,v.PARTY_NAME,info.ORG_NUM,info.CONTRACT_NUM,v.CERT_TYPE,v.CERT_NUM,info.CONTRACT_AMT,info.LOAN_USE,to_char(info.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(info.END_DATE,'yyyy-MM-dd') END_DATE,rate.FLOAT_WAY,
+			        rate.RATE_TYPE,rate.YEAR_RATE,rate.RATE_FLOAT_PROPORTION,decode(rate.IR_UPDATE_FREQUENCY,'01','1','02','2','03','3','04','4','') as IR_UPDATE_FREQUENCY,rate.INTEREST_COLLECT_TYPE,rate.OVERDUE_RATE_UP_PROPORTION,info.REPAYMENT_TYPE,info.TRUS_TO_PAY_FLG,
+			        info.FIRST_REPAY_TERM,rate.HOLIDAY_INT_FLG,info.PRODUCT_TYPE,info.CYCLE_IND_CON,info.CONTRACT_ADDRESS,info.SPEC_PAYMENT_DATE
+			from  TB_CON_CONTRACT_INFO info,TB_CON_LOANRATE rate,V_CSM_PARTY v
+			where  info.PARTY_ID=v.PARTY_ID
+			and info.CONTRACT_ID=rate.CONTRACT_ID
+			and info.CON_STATUS='03'
+			and info.CONTRACT_NUM=#subContractNum#) con 
+            left join TB_CON_ATTACHED_INFO att
+            on con.CONTRACT_ID=att.CONTRACT_ID
+            left join TB_CON_LDZJ ld
+            on con.CONTRACT_ID=ld.CONTRACT_ID
+    </select>
+    
+    <!--获取综合授信协议-->
+    <select id="printZHSX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select credit.*,v.PARTY_NAME,info.ARBITRATE_TYPE,info.ARBITRATE_NAME,info.ARBITRATE_ADDRESS,info.OTHER,info.TOTAL_COUNT,info.ADD_CLAUSE
+		from TB_CON_CREDIT_INFO credit,V_CSM_PARTY v,TB_CON_ATTACHED_INFO info
+		where  credit.PARTY_ID=v.PARTY_ID
+        and info.CONTRACT_ID=credit.CONTRACT_ID
+        and credit.CON_STATUS='03'
+		and credit.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--获取综合授信协议-->
+    <select id="printZHSXPZ" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select rownum,tb.PRODUCT_TYPE,tb.CURRENCY_CD,tb.DETAIL_AMT,tb.LOAN_USE,decode(tb.CYCLE_IND,'1','是','0','否')  CYCLE_IND
+		from TB_CON_CREDIT_INFO info,tb_biz_approve t,tb_biz_amount_approve ta,tb_biz_amount_detail_approve tb 
+		where info.CONTRACT_NUM=#subContractNum#
+		and info.CON_STATUS='03' 
+		and info.APPLY_ID=t.APPLY_ID
+		and t.APPROVE_ID=ta.APPROVE_ID
+		and ta.AMOUNT_ID=tb.AMOUNT_ID
+    </select>
+    
+    <!--获取综合授信协议-->
+    <select id="printZHSXJE" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select ta.CURRENCY_CD,ta.CREDIT_AMOUNT from TB_BIZ_AMOUNT_APPROVE ta,TB_BIZ_APPROVE t,TB_CON_CREDIT_INFO info
+			where info.APPLY_ID=t.APPLY_ID
+			and t.APPROVE_ID=ta.APPROVE_ID
+			and info.CONTRACT_NUM=#subContractNum#
+			and info.CON_STATUS='03'
+    </select>
+    
+    <!--获取打印主合同数据(借款计划)-->
+    <select id="getJK" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select to_char(pl.PAYOUT_DATE,'yyyy-MM-dd') PAYOUT_DATE,pl.PAYOUT_AMT,pl.LOANUSE as JLOANUSE
+			from TB_CON_CONTRACT_INFO info ,TB_CON_PAYOUT_PLAN pl
+			where info.CONTRACT_ID=pl.CONTRACT_DETAIL_ID
+			and info.con_status = '03'
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--获取打印主合同数据(还款计划)-->
+    <select id="getHK" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select to_char(pl.REPAY_DATE,'yyyy-MM-dd') REPAY_DATE,pl.REPAY_AMT
+			from TB_CON_CONTRACT_INFO info,TB_CON_REPAY_PLAN pl
+			where info.CONTRACT_ID=pl.CONTRACT_ID
+			and info.con_status = '03'
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--获取打印从合同数据(抵押、质押)-->
+    <select id="getCHTDYZY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select  listagg(tc.PARTY_NAME,',') within group(order by tc.PARTY_ID) as PARTY_NAME,
+			listagg(tb.PAPER_CON_NUM,',') within group(order by tc.PARTY_ID) as SUBCONTRACT_NUM
+			from TB_CON_CONTRACT_INFO t,TB_CON_SUBCONTRACT_REL ta,tb_con_subcontract tb,TB_CSM_PARTY tc
+			where t.CONTRACT_ID=ta.CONTRACT_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.PARTY_ID=tc.PARTY_ID
+			and t.CON_STATUS='03'
+			and tb.SUBCONTRACT_STATUS='03'
+			and tb.SUBCONTRACT_TYPE=#subcontractType#
+			and t.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--获取打印从合同数据(抵质押物抵押、质押)-->
+    <select id="getCHTSORTTYPE" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(basic.SORT_TYPE,',') within group(order by basic.SORT_TYPE) as SORT_TYPE
+			from TB_CON_CONTRACT_INFO c,TB_CON_SUBCONTRACT_REL rel,TB_CON_SUBCONTRACT sub,TB_CON_SUB_GRT_REL grtRel,TB_GRT_MORTGAGE_BASIC basic
+			where c.CONTRACT_ID=rel.CONTRACT_ID
+			and rel.SUBCONTRACT_ID=sub.SUBCONTRACT_ID
+			and sub.SUBCONTRACT_ID=grtRel.SUBCONTRACT_ID
+			and basic.SURETY_ID=grtRel.SURETY_ID
+			and sub.SUBCONTRACT_STATUS='03'
+			and sub.SUBCONTRACT_TYPE=#subcontractType#
+			and c.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--获取打印综合授信协议数据(抵押、质押)-->
+    <select id="getXYDYZY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(tc.PARTY_NAME,',') within group(order by tc.PARTY_ID) as PARTY_NAME,
+			listagg(tb.PAPER_CON_NUM,',') within group(order by tc.PARTY_ID) as SUBCONTRACT_NUM
+			from TB_CON_CREDIT_INFO t,TB_CON_SUBCONTRACT_REL ta,tb_con_subcontract tb,TB_CSM_PARTY tc
+			where t.CONTRACT_ID=ta.CONTRACT_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.PARTY_ID=tc.PARTY_ID
+			and tb.SUBCONTRACT_STATUS='03'
+			and tb.SUBCONTRACT_TYPE=#subcontractType#
+			and t.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--获取打印综合授信协议数据(抵质押物抵押、质押)-->
+    <select id="getXYSORTTYPE" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(basic.SORT_TYPE,',') within group(order by basic.SORT_TYPE) as SORT_TYPE
+			from TB_CON_CREDIT_INFO c,TB_CON_SUBCONTRACT_REL rel,TB_CON_SUBCONTRACT sub,TB_CON_SUB_GRT_REL grtRel,TB_GRT_MORTGAGE_BASIC basic
+			where c.CONTRACT_ID=rel.CONTRACT_ID
+			and rel.SUBCONTRACT_ID=sub.SUBCONTRACT_ID
+			and sub.SUBCONTRACT_ID=grtRel.SUBCONTRACT_ID
+			and basic.SURETY_ID=grtRel.SURETY_ID
+			and sub.SUBCONTRACT_STATUS='03'
+			and sub.SUBCONTRACT_TYPE=#subcontractType#
+			and c.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--获取打印从合同数据(保证人)-->
+    <select id="getCHTBZR" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(tc.PARTY_NAME,',') within group(order by tc.PARTY_ID) as PARTY_NAME,
+			listagg(tb.PAPER_CON_NUM,',') within group(order by tc.PARTY_ID) as SUBCONTRACT_NUM
+			from TB_CON_CONTRACT_INFO t,TB_CON_SUBCONTRACT_REL ta,tb_con_subcontract tb,TB_CSM_PARTY tc,TB_CON_SUB_GRT_REL td,TB_GRT_GUARANTEE_BASIC te
+			where t.CONTRACT_ID=ta.CONTRACT_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SUBCONTRACT_ID=td.SUBCONTRACT_ID
+			and td.SURETY_ID=te.SURETY_ID
+			and te.PARTY_ID=tc.PARTY_ID
+			and t.CONTRACT_ID=#contractId#
+    </select>
+    
+     <!--获取打印综合授信协议数据(保证人)-->
+    <select id="getXYBZR" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(tc.PARTY_NAME,',') within group(order by tc.PARTY_ID) as PARTY_NAME,
+			listagg(tb.PAPER_CON_NUM,',') within group(order by tc.PARTY_ID) as SUBCONTRACT_NUM
+			from TB_CON_CREDIT_INFO t,TB_CON_SUBCONTRACT_REL ta,tb_con_subcontract tb,TB_CSM_PARTY tc,TB_CON_SUB_GRT_REL td,TB_GRT_GUARANTEE_BASIC te
+			where t.CONTRACT_ID=ta.CONTRACT_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SUBCONTRACT_ID=td.SUBCONTRACT_ID
+			and td.SURETY_ID=te.SURETY_ID
+			and te.PARTY_ID=tc.PARTY_ID
+			and t.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--获取打印保证从合同数据-->
+    <select id="getBZHT" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    	SELECT V1.PARTY_NAME AS JPARTY_NAME,
+		       BASIC.PARTY_ID PARTY_ID,
+		       V.PARTY_NAME PARTY_NAME,
+		       BASIC.ORG_NUM,
+		       SUB.ZFWYJBL,
+		       SUB.SUBCONTRACT_NUM,
+		       TO_CHAR(SUB.BEGIN_DATE, 'YYYY-MM-DD') SUBBEGIN_DATE,
+		       TO_CHAR(SUB.END_DATE, 'YYYY-MM-DD') SUBEND_DATE,
+		       SUB.PAPER_CON_NUM,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       SUB.SUBCONTRACT_NUM,
+		       SUB.ZGBJXE,
+		       SUB.CHANGE_PERCENT,
+		       INFO.ARBITRATE_TYPE,
+		       INFO.ARBITRATE_NAME,
+		       INFO.ARBITRATE_ADDRESS,
+		       INFO.OTHER,
+		       INFO.TOTAL_COUNT,
+		       INFO.ADD_CLAUSE
+		  FROM TB_CON_SUBCONTRACT     SUB,
+		       TB_CON_SUB_GRT_REL     GRTREL,
+		       TB_GRT_GUARANTEE_BASIC BASIC,
+		       V_CSM_PARTY            V,
+		       V_CSM_PARTY            V1,
+		       TB_CON_ATTACHED_INFO   INFO
+		 WHERE SUB.SUBCONTRACT_ID = GRTREL.SUBCONTRACT_ID
+		   AND GRTREL.SURETY_ID = BASIC.SURETY_ID
+		   AND INFO.CONTRACT_ID = SUB.SUBCONTRACT_ID
+		   AND V.PARTY_ID = BASIC.PARTY_ID
+		   AND V1.PARTY_ID = SUB.CON_PARTY_ID
+		and sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--获取打印保证金协议数据-->
+    <select id="getBZJXY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select sub.PAPER_CON_NUM, basic.PARTY_ID,basic.ORG_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,m.CURRENCY_CD,m.MARGIN_ACCOUNT,m.ACC_BALANCE,decode(m.MARGIN_SORT,'02','(一)','01','(二)') BMARGIN_SORT,
+    			m.BEGIN_DATE,m.END_DATE,sub.SUBCONTRACT_NUM,info.ADD_CLAUSE,m.MARGIN_RATE,to_char(sub.BEGIN_DATE,'yyyy-MM-dd') BBEGIN_DATE,to_char(sub.END_DATE,'yyyy-MM-dd') BEND_DATE,
+		        sub.JRNCRBZJ,sub.BZJBL,sub.BZJLX,sub.AYLLJX,sub.ANLLJX,sub.JRNCRBZJ,sub.ZFWYJBL,info.ARBITRATE_TYPE,info.ARBITRATE_NAME,info.ARBITRATE_ADDRESS,info.OTHER,info.TOTAL_COUNT,
+                decode(sub.BZJJXZQ,'01','1','02','2','03','3','04','4') BZJJXZQ,sub.BZJJE
+		from TB_CON_SUBCONTRACT sub,TB_CON_SUB_GRT_REL rel,TB_GRT_MORTGAGE_BASIC basic,TB_GRT_MARGIN m,V_CSM_PARTY v,TB_CON_ATTACHED_INFO info,TB_CON_CONTRACT_INFO c,TB_CON_SUBCONTRACT_REL sRel
+		where sub.SUBCONTRACT_ID=rel.SUBCONTRACT_ID
+		and rel.SURETY_ID=basic.SURETY_ID
+        and info.CONTRACT_ID=sub.SUBCONTRACT_ID
+		and m.SURETY_ID=basic.SURETY_ID
+        and sRel.SUBCONTRACT_ID=sub.SUBCONTRACT_ID
+        and sRel.CONTRACT_ID=c.CONTRACT_ID
+        and c.CON_STATUS='03'
+		and v.PARTY_ID=basic.PARTY_ID
+		and sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--关联银承数据-->
+    <select id="getYC" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select hp.BZJBL,hp.SFBZ,hp.BZJJE,hp.TGFPDCLQX,hp.DKLL
+			from TB_CON_CONTRACT_INFO info,TB_CON_KLYHCDHP hp
+			where info.CONTRACT_ID=hp.CONTRACT_ID
+            and info.CON_STATUS='03'
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--关联商业汇票贴现数据-->
+    <select id="getSYHP" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select hp.HPZS,hp.HPBH,hp.HP_TOTAL_AMT,to_char(hp.TXQQ,'yyyy-MM-dd') TXQQ,hp.TXYLL,hp.DKLL,hp.TXZJYT,info.CONTRACT_NUM
+			from TB_CON_CONTRACT_INFO info,TB_CON_HPTX hp
+			where info.CONTRACT_ID=hp.CONTRACT_ID
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--关联保函协议数据-->
+    <select id="getBHXY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select bh.SYR,bh.BZJJE,to_char(bh.BEGIN_DATE,'yyyy-MM-dd') BHBEGIN_DATE,to_char(bh.END_DATE,'yyyy-MM-dd') BHEND_DATE,info.CONTRACT_AMT,bh.DKLL,bh.WYJBL
+			from TB_CON_CONTRACT_INFO info,TB_CON_BH bh
+			where info.CONTRACT_ID=bh.CONTRACT_ID
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--保函协议获取从合同数据-->
+    <select id="getBHCHT" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(ta.SUBCONTRACT_NUM,',') within group (order by ta.SUBCONTRACT_NUM) as SUBCONTRACT_NUM from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SUBCONTRACT_STATUS ='03'
+			and t.CONTRACT_ID=#contractId#
+    </select>
+    
+     <!--保函协议获取费率数据-->
+    <select id="getBHFL" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select nvl(ta.CHARGING_PROPORTION,(ta.SHOULD_FEE/t.CONTRACT_AMT*10)) as sfbl from tb_con_contract_info t,tb_con_fee ta 
+			where t.CONTRACT_ID=ta.CONTRACT_DETAIL_ID and t.CONTRACT_ID=#contractId#
+    </select>
+    
+     <!--保函协议获取账户数据-->
+    <select id="getBHZH" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select zh.ZH
+            from tb_con_contract_info t,TB_CON_ZH zh
+			where t.CONTRACT_ID=zh.CONTRACT_ID and t.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--关联信用证开证合同数据-->
+    <select id="getXYZ" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select gn.*
+			from TB_CON_CONTRACT_INFO info,TB_CON_GNXYZ gn
+			where info.CONTRACT_ID=gn.CONTRACT_ID
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--关联固定资产合同数据-->
+    <select id="getGDZC" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select gd.OTHER_CONDITION1,gd.OTHER_CONDITION2,gd.OTHER_CONDITION3,gd.OTHER_CONDITION4,gd.PAY_DEPEND1,gd.PAY_DEPEND2,gd.PAY_DEPEND3,decode(gd.PAY_WAY,'0','（一）','1','（二）') PAY_WAY,
+		        gd.TOTAL_DEBT,gd.THIRD_GUARANT,gd.THIRD_LOAN_AMOUNT,gd.THIRD_BORROW_AMOUNT,gd.STOCK_CHANGE,gd.FINANCIAL_LIMIT,gd.WYBCBL
+		from TB_CON_CONTRACT_INFO info,TB_CON_GDZCDK gd
+		where info.CONTRACT_ID=gd.CONTRACT_ID
+			and info.CONTRACT_NUM=#subContractNum#
+			
+		union 
+	    select '' as OTHER_CONDITION1,'' as OTHER_CONDITION2,'' as OTHER_CONDITION3,'' as OTHER_CONDITION4,bg.PAY_DEPEND1,bg.PAY_DEPEND2,bg.PAY_DEPEND3,decode(bg.PAY_WAY,'0','（一）','1','（二）') PAY_WAY,
+			        null as TOTAL_DEBT,null as THIRD_GUARANT,null as THIRD_LOAN_AMOUNT,null as THIRD_BORROW_AMOUNT,null as STOCK_CHANGE,null as FINANCIAL_LIMIT,bg.prepay_makeup_rate   as WYBCBL
+			from TB_CON_CONTRACT_INFO info,tb_con_bgdk bg
+			where info.CONTRACT_ID=bg.CONTRACT_ID
+			and info.CONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <!--关联固定资产合同数据-->
+    <select id="getGDZCFDLL" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select FLOAT_WAY,RATE_FLOAT_PROPORTION from TB_CON_LOANRATE where CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--查询主合同抵质押类型-->
+    <select id="getZHTType" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select listagg(decode(tz.SUBCONTRACT_TYPE,'01','抵押','02','质押','04','保证'),',') within group(order by tz.SUBCONTRACT_TYPE) as SUBCONTRACT_TYPE 
+			from (
+			    select distinct tb.SUBCONTRACT_TYPE
+			    from TB_CON_CONTRACT_INFO t,TB_CON_SUBCONTRACT_REL ta,tb_con_subcontract tb
+			    where t.CONTRACT_ID=ta.CONTRACT_ID
+			    and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			    and tb.SUBCONTRACT_TYPE !='03'
+    			and tb.SUBCONTRACT_STATUS ='03'
+			    and t.CONTRACT_ID =#contractId#
+			) tz 
+    </select>
+    
+    <!--查询放款账户信息-->
+    <select id="getZHFK" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select ZH,ZHKHJG from TB_CON_ZH where ZHLX='0' and CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--查询结算账户信息-->
+    <select id="getZHJS" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select ZH,ZHKHJG from TB_CON_ZH where ZHLX='2' and CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--查询小贷共有人信息-->
+    <select id="getXDGPARTY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select v.PARTY_NAME as COMPARTY_NAME,V.CERT_TYPE COMCERT_TYPE,v.CERT_NUM COMCERT_NUM,v.PARTY_ID
+			from TB_CON_CONTRACT_INFO info,TB_BIZ_XW_APPROVE approve,V_CSM_PARTY v
+			where info.AMOUNT_DETAIL_ID=approve.AMOUNT_DETAIL_ID
+			and approve.GTJKR=v.PARTY_ID
+			and info.CONTRACT_ID=#contractId#
+    </select>
+    
+     <!--查询小贷借款人信息-->
+    <select id="getXDPARTY" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select v.PARTY_NAME as COMPARTY_NAME,V.CERT_TYPE COMCERT_TYPE,v.CERT_NUM COMCERT_NUM,v.PARTY_ID
+			from TB_CON_CONTRACT_INFO info,TB_BIZ_XW_APPROVE approve,V_CSM_PARTY v
+			where info.AMOUNT_DETAIL_ID=approve.AMOUNT_DETAIL_ID
+			and approve.GTJKR=v.PARTY_ID
+			and info.CONTRACT_ID=#contractId#
+    </select>
+    
+    <!--查询小贷信息-->
+    <select id="getXDInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select decode(xw.PAY_WAY,'1','（二）','0','（一）') PAY_WAY,xw.CAPITAL_PAY_CONDITION1,xw.CAPITAL_PAY_CONDITION2,xw.CAPITAL_PAY_CONDITION3,rate.HOLIDAY_INT_FLG,rate.FLOAT_TYPE,rate.RATE_FLOAT_PROPORTION
+			from TB_CON_XW xw,TB_CON_CONTRACT_INFO info,TB_CON_LOANRATE rate
+			where info.CONTRACT_ID=xw.CONTRACT_ID
+			and rate.CONTRACT_ID=info.CONTRACT_ID
+			and info.CONTRACT_ID=#contractId#
+    </select>
+    <!--查询个贷贷信息-->
+    <select id="getGDInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select decode(info.PAY_WAY, '1', '（二）', '0', '（一）') PAY_WAY,
+	       info.pay_depend1 as CAPITAL_PAY_CONDITION1,
+	       info.pay_depend2 as CAPITAL_PAY_CONDITION2,
+	       info.pay_depend3 as CAPITAL_PAY_CONDITION3,
+	       rate.HOLIDAY_INT_FLG,
+	       rate.FLOAT_TYPE,
+	       rate.RATE_FLOAT_PROPORTION
+	  from TB_CON_CONTRACT_INFO info, TB_CON_LOANRATE rate
+	 where rate.CONTRACT_ID = info.CONTRACT_ID
+	   and info.CONTRACT_ID = #contractId#
+    </select>
+    
+    <!--查询甲乙双方地址信息-->
+    <select id="getAddrs" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		 <isNotNull prepend="" property="subContractNum"> 
+		 select distinct addrs.*
+		  from tb_con_notice_addrs    addrs,
+		       TB_CON_CONTRACT_INFO   info,
+		       TB_CON_SUBCONTRACT     sub,
+		       TB_CON_SUBCONTRACT_REL rel
+		 where sub.SUBCONTRACT_ID = rel.SUBCONTRACT_ID
+		   and rel.CONTRACT_ID = info.CONTRACT_ID
+		   and addrs.contract_id = info.contract_id
+    		and sub.SUBCONTRACT_NUM=#subContractNum#
+    	</isNotNull>
+    	<isNotNull prepend="" property="contractNum"> 
+    	 select distinct addrs.*
+		  from tb_con_notice_addrs    addrs,
+		       TB_CON_CONTRACT_INFO   info
+		 where addrs.contract_id = info.contract_id
+    		and info.CONTRACT_NUM=#contractNum#
+    	</isNotNull>
+    </select>
+</sqlMap>

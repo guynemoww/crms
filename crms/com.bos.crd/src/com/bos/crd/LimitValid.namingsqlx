@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    
+    <sql id="loanStatusSql">
+li.LOAN_STATUS NOT IN ('04','06')
+AND ls.SUMMARY_STATUS_CD NOT IN ('06','09')
+    </sql>
+    
+    <resultMap id="limitLatMap" class="java.util.HashMap" >
+        <result column="CODE" javaType="java.lang.String" property="CODE"/>
+        <result column="ID" javaType="java.lang.String" property="ID"/>
+        <result column="PARENT_ID" javaType="java.lang.String" property="PARENT_ID"/>
+    </resultMap>
+    
+  	<select id="searchOrgs" resultMap="limitLatMap">
+SELECT ORGCODE code,ORGID id,PARENTORGID parent_id FROM OM_ORGANIZATION 
+    </select>
+    
+    <select id="searchProducts" resultMap="limitLatMap">
+SELECT PRODUCT_CD code,PRODUCT_ID id,SUPERIOR_ID parent_id FROM TB_SYS_PRODUCT
+    </select>
+    
+    <select id="searchTrades" resultMap="limitLatMap">
+SELECT DICTID code,DICTID id,PARENTID parent_id FROM EOS_DICT_ENTRY WHERE DICTTYPEID='CDXY0300'
+    </select>
+    
+    <select id="searchRiskLimit" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+<isNotNull property="groupIds">
+SELECT * FROM (
+SELECT r.LIMIT_TYPE,r.LIMIT_CODE,
+CASE WHEN gd.limit_amt IS NULL THEN r.limit_amt WHEN r.limit_amt=0 THEN gd.limit_amt ELSE LEAST(gd.limit_amt,r.limit_amt) END  AMT 
+FROM TB_CRD_RISK_LIMIT2 r
+LEFT JOIN TB_CRD_RISK_GROUP_DETAIL gd ON r.limit_id = gd.limit_id
+AND gd.group_id IN
+<iterate property = "groupIds" open = "(" close = ")" conjunction = "," >#groupIds[]#</iterate>
+WHERE
+<isNotNull property="whereSql"> $whereSql$ AND </isNotNull>
+r.LIMIT_CAP IS NULL
+) a WHERE a.amt>0
+</isNotNull>
+<isNull property="groupIds">
+SELECT r.LIMIT_TYPE,r.LIMIT_CODE,r.LIMIT_AMT AMT 
+FROM TB_CRD_RISK_LIMIT2 r
+WHERE
+<isNotNull property="whereSql"> $whereSql$ AND </isNotNull>
+r.LIMIT_AMT>0 AND r.LIMIT_CAP IS NULL 
+</isNull>
+    </select>
+    
+ 	<select id="searchRiskGroupId" parameterClass="java.util.Map" resultClass="java.lang.String">
+SELECT GROUP_ID FROM TB_CRD_RISK_GROUP_DETAIL gd
+LEFT JOIN TB_CRD_RISK_LIMIT2 r ON r.LIMIT_ID=gd.LIMIT_ID
+WHERE r.LIMIT_TYPE=#limitType# AND r.LIMIT_CODE IN 
+<iterate property = "limitCodes" open = "(" close = ")" conjunction = "," >#limitCodes[]#</iterate>
+GROUP BY GROUP_ID
+    </select>
+
+	<select id="sumLoanBal_org" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT li.LOAN_ORG code,SUM(NVL(ls.JJYE,NVL(li.LOAN_AMT,0))) bal FROM TB_LOAN_INFO li
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+WHERE 
+<include refid="loanStatusSql"/>
+GROUP BY li.LOAN_ORG
+   </select>
+   
+	<select id="sumLoanBal_product" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT li.PRODUCT_TYPE code,SUM(NVL(ls.JJYE,NVL(li.LOAN_AMT,0))) bal FROM TB_LOAN_INFO li
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+WHERE
+<include refid="loanStatusSql"/>
+GROUP BY li.PRODUCT_TYPE
+   </select>
+   
+	<select id="sumLoanBal_guaranty" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT ci.MAIN_GUARANTY_TYPE code,SUM(NVL(ls.JJYE,NVL(li.LOAN_AMT,0))) bal FROM TB_LOAN_INFO li
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=li.CONTRACT_ID
+WHERE  
+<include refid="loanStatusSql"/>
+GROUP BY ci.MAIN_GUARANTY_TYPE
+   </select>
+   
+	<select id="sumLoanBal_trade" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT cfi.LOAN_TURN code,SUM(NVL(ls.JJYE,NVL(li.LOAN_AMT,0))) bal FROM TB_LOAN_INFO li
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=li.CONTRACT_ID
+LEFT JOIN TB_CON_FLAG_INFO cfi ON cfi.CONTRACT_ID=ci.CONTRACT_ID
+WHERE 
+<include refid="loanStatusSql"/>
+GROUP BY cfi.LOAN_TURN
+   </select>
+   
+	<select id="getRiskValidInfoByContract" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ci.PRODUCT_TYPE,cfi.LOAN_TURN,ci.MAIN_GUARANTY_TYPE GARANTY_TYPE FROM TB_CON_CONTRACT_INFO ci 
+LEFT JOIN TB_CON_FLAG_INFO cfi ON ci.CONTRACT_ID= cfi.CONTRACT_ID
+WHERE ci.CONTRACT_ID=#contractId#
+    </select>
+    
+    
+<!--监管限额 -->
+    <select id="getChargeValidInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT a.CREDIT_AMOUNT,a.PARTY_ID,p.IS_POTENTIAL_CUST IS_GROUP_CUST
+FROM TB_BIZ_AMOUNT_APPLY a
+LEFT JOIN TB_CSM_PARTY p ON a.party_id=p.PARTY_ID
+WHERE a.APPLY_ID=#applyId#
+    </select>
+    
+   	<select id="sumLoanBal" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT SUM(NVL(ls.JJYE,NVL(li.LOAN_AMT,0))) bal FROM TB_LOAN_INFO li
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+WHERE  
+<include refid="loanStatusSql"/>
+   </select>
+</sqlMap>

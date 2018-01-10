@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zhangqi -->
+<sqlMap>
+
+	<resultMap class="com.bos.dataset.pub.TbPubImageDocument" id="tbPubImageDocument">
+        <result column="IMAGE_DOCUMENT_ID"   property="imageDocumentId"/>
+        <result column="IMAGE_DOCUMENT_NUMBER"   property="imageDocumentNumber"/>
+        <result column="IMAGE_DOCUMENT_NAME"   property="imageDocumentName"/>
+        <result column="IMAGE_DOCUMENT_TYPE"   property="imageDocumentType"/>
+        <result column="IMAGE_DOCUMENT_STATUS"   property="imageDocumentStatus"/>
+        <result column="IMAGE_DOCUMENT_DESC"   property="imageDocumentDesc"/>
+        <result column="BUSINESS_NUMBER"   property="businessNumber"/>
+        <result column="ORG_NUM" property="orgNum"/>
+        <result column="USER_NUM"  property="userNum"/>
+        <result column="CREATE_TIME"  property="createTime"/>
+       	<result column="PARTY_NUM"  property="partyNum"/>
+     	<result column="BAR_CODE"  property="barCode"/>
+     	<result column="SERIAL_NO"  property="serialNo"/>
+      	<result column="IMAGE_DOCUMENT_TYPE_ID"  property="imageDocumentTypeId"/>
+      	<result column="PAGE_NUM"  property="pageNum"/>
+    </resultMap>
+   <update id="updateImageDocument" parameterClass="java.util.Map" >
+   		update  tb_pub_image_document set image_document_number=#imageDocumentNumber#,IMAGE_DOCUMENT_STATUS=#imageDocumentStatus#,page_num=#pageNum# where image_document_id=#imageDocumentId#
+   </update>
+    <select id="selectImageNum"   parameterClass="com.bos.dataset.pub.TbPubImageDocument" resultClass="java.util.HashMap">
+       	select max(SERIAL_NO) as num from TB_PUB_IMAGE_DOCUMENT where business_Number =#businessNumber# and party_num=#partyNum# and IMAGE_DOCUMENT_TYPE_Id=#imageDocumentTypeId#
+   </select>
+    <update id="updateImageDocuments" parameterClass="com.bos.dataset.pub.TbPubImageDocument" >
+   		update  tb_pub_image_document set image_document_number=#imageDocumentNumber#,IMAGE_DOCUMENT_STATUS=#imageDocumentStatus#,page_num=#pageNum#  where bar_code=#barCode# and party_Num=#partyNum# and business_Number=#businessNumber#
+   		   	 <isNotNull prepend="AND" property="loanOverId">
+  		  loan_Over_id=#loanOverId# 
+  		  </isNotNull> 
+   </update>
+   
+   <select id="selectImageByType"   parameterClass="com.bos.dataset.pub.TbPubImageDocument" resultMap="tbPubImageDocument">
+      	select d.IMAGE_DOCUMENT_ID,
+	           t.image_type_name as IMAGE_DOCUMENT_NAME,
+	           d.IMAGE_DOCUMENT_NUMBER,
+	           d.IMAGE_DOCUMENT_TYPE,
+	           d.IMAGE_DOCUMENT_STATUS,
+	           d.IMAGE_DOCUMENT_DESC,
+	           d.BUSINESS_NUMBER,
+	           d.BUSINESS_STAGE,
+	           d.ORG_NUM,
+	           d.USER_NUM,
+	           d.CREATE_TIME,
+	           d.PARTY_NUM,
+	           d.BAR_CODE,
+	           d.SERIAL_NO,
+	           t.image_type_id as IMAGE_DOCUMENT_TYPE_ID,
+	           d.LOAN_OVER_ID,
+	           d.PAGE_NUM
+	      from tb_pub_image_type t left join TB_PUB_IMAGE_DOCUMENT d on t.image_type_id=d.image_document_type_id and d.business_number=#businessNumber#
+	     where t.image_model_type=#partyTypeCd# and t.superior_id=#imageTypeId#  
+       	 <isNotNull prepend="AND" property="imageDocumentName">
+  		 t.image_type_name like '%$imageDocumentName$%'  
+  		 </isNotNull>
+  		 order by t.sort_no
+  	</select>
+  	   <select id="selectImageByTypeOne"   parameterClass="com.bos.dataset.pub.TbPubImageDocument" resultMap="tbPubImageDocument">
+      	select d.IMAGE_DOCUMENT_ID,
+	           t.image_type_name as IMAGE_DOCUMENT_NAME,
+	           d.IMAGE_DOCUMENT_NUMBER,
+	           d.IMAGE_DOCUMENT_TYPE,
+	           d.IMAGE_DOCUMENT_STATUS,
+	           d.IMAGE_DOCUMENT_DESC,
+	           d.BUSINESS_NUMBER,
+	           d.BUSINESS_STAGE,
+	           d.ORG_NUM,
+	           d.USER_NUM,
+	           d.CREATE_TIME,
+	           d.PARTY_NUM,
+	           d.BAR_CODE,
+	           d.SERIAL_NO,
+	           t.image_type_id as IMAGE_DOCUMENT_TYPE_ID,
+	           d.LOAN_OVER_ID,
+	           d.PAGE_NUM
+	      from tb_pub_image_type t left join TB_PUB_IMAGE_DOCUMENT d on t.image_type_id=d.image_document_type_id 
+	     where t.image_model_type=#partyTypeCd# and t.image_type_id=#imageTypeId# and d.business_number=#businessNumber#
+       	 <isNotNull prepend="AND" property="imageDocumentName">
+  		 t.image_type_name like '%$imageDocumentName$%'  
+  		 </isNotNull>
+  		 order by t.sort_no
+  	</select>
+  	
+   <select id="selectImageTemplateOne"   parameterClass="com.bos.dataset.pub.TbPubImageDocument" resultMap="tbPubImageDocument">
+   
+  		 select '' IMAGE_DOCUMENT_ID,
+	           t.image_type_name as IMAGE_DOCUMENT_NAME,
+	           '' IMAGE_DOCUMENT_NUMBER,
+	           '' IMAGE_DOCUMENT_TYPE,
+	           '' IMAGE_DOCUMENT_STATUS,
+	           '' IMAGE_DOCUMENT_DESC,
+	           '' BUSINESS_NUMBER,
+	           '' BUSINESS_STAGE,
+	           '' ORG_NUM,
+	           '' USER_NUM,
+	           '' CREATE_TIME,
+	           '' PARTY_NUM,
+	           '' BAR_CODE,
+	           '' SERIAL_NO,
+	           t.image_type_id as IMAGE_DOCUMENT_TYPE_ID,
+	           '' LOAN_OVER_ID,
+	           '' PAGE_NUM
+	      from tb_pub_image_type t 
+	     where t.image_model_type=#partyTypeCd# and t.image_type_id=#imageTypeId#
+	       <isNotNull prepend="AND" property="imageDocumentName">
+  		 t.image_type_name like '%$imageDocumentName$%'  
+  		 </isNotNull>
+  		 order by t.sort_no
+  	</select>   
+      <select id="selectImageTemplate"   parameterClass="com.bos.dataset.pub.TbPubImageDocument" resultMap="tbPubImageDocument">
+   
+  		 select '' IMAGE_DOCUMENT_ID,
+	           t.image_type_name as IMAGE_DOCUMENT_NAME,
+	           '' IMAGE_DOCUMENT_NUMBER,
+	           '' IMAGE_DOCUMENT_TYPE,
+	           '' IMAGE_DOCUMENT_STATUS,
+	           '' IMAGE_DOCUMENT_DESC,
+	           '' BUSINESS_NUMBER,
+	           '' BUSINESS_STAGE,
+	           '' ORG_NUM,
+	           '' USER_NUM,
+	           '' CREATE_TIME,
+	           '' PARTY_NUM,
+	           '' BAR_CODE,
+	           '' SERIAL_NO,
+	           t.image_type_id as IMAGE_DOCUMENT_TYPE_ID,
+	           '' LOAN_OVER_ID,
+	           '' PAGE_NUM
+	      from tb_pub_image_type t 
+	     where t.image_model_type=#partyTypeCd# and t.superior_id=#imageTypeId#
+       	 <isNotNull prepend="AND" property="imageDocumentName">
+  		 t.image_type_name like '%$imageDocumentName$%'  
+  		 </isNotNull>  
+  		 order by t.sort_no
+  	</select> 
+   <select id="selectPosition"   resultClass="com.bos.utp.dataset.position.OmPosition">
+       select  posicode ,posiname from om_position 
+   </select>
+   
+   <select id="selectMaxCode"   parameterClass="com.bos.dataset.pub.TbPubImageType" resultClass="com.bos.dataset.pub.TbPubImageType">
+	   select max(to_number(image_type_id)) as imageTypeId from tb_pub_image_type
+   </select>
+   
+   <!-- 一般客户影像类型查询-->
+   <select id="selectImageTree"   parameterClass="com.bos.dataset.pub.TbPubImageType" resultClass="com.bos.dataset.pub.TbPubImageType">
+	   select IMAGE_TYPE_ID        as imageTypeId,
+		       SUPERIOR_ID          as superiorId,
+		       image_type_name      as imageTypeName,
+		       IMAGE_CONTROL_TYPE   as imageControlType,
+		       image_Model_Type     as imageModelType,
+		       image_Require_Status as imageRequireStatus,
+		       flow_Module_Type     as flowModuleType,
+		       is_Src				as isSrc
+		  from tb_pub_image_type
+		 where 1 = 1
+	    <isNotNull  prepend="AND" property="imageControlType">
+	   		IMAGE_CONTROL_TYPE like '%$imageControlType$%'
+	    </isNotNull>  
+	    <isNotNull  prepend="AND" property="imageModelType">
+	   		image_Model_Type = #imageModelType#
+  		</isNotNull> 
+  		<isNotNull  prepend="AND" property="superiorId">
+	   		superior_Id = #superiorId#
+  		</isNotNull> 
+  		<isNotNull  prepend="AND" property="flowModuleType">
+	   		flow_module_type in ($flowModuleType$)
+  		 </isNotNull>
+       order by  to_number(imageTypeId)
+   </select>
+	<!-- 查询影像类型树，包含父节 -->
+	 <select id="selectImageTree1"   parameterClass="com.bos.dataset.pub.TbPubImageType" resultClass="com.bos.dataset.pub.TbPubImageType">
+	 select IMAGE_TYPE_ID        as imageTypeId,
+           SUPERIOR_ID          as superiorId,
+           image_type_name      as imageTypeName,
+           IMAGE_CONTROL_TYPE   as imageControlType,
+           image_Model_Type     as imageModelType,
+           image_Require_Status as imageRequireStatus,
+           flow_Module_Type     as flowModuleType
+      from tb_pub_image_type
+     where image_Model_Type=#imageModelType# and (SUPERIOR_ID is null or (flow_Module_Type in($flowModuleType$) or flow_Module_Type='99')) and image_require_status='0'
+   </select>
+   
+   	<resultMap class="java.util.HashMap" id="imageDataMap">
+        <result column="CNT"   property="cnt"/>
+        <result column="BAR_CODE"   property="barCode"/>
+        <result column="CREATE_TIME"   property="createTime"/>
+    </resultMap>
+    <select id="getBatchId"  parameterClass="java.util.HashMap" resultMap="imageDataMap">
+    
+    	select count(*) cnt, tt.bar_code,tt.create_time
+		  from tb_pub_image_document tt
+		 where tt.business_number = #businessNumber#
+		   and tt.image_document_type_id in
+		       (select it.image_type_id
+		          from tb_pub_image_type it
+		         where it.superior_id = #imageTypeId#)
+		 group by tt.bar_code,tt.create_time
+    </select>
+    
+   <resultMap class="java.util.HashMap" id="imageData">
+        <result column="PARTY_NUM"   property="partyNum"/>
+        <result column="FLOWMODULETYPE"   property="flowModuleType"/>
+    </resultMap>
+    <!--根据业务编号、机构号，查询客户编号，节点过滤码-->
+    <select id="get_image_config" parameterClass="java.util.HashMap" resultMap="imageData">
+    	
+			select t.party_num,
+			       case
+			         when t.party_type_cd = '01' then
+			          '11'
+			         else
+			          '21,211,212'
+			       end as flowModuleType
+			  from tb_csm_party t, tb_csm_management_team mt
+			 where t.party_id = mt.party_id
+			   and t.party_num = #businessNumber#
+			   and mt.org_num in (select orgcode
+			                        from om_organization oo
+			                       where oo.orgseq like '%.$orgid$.%')
+			union
+			select p.party_num, '12' as flowModuleType
+			  from tb_csm_project_info t, tb_csm_management_team mt, tb_csm_party p
+			 where t.party_id = mt.party_id
+			   and t.party_id = p.party_id
+			   and t.project_id = #businessNumber#
+			   and mt.org_num in (select orgcode
+			                        from om_organization oo
+			                       where oo.orgseq like '%.$orgid$.%')
+			union
+			select p.party_num, '110' as flowModuleType
+			  from tb_crd_third_party_limit cpl, tb_csm_party p
+			 where cpl.party_id = p.party_id
+			   and cpl.limit_id = #businessNumber#
+			   and cpl.org_num in (select orgcode
+			                         from om_organization oo
+			                        where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num,
+			       case
+			         when t.party_type_cd = '01' then
+			          '15,151,152'
+			         else
+			          '22,221,222|' || a.product_type
+			       end as flowModuleType
+			  from tb_biz_apply a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.biz_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num,
+			       case
+			         when t.party_type_cd = '01' then
+			          '15,153'
+			         else
+			          '22,223'
+			       end as flowModuleType
+			  from tb_con_contract_info a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.contract_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num,
+			       case
+			         when t.party_type_cd = '01' then
+			          '15,154'
+			         else
+			          '22,224'
+			       end as flowModuleType
+			  from tb_loan_info a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.loan_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num,
+			       case
+			         when a.coll_type = '01' then
+			          '13'
+			         else
+			          '14'
+			       end as flowModuleType
+			  from tb_grt_mortgage_basic a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.surety_no = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '16' as flowModuleType
+			  from tb_aft_normal_check a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.check_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '16' as flowModuleType
+			  from tb_aft_first_check f, tb_csm_party t
+			 where f.party_id = t.party_id
+			   and f.check_num = #businessNumber#
+			   and f.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '16' as flowModuleType
+			  from tb_aft_point_check f, tb_csm_party t
+			 where f.party_id = t.party_id
+			   and f.check_num = #businessNumber#
+			   and f.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '16' as flowModuleType
+			  from tb_aft_expire_check f, tb_csm_party t
+			 where f.party_id = t.party_id
+			   and f.check_num = #businessNumber#
+			   and f.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '17' as flowModuleType
+			  from tb_cla_assets_classify_apply a,
+			       tb_cla_classify_cust_info    ci,
+			       tb_csm_party                 t
+			 where a.ac_apply_id = ci.ac_apply_id
+			   and ci.party_id = t.party_id
+			   and a.ac_apply_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select t.party_num, '18' as flowModuleType
+			  from tb_con_loan_change a, tb_csm_party t
+			 where a.party_id = t.party_id
+			   and a.change_num = #businessNumber#
+			   and a.org_num in (select orgcode
+			                       from om_organization oo
+			                      where oo.orgseq like '%.$orgid$.%')
+			union
+			select '' as party_num, '112' as flowModuleType
+			  from tb_clt_register_info a
+			 where a.clt_id = #businessNumber#
+			   and a.create_org_num in
+			       (select orgcode
+			          from om_organization oo
+			         where oo.orgseq like '%.$orgid$.%')
+                    
+    </select>
+</sqlMap>

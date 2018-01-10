@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tPageFlow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="ExportManager" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3" state="stateless">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" type="start">
+    <sourceConnections xsi:type="process:tActionLink" id="link0" name="link0" lineType="reference" isDefault="true" type="action" actionName="action0">
+      <sourceNode>start0</sourceNode>
+      <targetNode>view0</targetNode>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link8" name="link8" lineType="reference" type="action" actionName="download" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign1</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link21" name="link21" lineType="reference" type="action" actionName="export" dataConvertClass="">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign4</targetNode>
+      <process:validateRules onError="default"/>
+      <process:inputParameters/>
+    </sourceConnections>
+    <location x="60" y="134"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" type="end" contextPath="" method="forward" uri="/biz/biz_advice.jsp" variableUri="false">
+    <targetConnections>link7</targetConnections>
+    <location x="652" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:inputVariables/>
+    <process:returns/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="62" y="170"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="654" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view1" name="下载页面" displayName="download.jsp" type="view" contextPath="" method="forward" uri="/pub/io/file/download.jsp">
+    <sourceConnections xsi:type="process:tActionLink" id="link3" name="link3" lineType="reference" isDefault="true" type="action" actionName="action1">
+      <sourceNode>view1</sourceNode>
+      <targetNode>end1</targetNode>
+    </sourceConnections>
+    <targetConnections>link14</targetConnections>
+    <targetConnections>link15</targetConnections>
+    <targetConnections>link22</targetConnections>
+    <location x="557" y="208"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view1label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view1label" name="label" nodeType="label">
+    <location x="544" y="244"/>
+    <figSize height="17" width="49"/>
+    <node>view1</node>
+  </nodes>
+  <nodes xsi:type="process:tView" description="" id="view0" name="视图" displayName="biz_advice.jsp" type="view" contextPath="" method="forward" uri="/biz/biz_advice.jsp">
+    <sourceConnections xsi:type="process:tActionLink" description="" id="link2" name="link2" lineType="reference" isDefault="true" type="action" actionName="upload" dataConvertClass="">
+      <sourceNode>view0</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:validateRules errorPage="" onError="default"/>
+      <process:inputParameters>
+        <process:parameter anyType="com.primeton.ext.access.http.IUploadFile" description="" historyStateLocation="client" isArray="false" name="Fdata"/>
+      </process:inputParameters>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="208" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>view0label</nodeLabel>
+    <process:inputParameters/>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="view0label" name="label" nodeType="label">
+    <location x="207" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>view0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="356" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">com.bos.utp.tools.SystemInfo.APP_WAR_PATH + &quot;document/bizword/&quot; + bizId + &quot;-一般授信调查报告.docx&quot;</process:from>
+      <process:to type="query">path</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="358" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="copyFile" displayName="copyFile" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link7" name="link7" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="504" y="60"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true">
+      <process:partner type="literal">com.eos.foundation.common.utils.FileUtil.copyFile</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="srcFilePath" type="query" value="java.lang.String" valueType="Java" pattern="reference">Fdata/filePath</process:inputVariable>
+      <process:inputVariable id="1" name="destFilePath" type="query" value="java.lang.String" valueType="Java" pattern="reference">path</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="491" y="96"/>
+    <figSize height="17" width="48"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="赋值1" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>invokePojo1</targetNode>
+    </sourceConnections>
+    <targetConnections>link8</targetConnections>
+    <location x="208" y="208"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">com.bos.utp.tools.SystemInfo.APP_WAR_PATH + &quot;document/bizword/&quot; + bizId + &quot;-一般授信调查报告.docx&quot;</process:from>
+      <process:to type="query">downloadFile</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="206" y="244"/>
+    <figSize height="17" width="32"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end1" name="结束1" displayName="结束" type="end">
+    <targetConnections>link3</targetConnections>
+    <location x="705" y="208"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end1label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end1label" name="label" nodeType="label">
+    <location x="703" y="244"/>
+    <figSize height="17" width="32"/>
+    <node>end1</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo1" name="existFile" displayName="existFile" type="invoke" index="1" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" description="" id="link11" name="link11" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>assign2</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">flg</process:leftOperand>
+          <process:rightOperand type="literal">false</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link15" name="link15" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>view1</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <location x="330" y="208"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo1label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true">
+      <process:partner type="literal">com.bos.utp.tools.FileUploadUtil.existFile</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="filePath" type="query" value="java.lang.String" valueType="Java" pattern="reference">downloadFile</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="boolean" valueType="Java">flg</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo1label" name="label" nodeType="label">
+    <location x="318" y="244"/>
+    <figSize height="17" width="46"/>
+    <node>invokePojo1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="赋值2" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link14" name="link14" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>view1</targetNode>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="451" y="285"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">&quot;该文件还未上传！&quot;</process:from>
+      <process:to type="query">downloadFile</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="449" y="321"/>
+    <figSize height="17" width="32"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo2" name="word2007TextReplace" displayName="word2007TextReplace" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link22" name="link22" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo2</sourceNode>
+      <targetNode>view1</targetNode>
+    </sourceConnections>
+    <targetConnections>link18</targetConnections>
+    <location x="750" y="375"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo2label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true">
+      <process:partner type="literal">com.bos.pub.WordUtil.word2007TextReplace</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="wordTemplate" type="literal" value="java.lang.String" valueType="Java" pattern="reference">一般授信调查报告.docx</process:inputVariable>
+      <process:inputVariable id="1" name="params" type="expression" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">map</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">downloadFile</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo2label" name="label" nodeType="label">
+    <location x="697" y="411"/>
+    <figSize height="17" width="129"/>
+    <node>invokePojo2</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo3" name="set1" displayName="set1" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link18" name="link18" displayName="link11" isDefault="true" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>invokePojo2</targetNode>
+    </sourceConnections>
+    <targetConnections>link20</targetConnections>
+    <location x="674" y="376"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo3label</nodeLabel>
+    <process:pojo methodType="xpath" synchronization="true">
+      <process:partner type="literal">commonj.sdo.DataObject.set</process:partner>
+      <process:instance instanceName="f:map"/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="arg0" type="literal" value="java.lang.String" valueType="Java" pattern="reference">bizDetail</process:inputVariable>
+      <process:inputVariable id="1" name="arg1" type="query" value="java.lang.Object" valueType="Java" pattern="reference">f:bizDetail</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo3label" name="label" nodeType="label">
+    <location x="673" y="412"/>
+    <figSize height="17" width="25"/>
+    <node>invokePojo3</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign4" name="赋值4" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link23" name="link23" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign4</sourceNode>
+      <targetNode>subprocess1</targetNode>
+    </sourceConnections>
+    <targetConnections>link21</targetConnections>
+    <location x="120" y="376"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign4label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">f:bizId</process:from>
+      <process:to type="query">f:bizDetail/bizNum</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign4label" name="label" nodeType="label">
+    <location x="118" y="412"/>
+    <figSize height="17" width="32"/>
+    <node>assign4</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo4" name="set" displayName="set" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link20" name="link20" displayName="link10" isDefault="true" type="transition">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>invokePojo3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link27</targetConnections>
+    <location x="602" y="376"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo4label</nodeLabel>
+    <process:pojo methodType="xpath" synchronization="true">
+      <process:partner type="literal">commonj.sdo.DataObject.set</process:partner>
+      <process:instance instanceName="f:map"/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="arg0" type="literal" value="java.lang.String" valueType="Java" pattern="reference">tbir</process:inputVariable>
+      <process:inputVariable id="1" name="arg1" type="query" value="java.lang.Object" valueType="Java" pattern="reference">f:tbir</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo4label" name="label" nodeType="label">
+    <location x="604" y="412"/>
+    <figSize height="17" width="18"/>
+    <node>invokePojo4</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="getBizDetailAndTbir" displayName="getBizDetailAndTbir" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link24" name="link24" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>assign3</targetNode>
+    </sourceConnections>
+    <targetConnections>link23</targetConnections>
+    <location x="225" y="376"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="1" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.bos.biz.createBiz.getBizDetailAndTbir</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="bizDetail" type="query" value="com.bos.biz.bizBusiness.TbBizBusinessDetail" valueType="DataObject" pattern="reference">f:bizDetail</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="bizDetail" type="query" value="com.bos.biz.bizBusiness.TbBizBusinessDetail" valueType="DataObject">f:bizDetail</process:outputVariable>
+        <process:outputVariable id="1" name="tbir" type="query" value="com.bos.biz.bizBusiness.TbBizIntRate" valueType="DataObject">f:tbir</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="180" y="411"/>
+    <figSize height="17" width="116"/>
+    <node>subprocess1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="赋值3" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+    </sourceConnections>
+    <targetConnections>link24</targetConnections>
+    <location x="327" y="376"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">f:bizDetail/tbBizBusiness/partyId</process:from>
+      <process:to type="query">f:csmcorp/tbCsmParty/partyid</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="325" y="412"/>
+    <figSize height="17" width="32"/>
+    <node>assign3</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo5" name="set2" displayName="set" collapsed="false" type="invoke" index="2" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link27" name="link27" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo5</sourceNode>
+      <targetNode>invokePojo4</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="506" y="376"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo5label</nodeLabel>
+    <process:pojo methodType="xpath" synchronization="true">
+      <process:partner type="literal">commonj.sdo.DataObject.set</process:partner>
+      <process:instance instanceName="f:map"/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="arg0" type="literal" value="java.lang.String" valueType="Java" pattern="reference">corp</process:inputVariable>
+      <process:inputVariable id="1" name="arg1" type="query" value="java.lang.Object" valueType="Java" pattern="reference">f:csmcorp</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo5label" name="label" nodeType="label">
+    <location x="505" y="412"/>
+    <figSize height="17" width="25"/>
+    <node>invokePojo5</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="wangbing" createTime="2013-07-23 14:34:36" date="2013-07-23Z" description="" name="DictManager" version="6.3"/>
+  <process:variables>
+    <process:variable anyType="commonj.sdo.DataObject" description="" historyStateLocation="client" isArray="false" name="map"/>
+    <process:variable description="业务信息主键" historyStateLocation="client" isArray="false" name="bizId" primitiveType="String"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.biz.bizBusiness.TbBizBusinessDetail" name="bizDetail"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.biz.bizBusiness.TbBizIntRate" name="tbir"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.csm.corp.customer.TbCsmCorporation" name="csmcorp"/>
+  </process:variables>
+</process:tPageFlow>

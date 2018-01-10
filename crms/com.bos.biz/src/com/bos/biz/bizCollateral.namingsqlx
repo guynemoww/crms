@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <select id="getCollateraList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select basic.surety_id,rel.relation_id,t.PARTY_NAME,basic.sort_type,basic.ASSESS_VALUE,basic.coll_type,rel.SURETY_AMT,
+			(select sum(SURETY_AMT) from tb_biz_grt_rel where APPLY_ID=#applyId#) as YDBE
+			from TB_GRT_MORTGAGE_BASIC basic,tb_biz_grt_rel rel,tb_csm_party t
+			where basic.surety_id=rel.surety_id
+			and basic.PARTY_ID=t.PARTY_ID
+			and rel.APPLY_ID=#applyId#
+			and rel.SURETY_TYPE=#collType#
+    </select>
+    
+    <select id="getCreditsafeList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select  creditsafe.surety_id,rel.RELATION_ID, rel.SURETY_TYPE,creditsafe.POLICY_HOLDER,creditsafe.CURRENCY_CD,creditsafe.CREDIT_LIMIT,
+            to_char(creditsafe.EFFECTIVE_DATE,'yyyy-mm-dd') begin_date, to_char( creditsafe.END_DATE,'yyyy-mm-dd') end_date,creditsafe.GUARANTEE_MONEY
+		    from TB_GRT_CREDITSAFE creditsafe,TB_BIZ_GRT_REL rel
+		    where creditsafe.surety_id=rel.surety_id
+		    and rel.apply_id=#applyId#
+    </select>
+    
+    <select id="getCashDepositList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select  rel.RELATION_ID, margin.SURETY_KEY_ID,margin.surety_id,margin.MARGIN_ACCOUNT,margin.MARGIN_SORT,margin.CURRENCY_CD,margin.OPEN_BANK,margin.ACCT_NAME,margin.MAGIN_SCALE,margin.ACC_BALANCE,to_char(margin.END_DATE,'yyyy-mm-dd') as end_date ,margin.IS_JIXI,margin.MARGIN_RATE,margin.append_amt    		
+		    from tb_grt_margin margin,TB_GRT_MORTGAGE_BASIC basic,TB_BIZ_GRT_REL rel
+		    where margin.surety_id=basic.surety_id
+		    and basic.surety_id=rel.surety_id
+		    and rel.apply_id=#applyId#
+    </select>
+  <!--查询业务申请下关联 保证人--> 
+    <select id="getGuaranteerList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	SELECT 
+       G.GUARANTEE_TYPE,
+       G.CURRENCY_CD,
+       G.SURETY_AMT,
+       G.USABLE_GUARANTEE_LIMIT,
+       (G.SURETY_AMT-G.USABLE_GUARANTEE_LIMIT)AS USED_GUARANTEE_LIMIT,
+       T.PARTY_NAME,
+       G.PARTY_ID,
+       G.SURETY_ID,
+       REL.RELATION_ID
+  FROM TB_GRT_GUARANTEE_BASIC G, TB_BIZ_GRT_REL REL, TB_CSM_PARTY T
+ WHERE G.SURETY_ID = REL.SURETY_ID
+   AND T.PARTY_ID = G.PARTY_ID
+   AND REL.APPLY_ID =#applyId#
+   and g.guarantee_Type='04'
+    </select>
+    
+    <select id="getCollateraBySuretyId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select basic.SURETY_NO,basic.PARTY_ID ,basic.COLL_TYPE,basic.SORT_TYPE,basic.ASSESS_FORM,to_char(basic.ASSESS_DATE,'yyyy-mm-dd') as ASSESS_DATE ,
+    	basic.ASSESS_VALUE,basic.CURRENCY_CD,basic.MYBANK_AFFIRM_VALUE,basic.MORTGAGE_VALUE,basic.MYBANK_SET_VALUE,rel.SURETY_AMT,basic.MORTGAGE_STATUS,
+    	rel.MORTGAGE_RATE,basic.ORG_NUM,basic.USER_NUM,to_char(basic.CREATE_TIME,'yyyy-mm-dd') as CREATE_TIME,to_char(basic.UPDATE_TIME,'yyyy-mm-dd')  as  UPDATE_TIME
+		from TB_GRT_MORTGAGE_BASIC basic,tb_biz_grt_rel rel
+		where 1=1
+		and basic.SURETY_ID=rel.SURETY_ID
+		and rel.RELATION_ID=#relationId#
+    </select>
+     <!--查询业务申请利率--> 
+    <select id="getBizRate" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     	select nvl(e.year_rate,0)  bizRate  from tb_biz_amount_loanrate_apply e where e.amount_detail_id=#amountDetailId#
+    </select>
+    
+</sqlMap>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:midaoliang -->
+<sqlMap>
+ <resultMap class="commonj.sdo.DataObject" id="queryRoleidForEmpExtMap">
+        <result column="ROLEID"  property="ROLEID"/>
+        <result column="ROLENAME"  property="ROLENAME"/>
+    </resultMap>
+    <!-- 获取用户信息 -->
+    <select id="queryEmployeeByTempsss" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.QueryEmplyoeeEntity">
+    	select distinct e.empid as empid,
+		   e.orgid as inorgid,
+	       e.empcode as empcode,
+	       e.empname as empname,
+	       e.gender as gender,
+	       e.empstatus as empstatus,
+	       opr.operatorid as operatorid,
+	       opr.status as status,
+	       o.orgname as inorgname,
+	       opr.lastlogin as lastlogin,
+	       e.department_Id as departmentId 
+		from om_emporg eo 
+		  inner join om_employee e on eo.empid=e.empid
+		  inner join om_organization o on eo.orgid=o.orgid
+		  left outer join ac_operator opr on e.operatorid=opr.operatorid
+		where 1=1
+     	<isNotNull prepend=" and " property="inorgid"> 
+             o.orgid=#inorgid#
+        </isNotNull>
+        <isNotNull prepend=" and " property="empcode"> 
+             e.empcode like '$empcode$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empname"> 
+             e.empname like '%$empname$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empstatus"> 
+             e.empstatus=#empstatus#
+        </isNotNull>
+        <isNotNull prepend=" and " property="rolename"> 
+             ar.rolename like '%$rolename$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="orgname"> 
+             o.orgname like '%$orgname$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="departmentId"> 
+             e.department_Id = #departmentId#
+        </isNotNull>
+         <isNotNull prepend=" and " property="status"> 
+             opr.status = #status#
+        </isNotNull>
+        <!--<isEqual prepend=" and " property="isadmin" compareValue="y">
+             e.isadmin=#isadmin#
+        </isEqual>
+        <isEqual prepend=" and " property="isadmin" compareValue="n">
+             (e.isadmin=#isadmin# or e.isadmin is null)
+        </isEqual>-->
+    </select>
+    <!-- 根据营销团队id获取客户经理列表 -->
+    <select id="queryEmployeeByTemp" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.QueryEmpForOrgEntity">
+    	select eo.orgid as inorgid,
+	       o.orgname as inorgname,
+	       o.orglevel as orglevel,
+	       o.orgcode as orgcode,
+	       e.empid as empid,
+	       e.empcode as empcode,
+	       e.empname as empname,
+	       e.gender as gender,
+	       e.empstatus as empstatus,
+	       e.department_Id as departmentId,
+	       opr.operatorid as operatorid,
+	       opr.status as status,
+	       to_Char(opr.lastlogin , 'YYYY-MM-DD HH24:MI:SS') as lastlogin
+		from om_emporg eo 
+		  inner join om_employee e on eo.empid=e.empid
+		  inner join om_organization o on eo.orgid=o.orgid
+		  left outer join ac_operator opr on e.operatorid=opr.operatorid
+    where 1=1
+		<isNotNull prepend=" and " property="orgseq"> 
+             o.orgseq like '$orgseq$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empcode"> 
+             e.empcode like '$empcode$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empname"> 
+             e.empname like '%$empname$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empstatus"> 
+             e.empstatus=#empstatus#
+        </isNotNull>
+        <isNotNull prepend=" and " property="orgname"> 
+             o.orgname like '%$orgname$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="departmentId"> 
+             e.department_Id =#departmentId#
+        </isNotNull>
+        order by o.orglevel
+    </select>
+    
+    <!-- 根据机构id删除角色关联表 ac_operatorrole 对应信息 -->
+    <delete id="delOprRoleByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete ac_operatorrole where operatorid in (select operatorid from om_employee where orgid=#orgid#)
+    	]]>
+    </delete>
+    <!-- 根据机构id删除用户表 om_employee 对应信息 -->
+    <delete id="delOmployeeByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete om_employee where orgid=#orgid#
+    	]]>
+    </delete>
+    <!-- 根据机构id删除机构用户关系表 om_emporg 对应信息 -->
+    <delete id="delEmpOrgByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete om_emporg where orgid=#orgid#
+    	]]>
+    </delete>
+    
+     <select id="queryRoleidForEmpExt" parameterClass="Long" resultMap="queryRoleidForEmpExtMap">
+    	<![CDATA[
+    		select b.rolename,b.roleid from ac_operatorrole a,ac_role b
+				where a.roleid=b.roleid and a.operatorid=#value#
+    	]]>
+    </select>
+</sqlMap>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+    
+    <!-- 查询我行评估信息   -->
+    <select id="getMyBankAssessList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select assess.SURETY_KEY_ID, basic.SURETY_NO,basic.COLL_TYPE,basic.SORT_TYPE,assess.CURRENCY_CD,assess.ASSESS_VALUE,to_char(assess.ASSESS_DATE,'yyyy-mm-dd') as ASSESS_DATE,assess.REMARK,assess.cost_value
+		    from TB_GRT_MYBANK_ASSESS assess,TB_GRT_MORTGAGE_BASIC basic
+		    where assess.SURETY_ID=basic.SURETY_ID
+		    and assess.SURETY_ID=#suretyId#
+		    and basic.SORT_TYPE=#sortType#
+   </select>
+   
+   
+   <!-- 查询外部评估信息   -->
+   <select id="getOuterAssessList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select assess.ASSESS_ORG, assess.SURETY_KEY_ID, basic.SURETY_NO,basic.COLL_TYPE,basic.SORT_TYPE,assess.CURRENCY_CD,assess.ASSESS_VALUE,to_char(assess.ASSESS_DATE,'yyyy-mm-dd') as ASSESS_DATE,assess.REMARK,assess.cost_value
+		    from TB_GRT_OUTER_ASSESS assess,TB_GRT_MORTGAGE_BASIC basic
+		    where assess.SURETY_ID=basic.SURETY_ID
+		    and assess.SURETY_ID=#suretyId#
+		    and basic.SORT_TYPE=#sortType#
+   </select>
+   
+  <!-- 查询已用担保金额   -->
+   <select id="getGrtAviAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 	<![CDATA[
+	select * from  TB_GRT_MORTGAGE_BASIC t
+ 	where nvl(t.mortgage_value,0)<nvl(t.total_amt,0)
+    and t.SURETY_ID =#suretyId#
+     	]]>
+   </select>
+   
+   <!--校验评估价值是否录入-->
+    <select id="checkAssessValue" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select *
+    from TB_GRT_MORTGAGE_BASIC t
+  	 where t.mortgage_value is not null
+   	and t.assess_value is null
+    and t.SURETY_ID =#suretyId#
+   </select>
+   
+      <!--校验唯一性-->
+    <select id="checkOwnershipNum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 select * from tb_grt_mortgage_basic t
+  		where  t.ownership_num=#ownershipNum#
+         and t.mortgage_status!='06'
+      <isNotNull property="suretyId">  and t.SURETY_ID! =#suretyId# </isNotNull>
+ 
+   </select>
+   
+   
+</sqlMap>

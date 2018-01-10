@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lijf -->
+<sqlMap>
+
+    <select id="select_position_re" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select to_char(listagg (orglevel,',') within group  (order by orglevel)) as orglevel from (
+		with sup_orgs as(select * from OM_ORGANIZATION t start with t.orgcode = #orgcode# connect by prior t.parentorgid = t.orgid)
+		select distinct s.orglevel as orglevel
+		  from sup_orgs s, om_empposition ep, om_position p,ac_operator ao
+		 where ep.orgid = s.orgid
+		   and ep.positionid = p.positionid
+		   and ep.empid = ao.operatorid
+		   and p.posicode = #posicode#
+		   and ao.status in ('running', 'init')
+		)
+	</select>
+	
+	<select id="queryPositionByUserNum" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+	      select b.posicode,
+	             b.posiname,
+	             d.orglevel,
+	             d.orgcode,
+	             c.empcode
+	        from om_empposition  a,
+	             om_position     b,
+	             om_employee     c,
+	             om_organization d
+	       where a.positionid = b.positionid
+	         and c.empid = a.empid
+	         and d.orgid = a.orgid
+	         and c.empcode = #userNum#
+	</select>
+</sqlMap>

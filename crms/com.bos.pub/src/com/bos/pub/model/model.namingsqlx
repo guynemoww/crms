@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <!-- 根据模型ID查询模型下的指标 -->
+    <select id="selectModelIndex" parameterClass="java.util.Map" resultClass="com.bos.pub.model.TbPubModelIndex">
+with pa(miId, indexInd, modelId, pMiId, miName, miOrder, indexId) as (
+  select MI_ID miId,t.INDEX_IND indexInd,MODEL_ID modelId,P_MI_ID pMiId,MI_NAME miName,
+    MI_ORDER miOrder,t.INDEX_ID indexId 
+  from TB_PUB_MODEL_INDEX t 
+  where t.model_id=#modelId# and t.p_mi_id='0'
+
+  union all
+
+  select MI_ID miId,t2.INDEX_IND indexInd,MODEL_ID modelId,P_MI_ID pMiId,MI_NAME miName,
+    MI_ORDER miOrder,t2.INDEX_ID indexId 
+  from TB_PUB_MODEL_INDEX t2, pa p
+  where p.miId=t2.p_mi_id
+)
+select p.*,b.index_desc indexDesc 
+from pa p left join tb_pub_index_base b on b.index_id=p.indexId
+	</select>
+	
+	<select id="selectBaseIndexAndItems" parameterClass="java.util.Map" resultClass="com.bos.pub.model.BaseIndexAndItems">
+with mm as
+ (select distinct index_ind, model_id
+    from TB_PUB_MODEL_INDEX t
+   where index_ind is not null), pa(model_id,index_id,index_name, index_ind, index_type, index_param, index_index, grade_type, index_expr, grade_expr) as (
+select mm.model_id,
+       b.index_id,
+       b.index_name,
+       b.index_ind,
+       b.index_type,
+       b.index_param,
+       b.index_index,
+       b.grade_type,
+       b.index_expr,
+       b.grade_expr
+  from tb_pub_index_base b, mm
+ where b.index_status = '1'
+        and b.index_ind = mm.index_ind
+
+ union all 
+ select mm.model_id,
+       b.index_id,
+       b.index_name,
+       b.index_ind,
+       b.index_type,
+       b.index_param,
+       b.index_index,
+       b.grade_type,
+       b.index_expr,
+       b.grade_expr
+  from tb_pub_index_base b, mm, pa p
+  where b.index_ind = mm.index_ind
+  and b.index_index is not null
+       and ',' || p.index_index || ',' like
+           '%,' || b.index_ind || ',%'
+       and b.index_status = '1'
+)
+select * from pa where model_id=#modelId#
+	</select>
+	<update id="updateModelIndexId" parameterClass="java.util.Map" >
+		update TB_PUB_MODEL_INDEX t set t.index_id=#indexId# where t.index_ind=#indexInd#
+	</update>
+	
+	
+	
+	<select id="selectmappingItems" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+		select DICTNAME from EOS_DICT_ENTRY where DICTTYPEID=#sid# and DICTID=#source#
+			
+	</select>
+</sqlMap>

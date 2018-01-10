@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--获取已关联的担保合同 -->
+    <!-- modi by shangmf:20171018:修复最高额担保合同重复显示的问题，去掉cert_type,cert_num的查询，以避免重复，以及后边的union all用union -->
+    <select id="getMaxloanconList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select *
+  from (select ta.subcontract_id,
+               ta.subcontract_num,
+               ta.zgbjxe,
+               ta.avi_amt,
+               to_char(ta.begin_date, 'YYYY-MM-DD') as begin_date,
+               to_char(ta.end_date, 'YYYY-MM-DD') as end_date,
+               t.maxloancon_id
+          from tb_biz_grt_maxloancon_apply t, tb_con_subcontract ta
+         where t.subcontract_id = ta.subcontract_id
+         and ta.subcontract_status='03' 
+        and t.apply_id = #applyId#
+        and t.re_type = #guarantyType#
+        ) ty
+  left join (select listagg(tb.party_name, ',') within group(order by party_name) as party_name,
+                    t.subcontract_id               
+               from tb_con_sub_grt_rel     t,
+                    tb_grt_guarantee_basic ta,
+                    tb_csm_party           tb
+              where t.surety_id = ta.surety_id
+                and ta.party_id = tb.party_id
+              group by t.subcontract_id
+             union
+             select td.party_name, tc.subcontract_id
+               from tb_con_subcontract tc, v_csm_party td 
+              where tc.party_id = td.party_id and tc.subcontract_status='03') tz
+    on ty.subcontract_id = tz.subcontract_id
+    <!-- 备份留存
+    left join (select listagg(tb.party_name, ',') within group(order by party_name) as party_name,
+                    t.subcontract_id,
+                    ''as cert_type,
+                    ''as cert_num                 
+               from tb_con_sub_grt_rel     t,
+                    tb_grt_guarantee_basic ta,
+                    tb_csm_party           tb
+              where t.surety_id = ta.surety_id
+                and ta.party_id = tb.party_id
+              group by t.subcontract_id
+             union all
+             select td.party_name, tc.subcontract_id,td.cert_type,td.cert_num
+               from tb_con_subcontract tc, v_csm_party td 
+              where tc.party_id = td.party_id and tc.subcontract_status='03') tz
+    on ty.subcontract_id = tz.subcontract_id
+    -->
+    </select>
+    <!--获取可关联的最高额担保合同   业务申请-->
+    <select id="getMaxLoanCon1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	  select * from (   	
+                    select t.subcontract_id,
+      				 t.subcontract_num,
+      				 t.subcontract_type,
+		             	to_char(t.begin_date, 'YYYY-MM-DD') as begin_date,
+               			to_char(t.end_date, 'YYYY-MM-DD') as end_date,				       
+               			t.party_id,
+				       t.zgbjxe,
+				       t.avi_amt,
+				       t.total_amt 
+       from TB_CON_SUBCONTRACT t
+                        where  t.IF_TOP_SUBCON ='1'
+                        and t.SUBCONTRACT_STATUS='03'
+                        and t.SUBCONTRACT_TYPE = #guarantyType#
+                        and t.CON_PARTY_ID = #partyId#
+			)ty left join (
+			             select listagg(v.PARTY_NAME,',') within group(order by PARTY_NAME) as PARTY_NAME,t.SUBCONTRACT_ID <!-- ,''as CERT_TYPE ,''as CERT_NUM-->
+                        from TB_CON_SUB_GRT_REL t,TB_GRT_GUARANTEE_BASIC ta,V_CSM_PARTY v
+			            where t.SURETY_ID=ta.SURETY_ID
+			            and ta.PARTY_ID=v.PARTY_ID
+			            group by t.SUBCONTRACT_ID
+			            union <!--all-->
+			            select v.PARTY_NAME,tc.SUBCONTRACT_ID <!--,v.CERT_TYPE,v.CERT_NUM-->
+                        from TB_CON_SUBCONTRACT tc,V_CSM_PARTY v
+			            where tc.PARTY_ID=v.PARTY_ID and tc.SUBCONTRACT_STATUS='03'
+			) tz
+			on ty.SUBCONTRACT_ID=tz.SUBCONTRACT_ID
+			<isNotNull property="partyName">  and ta.PARTY_NAME = '$partyName$' </isNotNull>
+			<isNotNull property="subcontractNum">  and t.SUBCONTRACT_NUM = '$subcontractNum$' </isNotNull> 
+			<isNotNull property="subcontractManualNum">  and t.SUBCONTRACT_MANUAL_NUM = '$subcontractManualNum$' </isNotNull> 
+    </select>
+    <!--获取可关联的最高额担保合同   综合授信协议或者单笔合同-->
+    <select id="getMaxLoanCon2" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				    select *
+		   from (select t.subcontract_id,
+		                t.subcontract_num,
+		                t.paper_con_num,
+		                t.bz,
+		                t.zgbjxe,
+		                t.avi_amt,
+		                to_char(t.end_date, 'yyyy-MM-dd') as end_date
+		           from tb_con_subcontract t,
+		                (select tb.subcontract_id, tb.apply_id
+		                   from tb_biz_grt_maxloancon_apply tb
+		                 union
+		                 select tb.subcontract_id, t.apply_id
+		                   from tb_biz_grt_rel     t,
+		                        tb_con_sub_grt_rel ta,
+		                        tb_con_subcontract tb
+		                  where t.surety_id = ta.surety_id
+		                    and ta.subcontract_id = tb.subcontract_id
+		                    and tb.subcontract_id not in
+		                        (select tc.subcontract_id
+		                           from tb_con_subcontract tc, tb_con_sub_grt_rel td
+		                          where tc.subcontract_id = td.subcontract_id
+		                            and tc.if_top_subcon = '1'
+		                            and tc.subcontract_status = '03'
+		                            and td.surety_id not in
+		                                (select surety_id from tb_biz_grt_rel))) tb
+		          where t.if_top_subcon = '1'
+		            and t.subcontract_status = '03'
+		            and t.subcontract_id = tb.subcontract_id
+		            and t.subcontract_type = #guarantyType#
+		            and t.con_party_id = #partyId#
+		            and tb.apply_id = #applyId#) ty
+		   left join (select listagg(tb.party_name, ',') within group(order by party_name) as party_name,
+		                     t.subcontract_id
+		                from tb_con_sub_grt_rel     t,
+		                     tb_grt_guarantee_basic ta,
+		                     tb_csm_party           tb
+		               where t.surety_id = ta.surety_id
+		                 and ta.party_id = tb.party_id
+		               group by t.subcontract_id
+		              union <!-- all-->
+		              select td.party_name, tc.subcontract_id
+		                from tb_con_subcontract tc, tb_csm_party td
+		               where tc.party_id = td.party_id and tc.SUBCONTRACT_STATUS='03') tz
+		     on ty.subcontract_id = tz.subcontract_id
+			<isNotNull property="partyName">  and ta.PARTY_NAME = '$partyName$' </isNotNull>
+			<isNotNull property="subcontractNum">  and t.SUBCONTRACT_NUM = '$subcontractNum$' </isNotNull> 
+			<isNotNull property="subcontractManualNum">  and t.SUBCONTRACT_MANUAL_NUM = '$subcontractManualNum$' </isNotNull> 
+    </select>
+    <!--获取可关联的最高额担保合同   综合授信协议项下业务-->
+    <select id="getMaxLoanCon3" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			  select * from (   	
+			        select t.SUBCONTRACT_ID,t.SUBCONTRACT_NUM,t.PAPER_CON_NUM,t.BZ,t.ZGBJXE as TOTAL_AMT,nvl(t.AVI_AMT,t.ZGBJXE) as AVI_AMT,
+                    to_date(to_char(t.END_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') as END_DATE,t.ZGBJXE
+			        	from TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL tb,tb_con_credit_info te
+						where  t.IF_TOP_SUBCON ='1'
+			            and t.SUBCONTRACT_ID = tb.SUBCONTRACT_ID
+			            and te.CON_STATUS='03'
+                        and t.SUBCONTRACT_STATUS='03'
+                      <!--  and tb.if_effective='1' 20171024-->
+			            and tb.CONTRACT_ID=te.CONTRACT_ID
+						and t.SUBCONTRACT_TYPE = #guarantyType#						
+						and t.CON_PARTY_ID = #partyId#
+			            and tb.contract_id = #xyId#
+			            and tb.SUBCONTRACT_ID not in
+			            (
+			            	select ta.SUBCONTRACT_ID
+				            from TB_BIZ_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,TB_CON_SUBCONTRACT_REL tb,tb_csm_party tc
+							where t.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+							and ta.SUBCONTRACT_ID = tb.SUBCONTRACT_ID
+							and ta.party_id=tc.party_id
+							and ta.SUBCONTRACT_TYPE='01'
+				            and tb.CONTRACT_ID=#contractId#
+			            )
+			)ty left join (
+			            select listagg(tb.PARTY_NAME,',') within group(order by PARTY_NAME) as PARTY_NAME,t.SUBCONTRACT_ID from TB_CON_SUB_GRT_REL t,TB_GRT_GUARANTEE_BASIC ta,TB_CSM_PARTY tb
+			            where t.SURETY_ID=ta.SURETY_ID
+			            and ta.PARTY_ID=tb.PARTY_ID
+			            group by t.SUBCONTRACT_ID
+			            union <!--all-->
+			            select td.PARTY_NAME,tc.SUBCONTRACT_ID from TB_CON_SUBCONTRACT tc,TB_CSM_PARTY td
+			            where tc.PARTY_ID=td.PARTY_ID and tc.SUBCONTRACT_STATUS='03'
+			) tz
+			on ty.SUBCONTRACT_ID=tz.SUBCONTRACT_ID
+			<isNotNull property="partyName">  and ta.PARTY_NAME = '$partyName$' </isNotNull>
+			<isNotNull property="subcontractNum">  and t.SUBCONTRACT_NUM = '$subcontractNum$' </isNotNull> 
+			<isNotNull property="subcontractManualNum">  and t.SUBCONTRACT_MANUAL_NUM = '$subcontractManualNum$' </isNotNull> 
+    </select>
+    <!--获取业务申请担保方式 -->
+    <select id="getBizGrtType" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from tb_biz_amount_apply t 
+			where t.APPLY_ID=#applyId# 
+			and t.GUARANTY_TYPE like '%$guarantyType$%'
+    </select>
+</sqlMap>

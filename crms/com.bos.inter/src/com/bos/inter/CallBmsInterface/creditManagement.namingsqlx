@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:shendl -->
+<sqlMap>
+	<!--额度查询:对公客户额度信息-->
+	<select id="queryCreditInfo" parameterClass="java.util.HashMap" resultClass="com.bos.inter.CallBmsInterface.CRMSCrdQueryRsBody">
+    select 
+       d.ecif_party_num as custNo,
+       d.party_name     as custName,
+       d.party_type_cd  as custType,
+       nvl(b.credit_amount,0)  as crdTotalAmount,
+       nvl(b.credit_used,0)    as crdUsedAmount,
+       nvl(b.credit_avi,0)     as crdAviAmount,
+       c.valid_date     as beginDate,
+       c.end_date       as endDate,
+       a.product_type   as productType,
+       e.product_name  as productName,
+       a.detail_amt as crdDetailAmount,
+       a.detail_used as crdDetailUsedAmount,
+       a.detail_balance as crdDetailAviAmount
+    from 
+       tb_biz_amount_detail_approve a,
+       tb_biz_amount_approve b,
+       tb_biz_approve c,
+       tb_csm_party d,
+       tb_sys_product e
+     where
+       a.amount_id = b.amount_id
+     and 
+       b.approve_id = c.approve_id
+     and
+       b.party_id = c.party_id
+     and 
+       a.product_type = e.product_cd  
+     and c.biz_type in ('02','05')
+     and c.become_effective_mark = '03'
+     and b.party_id = #partyId#
+     and a.product_type = #productCd#
+   </select>
+	<!--额度查询:同业客户额度信息-->
+	<select id="queryTYCreditInfo" parameterClass="java.lang.String" resultClass="com.bos.inter.CallBmsInterface.CRMSCrdQueryRsBody">  
+    select 
+       t2.ecif_party_num as custNo,
+       t2.party_name as custName,
+       t2.party_type_cd  as custType,
+       nvl(t1.item_amt,0) as crdTotalAmount,
+       nvl(t1.item_used,0) as crdUsedAmount,
+       nvl(t1.item_avi,0) as crdAviAmount,
+       t1.begin_date as beginDate,
+       t1.end_date as endDate
+     from tb_crd_third_party_limit t1,tb_csm_party t2
+     where t1.party_id = t2.party_id
+     and t1.party_id = #partyId#
+     and t1.limit_type = '05' and t1.status_cd = '03'
+	</select> 
+	<!--额度查询:同业客户额度信息  在额度调整(扣减和恢复的时候 需要用到额度ID 也就是limitId)-->
+	<select id="queryTYCredit" parameterClass="java.lang.String" resultClass="com.bos.inter.CallBmsInterface.CRMSCrdQueryTyInfo">  
+    select 
+       t1.limit_id as limitId,
+       nvl(t1.item_amt,0) as crdTotalAmount,
+       nvl(t1.item_used,0) as crdUsedAmount,
+       nvl(t1.item_avi,0) as crdAviAmount
+     from tb_crd_third_party_limit t1
+     where  t1.party_id = #partyId#
+     and t1.limit_type = '05' 
+     and t1.status_cd = '03'
+	</select> 
+</sqlMap>

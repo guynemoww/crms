@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--查询业务主键-->
+    <select id="queryBizKey" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    select t.APPLY_ID,t.APPROVE_ID,ta.AMOUNT_ID,tb.AMOUNT_DETAIL_ID,tc.CONTRACT_ID,td.LOAN_ID,te.SUMMARY_ID
+		from tb_biz_approve t,TB_BIZ_AMOUNT_APPROVE ta,TB_BIZ_AMOUNT_DETAIL_APPROVE tb,TB_CON_CONTRACT_INFO tc,TB_LOAN_INFO td,TB_LOAN_SUMMARY te
+		where t.APPROVE_ID=ta.APPROVE_ID
+		and ta.AMOUNT_ID=tb.AMOUNT_ID
+		and tb.AMOUNT_DETAIL_ID=tc.AMOUNT_DETAIL_ID
+		and tc.CONTRACT_ID=td.CONTRACT_ID
+		and td.LOAN_ID=te.LOAN_ID
+		<isNotNull property="summaryId">  and te.summary_id = '$summaryId$' </isNotNull>
+		<isNotNull property="loanId">  and td.loan_id = '$loanId$' </isNotNull>
+		<isNotNull property="contractId">  and tc.contract_id = '$contractId$' </isNotNull>
+		<isNotNull property="amountDetailId">  and tb.AMOUNT_DETAIL_ID = '$amountDetailId$' </isNotNull>
+		<isNotNull property="amountId">  and ta.AMOUNT_ID = '$amountId$' </isNotNull>
+		<isNotNull property="approveId">  and t.APPROVE_ID = '$approveId$' </isNotNull>
+		<isNotNull property="applyId">  and t.APPLY_ID = '$applyId$' </isNotNull>
+    </select>
+    <!--查询业务主键没有生成借据-->
+    <select id="queryBizKey1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    select t.APPLY_ID,t.APPROVE_ID,ta.AMOUNT_ID,tb.AMOUNT_DETAIL_ID,tc.CONTRACT_ID,td.LOAN_ID
+		from tb_biz_approve t,TB_BIZ_AMOUNT_APPROVE ta,TB_BIZ_AMOUNT_DETAIL_APPROVE tb,TB_CON_CONTRACT_INFO tc,TB_LOAN_INFO td
+		where t.APPROVE_ID=ta.APPROVE_ID
+		and ta.AMOUNT_ID=tb.AMOUNT_ID
+		and tb.AMOUNT_DETAIL_ID=tc.AMOUNT_DETAIL_ID
+		and tc.CONTRACT_ID=td.CONTRACT_ID
+		<isNotNull property="loanId">  and td.loan_id = '$loanId$' </isNotNull>
+		<isNotNull property="contractId">  and tc.contract_id = '$contractId$' </isNotNull>
+		<isNotNull property="amountDetailId">  and tb.AMOUNT_DETAIL_ID = '$amountDetailId$' </isNotNull>
+		<isNotNull property="amountId">  and ta.AMOUNT_ID = '$amountId$' </isNotNull>
+		<isNotNull property="approveId">  and t.APPROVE_ID = '$approveId$' </isNotNull>
+		<isNotNull property="applyId">  and t.APPLY_ID = '$applyId$' </isNotNull>
+    </select>
+    <!-- 获取的所有批复额度（非银团，非低，非委托贷款）  -->
+    <select id="getPartyUseAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    <isNotNull property="partyId">
+			select nvl(sum(t.CREDIT_amount),0) as useAmt 
+				from tb_biz_amount_approve t,tb_biz_approve ta
+				where t.APProve_ID=ta.APProve_ID
+                and ta.BECOME_EFFECTIVE_MARK='03'
+                and nvl(ta.PRODUCT_TYPE,0) != '01013001' and nvl(ta.PRODUCT_TYPE,0) != '01013010'
+		   		and ta.PARTY_ID = '$partyId$'
+	    </isNotNull>
+    </select>
+    <!-- 获取已使用的综合授信额度（非银团，非低）  -->
+    <select id="getCreditUseAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    <isNotNull property="partyId">
+			select nvl(sum(ta.CREDIT_AMOUNT-ta.CREDIT_AVI),0) as useAmt 
+				from tb_biz_approve t,tb_biz_amount_approve ta 
+				where  t.APPROVE_ID=ta.APPROVE_ID
+                and t.BECOME_EFFECTIVE_MARK ='03'
+				and t.LOW_RISK_BIZ_TYPE is null
+                and nvl(t.IS_BANK_TEAM_LOAN,0) = '0'
+		   		and t.PARTY_ID = '$partyId$'
+	    </isNotNull>
+    </select>
+    <!-- 查询批复下所有借据额度  -->
+    <select id="querySummaryAmts" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    
+		    select   nvl(sum(te.RMB_AMT),0) as useAmt
+				from tb_biz_approve t,TB_BIZ_AMOUNT_APPROVE ta,TB_BIZ_AMOUNT_DETAIL_APPROVE tb,TB_CON_CONTRACT_INFO tc,TB_LOAN_INFO td,TB_LOAN_SUMMARY te
+				where t.APPROVE_ID=ta.APPROVE_ID
+				and ta.AMOUNT_ID=tb.AMOUNT_ID
+				and tb.AMOUNT_DETAIL_ID=tc.AMOUNT_DETAIL_ID
+				and tc.CONTRACT_ID=td.CONTRACT_ID
+                and te.LOAN_ID=td.LOAN_ID
+		        and td.LOAN_STATUS='03'
+		        <isNotNull property="applyId"> and t.APPLY_ID ='$applyId$' </isNotNull>
+		        <isNotNull property="contractId"> and tc.CONTRACT_ID ='$contractId$' </isNotNull>
+	    
+    </select>
+    <!-- 将该客户下所有客户额度置为失效（非银团，非低）  -->
+    <select id="delPartyLimit" parameterClass="java.util.HashMap">
+			update tb_crd_party_limit t set t.STATUS_CD='04' 
+				where t.STATUS_CD != '06'
+				and t.PARTY_ID ='$partyId$'
+    </select>
+    <!-- 将所有批复额度置为失效（非银团，非低）  -->
+    <select id="delCreditLimit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	<isNotNull property="partyId"> 
+		update tb_biz_approve t set t.BECOME_EFFECTIVE_MARK='04' 
+			where t.LOW_RISK_BIZ_TYPE is null
+            and nvl(t.IS_BANK_TEAM_LOAN,0) = '0'
+			and t.PARTY_ID ='$partyId$'
+		 </isNotNull>
+    </select>
+</sqlMap>

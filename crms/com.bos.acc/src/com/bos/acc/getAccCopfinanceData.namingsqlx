@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:jiangzhan -->
+<sqlMap>
+ <!--获取利润表科目平均值-->
+ <select id="getAccCopfinanceLrAvgData" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select nvl(sum(t.profit_zyywsr),0)/(decode(count(*),0,1,count(*))) as avg_zyywsr,
+	           nvl(sum(t.profit_zyywcb),0)/(decode(count(*),0,1,count(*))) as avg_zyywcb,
+	           nvl(sum(t.profit_jyfyhj),0)/(decode(count(*),0,1,count(*))) as avg_jyfyhj,
+	           nvl(sum(t.profit_lwgz),0)/(decode(count(*),0,1,count(*))) as avg_lwgz,
+	           nvl(sum(t.profit_zj),0)/(decode(count(*),0,1,count(*))) as avg_zj,
+	           nvl(sum(t.profit_sdf),0)/(decode(count(*),0,1,count(*))) as avg_sdf,
+	           nvl(sum(t.profit_s),0)/(decode(count(*),0,1,count(*))) as avg_s,
+	           nvl(sum(t.profit_qtjyfy),0)/(decode(count(*),0,1,count(*))) as avg_qtjyfy,
+	           nvl(sum(t.profit_cwfy),0)/(decode(count(*),0,1,count(*))) as avg_cwfy,
+	           nvl(sum(t.profit_jtkz),0)/(decode(count(*),0,1,count(*))) as avg_jtkz,
+	           nvl(sum(t.profit_tzxsr),0)/(decode(count(*),0,1,count(*))) as avg_tzxsr,
+	           nvl(sum(t.profit_tzxzc),0)/(decode(count(*),0,1,count(*))) as avg_tzxzc,
+	           nvl(sum(t.profit_qtyyjsr),0)/(decode(count(*),0,1,count(*))) as avg_qtyyjsr,
+	           nvl(sum(t.profit_lrze),0)/(decode(count(*),0,1,count(*))) as avg_lrze
+	    from tb_acc_finance_nprofit_data t where t.finance_id = #financeId#
+ </select>
+ 
+ <!--删除科目数据-->
+ <delete id="delAccFinanceProjectValue" parameterClass="commonj.sdo.DataObject">
+	 delete from tb_acc_finance_statement_data t
+	  where t.finance_id = #financeId#
+	    and t.project_cd in ('01902001','01902002','01902003','01902004','01902005','01902006','01902007','01902008','01902009','01902010','01902011','01902012','01902013','01902014')
+</delete>
+
+	<resultMap class="java.util.HashMap" id="resultMap">
+        <result column="BILL_DATA_ID" javaType="string" property="billDataId"/>
+        <result column="FINANCE_ID" javaType="string" property="financeId"/>
+        <result column="REPORT_TYPE" javaType="string" property="reportType"/>
+        <result column="SHEET_CODE" javaType="string" property="sheetCode"/>
+        <result column="FINANCE_DEADLINE" javaType="string" property="financeDeadline"/>
+        <result column="BILL_YEAR" javaType="string" property="billYear"/>
+        <result column="BILL_MONTH" javaType="string" property="billMonth"/>
+        <result column="BILL_IN_CASH" javaType="string" property="billInCash"/>
+        <result column="BILL_IN_COUNT" javaType="string" property="billInCount"/>
+        <result column="BILL_OUT_CASH" javaType="string" property="billOutCash"/>
+        <result column="BILL_OUT_COUNT" javaType="string" property="billOutCount"/>
+        <result column="BILL_MONTH_REST" javaType="string" property="billMonthRest"/>
+    </resultMap>
+<select id="selectSumAvgData" parameterClass="commonj.sdo.DataObject" resultMap="resultMap">
+	  select  t.bill_data_id,    
+	          t.finance_id ,        
+	          t.report_type,     
+	          t.sheet_code,
+	          t.finance_deadline,      
+	          t.bill_year,       
+	          t.bill_month,      
+	          t.bill_in_cash,   
+	          t.bill_in_count,   
+	          t.bill_out_cash ,  
+	          t.bill_out_count,  
+	          t.bill_month_rest 
+	    from  tb_acc_finance_bill_data t
+	   where t.finance_id = #financeId#                                         
+	   union all
+	  select '' as bill_data_id,   
+	         #financeId# as finance_id,      
+	         #reportType# as report_type,    
+	         #sheetCode# as sheet_code,
+	         null as finance_deadline,     
+	         '合计数' as bill_year,
+	         null as bill_month,                                      
+	         sum(a.bill_in_cash) as bill_in_cash,                        
+	         sum(a.bill_in_count) as bill_in_count,                      
+	         sum(a.bill_out_cash) as bill_out_cash,                      
+	         sum(a.bill_out_count) as bill_out_count,                    
+	         sum(a.bill_month_rest) as bill_month_rest                   
+	    from tb_acc_finance_bill_data a                                  
+	   where a.finance_id = #financeId#                                       
+	  union all (select '' as bill_data_id,    
+	                    #financeId# as finance_id,
+	                    #reportType# as report_type,    
+	                    #sheetCode# as sheet_code,
+	                    null as finance_deadline,
+	                    '平均数' as bill_year,
+	                    null as bill_month,                           
+	                    round(avg(a.bill_in_cash),2) as bill_in_cash,             
+	                    round(avg(a.bill_in_count)) as bill_in_count,           
+	                    round(avg(a.bill_out_cash),2) as bill_out_cash,           
+	                    round(avg(a.bill_out_count)) as bill_out_count,         
+	                    round(avg(a.bill_month_rest),2) as bill_month_rest        
+	               from tb_acc_finance_bill_data a                       
+	              where a.finance_id = #financeId#                             
+	                )                              
+</select>
+ 
+ <!--查找所有科目-->
+ <select id="getItemCode" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select a.*
+  		  from tb_acc_nfd_item a, tb_acc_nfd_sheet b
+		 where a.sheet_id = b.sheet_id
+		   and b.report_id = #reportType#
+ 
+ </select>
+ 
+	<!--根据财报主键备份科目数据信息-->  
+     <insert id="insertAccFinanceStatementDataInfo" parameterClass="java.util.HashMap">
+		     insert into tb_acc_finance_statement_data
+		   (select sys_guid() as finance_statement_data_id,
+		           #newfinancialStatementId# as financial_statement_id,
+		           #newfinanceId# as finance_id,
+		           t.project_cd,
+		           t.project_value,
+		           t.create_time,
+		           t.update_time,
+		           t.pre_total_value,
+		           t.pre_total_flag
+		      from tb_acc_finance_statement_data t
+		     where t.finance_id = #financeId#
+		       and t.financial_statement_id = #financialStatementId#)
+	</insert>
+	
+	<!--根据财报主键备份利润表明细信息-->  
+     <insert id="insertAccFinanceProfitDataInfo" parameterClass="java.util.HashMap">
+		insert into tb_acc_finance_nprofit_data
+		  (select sys_guid() as profit_data_id,
+		          #newfinanceId# as finance_id,
+		          t.report_type,
+		          t.sheet_code,
+		          t.finance_deadline,
+		          t.profit_month,
+		          t.profit_zyywsr,
+		          t.profit_zyywcb,
+		          t.profit_jyfyhj,
+		          t.profit_lwgz,
+		          t.profit_zj,
+		          t.profit_sdf,
+		          t.profit_s,
+		          t.profit_qtjyfy,
+		          t.profit_cwfy,
+		          t.profit_jtkz,
+		          t.profit_tzxsr,
+		          t.profit_tzxzc,
+		          t.profit_qtyyjsr,
+		          t.profit_lrze,
+		          t.create_time,
+		          t.update_time
+		     from tb_acc_finance_nprofit_data t
+		    where t.finance_id = #financeId#)
+	</insert>
+	
+	<!--根据财报主键备份银行对账单数据信息-->  
+     <insert id="insertAccFinanceBillDataInfo" parameterClass="java.util.HashMap">
+		insert into tb_acc_finance_bill_data
+	  (select sys_guid() as bill_data_id,
+	          #newfinanceId# as finance_id,
+	          t.report_type,
+	          t.sheet_code,
+	          t.finance_deadline,
+	          t.bill_year,
+	          t.bill_month,
+	          t.bill_in_cash,
+	          t.bill_in_count,
+	          t.bill_out_cash,
+	          t.bill_out_count,
+	          t.bill_month_rest,
+	          t.create_time,
+	          t.update_time
+	     from tb_acc_finance_bill_data t
+	    where t.finance_id = #financeId#)
+	</insert>
+	
+	<!--根据财报主键备份银行账户数据信息-->  
+     <insert id="insertAccFinanceBillAccountDataInfo" parameterClass="java.util.HashMap">
+		  insert into tb_acc_finance_bill_account
+	   (select sys_guid() as bill_account_id,
+	           #newfinanceId# as finance_id,
+	           t.bill_khh,
+	           t.bill_zhmc,
+	           t.bill_zh
+	      from tb_acc_finance_bill_account t
+	     where t.finance_id = #financeId#)
+	</insert>
+</sqlMap>

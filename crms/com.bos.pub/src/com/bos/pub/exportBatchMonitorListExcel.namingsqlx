@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="queryBatchMonitorList">
+		<result column="JOB_CODE" property="jobCode"/>
+		<result column="JOB_NAME" property="jobName"/>
+        <result column="JOB_BATCHGROUP" property="jobBatchgroup"/>
+        <result column="JOB_STATUS" property="jobStatus"/>
+        <result column="JOB_BATCHDATE" property="jobBatchdate"/>
+        <result column="JOB_STARTTIME" property="jobStarttime"/>
+        <result column="JOB_ENDTIME" property="jobEndtime"/>
+        <result column="JOB_BATCHORDER" property="jobBatchorder"/>
+    </resultMap>
+    <!--查询批量监控-->
+    <select id="queryBatchMonitorList" parameterClass="java.util.HashMap" resultMap="queryBatchMonitorList">
+    	select 
+			JOB_CODE,
+			JOB_NAME,
+			(select DICTNAME from EOS_DICT_ENTRY where DICTTYPEID='XD_RZCD0003' and DICTID=JOB_BATCHGROUP) JOB_BATCHGROUP,
+			(select DICTNAME from EOS_DICT_ENTRY where DICTTYPEID='XD_RZCD0006' and DICTID=JOB_STATUS) JOB_STATUS,
+			JOB_BATCHDATE,
+			JOB_STARTTIME,
+			JOB_ENDTIME,
+			JOB_BATCHORDER
+		from TB_BATCH_TASK_MONITOR
+		where 1=1
+		<isNotNull property="jobBatchgroup">
+			and JOB_BATCHGROUP = #jobBatchgroup#
+		</isNotNull>
+		<isNotNull property="jobStatus">
+			and JOB_STATUS = #jobStatus#
+		</isNotNull>
+		<isNotNull property="minJobStarttime">
+			and JOB_STARTTIME &gt;= CONCAT(#minJobStarttime#,':00')
+		</isNotNull>
+		<isNotNull property="maxJobStarttime">
+			and JOB_STARTTIME &lt;= CONCAT(#maxJobStarttime#,':00')
+		</isNotNull>
+		<isNotNull property="jobName">
+			and JOB_NAME like '%$jobName$%'
+		</isNotNull>
+		<isNotNull property="jobBatchdate">
+			and JOB_BATCHDATE = #jobBatchdate#
+		</isNotNull>
+		order by JOB_STARTTIME desc,JOB_BATCHORDER asc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+    	<result column="SERIALNO"  property="serialno"/>
+    	<result column="SUBJECTNO"  property="subjectno"/>
+    	<result column="DUESUBJECTNO"  property="duesubjectno"/>
+    	<result column="SUBJECTNAME"  property="subjectname"/>
+    	<result column="ORGNAME"  property="orgName"/>
+    	<result column="BUSINESSCURRENCY"  property="businesscurrency"/>
+    	<result column="OCCURDATE"  property="occurdate"/>
+    	<result column="MFBALANCE"  property="mfbalance"/>
+    	<result column="BALANCE"  property="balance"/>
+    	<result column="STATE"  property="state"/>
+    	<result column="BALANCETYPE"  property="balancetype"/>
+    	<result column="ORG_NUM"  property="orgNum"/>
+    </resultMap>
+	<!--总分对账查询 支持模糊查询-->
+     <select id="queryBatchCheckBalance" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="resultMap">
+    select cb.SERIALNO
+    	  ,cb.subjectno
+    	  ,cb.duesubjectno
+    	  ,(select oo.ORGNAME from OM_ORGANIZATION oo where oo.ORGCODE=cb.org_num) as ORGNAME
+    	  ,(select dictname from EOS_DICT_ENTRY where dicttypeid='CD000001' and dictid=cb.businesscurrency) as businesscurrency
+    	  ,cb.occurdate,cb.ORG_NUM,
+    	   cb.mfbalance,cb.balance,cb.state,cb.balancetype,
+    	   (select distinct si.subjectname from tb_batch_subject_info si where si.subjectno = cb.subjectno fetch first 1 rows only) as subjectname
+    from tb_batch_check_balance cb where 1=1 
+   		 <isNotNull property="subjectno">
+          and cb.subjectno like '%$subjectno$%'
+    	</isNotNull>
+    	<isNotNull property="errordescribe">
+         and cb.ORG_NUM in (select ORGCODE from OM_ORGANIZATION where ORGNAME like '%$errordescribe$%')
+    	</isNotNull>
+    	<isNotNull property="businesscurrency">
+         and cb.businesscurrency=#businesscurrency#
+    	</isNotNull>
+    	<isNotNull property="occurdate">
+          and cb.occurdate=#occurdate#
+    	</isNotNull>
+    	<isNotNull property="state">
+          and cb.state=#state#
+    	</isNotNull>
+    	<isNotNull property="balancetype">
+          and cb.balancetype=#balancetype#
+    	</isNotNull>
+    </select>
+        <resultMap class="commonj.sdo.DataObject" id="batchLog">
+        <result column="SP_NAME" property="spName"/>
+        <result column="EXEC_RESULT" property="execResult"/>
+        <result column="BEG_TIME" property="begTime"/>
+        <result column="END_TIME" property="endTime"/>
+        <result column="LOG_ID" property="logId"/>
+        <result column="IN_PARA1" property="inPara1"/>
+        <result column="IN_PARA2" property="inPara2"/>
+        <result column="IN_PARA3" property="inPara3"/>
+        <result column="IN_PARA4" property="inPara4"/>
+        <result column="IN_PARA5" property="inPara5"/>
+        <result column="OUT_PARA1" property="outPara1"/>
+        <result column="OUT_PARA2" property="outPara2"/>
+        <result column="OUT_PARA3" property="outPara3"/>
+        <result column="OUT_PARA4" property="outPara4"/>
+        <result column="OUT_PARA5" property="outPara5"/>
+    </resultMap>
+    <!--批量日志模糊查询-->
+    <select id="queryBatchLog" parameterClass="java.util.HashMap" resultMap="batchLog">
+    	select SP_NAME
+    		  ,(select dictname from eos_dict_entry where dicttypeid='XD_RZCD0001' and dictid=EXEC_RESULT) EXEC_RESULT
+    		  ,BEG_TIME
+    		  ,END_TIME
+    		  ,LOG_ID
+    		  ,IN_PARA1
+			  ,IN_PARA2
+			  ,IN_PARA3
+			  ,IN_PARA4
+			  ,IN_PARA5
+			  ,OUT_PARA1
+			  ,OUT_PARA2
+			  ,OUT_PARA3
+			  ,OUT_PARA4
+			  ,OUT_PARA5
+    	from TB_BATCH_SP_LOG
+    	where 1=1
+		<isNotNull property="execResult">
+	    	and EXEC_RESULT = #execResult#
+	    </isNotNull>
+		<isNotNull property="spName">
+	    	and SP_NAME like '%$spName$%'
+	    </isNotNull>
+	    <isNotNull property="begTime">
+	    	and BEG_TIME &gt;= #begTime#
+	    </isNotNull>
+	    <isNotNull property="endTime">
+	    	and BEG_TIME &lt;= #endTime#
+	    </isNotNull>
+	    order by BEG_TIME desc
+    </select>
+</sqlMap>

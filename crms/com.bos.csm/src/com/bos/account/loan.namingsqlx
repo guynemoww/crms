@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="judai" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="bizNum" column="BIZ_NUM"/>
+			<result property="applyDate" column="APPLY_DATE"/>
+			<result property="creditAmount" column="CREDIT_AMOUNT"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="bizType" column="BIZ_TYPE"/>
+			<result property="bizHappenNature" column="BIZ_HAPPEN_NATURE"/>
+			<result property="creditTerm" column="CREDIT_TERM"/>
+			<result property="validDate" column="VALID_DATE"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="loanUse" column="LOAN_USE"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="applyId" column="APPLY_ID"/>
+			<result property="opinion" column="OPINION"/>
+	</resultMap>
+    <select id="judai" parameterClass="java.util.HashMap" resultMap="judai">
+		select a.apply_id,
+               a.org_num,
+               v.party_id,
+               v.party_name,
+               v.cert_type,
+               v.cert_num,
+               v.middle_code,
+               a.biz_num,
+               to_char(a.apply_date, 'yyyy-mm-dd') apply_date,
+               b.credit_amount,
+               b.currency_cd,
+               a.biz_type,
+               a.biz_happen_nature,
+               b.credit_term,
+               to_char(a.valid_date, 'yyyy-mm-dd') valid_date,
+               a.user_num,
+               (select to_char(listagg(loan_use,',') within group (order by loan_use))
+                  from tb_biz_amount_detail_approve
+                 where amount_id = b.amount_id) loan_use,
+               w.opinion
+          from tb_biz_approve          a,
+               tb_biz_amount_approve   b,
+               tb_wfm_workiteminstance w,
+               tb_wfm_processinstance  wf,
+               v_csm_party             v
+         where a.approve_id = b.approve_id
+           and a.party_id = v.party_id
+           and w.process_id = wf.process_id
+           and a.apply_id = wf.product_id
+           and w.conclusion = '2'
+           and  a.org_num in (
+                SELECT O.ORGCODE
+                  FROM OM_ORGANIZATION O
+                 WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="partyName">  AND v.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND v.CERT_TYPE = #certType# </isNotNull>
+		 <isNotNull property="certNum">  AND v.CERT_NUM = #certNum# </isNotNull>
+		 <isNotNull property="userNum">  AND a.USER_NUM = #userNum# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="daikuan" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="payTime" column="PAY_TIME"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="payUse" column="PAY_USE"/>
+			<result property="applyAmount" column="APPLY_AMOUNT"/>
+			<result property="payObject" column="PAY_OBJECT"/>
+			<result property="isFitDeal" column="IS_FIT_DEAL"/>
+	</resultMap>
+    <select id="daikuan" parameterClass="java.util.HashMap" resultMap="daikuan">
+		SELECT T.ORG_NUM,
+			   T.USER_NUM,
+			   V.PARTY_ID,	
+			   V.PARTY_NAME,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       V.MIDDLE_CODE,
+		       TO_CHAR(TA.PAY_TIME,'YYYY-MM-DD') AS PAY_TIME,
+		       T.SUMMARY_CURRENCY_CD,
+		       TA.PAY_USE,
+		       TA.APPLY_AMOUNT,
+		       TA.PAY_OBJECT,
+		       TA.IS_FIT_DEAL
+		  FROM TB_LOAN_SUMMARY T, TB_LOAN_MONEY_USE TA, V_CSM_PARTY V
+		 WHERE T.SUMMARY_ID = TA.SUMMARY_ID
+		       AND T.PARTY_ID = V.PARTY_ID
+			   AND T.ORG_NUM IN (SELECT O.ORGCODE
+			                        FROM OM_ORGANIZATION O
+			                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		 <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		 <isNotNull property="certNum">  AND V.CERT_NUM = #certNum# </isNotNull>
+		  <isNotNull property="userNum">  AND T.USER_NUM = #userNum# </isNotNull>
+		 <isNotNull property="date1">
+		<![CDATA[
+			AND TA.PAY_TIME >= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+		<isNotNull property="date2">
+		<![CDATA[
+			AND TA.PAY_TIME <= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+	 </select>
+</sqlMap>

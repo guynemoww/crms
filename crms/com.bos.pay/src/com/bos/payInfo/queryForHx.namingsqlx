@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:LPC -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="queryMonthDay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select months_between(add_months(r.begin_date,
+                                 months_between(r.end_date, r.begin_date)),
+                      r.begin_date) a,
+       	r.end_date -
+       		add_months(r.begin_date, months_between(r.end_date, r.begin_date)) b
+		  from tb_loan_info r
+		  where  r.loan_id  = #loanId#
+    </select>
+    <select id="queryEntAcc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select c.acc_id as accId,c.entrust_acc as czh, c.entrust_loan_acc as rzh,t.product_type as type,t.loan_org as org,t.currency_cd as currType
+		  from tb_loan_info t, TB_LOAN_WTDK ta, tb_csm_entrust_account c
+		 where t.LOAN_ID = ta.LOAN_ID
+       		and ta.wtxm_id = c.acc_id
+		   and t.loan_id = #loanId#
+       union
+	       select te.acc_id as accId,te.entrust_acc as czh , te.entrust_loan_acc as rzh,t.product_type as type,t.loan_org as org,t.currency_cd as currType  
+	       from tb_loan_info t, tb_biz_xw_apply xw ,tb_con_contract_info tc , tb_csm_entrust_account te
+	       where t.contract_id = tc.contract_id and tc.amount_detail_id = xw.amount_detail_id 
+	       and xw.wtxm_id = te.acc_id
+	       and t.loan_id = #loanId#
+		   
+		   
+    </select>
+    <!--保存委托贷款基金和委托贷款收息账号信息-->
+    <update id="updaEntAcc" parameterClass="java.util.HashMap" >
+    	update tb_csm_entrust_account set ENTRUST_LOAN_ACC=#entrustLoanAcc#,ENTRUST_RETURN_ACC=#entrustReturnAcc# where ACC_ID=#accId#
+    </update>
+    <!--将公积金账号表信息转化到委托方账户信息表-->
+    <update id="updateEntAcc" parameterClass="java.util.HashMap" >
+    	update tb_csm_entrust_account set ENTRUST_ACC=#entrustAcc#,ENTRUST_RETURN_PRINCIPAL_ACC=#entrustReturnPrincipalAcc#,
+    		ENTRUST_RETURN_INTEREST_ACC=#entrustReturnInterestAcc#,ENTRUST_RETURN_ACC=#entrustReturnAcc# where ACC_ID=#accId#
+    </update>
+     <select id="queryAccId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select ta.wtxm_id as accId
+		  from tb_loan_info t, TB_LOAN_WTDK ta
+		 where t.LOAN_ID = ta.LOAN_ID
+		   and t.loan_id = #loanId#
+       union
+	       select xw.wtxm_id as accId
+	       from tb_loan_info t, tb_biz_xw_apply xw ,tb_con_contract_info tc
+	       where t.contract_id = tc.contract_id and tc.amount_detail_id = xw.amount_detail_id 
+	       and t.loan_id = #loanId#
+    </select>
+     <select id="queryAccountInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select t.zhlx as zhlx, t.zh as zh from tb_loan_zh t where t.loan_id = #loanId#
+    </select>
+    <!--查询保证金信息 -->
+    <select id="queryBzjAccountInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	   select  m.MARGIN_ACCOUNT MARGIN_ACCOUNT,m.CURRENCY_CD CURRENCY_CD from TB_CON_SUBCONTRACT t,TB_CON_SUB_GRT_REL ta,tb_grt_mortgage_basic tb,TB_CSM_PARTY tc,tb_grt_margin m
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SURETY_ID=tb.SURETY_ID
+			and t.PARTY_ID=tc.PARTY_ID
+            and m.SURETY_ID=tb.SURETY_ID
+			and t.SUBCONTRACT_ID in (
+      select te.SUBCONTRACT_ID
+        from TB_CON_SUBCONTRACT te,TB_CON_SUBCONTRACT_REL tf,TB_CSM_PARTY p,tb_loan_info tg
+        where te.SUBCONTRACT_ID=tf.SUBCONTRACT_ID
+        and p.PARTY_ID=te.PARTY_ID
+            and te.SUBCONTRACT_STATUS in('01','02','03','05')
+        and te.SUBCONTRACT_TYPE='03'
+        and tf.contract_id = tg.contract_id
+        and tg.loan_id = #loanId#
+      )
+    </select>
+     <!--查询保证金金额 -->
+    <select id="queryBzjJeInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	    select b.bzjje BZJJE from tb_con_contract_info a,tb_con_bh b,tb_loan_info c where a.contract_id=c.contract_id and a.contract_id=b.contract_id
+				and c.loan_id= #loanId#
+    </select>
+    <!--保存保证金冻结信息 -->
+    <insert id="insertGuanteeInfo" parameterClass="java.util.HashMap">
+    	  insert into tb_guarantee_info (GAURANTEE_ID, LOAN_ID, CUST_ACCOUNT, ACCOUNT_NAME, FRE_AMT, FRE_RESION, FRE_TYPE, FRE_NO, EXAMNU, FRE_NUM, ACCOUNT_AMT,OUT_ACCOUNT)
+							values (sys_guid(), #LOAN_ID#, #CUST_ACCOUNT#, #ACCOUNT_NAME#, #FRE_AMT#, #FRE_RESION#, #FRE_TYPE#, #FRE_NO#, #EXAMNU#, #FRE_NUM#, #ACCOUNT_AMT#,#OUT_ACCOUNT#)
+    </insert>
+</sqlMap>

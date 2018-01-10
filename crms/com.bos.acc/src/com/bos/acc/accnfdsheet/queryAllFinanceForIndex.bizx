@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="queryAllFinanceForIndex.bizx" detailDescription="" demonstration=""
+	urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true"
+	productVersion="6.3">
+	<nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释"
+		nodeType="note" type="note" content="根据年份获取近三年财报" title="C_ture&#x9;14-5-15 上午10:42">
+		<location x="30" y="300" />
+		<size height="100" width="146" />
+	</nodes>
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" nodeType="common" type="start">
+		<sourceConnections xsi:type="process:tLink" id="link1"
+			name="link1" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>invokePojo1</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<location x="60" y="145" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="62" y="181" />
+		<figSize height="15" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束"
+		nodeType="common" type="end">
+		<targetConnections>link5</targetConnections>
+		<targetConnections>link11</targetConnections>
+		<location x="720" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:returns>
+			<process:return id="0"
+				language="com.bos.dataset.acc.TbAccCustomerFinance[]" name="accCustomerFinances"
+				type="query" valueType="DataObject">accCustomerFinances</process:return>
+			<process:return id="1" language="String" name="msg"
+				type="query" valueType="Primitive">msg</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="722" y="96" />
+		<figSize height="15" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo0"
+		name="查询近三年财务报表id" displayName="查询财务报表模版子表" collapsed="false"
+		nodeType="common" type="invoke" index="0" invokeType="invoke_pojo"
+		varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link5"
+			name="link5" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo0</sourceNode>
+			<targetNode>end0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink" id="link10"
+			name="link10" displayName="连接线" lineType="note" type="exception">
+			<sourceNode>invokePojo0</sourceNode>
+			<targetNode>assign2</targetNode>
+		</sourceConnections>
+		<targetConnections>link4</targetConnections>
+		<location x="465" y="60" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo0label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseUtil.queryEntitiesByCriteriaEntity</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+			<process:inputVariable id="1" name="criteriaEntity"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">cri</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="commonj.sdo.DataObject[]" valueType="Java">accCustomerFinances</process:outputVariable>
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo0label"
+		name="label" nodeType="label">
+		<location x="417" y="96" />
+		<figSize height="15" width="119" />
+		<node>invokePojo0</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo1"
+		name="获取近三年年末日期" displayName="getRecentlyDate" nodeType="common" type="invoke"
+		index="1" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link2"
+			name="link2" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo1</sourceNode>
+			<targetNode>assign0</targetNode>
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink" id="link9"
+			name="link9" displayName="连接线" lineType="note" type="exception">
+			<sourceNode>invokePojo1</sourceNode>
+			<targetNode>assign2</targetNode>
+		</sourceConnections>
+		<targetConnections>link1</targetConnections>
+		<location x="175" y="145" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo1label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.bos.acc.AccFinanceUtil.getRecentlyDate</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="paramDate"
+				type="query" value="java.util.Date" valueType="Java" pattern="reference">paramDate</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="java.util.HashMap" valueType="Java">paramMap</process:outputVariable>
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo1label"
+		name="label" nodeType="label">
+		<location x="132" y="181" />
+		<figSize height="15" width="109" />
+		<node>invokePojo1</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="暂定只支持年报 因此财报类型给固定值1-年报"
+		id="assign1" name="赋值1" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link4"
+			name="link4" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign1</sourceNode>
+			<targetNode>invokePojo0</targetNode>
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="315" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign1label</nodeLabel>
+		<process:copy>
+			<process:from type="literal" pattern="reference">com.bos.dataset.acc.TbAccCustomerFinance</process:from>
+			<process:to type="query">cri/_entity</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">financeDeadline</process:from>
+			<process:to type="query">cri/_expr[1]/_property</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="value">2013-12-31,2012-12-31,2011-12-31</process:from>
+			<process:to type="query">cri/_expr[1]/_value</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">in</process:from>
+			<process:to type="query">cri/_expr[1]/_op</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">financeTypeCd</process:from>
+			<process:to type="query">cri/_expr[2]/_property</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">1</process:from>
+			<process:to type="query">cri/_expr[2]/_value</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">financeStatusCd</process:from>
+			<process:to type="query">cri/_expr[3]/_property</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">02</process:from>
+			<process:to type="query">cri/_expr[3]/_value</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">orgNum</process:from>
+			<process:to type="query">cri/_expr[4]/_property</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">orgnum</process:from>
+			<process:to type="query">cri/_expr[4]/_value</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label"
+		nodeType="label">
+		<location x="314" y="96" />
+		<figSize height="15" width="31" />
+		<node>assign1</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="赋值" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>assign1</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link2</targetConnections>
+		<location x="172" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">paramMap/year1</process:from>
+			<process:to type="query">year1</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">paramMap/year2</process:from>
+			<process:to type="query">year2</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">paramMap/year3</process:from>
+			<process:to type="query">year3</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="174" y="96" />
+		<figSize height="15" width="25" />
+		<node>assign0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign2"
+		name="赋值2" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link11"
+			name="link11" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign2</sourceNode>
+			<targetNode>end0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link9</targetConnections>
+		<targetConnections>link10</targetConnections>
+		<location x="462" y="145" />
+		<size height="28" width="28" />
+		<nodeLabel>assign2label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">__exception/message</process:from>
+			<process:to type="query">msg</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label"
+		nodeType="label">
+		<location x="461" y="181" />
+		<figSize height="15" width="31" />
+		<node>assign2</node>
+	</nodes>
+	<topRuler />
+	<leftRuler />
+	<process:info author="C_ture" createTime="2014-05-15 10:42:29"
+		date="2014-05-15Z" description="根据年份获取近三年财报" name="queryAllFinanceForIndex"
+		version="6.3" />
+	<process:variables>
+		<process:variable description=""
+			historyStateLocation="client" isArray="false"
+			modelType="com.bos.dataset.acc.TbAccCustomerFinance" name="accCustomerFinance" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false"
+			modelType="com.primeton.das.criteria.criteriaType" name="cri" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="year1"
+			primitiveType="Date" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="year2"
+			primitiveType="Date" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="year3"
+			primitiveType="Date" />
+		<process:variable anyType="java.util.HashMap"
+			description="" historyStateLocation="client" isArray="false" name="paramMap" />
+	</process:variables>
+	<process:inputs varArgs="false">
+		<process:input description="" isArray="false" name="paramDate"
+			primitiveType="Date" />
+		<process:input description="" isArray="false" name="orgnum"
+			primitiveType="String" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="true"
+			modelType="com.bos.dataset.acc.TbAccCustomerFinance" name="accCustomerFinances" />
+		<process:output description="" isArray="false" name="msg"
+			primitiveType="String" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+	<process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

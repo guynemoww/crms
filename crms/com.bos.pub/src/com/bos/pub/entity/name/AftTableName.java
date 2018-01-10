@@ -1,0 +1,48 @@
+package com.bos.pub.entity.name;
+
+public interface AftTableName {
+	String TB_AFT_ACCOUNT_TRADE_LIST = "com.bos.dataset.aft.TbAftAccountTradeList";
+	String TB_AFT_AFTER_LOAN_INFO = "com.bos.dataset.aft.TbAftAfterLoanInfo";
+	String TB_AFT_ATTENTION_LIST = "com.bos.dataset.aft.TbAftAttentionList";
+	String TB_AFT_BIGCSM_REPORT_DETAIL = "com.bos.dataset.aft.TbAftBigcsmReportDetail";
+	String TB_AFT_BUY_EQUIPMENT = "com.bos.dataset.aft.TbAftBuyEquipment";
+	String TB_AFT_CAPITAL_FLOWS = "com.bos.dataset.aft.TbAftCapitalFlows";
+	String TB_AFT_CAPITAL_FLOWS_DETAIL = "com.bos.dataset.aft.TbAftCapitalFlowsDetail";
+	String TB_AFT_CREDIT_CONDITION = "com.bos.dataset.aft.TbAftCreditCondition";
+	String TB_AFT_EXPIRE_CHECK = "com.bos.dataset.aft.TbAftExpireCheck";
+	String TB_AFT_FIRST_CHECK = "com.bos.dataset.aft.TbAftFirstCheck";
+	String TB_AFT_GUARANTEE_EXTERNAL = "com.bos.dataset.aft.TbAftGuaranteeExternal";
+	String TB_AFT_GUARANTEE_INSPECT = "com.bos.dataset.aft.TbAftGuaranteeInspect";
+	String TB_AFT_INSPECT_CORP_LIST = "com.bos.dataset.aft.TbAftInspectCorpList";
+	String TB_AFT_INSPECT_RATE = "com.bos.dataset.aft.TbAftInspectRate";
+	String TB_AFT_INSPECT_REPORT = "com.bos.dataset.aft.TbAftInspectReport";
+	String TB_AFT_INSPECT_REPORT_COND = "com.bos.dataset.aft.TbAftInspectReportCond";
+	String TB_AFT_KEY_MONITORING_LIST = "com.bos.dataset.aft.TbAftKeyMonitoringList";
+	String TB_AFT_LOAN_CHECK_CUST_INFO = "com.bos.dataset.aft.TbAftLoanCheckCustInfo";
+	String TB_AFT_LOAN_CHECK_DELT_INFO = "com.bos.dataset.aft.TbAftLoanCheckDeltInfo";
+	String TB_AFT_LOAN_CHECK_IDX_DATA = "com.bos.dataset.aft.TbAftLoanCheckIdxData";
+	String TB_AFT_LOAN_INSPECT = "com.bos.dataset.aft.TbAftLoanInspect";
+	String TB_AFT_LOAN_INSPECT_COND = "com.bos.dataset.aft.TbAftLoanInspectCond";
+	String TB_AFT_LOAN_INSPECT_OTH = "com.bos.dataset.aft.TbAftLoanInspectOth";
+	String TB_AFT_NORMAL_CHECK = "com.bos.dataset.aft.TbAftNormalCheck";
+	String TB_AFT_NORMAL_PERSON = "com.bos.dataset.aft.TbAftNormalPerson";
+	String TB_AFT_NORMAL_PRODUCT = "com.bos.dataset.aft.TbAftNormalProduct";
+	String TB_AFT_NORMAL_PROJECT = "com.bos.dataset.aft.TbAftNormalProject";
+	String TB_AFT_NORMAL_TRADE = "com.bos.dataset.aft.TbAftNormalTrade";
+	String TB_AFT_NORMAL_TRUST = "com.bos.dataset.aft.TbAftNormalTrust";
+	String TB_AFT_PFCORPINFO = "com.bos.dataset.aft.TbAftPfcorpinfo";
+	String TB_AFT_PFCORPINFODETAIL = "com.bos.dataset.aft.TbAftPfcorpinfodetail";
+	String TB_AFT_PFCORPINFO_CONDITION = "com.bos.dataset.aft.TbAftPfcorpinfoCondition";
+	String TB_AFT_POINT_CHECK = "com.bos.dataset.aft.TbAftPointCheck";
+	String TB_AFT_REQUIRE_EXECUTE = "com.bos.dataset.aft.TbAftRequireExecute";
+	String TB_AFT_SMB_CONDITION = "com.bos.dataset.aft.TbAftSmbCondition";
+	String TB_AFT_SMB_INSPECT_DETAIL = "com.bos.dataset.aft.TbAftSmbInspectDetail";
+	String TB_AFT_SPOT_INSPECT_DETAIL = "com.bos.dataset.aft.TbAftSpotInspectDetail";
+	String TB_AFT_TRACK_HOUSE = "com.bos.dataset.aft.TbAftTrackHouse";
+	String TB_AFT_TRACK_PERSON = "com.bos.dataset.aft.TbAftTrackPerson";
+	String TB_AFT_TRACK_PRODUCT = "com.bos.dataset.aft.TbAftTrackProduct";
+	String TB_AFT_TRACK_SCHHOS = "com.bos.dataset.aft.TbAftTrackSchhos";
+	String TB_AFT_TRACK_TRADE = "com.bos.dataset.aft.TbAftTrackTrade";
+	String TB_AFT_USER_NUM = "com.bos.dataset.aft.TbAftUserNum";
+	String TB_AFT_WARRANT_INFO = "com.bos.dataset.aft.TbAftWarrantInfo";
+}

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+  <resultMap class="com.bos.pub.sys.CustEntity" id="cusView">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="CERTIFICATE_CODE" javaType="string" property="certificateCode"/>
+        <result column="CERTIFICATE_TYPE_CD" javaType="string" property="certificateTypeCd"/>
+        
+    </resultMap>
+    
+      <resultMap class="com.bos.pub.sys.TbSysBigCompanyList" id="tbSysBigCompanyList">
+        <result column="ID"  property="id"/>
+        <result column="ORG_CODE" property="orgCode"/>
+        <result column="CUST_NAME"  property="custName"/>
+        <result column="GRANT_ORG_CODE"  property="grantOrgCode"/>
+        <result column="GRANT_COUNT"  property="grantCount"/>
+        <result column="LOAN_TYPE"  property="loanType"/>
+        <result column="CODE_TYPE"  property="codeType"/>
+        <result column="APPLY_COUNT"  property="applyCount"/>
+    </resultMap>
+    
+         <resultMap class="com.bos.pub.sys.TbSysCustGrantList" id="tbSysCustGrantList">
+        <result column="ID"  property="id"/>
+        <result column="ORG_CODE" property="orgCode"/>
+        <result column="CUST_NAME"  property="custName"/>
+        <result column="GRANT_ORG_CODE"  property="grantOrgCode"/>
+        <result column="GRANT_COUNT"  property="grantCount"/>
+        <result column="LOAN_TYPE"  property="loanType"/>
+        <result column="CODE_TYPE"  property="codeType"/>
+        <result column="APPLY_COUNT"  property="applyCount"/>
+    </resultMap>
+    
+   <select id="queryCusOrgn" parameterClass="java.util.HashMap" resultMap="cusView">
+      SELECT t1.PARTY_ID,
+      t1.PARTY_NAME,
+	  t3.certificate_Code,
+	  t3.certificate_type_cd
+	  FROM TB_CSM_PARTY t1,TB_CSM_CORPORATION t2 ,TB_CSM_CERTIFICATE_INFO t3
+      WHERE t1.PARTY_ID = t2.PARTY_ID and t3.PARTY_ID=t1.PARTY_ID
+		<isNotNull property="partyName">
+	    	and  t1.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="orgnNum">
+	    	and   t3.certificate_Code  like '%$orgnNum$%'
+	   </isNotNull>
+    </select>
+     
+       <select id="queryCustCus" parameterClass="java.util.HashMap" resultMap="cusView">
+   	  SELECT t1.PARTY_ID,
+      t1.PARTY_NAME,
+	  t3.certificate_Code,
+	  t3.CERTIFICATE_TYPE_CD
+	  FROM TB_CSM_PARTY t1,TB_CSM_CORPORATION t2 ,TB_CSM_CERTIFICATE_INFO t3
+	  WHERE t1.PARTY_ID = t2.PARTY_ID and t3.PARTY_ID=t1.PARTY_ID
+	  and t1.PARTY_TYPE_CD in ('06')
+		<isNotNull property="partyName">
+	    	and  t1.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="orgnNum">
+	    	and   t3.certificate_Code  like '%$orgnNum$%'
+	   </isNotNull>
+    </select>
+          
+       <select id="queryTbSysBigCompanyList" parameterClass="java.util.HashMap" resultMap="tbSysBigCompanyList">
+    		select * from tb_Sys_Big_Company_List where grant_org_code in ('$parentorgids$')
+    	</select>
+    	
+    <select id="queryTbSysCustGrantList" parameterClass="java.util.HashMap" resultMap="tbSysCustGrantList">
+    		select * from Tb_Sys_Cust_Grant_List where grant_org_code in ('$parentorgids$')
+    </select>
+    	
+    	<select id="queryGroupPartyName" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select party_name as partyName from tb_csm_party where party_id  = (select GROUP_PARTY_ID from TB_CSM_GROUP_MEMBER where CORPORATION_PARTY_ID = #partyId#)
+	</select>
+	
+</sqlMap>

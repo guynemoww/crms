@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:liulei -->
+<sqlMap>
+    <select id="getCorps" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+	    t1.ECIF_PARTY_NUM           AS ecifPartyNum,
+    	corp.org_register_cd      	AS orgRegisterCd,
+    	corp.REGISTER_ASSETS		AS registerAssets,
+        corp.registr_cd           as registrCd,
+        corp.org_register_cd      as orgRegisterCd,
+        corp.middel_code          as middelCode,
+        corp.english_name         as englishName
+	FROM
+	   TB_CSM_PARTY t1
+	JOIN
+		TB_CSM_CORPORATION corp
+	ON 
+		t1.party_id = corp.party_id
+	
+    WHERE 1=1
+    	<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="registrCd"> and corp.registr_cd like '%$registrCd$%'</isNotNull>
+		<isNotNull property="middelCode">  and corp.middel_code like '%$middelCode$%' </isNotNull>
+		<isNotNull property="orgRegisterCd">  and corp.org_register_cd like '%$orgRegisterCd$%' </isNotNull>
+    </select>
+    <select id="getCorps2" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+    	corp.org_register_cd      	AS orgRegisterCd,
+    	corp.REGISTER_ASSETS		AS registerAssets,
+        corp.registr_cd           as registrCd,
+        corp.org_register_cd      as orgRegisterCd,
+        corp.middel_code          as middelCode,
+        corp.unify_society_credit_num as unifySocietyCreditNum,
+        corp.english_name         as englishName,
+        t1.user_num as userNum,
+        t1.org_num as orgNum
+	FROM
+	   V_CSM_PARTY t1
+	JOIN
+		TB_CSM_CORPORATION corp
+	ON 
+		t1.party_id = corp.party_id
+    WHERE T1.IS_POTENTIAL_CUST = '1'
+		   and t1.examine_state = '3'
+    	<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="registrCd"> and corp.registr_cd like '%$registrCd$%'</isNotNull>
+		<isNotNull property="middelCode">  and corp.middel_code like '%$middelCode$%' </isNotNull>
+		<isNotNull property="orgRegisterCd">  and corp.org_register_cd like '%$orgRegisterCd$%' </isNotNull>
+  		<isNotNull property="unifySocietyCreditNum">  and corp.unify_society_credit_num like '%$unifySocietyCreditNum$%' </isNotNull>
+     	<isNotNull property="corpCustomerTypeCd">  and corp.CORP_CUSTOMER_TYPE_CD = '$corpCustomerTypeCd$' </isNotNull>
+    </select>
+    <select id="getNaturals" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+	    t1.ECIF_PARTY_NUM           AS ecifPartyNum,
+    	np.cert_type				AS certType,
+    	np.cert_num   				AS certCode,
+    	''							AS orgRegisterCd,
+    	''							AS registerAssets
+	FROM
+	   TB_CSM_PARTY t1
+	JOIN
+		TB_CSM_NATURAL_PERSON np
+	ON 
+		t1.party_id = np.party_id 
+	WHERE 1=1
+		<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="ecifPartyNum"> and t1.ECIF_PARTY_NUM = #ecifPartyNum# </isNotNull>
+	    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+				 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+		</isNotNull>
+		<isNotNull property="certType">  and np.cert_type = #certType# </isNotNull>
+		<isNotNull property="certCode">  and np.cert_num like '%$certCode$%' </isNotNull>
+    </select>
+    <select id="getNaturals2" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+    	np.cert_type				AS certType,
+    	np.cert_num   				AS certCode,
+    	''							AS orgRegisterCd,
+    	''							AS registerAssets,
+    	t1.user_num	as userNum,
+    	t1.org_num as orgNum
+	FROM
+	   V_CSM_PARTY t1
+	JOIN
+		TB_CSM_NATURAL_PERSON np
+	ON 
+		t1.party_id = np.party_id 
+	WHERE T1.IS_POTENTIAL_CUST = '1'
+		   and t1.examine_state = '3'
+		<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="ecifPartyNum"> and t1.ECIF_PARTY_NUM = #ecifPartyNum# </isNotNull>
+	    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+				 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+		</isNotNull>
+		<isNotNull property="certType">  and np.cert_type = #certType# </isNotNull>
+		<isNotNull property="certCode">  and np.cert_num like '%$certCode$%' </isNotNull>
+    </select>
+    
+    
+    <select id="getNaturals3" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+	    t1.ECIF_PARTY_NUM           AS ecifPartyNum,
+    	np.cert_type				AS certType,
+    	np.cert_num   				AS certCode,
+    	''							AS orgRegisterCd,
+    	''							AS registerAssets
+	FROM
+	   TB_CSM_PARTY t1
+	JOIN
+		TB_CSM_NATURAL_PERSON np
+	ON 
+		t1.party_id = np.party_id 
+	WHERE T1.IS_POTENTIAL_CUST = '1'
+		   and t1.examine_state = '3'
+		   
+		   AND np.natural_person_type_cd in ('2')
+		   
+		<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="ecifPartyNum"> and t1.ECIF_PARTY_NUM = #ecifPartyNum# </isNotNull>
+	    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+				 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+		</isNotNull>
+		<isNotNull property="certType">  and np.cert_type = #certType# </isNotNull>
+		<isNotNull property="certCode">  and np.cert_num like '%$certCode$%' </isNotNull>
+    </select>
+    
+    <select id="getNaturalsALL" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+    SELECT
+	    t1.PARTY_ID                 AS partyId,
+	    t1.PARTY_NUM				AS partyNum,
+	    t1.PARTY_TYPE_CD			AS partyTypeCd,
+	    t1.PARTY_NAME				AS partyName,
+	    t1.ECIF_PARTY_NUM           AS ecifPartyNum,
+    	np.cert_type				AS certType,
+    	np.cert_num   				AS certCode,
+    	''							AS orgRegisterCd,
+    	''							AS registerAssets
+	FROM
+	   TB_CSM_PARTY t1
+	JOIN
+		TB_CSM_NATURAL_PERSON np
+	ON 
+		t1.party_id = np.party_id 
+	WHERE 1=1
+		<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="ecifPartyNum"> and t1.ECIF_PARTY_NUM = #ecifPartyNum# </isNotNull>
+	    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+				 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+		</isNotNull>
+		<isNotNull property="certType">  and np.cert_type = #certType# </isNotNull>
+		<isNotNull property="certCode">  and np.cert_num = #certCode# </isNotNull>
+    </select>
+    
+     <select id="getProviteCust" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+	    SELECT
+		    t1.PARTY_ID                 AS partyId,
+		    t1.PARTY_NUM				AS partyNum,
+		    t1.PARTY_TYPE_CD			AS partyTypeCd,
+		    t1.PARTY_NAME				AS partyName,
+		    t1.ECIF_PARTY_NUM           AS ecifPartyNum,
+	    	np.cert_type				AS certType,
+	    	np.cert_num   				AS certCode,
+	    	''							AS orgRegisterCd,
+	    	''							AS registerAssets
+		FROM
+		   TB_CSM_PARTY t1
+		JOIN
+			TB_CSM_NATURAL_PERSON np
+		ON 
+			t1.party_id = np.party_id and np.natural_person_type_cd in ('2','3') 
+		WHERE T1.IS_POTENTIAL_CUST='1'	
+			<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+			<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+		    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+		    <isNotNull property="ecifPartyNum"> and t1.ECIF_PARTY_NUM = #ecifPartyNum# </isNotNull>
+		    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+					 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+			</isNotNull>
+			<isNotNull property="certType">  and np.cert_type = #certType# </isNotNull>
+			<isNotNull property="certCode">  and np.cert_num = #certCode# </isNotNull>
+		
+    </select>
+    <select id="getNaturalAndCorp" parameterClass="java.util.HashMap" resultClass="com.bos.csm.pub.getNaturalAndCorp.GetCustAndCert">
+		SELECT t1.PARTY_ID      AS partyId,
+		       t1.PARTY_NUM     AS partyNum,
+		       t1.PARTY_TYPE_CD AS partyTypeCd,
+		       t1.PARTY_NAME    AS partyName,
+		       V.CERT_TYPE AS certType,
+		       V.CERT_NUM       AS certCode
+		
+		  FROM TB_CSM_PARTY t1
+		  JOIN TB_CSM_CORPORATION corp
+		    ON t1.party_id = corp.party_id
+		  JOIN V_CSM_PARTY V
+		    ON T1.PARTY_ID = V.PARTY_ID
+		 WHERE T1.IS_POTENTIAL_CUST = '1'
+		   and t1.examine_state = '3'
+		<isNotNull property="partyId">  and t1.party_id = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and t1.PARTY_NAME like '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  and t1.PARTY_NUM = #partyNum# </isNotNull>
+	    <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+				 (  select party_id from tb_csm_management_team where user_num=#curUserNum# ) 
+		</isNotNull>
+		<isNotNull property="certType">  and v.cert_type = #certType# </isNotNull>
+		<isNotNull property="certCode">  and V.cert_num = #certCode# </isNotNull>
+    </select>
+    <resultMap id="party" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="isPotentialCust" column="IS_POTENTIAL_CUST"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD" />
+			<result property="registrCd" column="REGISTR_CD" />
+			<result property="partyTypeCd" column="PARTY_TYPE_CD" />
+			<result property="middleCode" column="MIDDLE_CODE" />
+			<result property="unifySocietyCreditNum"  column="UNIFY_SOCIETY_CREDIT_NUM"/>
+			<result property="userNum"  column="USER_NUM"/>
+			<result property="orgNum"  column="ORG_NUM"/>
+	</resultMap>
+    <select id="getPartyList" parameterClass="java.util.HashMap" resultMap="party">
+		SELECT DISTINCT
+			   V.PARTY_ID,
+		       V.PARTY_NUM,
+		       V.PARTY_NAME,
+		       V.PARTY_TYPE_CD,
+		       V.IS_POTENTIAL_CUST,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       V.MIDDLE_CODE,
+		       V.ORG_REGISTER_CD,
+		       V.REGISTR_CD,
+		       v.unify_Society_Credit_Num,
+		       v.user_num,
+		       v.org_num
+		  FROM TB_CSM_MANAGEMENT_TEAM MT, V_CSM_PARTY V
+		 WHERE MT.PARTY_ID = V.PARTY_ID
+    	<isNotNull property="partyId">  and V.PARTY_ID = #partyId# </isNotNull>
+		<isNotNull property="partyName">  and V.PARTY_NAME like '%$partyName$%' </isNotNull>
+		<isNotNull property="registerCd">  and V.registr_cd like '%$registerCd$%' </isNotNull>
+		<isNotNull property="orgRegisterCd">  and V.org_register_cd like '%$orgRegisterCd$%' </isNotNull>
+		<isNotNull property="custType">  and V.PARTY_TYPE_CD = #custType# </isNotNull>
+		<isNotNull property="certType">  and V.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  and V.CERT_NUM = #certNum# </isNotNull>
+	    <isNotNull property="unifySocietyCreditNum"> and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%' </isNotNull>    
+	    
+	    </select>
+</sqlMap>

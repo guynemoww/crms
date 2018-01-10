@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--获取限额组信息-->
+    <select id="getRiskLimit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.GROUP_NAME as groupname,nvl(t.AVAILABLE_AMT,0) as availableamt,t.limit_id as limitid
+			from tb_crd_risk_limit t,tb_crd_risk_group ta 
+			where t.LIMIT_GROUP=ta.ID
+			and t.STATUS_CD ='03'
+			and t.LIMIT_ORG = #orgNum#
+			and t.LIMIT_GROUP = #limitGroup#
+			<isNotNull property="date">
+			and to_date(to_char(#date#,'yyyy-mm-dd'),'yyyy-mm-dd') between t.START_DATE and t.END_DATE
+			</isNotNull>
+    </select>
+    <!--获取需校验的组  总行配置的就需要校验-->
+    <select id="getRiskGroup" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t.LIMIT_GROUP,ta.GROUP_NAME
+			from tb_crd_risk_limit t,tb_crd_risk_group ta 
+			where t.LIMIT_GROUP=ta.ID
+			and t.STATUS_CD ='03'
+			and to_date(to_char(#date#,'yyyy-mm-dd'),'yyyy-mm-dd') between t.START_DATE and t.END_DATE
+			and t.LIMIT_ORG = '08101'
+			and t.LIMIT_GROUP in (
+                select ta.GROUP_ID from tb_crd_risk_group ta where ta.PRODUCT_CD=#productCd#
+            )
+    </select>
+    <!--查询机构下级机构的所有已分配额度-->
+    <select id="getLimitUsed" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+        select nvl(sum(t.LIMIT_AMT),0) as LIMIT_AMT from tb_crd_risk_limit t,Om_Organization ta
+        where  t.STATUS_CD ='03'
+        and t.LIMIT_ORG =ta.ORGCODE
+        and ta.PARENTORGID =#orgId#
+        and t.LIMIT_GROUP =#groupId#
+    </select>
+     <!--查询机构向下所有未分配额度机构的借据余额之和-->
+    <select id="getLimitJjye" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+        select nvl(sum(ti.JJYE),0) as jjye from tb_loan_info th,TB_LOAN_SUMMARY ti
+        where th.LOAN_ID=ti.LOAN_ID
+        and th.PRODUCT_TYPE  in (select PRODUCT_CD from tb_crd_risk_group where GROUP_ID = #groupId#)
+        and th.ORG_NUM in （(select ORGCODE from Om_Organization where PARENTORGID=#orgId# 
+                and ORGCODE not in (
+                    select t.LIMIT_ORG from tb_crd_risk_limit t,Om_Organization ta
+                        where  t.STATUS_CD ='03'
+                        and t.LIMIT_ORG =ta.ORGCODE
+                        and ta.PARENTORGID =#orgId#
+                )
+            ) union all
+            select ORGCODE from Om_Organization where ORGID=#orgId# 
+        )
+    </select>
+</sqlMap>

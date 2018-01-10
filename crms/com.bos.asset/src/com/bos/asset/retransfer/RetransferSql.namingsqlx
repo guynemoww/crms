@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    
+
+	<select id="retransferList" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT 
+tr.ID TRANSFER_id,
+tr.TRANSFER_NUM,
+to_char(tr.TAS_DATE,'yyyy-MM-dd') TAS_DATE,
+ci.CONTRACT_ID,
+ci.CONTRACT_NUM,
+p.PARTY_NAME,
+p.CERT_TYPE,
+p.CERT_NUM,
+tr.CON_ORG_NUM,
+tr.CON_USER_NUM,
+tr.TAS_ORG_NUM,
+tr.TAS_USER_NUM
+FROM TB_ASSET_TRANSFER TR
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=tr.CONTRACT_ID
+INNER JOIN  V_CSM_PARTY  p ON p.PARTY_ID = ci.PARTY_ID
+WHERE tr.STATUS = '30'
+	    <isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+	    <isNotNull property="userNum"> AND tr.TAS_USER_NUM = #userNum#</isNotNull>
+	    <isNotNull property="orgNum"> AND tr.TAS_ORG_NUM = #orgNum#</isNotNull>
+	    <isNotNull property="certType"> AND p.CERT_TYPE = #certType#</isNotNull>
+	    <isNotNull property="certNum"> AND p.CERT_NUM = #certNum#</isNotNull>
+	    <isNotNull property="partyName"> AND p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+	 </select>
+	 
+	 <select id="retransferCreateValid" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+SELECT ID FROM TB_ASSET_RETRANSFER WHERE TRANSFER_ID = #transferId# AND STATUS IN ('10','20','30')
+	 </select>
+	 
+    <select id="conInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT p.PARTY_NAME,p.PARTY_NUM,p.CERT_TYPE,p.CERT_NUM,c.CONTRACT_NUM,c.CONTRACT_AMT,c.CON_YU_E
+,to_char(c.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(c.END_DATE,'yyyy-MM-dd') END_DATE,
+c.CONTRACT_TERM,c.CYCLE_UNIT,c.REPAYMENT_TYPE,cl.YEAR_RATE,cl.OVERDUE_RATE_UP_PROPORTION
+FROM TB_CON_CONTRACT_INFO c
+LEFT JOIN V_CSM_PARTY p ON c.PARTY_ID=p.PARTY_ID
+LEFT JOIN TB_CON_LOANRATE cl ON cl.CONTRACT_ID=c.CONTRACT_ID
+WHERE c.CONTRACT_ID=#contractId#
+	 </select>
+	 
+    <select id="loanInfoList" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT p.PARTY_ID,p.PARTY_NAME,r.CONTRACT_ID,ci.CONTRACT_NUM,li.LOAN_ID,ls.SUMMARY_NUM,li.PRODUCT_TYPE,ls.SUMMARY_AMT,ls.JJYE,
+ls.NORMAL_ITR,to_char(ls.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(ls.END_DATE,'yyyy-MM-dd')END_DATE,ci.CLS_RESULT,
+p.PARTY_TYPE_CD,pc.CORP_CUSTOMER_TYPE_CD,r.ID,ls.SUMMARY_ID,to_char(t.TAS_DATE,'yyyy-MM-dd')TAS_DATE
+FROM TB_ASSET_RETRANSFER r
+INNER JOIN TB_ASSET_TRANSFER t ON r.TRANSFER_ID=t.ID
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID = r.CONTRACT_ID
+INNER JOIN TB_LOAN_INFO li ON r.CONTRACT_ID=li.CONTRACT_ID
+INNER JOIN TB_LOAN_SUMMARY ls ON ls.LOAN_ID=li.LOAN_ID
+LEFT JOIN V_CSM_PARTY p ON p.PARTY_ID=li.PARTY_ID
+LEFT JOIN TB_CSM_CORPORATION pc ON pc.PARTY_ID=p.PARTY_ID
+WHERE r.ID=#id#
+AND ls.SUMMARY_STATUS_CD IN ('02','03','04','07')
+	 </select>
+	 
+	 <select id="loanInfo" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT p.PARTY_NAME,p.CERT_TYPE,p.CERT_NUM,R.TRANSFER_ID,ci.CONTRACT_NUM,ls.SUMMARY_NUM,ls.ORG_NUM,ls.USER_NUM
+,li.PRODUCT_TYPE,ci.MAIN_GUARANTY_TYPE,li.REPAY_TYPE,ls.ARREAR_ITR,ls.PUNISH_ITR,ls.SUMMARY_STATUS_CD,ls.CYCLE_UNIT
+,to_char(ls.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,ls.SUMMARY_TERM,to_char(r.RETAS_DATE,'yyyy-MM-dd')RETAS_DATE
+,to_char(ls.END_DATE,'yyyy-MM-dd')END_DATE,ls.YQTS,r.RETAS_DATE,ci.CLS_RESULT,ls.SUMMARY_AMT,ls.JJYE,ls.NORMAL_ITR
+,nvl(ai.in_nor_bal_206, 0)+nvl(ai.out_nor_bal_209, 0) zclx,to_char(t.TAS_DATE,'yyyy-MM-dd')TAS_DATE,ls.YQTS,ls.JJYQBJ,
+nvl(ai.out_nor_bal_209, 0) out_nor_bal_09,                /*表外正常利息*/
+nvl(ai.out_dft_bal_210, 0) out_dft_bal_10,                /*表外拖欠利息*/
+nvl(ai.in_dft_bal_207, 0) in_dft_bal_07,                  /*表内拖欠利息*/
+nvl(ai.out_pns_bal_211, 0) out_pns_bal_11,                /*表外罚息*/
+nvl(ai.in_pns_bal_208, 0) in_pns_bal_08,                  /*表内罚息*/
+nvl(ai.in_nor_bal_206, 0) in_nor_bal_06,                  /*表内正常利息*/
+nvl(ai.nor_bal_101, 0) nor_bal_01,                        /*正常本金*/
+nvl(ai.nor_bal_101, 0) + nvl(ai.dvl_bal_102, 0) v_jjye     /*借据余额*/
+FROM TB_ASSET_RETRANSFER r
+INNER JOIN TB_ASSET_TRANSFER t ON t.id=r.TRANSFER_ID
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID = r.CONTRACT_ID
+INNER JOIN TB_LOAN_INFO li ON r.CONTRACT_ID=li.CONTRACT_ID
+INNER JOIN TB_LOAN_SUMMARY ls ON ls.LOAN_ID=li.LOAN_ID
+INNER JOIN SN_SUP_ACCOUNT_INFO ai ON ls.SUMMARY_NUM= ai.DUE_NUM
+LEFT JOIN V_CSM_PARTY p ON p.PARTY_ID=li.PARTY_ID
+WHERE r.ID=#id# AND ls.SUMMARY_ID=#summaryId#
+	 </select>
+
+</sqlMap>

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sqlMap>
+<!-- author:wangzhiyin -->
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    
+    <resultMap class="java.util.HashMap" id="orgsResult">
+         <result column="ORGID" javaType="String" property="orgId"/>
+         <result column="ORGCODE" javaType="String" property="orgCode"/>
+         <result column="ORGNAME" javaType="String" property="orgName"/>
+         <result column="ORGLEVEL" javaType="String" property="orgLevel"/>
+    </resultMap>
+    
+    
+   <select id="getParentOrgsList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+       SELECT org.ORGID,org.ORGCODE,org.ORGNAME,org.ORGLEVEL FROM OM_ORGANIZATION org
+    	START WITH
+    	org.ORGID = #orgId#
+    	CONNECT BY org.ORGID = prior org.PARENTORGID ]]>
+  </select>
+    
+   <select id="getParentOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[  
+        SELECT org.ORGID,org.ORGCODE,org.ORGNAME,org.ORGLEVEL
+	    FROM OM_ORGANIZATION org
+		WHERE
+		O.ORGID = 
+		(SELECT
+			PARENTORGID FROM OM_ORGANIZATION WHERE 
+			ORGID = #orgId#
+		 )]]>
+    </select>
+    
+   <select id="getWorkinglistCount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+       select p.product_cd,count(*) cnt from tb_wfm_workiteminstance w 
+join tb_wfm_processinstance p on p.process_id=w.process_id
+where w.user_num=#userId#
+and w.org_cd=#orgcode# and w.status='run'
+group by p.product_cd 
+    	]]>
+  </select>
+  
+   <!--根据业务主键，查询工作项信息 -->
+  <select id="queryWorkItemByBizId" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+  	SELECT
+	    wi.process_id as processId,
+	    wi.work_instance_id as workItemId,
+	    wi.user_num as userNum,
+	    wi.org_num as orgNum,
+	    ac.password
+	FROM
+	    TB_WFM_WORKITEMINSTANCE wi,
+	    TB_WFM_PROCESSINSTANCE pi,
+	    ac_operator ac
+	WHERE
+	    wi.process_id=pi.process_id
+	and wi.user_num = ac.userid
+	and pi.product_id=#bizId#
+	AND pi.process_status='run'
+	AND wi.status='run'
+  </select>
+  
+  <!--查询跟踪流程列表数据 -->
+  <select id="queryWorkedList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+SELECT
+p.PROCESS_ID as processId,
+p.PRODUCT_ID as productId,
+p.PRODUCT_CD as productCd,
+p.CREATE_POST_NAME as createPostName,
+p.CREATE_POST_CD as createPostCd,
+p.CREATE_USER_NAME as createUserName,
+p.CREATE_USER_NUM as createUserNum,
+p.CREATE_ORG_NAME as createOrgName,
+p.CREATE_ORG_NUM as createOrgNum,
+to_char(p.CREATE_TIME,'yyyy-MM-dd hh24:mi:ss') as createTime,
+p.FINISH_TIME as finishTime,
+p.ACTIVITY_NAME as activityName,
+p.POST_CD as postCd,
+p.APPOINT_USER_NAME as appointUserName,
+p.APPOINT_USER_NUM as appointUserNum,
+p.APPOINT_ORG_CD as appointOrgCd,
+p.APPOINT_ORG_NAME as appointOrgName,
+p.TEMPLATE_VERSION as templateVersion,
+p.PROCESS_STATUS as processStatus,
+p.APP_TYPE as appType,
+p.CUS_NAME as cusName,
+p.CUST_ID as custId,
+p.BIZ_STATUS as bizStatus,
+(case when bpi.PRODUCT_NAME is null then p.PROCESSINSTANCENAME else bpi.PRODUCT_NAME end) productName,
+pm.BIZ_VIEW_URL as bizViewUrl,
+p.PROCESSDEFNAME as processdefname,
+to_char(p.LASTUPDATETIME,'yyyy-MM-dd hh24:mi:ss') as lastupdatetime,
+p.PROCESSINSTANCENAME as processinstancename
+FROM (SELECT PROCESS_ID FROM TB_WFM_WORKITEMINSTANCE w WHERE w.user_num=#userNum# AND w.org_num =#orgNum# AND w.status='finish' GROUP BY PROCESS_ID) w
+LEFT JOIN TB_WFM_PROCESSINSTANCE p ON w.PROCESS_ID=p.PROCESS_ID
+LEFT JOIN TB_BIZ_APPLY a ON a.APPLY_ID=p.PRODUCT_ID
+LEFT JOIN TB_BIZ_PRODUCT_INFO bpi ON bpi.PRODUCT_CD=a.PRODUCT_TYPE
+LEFT JOIN TB_WFM_PROCESSMAPPING pm ON p.processdefname = pm.template_name AND p.TEMPLATE_VERSION=pm.TEMPLAGE_VERSION
+WHERE pm.version_status='1'
+			<isNotNull property="cusName">
+				and p.CUS_NAME like '%$cusName$%' 
+			</isNotNull>  
+			<isNotNull property="processDefName">
+				and p.PROCESSDEFNAME like '%$processDefName$%' 
+			</isNotNull>  
+			<isNotNull property="createUserName">
+				and p.CREATE_USER_NAME like '%$createUserName$%' 
+			</isNotNull>
+			<isNotNull property="processInstName">
+				and p.PROCESSINSTANCENAME like '%$processInstName$%' 
+			</isNotNull>
+			<isNotNull property="processStatus">
+				and p.PROCESS_STATUS=#processStatus#
+			</isNotNull>
+			<isNotNull property="startDate">
+				and to_char(p.CREATE_TIME,'yyyy-mm-dd')>=#startDate#
+			</isNotNull>
+			<isNotNull property="endDate">
+			<![CDATA[
+				and to_char(p.CREATE_TIME,'yyyy-mm-dd')<=#endDate#
+			]]>
+			</isNotNull>
+			<isNotNull property="createOrgId">
+				and p.CREATE_ORG_NUM in(select orgcode from om_organization where orgseq like '%$createOrgId$%')
+			</isNotNull>
+			ORDER BY (CASE WHEN p.PROCESS_STATUS='run' THEN 0 WHEN p.PROCESS_STATUS='finish' THEN 1 ELSE 9 END),p.create_time DESC
+  </select>
+  
+  <!--查询所有流程实例数据（非参与人查询） -->
+  <select id="queryWorkedListAll" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+   
+       SELECT
+			    distinct
+			    p.PROCESS_ID as processId,
+			    p.PRODUCT_CD as productCd,
+			    p.PRODUCT_ID as productId,
+			    p.CREATE_POST_NAME as createPostName,
+			    p.CREATE_POST_CD as createPostCd,
+			    p.CREATE_USER_NAME as createUserName,
+			    p.CREATE_USER_NUM as createUserNum,
+			    p.CREATE_ORG_NAME as createOrgName,
+			    p.CREATE_ORG_NUM as createOrgNum,
+			    to_char(p.CREATE_TIME,'yyyy-MM-dd hh24:mi:ss') as createTime,
+			    to_char(p.FINISH_TIME,'yyyy-MM-dd hh24:mi:ss') as finishTime,
+			    p.ACTIVITY_NAME as activityName,
+			    p.POST_CD as postCd,
+			    p.APPOINT_USER_NAME as appointUserName,
+			    p.APPOINT_USER_NUM as appointUserNum,
+			    p.APPOINT_ORG_CD as appointOrgCd,
+			    p.APPOINT_ORG_NAME as appointOrgName,
+			    p.TEMPLATE_VERSION as templateVersion,
+			    p.PROCESS_STATUS as processStatus,
+			    p.APP_TYPE as appType,
+			    p.CUS_NAME as cusName,
+			    p.BIZ_STATUS as bizStatus,
+			    p.PRODUCT_NAME as productName,
+			    pm.BIZ_VIEW_URL as bizViewUrl,
+			    p.PROCESSDEFNAME as processdefname,
+			    to_char(p.LASTUPDATETIME,'yyyy-MM-dd hh24:mi:ss') as lastupdatetime,
+			    p.PROCESSINSTANCENAME as processinstancename
+			FROM
+			    TB_WFM_PROCESSINSTANCE p,TB_WFM_PROCESSMAPPING pm
+			where  p.processdefname = pm.template_name 
+			and pm.version_status='1'  
+			and p.PROCESS_STATUS = 'finish'  
+			AND p.CREATE_ORG_NUM  IN (SELECT O.ORGCODE
+		                         FROM OM_ORGANIZATION O
+									WHERE O.ORGSEQ LIKE '%.$createOrgId$.%')
+			<isNotNull property="cusName">
+				and p.CUS_NAME like '%$cusName$%' 
+			</isNotNull>  
+			<isNotNull property="processDefName">
+				and p.PROCESSDEFNAME like '%$processDefName$%' 
+			</isNotNull>  
+			<!--
+			<isNotNull property="createUserName">
+				and ( p.CREATE_USER_NAME like '%$createUserName$%' or p.CREATE_USER_NUM like '%$createUserName$%' )
+			</isNotNull>
+			
+			<isNotNull property="createUserName">
+				and p.CREATE_USER_NAME = #createUserName#  
+			</isNotNull>
+			-->
+			<isNotNull property="createUserName">
+				and ( p.CREATE_USER_NAME = #createUserName# or p.CREATE_USER_NUM = #createUserName# )
+			</isNotNull>
+			
+			<isNotNull property="processInstName">
+				and p.PROCESSINSTANCENAME like '%$processInstName$%' 
+			</isNotNull>
+			<isNotNull property="processStatus">
+				and p.PROCESS_STATUS=#processStatus#
+			</isNotNull>
+			<isNotNull property="processId">
+				and p.PROCESS_ID=#processId#
+			</isNotNull>
+			<isNotNull property="startDate">
+			 
+				and to_char(p.CREATE_TIME,'yyyy-mm-dd') &gt;= to_char(to_date(#startDate# ,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd') 
+			
+			</isNotNull>
+			<isNotNull property="endDate">
+			
+				and to_char(p.CREATE_TIME,'yyyy-mm-dd') &lt;= to_char(to_date(#endDate# ,'yyyy-mm-dd hh24:mi:ss'),'yyyy-mm-dd') 	
+			 
+			</isNotNull>
+			<!--
+			<isNotNull property="createOrgId">
+				and p.CREATE_ORG_NUM in(select orgcode from om_organization where orgseq like '%$createOrgId$%')
+			</isNotNull>
+			-->
+			<isNotNull property="userNum">  AND p.CREATE_USER_NUM = #userNum# </isNotNull>
+			order by lastupdatetime desc
+    	
+  </select>
+  <!--查询所有流程实例数据（非参与人查询） -->
+  <select id="queryPressIds" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+ 
+	  select listagg(t.process_id, ',') within group(order by t.process_id) as processId
+	  from tb_wfm_processinstance t
+	 where t.process_status = 'run'
+	   and t.appoint_org_cd = #orgcode#
+	   <isNotNull property="cusName">
+	   and t.cus_name like '%$cusName$%'
+	   </isNotNull>
+	  <![CDATA[
+	   and rownum < 1000
+	   ]]>
+  </select>
+  <!--通过流程ID查询工作项实例-->
+  <select id="getWorkItems" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  	select 
+  		w.post_name as postName,
+  		w.post_cd as postCd,
+  		w.user_name as userName,
+  		w.user_num as userNum
+  	from tb_wfm_workiteminstance w 
+  	where w.post_cd in('P1229','P1001') 
+  	<isNotNull>AND w.process_id =#processInstId#</isNotNull>
+  	order by w.post_cd
+  </select>
+  <!--通过流程ID查询流程实例表-->
+  <select id="getProcessInstance" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  	select 
+           p.processdefname as processdefname,
+           p.processinstancename as processinstancename
+    from tb_wfm_processinstance p 
+    where 1=1
+  	<isNotNull>AND p.process_id =#processInstId#</isNotNull>
+  </select>
+  <!--通过partyId查询集团成员数-->
+  <select id="getGroupMember" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  	 select 
+  	 	t.GROUP_MEMBER_ID,
+            t.GROUP_PARTY_ID,
+            t.CORPORATION_PARTY_ID,
+            t.RELATIONSHIP_STATE,
+            v.PARTY_ID,
+            v.PARTY_NAME,
+            v.PARTY_NUM,
+            t.GROUP_REL_TYPE_CD,
+            t.MEMBER_TYPE_CD,
+            t.MEMBER_STATUS_CD,
+            t.MEMBER_SRC,
+            t.is_group,
+            t.OPER_TYPE,
+            v.CERT_TYPE,
+            v.CERT_NUM
+     from TB_CSM_GROUP_MEMBER t,v_csm_party v where t.corporation_party_id=v.PARTY_ID
+  	<isNotNull>and t.GROUP_PARTY_ID =#partyId#</isNotNull>
+  </select>
+</sqlMap>

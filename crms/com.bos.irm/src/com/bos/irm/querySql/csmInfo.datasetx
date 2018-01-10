@@ -1,0 +1,1060 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:DataSetDiagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://www.primeton.com/datamodel" name="csmInfo" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" displayName="客户信息" author="miaolf">
+  <nodes xsi:type="model:SPEntityNode" id="Entity1" name="QueryCusRateResult" nodeType="table" displayName="查询最新的客户评级对应的排序号" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="435"/>
+    <size height="66" width="150"/>
+    <figSize height="20" width="150"/>
+    <columnProperty id="property16" name="orderNo" displayName="orderNo" columnName="ORDER_NO" nullAble="true" PK="false" columnType="INTEGER" eosDataType="Int" length="10" dasType="int" showType="Int">
+      <viewField dict="false" dictTypeId="" displayName="orderNo" entityField="orderNo" id="orderNo" label="orderNo" name="orderNo" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="orderNo" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property17" name="partyId" displayName="partyId" columnName="PARTY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="partyId" entityField="partyId" id="partyId" label="partyId" name="partyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="partyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>SELECT TX.ORDER_NO , &#xD;
+       TE.PARTY_ID&#xD;
+ FROM (SELECT TS.PARTY_ID,&#xD;
+        TS.credit_rating_cd     &#xD;
+ FROM (SELECT TB.PARTY_ID , MAX(rating_dt) AS rating_dt FROM tb_irm_internal_rating_result TB&#xD;
+  WHERE TB.rating_state = '1' and tb.IS_PROFESSIONAL = '0' group by TB.PARTY_ID&#xD;
+ )EM&#xD;
+ LEFT JOIN &#xD;
+  tb_irm_internal_rating_result TS&#xD;
+ &#xD;
+  &#xD;
+ ON EM.PARTY_ID = TS.PARTY_ID AND EM.rating_dt = TS.rating_dt) TE&#xD;
+LEFT JOIN  tb_irm_scale_def TX &#xD;
+ ON TX.CREDIT_RATING_DISPLAY = TE.credit_rating_cd</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity3" name="QueryLastRatingResult" nodeType="table" displayName="查询上次的评级结果" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="570"/>
+    <size height="120" width="150"/>
+    <figSize height="20" width="158"/>
+    <comment>通过partyId查询客户的上次评级结果，不分生效失效。</comment>
+    <columnProperty id="property19" name="partyId" displayName="partyId" columnName="PARTY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="partyId" entityField="partyId" id="partyId" label="partyId" name="partyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="partyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property20" name="creditRatingCd" displayName="creditRatingCd" columnName="CREDIT_RATING_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="creditRatingCd" entityField="creditRatingCd" id="creditRatingCd" label="creditRatingCd" name="creditRatingCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="creditRatingCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property21" name="effectiveStartDt" displayName="effectiveStartDt" columnName="EFFECTIVE_START_DT" nullAble="true" PK="false" columnType="DATE" eosDataType="Date" dasType="date" showType="Date">
+      <viewField dict="false" dictTypeId="" displayName="effectiveStartDt" entityField="effectiveStartDt" id="effectiveStartDt" label="effectiveStartDt" name="effectiveStartDt" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="effectiveStartDt" showAllAttr="false">
+          <type name="date"/>
+          <attr name="srcFormat"/>
+          <attr name="styleClass"/>
+          <attr name="width"/>
+          <attr name="minValue"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr name="format"/>
+          <attr name="allowNull"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="allowInput"/>
+          <attr attrValue="" defaultValue="" name="readOnly"/>
+          <attr name="style"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr name="defaultNull"/>
+          <attr name="submitFormat"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr name="maxValue"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property22" name="effectiveEndDt" displayName="effectiveEndDt" columnName="EFFECTIVE_END_DT" nullAble="true" PK="false" columnType="DATE" eosDataType="Date" dasType="date" showType="Date">
+      <viewField dict="false" dictTypeId="" displayName="effectiveEndDt" entityField="effectiveEndDt" id="effectiveEndDt" label="effectiveEndDt" name="effectiveEndDt" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="effectiveEndDt" showAllAttr="false">
+          <type name="date"/>
+          <attr name="srcFormat"/>
+          <attr name="styleClass"/>
+          <attr name="width"/>
+          <attr name="minValue"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr name="format"/>
+          <attr name="allowNull"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="allowInput"/>
+          <attr attrValue="" defaultValue="" name="readOnly"/>
+          <attr name="style"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr name="defaultNull"/>
+          <attr name="submitFormat"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr name="maxValue"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property23" name="ratingState" displayName="ratingState" columnName="RATING_STATE" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="ratingState" entityField="ratingState" id="ratingState" label="ratingState" name="ratingState" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="ratingState" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>SELECT TR.PARTY_ID,&#xD;
+TR.CREDIT_RATING_CD,&#xD;
+TR.EFFECTIVE_START_DT,&#xD;
+TR.RATING_STATE,&#xD;
+TR.EFFECTIVE_END_DT&#xD;
+ FROM TB_IRM_INTERNAL_RATING_RESULT TR &#xD;
+ LEFT JOIN (SELECT &#xD;
+   T.PARTY_ID ,MAX(RATING_DT) AS RATING_DT&#xD;
+  FROM TB_IRM_INTERNAL_RATING_RESULT T &#xD;
+  GROUP BY T.PARTY_ID) TM&#xD;
+  ON TR.PARTY_ID = TM.PARTY_ID AND TR.RATING_DT = TM.RATING_DT&#xD;
+ WHERE  1=1</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity4" name="QueryNonFinancialInfo" nodeType="table" displayName="判断是否为非财务信息" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="789"/>
+    <size height="66" width="150"/>
+    <figSize height="20" width="167"/>
+    <comment>通过申请ID判断是非财务信息还是政府融资平台信息</comment>
+    <columnProperty id="property24" name="propertyTypeCd" displayName="propertyTypeCd" columnName="PROPERTY_TYPE_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="propertyTypeCd" entityField="propertyTypeCd" id="propertyTypeCd" label="propertyTypeCd" name="propertyTypeCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="propertyTypeCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property25" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>select TI.PROPERTY_TYPE_CD,&#xD;
+TN.IRA_APPLY_ID&#xD;
+ from TB_IRM_MODEL_INDEX TI &#xD;
+LEFT JOIN TB_IRM_NON_FINANCIAL_INFO TN &#xD;
+ON TI.INDEX_ID = TN.NON_FINANCIAL_INDEX_ID &#xD;
+where  TI.PROPERTY_TYPE_CD !='0204'&#xD;
+AND TN.NON_FINANCIAL_INDEX_ID IS NOT NULL</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity5" name="QueryGovNonFinancialInfo" nodeType="table" displayName="查询政府融资平台非财务指标" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="705"/>
+    <size height="66" width="150"/>
+    <figSize height="20" width="167"/>
+    <columnProperty id="property26" name="propertyTypeCd" displayName="propertyTypeCd" columnName="PROPERTY_TYPE_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="propertyTypeCd" entityField="propertyTypeCd" id="propertyTypeCd" label="propertyTypeCd" name="propertyTypeCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="propertyTypeCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property27" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>select TI.PROPERTY_TYPE_CD,&#xD;
+TN.IRA_APPLY_ID&#xD;
+ from TB_IRM_MODEL_INDEX TI &#xD;
+LEFT JOIN TB_IRM_NON_FINANCIAL_INFO TN &#xD;
+ON TI.INDEX_ID = TN.NON_FINANCIAL_INDEX_ID &#xD;
+where  TI.PROPERTY_TYPE_CD ='0204'&#xD;
+AND TN.NON_FINANCIAL_INDEX_ID IS NOT NULL</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity6" name="QueryFinanceInfoInRes" nodeType="table" displayName="Entity" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="870"/>
+    <size height="138" width="150"/>
+    <figSize height="20" width="202"/>
+    <columnProperty id="property28" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property29" name="indexCd" displayName="indexCd" columnName="INDEX_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="20" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="indexCd" entityField="indexCd" id="indexCd" label="indexCd" name="indexCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="indexCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property30" name="indexName" displayName="indexName" columnName="INDEX_NAME" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="100" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="indexName" entityField="indexName" id="indexName" label="indexName" name="indexName" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="indexName" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property31" name="remarks" displayName="remarks" columnName="REMARKS" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="1000" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="remarks" entityField="remarks" id="remarks" label="remarks" name="remarks" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="remarks" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property32" name="indexValueDataType" displayName="indexValueDataType" columnName="INDEX_VALUE_DATA_TYPE" nullAble="true" PK="false" columnType="DECIMAL" eosDataType="Decimal" length="22" precision="6" dasType="big_decimal" showType="Decimal">
+      <viewField dict="false" dictTypeId="" displayName="indexValueDataType" entityField="indexValueDataType" id="indexValueDataType" label="indexValueDataType" name="indexValueDataType" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="indexValueDataType" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property33" name="rowNum" displayName="rowNum" columnName="ROW_NUM" nullAble="false" PK="false" columnType="BIGINT" eosDataType="Long" length="19" dasType="long" showType="Long">
+      <viewField dict="false" dictTypeId="" displayName="rowNum" entityField="rowNum" id="rowNum" label="rowNum" name="rowNum" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="rowNum" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>select &#xD;
+ROW_NUMBER() over(order by tbri.INDEX_CD) as row_num,&#xD;
+tbri.INDEX_CD,&#xD;
+tbri.INDEX_NAME,&#xD;
+tbii.INDEX_DISP as remarks,&#xD;
+tbii.INDEX_VALUE_DATA_TYPE,&#xD;
+tbfi.IRA_APPLY_ID&#xD;
+ from tb_irm_rating_index_data tbii&#xD;
+left join tb_irm_rating_fin_index tbri on tbii.INDEX_CD = tbri.INDEX_CD&#xD;
+left join tb_irm_financial_info tbfi on tbii.financial_info_id = tbfi.financial_info_id&#xD;
+where tbii.FINANCIAL_INFO_ID is not null and tbri.INDEX_CD  is not null</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity7" name="QueryRatingModelAndVer" nodeType="table" displayName="通过评级申请ID查询生效的评级模型和模型版本号" author="黄龙龙" open="false" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="1035"/>
+    <size height="102" width="150"/>
+    <figSize height="20" width="164"/>
+    <columnProperty id="property34" name="modelId" displayName="modelId" columnName="MODEL_ID" nullAble="false" PK="false" columnType="VARCHAR" eosDataType="String" length="80" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="modelId" entityField="modelId" id="modelId" label="modelId" name="modelId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="modelId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property35" name="modelTypeCd" displayName="modelTypeCd" columnName="MODEL_TYPE_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="modelTypeCd" entityField="modelTypeCd" id="modelTypeCd" label="modelTypeCd" name="modelTypeCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="modelTypeCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property36" name="ratingModelVer" displayName="ratingModelVer" columnName="RATING_MODEL_VER" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="6" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="ratingModelVer" entityField="ratingModelVer" id="ratingModelVer" label="ratingModelVer" name="ratingModelVer" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="ratingModelVer" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property37" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>SELECT TBIM.MODEL_ID , TBIM.MODEL_TYPE_CD, TBIM.RATING_MODEL_VER,IRA_APPLY_ID FROM TB_IRM_RATING_MODEL TBIM &#xD;
+LEFT JOIN (SELECT TBIA.RATING_MODEL_CD , TBIA.RATING_MODEL_VER ,TBIA.IRA_APPLY_ID FROM TB_IRM_INTERNAL_RATING_APPLY TBIA ) AA&#xD;
+ON TBIM.MODEL_TYPE_CD = AA.RATING_MODEL_CD AND TBIM.RATING_MODEL_VER = AA.RATING_MODEL_VER&#xD;
+WHERE TBIM.MODEL_STATE = '2' AND AA.IRA_APPLY_ID IS NOT NULL&#xD;
+</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity8" name="QueryCusRatingFinanceInfo" nodeType="table" displayName="Entity" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="1155"/>
+    <size height="84" width="150"/>
+    <figSize height="20" width="170"/>
+    <columnProperty id="property39" name="customerTypeCd" displayName="customerTypeCd" columnName="CUSTOMER_TYPE_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="3" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="customerTypeCd" entityField="customerTypeCd" id="customerTypeCd" label="customerTypeCd" name="customerTypeCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="customerTypeCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property40" name="financeDeadline" displayName="financeDeadline" columnName="FINANCE_DEADLINE" nullAble="true" PK="false" columnType="DATE" eosDataType="Date" dasType="date" showType="Date">
+      <viewField dict="false" dictTypeId="" displayName="financeDeadline" entityField="financeDeadline" id="financeDeadline" label="financeDeadline" name="financeDeadline" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="financeDeadline" showAllAttr="false">
+          <type name="date"/>
+          <attr name="srcFormat"/>
+          <attr name="styleClass"/>
+          <attr name="width"/>
+          <attr name="minValue"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr name="format"/>
+          <attr name="allowNull"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="allowInput"/>
+          <attr attrValue="" defaultValue="" name="readOnly"/>
+          <attr name="style"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr name="defaultNull"/>
+          <attr name="submitFormat"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr name="maxValue"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property41" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>select &#xD;
+b.CUSTOMER_TYPE_CD,&#xD;
+b.FINANCE_DEADLINE ,&#xD;
+a.IRA_APPLY_ID&#xD;
+ from TB_IRM_FINANCIAL_INFO a&#xD;
+left join TB_ACC_CUSTOMER_FINANCE b&#xD;
+on a.REPORT_ID = b.FINANCE_ID&#xD;
+where &#xD;
+1=1 &#xD;
+and a.REPORT_ID is not null</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <nodes xsi:type="model:SPEntityNode" id="Entity9" name="QueryFirstRatingResult" nodeType="table" displayName="通过客户ID获取客户的评级结果（通过评级日期排序）" author="黄龙龙" open="true" entType="SPEntity" allUseViewModel="true" instanceClass="" table="">
+    <location x="60" y="1260"/>
+    <size height="102" width="150"/>
+    <figSize height="20" width="158"/>
+    <columnProperty id="property42" name="iraApplyId" displayName="iraApplyId" columnName="IRA_APPLY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="iraApplyId" entityField="iraApplyId" id="iraApplyId" label="iraApplyId" name="iraApplyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="iraApplyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property43" name="creditRatingCd" displayName="creditRatingCd" columnName="CREDIT_RATING_CD" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="60" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="creditRatingCd" entityField="creditRatingCd" id="creditRatingCd" label="creditRatingCd" name="creditRatingCd" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="creditRatingCd" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property44" name="partyId" displayName="partyId" columnName="PARTY_ID" nullAble="true" PK="false" columnType="VARCHAR" eosDataType="String" length="32" dasType="string" showType="String">
+      <viewField dict="false" dictTypeId="" displayName="partyId" entityField="partyId" id="partyId" label="partyId" name="partyId" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="partyId" showAllAttr="false">
+          <type name="text"/>
+          <attr attrValue="" defaultValue="" name="extAttr"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="style"/>
+          <attr attrValue="" defaultValue="" name="styleClass"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr attrValue="" defaultValue="" name="validateAttr"/>
+          <attr attrValue="" defaultValue="" name="readonly"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <columnProperty id="property45" name="ratingDt" displayName="ratingDt" columnName="RATING_DT" nullAble="true" PK="false" columnType="DATE" eosDataType="Date" dasType="date" showType="Date">
+      <viewField dict="false" dictTypeId="" displayName="ratingDt" entityField="ratingDt" id="ratingDt" label="ratingDt" name="ratingDt" userDefined="true">
+        <fieldView showAllAttr="false">
+          <type name="write"/>
+          <attr name="maxLength"/>
+          <attr name="formatPattern"/>
+          <attr attrValue="" defaultValue="" name="maxLengthString"/>
+          <attr name="value"/>
+          <attr name="srcFormatPattern"/>
+          <attr attrValue="" defaultValue="" name="filter"/>
+        </fieldView>
+        <fieldEdit name="ratingDt" showAllAttr="false">
+          <type name="date"/>
+          <attr name="srcFormat"/>
+          <attr name="styleClass"/>
+          <attr name="width"/>
+          <attr name="minValue"/>
+          <attr attrValue="" defaultValue="" name="tabindex"/>
+          <attr name="format"/>
+          <attr name="allowNull"/>
+          <attr attrValue="" defaultValue="" name="size"/>
+          <attr attrValue="" defaultValue="" name="title"/>
+          <attr attrValue="" defaultValue="" name="maxlength"/>
+          <attr attrValue="" defaultValue="" name="allowInput"/>
+          <attr attrValue="" defaultValue="" name="readOnly"/>
+          <attr name="style"/>
+          <attr attrValue="" defaultValue="" name="value"/>
+          <attr name="defaultNull"/>
+          <attr name="submitFormat"/>
+          <attr attrValue="" defaultValue="" name="disabled"/>
+          <attr name="maxValue"/>
+        </fieldEdit>
+      </viewField>
+    </columnProperty>
+    <spEntitySqlView product="default" view="" useSql="true" schema="" needSave="true">
+      <sql>select IRA_APPLY_ID,CREDIT_RATING_CD,PARTY_ID,RATING_DT from tb_irm_internal_rating_result &#xD;
+where IS_PROFESSIONAL = '0' and (PROJECT_ID is null or PROJECT_ID ='')&#xD;
+ order by RATING_DT desc</sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="DB2 UDB" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Informix" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="MySql" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Oracle" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="SQL Server" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+    <spEntitySqlView product="Sybase" view="" useSql="true" schema="">
+      <sql></sql>
+    </spEntitySqlView>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+</model:DataSetDiagram>

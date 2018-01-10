@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan 客户管理-名单制管理-->
+<sqlMap>
+    <resultMap id="info" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="listStatus" column="LIST_STATUS"/>
+			<result property="approveStatus" column="APPROVE_STATUS"/>
+			<result property="operUserid" column="OPER_USERID"/>
+			<result property="operOrgcode" column="OPER_ORGCODE"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="pdYj" column="PD_YJ"/>
+			<result property="clsResult" column="CLS_RESULT"/>
+	</resultMap> 
+	<!--风险监控名单制管理列表-->
+    <select id="infoList" parameterClass="java.util.HashMap" resultMap="info">
+    SELECT DISTINCT V.PARTY_ID,
+		                T.LIST_STATUS,
+		                 decode(T.LIST_STATUS,'2','1','1','2','3')sortno,
+		                T.APPROVE_STATUS,
+		                T.OPER_USERID,
+		                T.OPER_ORGCODE,
+		                MT.ORG_NUM,
+		                T.CREATE_DATE,
+		                V.CERT_TYPE,
+		                V.CERT_NUM,
+		                V.MIDDLE_CODE,
+		                V.PARTY_NAME,
+		                T.PD_YJ,
+		                A.CLS_RESULT
+		  FROM V_CSM_PARTY V
+		  LEFT JOIN TB_LST_INFO T
+		    ON T.PARTY_ID = V.PARTY_ID
+		   and t.approve_status = '03'
+		  LEFT JOIN (SELECT PARTY_ID,
+		                    '0' || MAX(TO_NUMBER(A.CLS_RESULT)) AS CLS_RESULT
+		               FROM tb_con_contract_info A
+		               where a.con_status = '03'
+		              GROUP BY PARTY_ID) A
+		    ON A.PARTY_ID = v.PARTY_ID
+		 INNER JOIN TB_CSM_MANAGEMENT_TEAM MT
+		    ON MT.PARTY_ID = V.PARTY_ID
+		  WHERE 1=1
+		<isNotNull property="partyId">  AND V.PARTY_ID = #partyId# </isNotNull>
+		<isNotNull property="partyName">  AND V.PARTY_NAME like '%$partyName$%' </isNotNull>
+		<isNotNull property="orgId">  AND MT.ORG_NUM IN (with sup_orgs as
+			 (select T.ORGCODE
+			    from OM_ORGANIZATION t
+			   start with t.orgid = '$orgId$'
+			  connect by prior t.ORGID = t.parentorgid)
+			select * from sup_orgs s) </isNotNull>
+		<isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		<isNull property="listStatus">  AND T.LIST_STATUS in ('1','3')</isNull>
+		<isNotNull property="listStatus">  AND T.LIST_STATUS = #listStatus# </isNotNull>
+		<isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>    
+		order by sortno
+    </select>
+    
+    <!--黑名单制管理列表-->
+    <select id="blackList" parameterClass="java.util.HashMap" resultMap="info">
+		   SELECT DISTINCT V.PARTY_ID,
+		                T.LIST_STATUS,
+		                 decode(T.LIST_STATUS,'2','1','1','2','3')sortno,
+		                T.APPROVE_STATUS,
+		                T.OPER_USERID,
+		                T.OPER_ORGCODE,
+		                MT.ORG_NUM,
+		                T.CREATE_DATE,
+		                V.CERT_TYPE,
+		                V.CERT_NUM,
+		                V.MIDDLE_CODE,
+		                V.PARTY_NAME,
+		                T.PD_YJ,
+		                A.CLS_RESULT
+		  FROM V_CSM_PARTY V
+		  LEFT JOIN TB_LST_INFO T
+		    ON T.PARTY_ID = V.PARTY_ID
+		   and t.approve_status = '03'
+		  LEFT JOIN (SELECT PARTY_ID,
+		                    '0' || MAX(TO_NUMBER(A.CLS_RESULT)) AS CLS_RESULT
+		               FROM tb_con_contract_info A
+		               where a.con_status = '03'
+		              GROUP BY PARTY_ID) A
+		    ON A.PARTY_ID = v.PARTY_ID
+		 INNER JOIN TB_CSM_MANAGEMENT_TEAM MT
+		    ON MT.PARTY_ID = V.PARTY_ID
+		  WHERE T.LIST_STATUS = '2'
+		<isNotNull property="partyId">  AND V.PARTY_ID = #partyId# </isNotNull>
+		<isNotNull property="partyName">  AND V.PARTY_NAME like '%$partyName$%' </isNotNull>
+		<isNotNull property="orgId">  AND MT.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$orgId$%') </isNotNull>
+		<isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		<isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>    
+		order by sortno
+    </select>
+    
+    
+    <resultMap id="change" class="java.util.HashMap">
+   			<result property="changeDate" column="CHANGE_DATE"/>
+			<result property="changeBeforStatus" column="CHANGE_BEFOR_STATUS"/>
+			<result property="changeAfterStatus" column="CHANGE_AFTER_STATUS"/>
+			<result property="changeReson" column="CHANGE_RESON"/>
+			<result property="operUserid" column="OPER_USERID"/>
+			<result property="operOrgcode" column="OPER_ORGCODE"/>
+			<result property="hisFlag" column="HIS_FLAG"/>
+	</resultMap>
+    <select id="changeList" parameterClass="java.util.HashMap" resultMap="change">
+		SELECT T.CHANGE_DATE,
+		       T.CHANGE_BEFOR_STATUS,
+		       T.CHANGE_AFTER_STATUS,
+		       T.CHANGE_RESON,
+		       T.OPER_USERID,
+		       T.OPER_ORGCODE,
+		       T.HIS_FLAG,
+		       T.P_ID
+		  FROM TB_LST_CHANGE_INFO T
+		 WHERE T.PARTY_ID = #partyId#
+    </select>
+    
+    <resultMap id="oneInfo" class="java.util.HashMap">
+   			<result property="listStatus" column="LIST_STATUS"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="clsResult" column="CLS_RESULT"/>
+			<result property="pdYj" column="PD_YJ"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="operUserid" column="OPER_USERID"/>
+	</resultMap>
+	<!--风险监控名单客户信息查询-->
+    <select id="oneInfo" parameterClass="java.util.HashMap" resultMap="oneInfo">
+		 SELECT DISTINCT V.PARTY_ID,
+		                T.LIST_STATUS,
+		                 decode(T.LIST_STATUS,'2','1','1','2','3')sortno,
+		                T.APPROVE_STATUS,
+		                T.OPER_USERID,
+		                T.OPER_ORGCODE,
+		                MT.ORG_NUM,
+		                T.CREATE_DATE,
+		                V.CERT_TYPE,
+		                V.CERT_NUM,
+		                V.MIDDLE_CODE,
+		                V.PARTY_NAME,
+		                T.PD_YJ,
+		                A.CLS_RESULT
+		  FROM V_CSM_PARTY V
+		  LEFT JOIN TB_LST_INFO T
+		    ON T.PARTY_ID = V.PARTY_ID
+		   and t.approve_status = '03'
+		  LEFT JOIN (SELECT PARTY_ID,
+		                    '0' || MAX(TO_NUMBER(A.CLS_RESULT)) AS CLS_RESULT
+		               FROM tb_con_contract_info A
+		               where a.con_status = '03'
+		              GROUP BY PARTY_ID) A
+		    ON A.PARTY_ID = v.PARTY_ID
+		 INNER JOIN TB_CSM_MANAGEMENT_TEAM MT
+		    ON MT.PARTY_ID = V.PARTY_ID
+		  WHERE V.PARTY_ID = #partyId#
+    </select>
+    
+    <resultMap id="stock" class="java.util.HashMap">
+   			<result property="rId" column="R_ID"/>
+			<!--
+	   		<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="cgPoint" column="CG_POINT"/>
+			-->
+			<result property="partyNum" column="party_num"/>
+			<result property="custName" column="CUST_NAME"/>
+		    <result property="stockNature" column="stock_nature"/>
+		    <result property="direcsitu" column="direcsitu"/>
+		    <result property="directorName" column="director_name"/>
+		    <result property="drectorPost" column="drector_post"/>
+		    <result property="stockNum" column="stock_num"/>
+		    <result property="stockRate" column="stock_rate"/>
+		    <result property="stockNetval" column="stock_netval"/>
+		    <result property="note" column="note"/>
+		    <result property="lastchanBankid" column="lastchan_bankid"/>
+		    <result property="lastchanPerson" column="lastchan_person"/>
+		    <result property="lastchanDate" column="lastchan_date"/>																						
+	
+	</resultMap>
+	<!--我行股东名单-->
+    <select id="stockList" parameterClass="java.util.HashMap" resultMap="stock">
+		SELECT   
+		    t.r_Id,
+		    p.party_num,
+		    t.cust_name,
+		    t.stock_nature,
+		    t.direcsitu,
+		    t.director_name,
+		    t.drector_post, 
+		    t.stock_num,
+		    t.stock_rate,
+		    t.stock_netval,
+		    t.note,
+		    t.lastchan_bankid, 
+		    t.lastchan_person,
+		    t.lastchan_date 
+		FROM TB_LST_STOCK T  
+		LEFT JOIN TB_CSM_PARTY p ON t.R_ID=p.PARTY_ID 
+		WHERE t.active=1
+		<isNotNull property="stockNature"> AND T.STOCK_NATURE= #stockNature# </isNotNull>
+		<isNotNull property="rId"> AND T.R_ID = #rId# </isNotNull>
+		<isNotNull property="custName"> AND T.CUST_NAME LIKE '%$custName$%' </isNotNull>
+    </select>
+    
+    <resultMap id="rela" class="java.util.HashMap">
+   			<result property="rId" column="R_ID"/>
+	   		<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="cgPoint" column="CG_POINT"/>
+	</resultMap>
+	<!--我行关联方名单-->
+    <select id="relaList" parameterClass="java.util.HashMap" resultMap="rela">
+		SELECT T.R_ID, 
+			T.PARTY_NAME, 
+			T.CERT_TYPE, 
+			T.CERT_NUM, 
+			T.CG_POINT
+		FROM TB_LST_RELA T WHERE 1=1
+		<isNotNull property="certType">  AND T.CERT_TYPE = #certType# </isNotNull>
+		<isNotNull property="certNum">  AND T.CERT_NUM = #certNum# </isNotNull>
+		<isNotNull property="partyName"> AND T.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+    </select>
+     <!--删除我行关联方-->
+    <delete id="deleteRelaList" parameterClass="java.util.HashMap">
+		DELETE FROM TB_LST_RELA T 
+    </delete>
+    <!--删除我行股东名单-->
+    <delete id="deleteStockList" parameterClass="java.util.HashMap" >
+		DELETE FROM TB_LST_STOCK T 
+    </delete>
+    <update id="cancelTbLstStock" parameterClass="java.util.HashMap">
+    	UPDATE TB_LST_STOCK SET active=0,LASTCHAN_BANKID=#lastChanBankId#,LASTCHAN_PERSON=#lastChanPerson#,LASTCHAN_DATE=TO_DATE(#lastChanDate#,'yyyy-MM-dd hh24:mi:ss') WHERE R_ID=#rId# AND active='1'
+    </update>
+    
+     <resultMap id="selectParty" class="java.util.HashMap">
+   			<result property="partyId" column="party_id"/>
+			<result property="partyName" column="party_name"/>
+		    <result property="partyNum" column="party_num"/>
+		    <result property="certType" column="cert_type"/>
+		    <result property="certNum" column="cert_num"/>
+		    <result property="updateOrgNum" column="update_org_num"/>
+		    <result property="updateUserNum" column="update_user_num"/>
+	</resultMap>
+    <select id="lstStockSelectCorpParty" parameterClass="java.util.HashMap" resultMap="selectParty">
+        SELECT p.party_id,p.party_num,p.party_name,'202' cert_type,cp.org_register_cd cert_num,cp.update_org_num,cp.update_user_num 
+        FROM TB_CSM_CORPORATION cp 
+		LEFT JOIN TB_CSM_PARTY p ON cp.PARTY_ID=p.PARTY_ID
+		WHERE 1=1 
+		<isNotNull property="partyNum"> AND p.party_num = #partyNum# </isNotNull>
+		<isNotNull property="partyName"> AND p.party_name LIKE '%$partyName$%' </isNotNull>
+		<isNotNull property="certNum"> AND cp.org_register_cd LIKE '%$certNum$%' </isNotNull>
+    </select>
+    <select id="lstStockSelectNatuParty" parameterClass="java.util.HashMap" resultMap="selectParty">
+		SELECT p.party_id,p.party_num,p.party_name,np.cert_type,np.cert_num,np.update_org_num,np.update_user_num
+		FROM TB_CSM_NATURAL_PERSON np
+		LEFT JOIN TB_CSM_PARTY p ON np.PARTY_ID=p.PARTY_ID
+		WHERE 1=1
+		<isNotNull property="partyNum"> AND p.party_num = #partyNum# </isNotNull>
+		<isNotNull property="certNum"> AND np.cert_num = #certNum# </isNotNull>
+		<isNotNull property="partyName"> AND p.party_name LIKE '%'||#partyName#||'%' </isNotNull>
+    </select>
+
+</sqlMap>

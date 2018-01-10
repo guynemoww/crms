@@ -1,0 +1,218 @@
+//package temp.decision;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.math.BigDecimal;
+
+public class {classname} {
+
+public Object exe(HashMap map) throws Exception {
+  this.map=map;
+{rulecontent}
+}
+
+private HashMap map=null;
+private Object log=null;
+private Method logMethod=null;
+public java.util.List path=new java.util.ArrayList();
+private Method computeGrantTableMethod=null;
+
+	
+	private Boolean paramNotExist(String pname) throws Exception {
+		return (this.map.containsKey(pname)==false);
+	}
+	
+	private Boolean paramNull(String pname) throws Exception {
+		return (this.map.get(pname)==null);
+	}
+	
+	private Object computeGrantTable(String nodename) throws Exception {
+		if (this.map.containsKey("TEST_DECISTION_TREE")) {
+				return false;// 决策树测试
+		}
+		
+		// 正常的规则嵌套调用
+		if (null == computeGrantTableMethod) {
+			Class util = Class.forName("com.bos.pub.DecisionUtil");
+			computeGrantTableMethod = util.getMethod("computeGrantTable", new Class[] { String.class, Map.class });
+		}
+		if (null != computeGrantTableMethod) {
+			return computeGrantTableMethod.invoke(null, new Object[] { nodename, this.map });
+		}
+		return null;
+	}
+	
+	private void log(String msg) {
+		try {
+			if (this.map.containsKey("TEST_DECISTION_TREE")) {
+				return;// 决策树测试
+			}
+			if (null == log) {
+				Class util = Class.forName("com.bos.pub.GitUtil");
+				Method mt = util.getMethod("getLogger", new Class[] { String.class });
+				log = mt.invoke(null, new Object[] { "{classname}" });
+				logMethod = log.getClass().getMethod("debug", new Class[] { String.class });
+			}
+			if (null != logMethod && null != log) {
+				java.io.StringWriter sw = new java.io.StringWriter();
+				new Exception().printStackTrace(new java.io.PrintWriter(sw));
+				
+				String str = sw.toString();
+				str = str.substring(str.indexOf("\n") + 2);
+				str = str.substring(0, str.indexOf("\n") -1);
+				logMethod.invoke(log, new Object[] { str + ":" + msg });
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	private void logPath(String nodename) {
+		path.add(nodename);
+	}
+	
+	private Boolean invokeRuleBool(String ruleInd) throws Exception {
+		return toBool(invokeRule(ruleInd));
+	}
+	private BigDecimal invokeRuleDouble(String ruleInd) throws Exception {
+		return toBigDecimal(invokeRule(ruleInd));
+	}
+	private Long invokeRuleLong(String ruleInd) throws Exception {
+		return toLong(invokeRule(ruleInd));
+	}
+	private String invokeRuleStr(String ruleInd) throws Exception {
+		Object re = invokeRule(ruleInd);
+		if (null == re)
+			return "";
+		return re.toString();
+	}
+	private Object invokeRule(String ruleInd) throws Exception {
+		try {
+			if (this.map.containsKey("TEST_DECISTION_TREE")) {
+				return this.map.get(ruleInd);// 决策树测试
+			} else {// 正常的规则嵌套调用
+				HashMap<String, Object> rule = new HashMap<String, Object>();
+				rule.put("rind", ruleInd);
+				
+				Class util = Class.forName("com.bos.pub.DecisionUtil");
+				Method mt = util.getMethod("execRule", new Class[] { HashMap.class, HashMap.class });
+				HashMap result = (HashMap)mt.invoke(util.newInstance(), new Object[] { rule, this.map });
+				if (result.containsKey("result")) {
+					this.map.put(ruleInd, result.get("result"));
+					return result.get("result");
+				} else {
+					throw new Exception("规则调用失败：" + result.get("msg"));
+				}
+			}
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private Long ifLong(Boolean condition, Long reTrue, Long reFalse) {
+		return condition ? reTrue : reFalse;
+	}
+
+	private Double ifDouble(Boolean condition, Double reTrue, Double reFalse) {
+		return condition ? reTrue : reFalse;
+	}
+
+	private String ifString(Boolean condition, String reTrue, String reFalse) {
+		return condition ? reTrue : reFalse;
+	}
+	
+	private Long absLong(Object obj) {
+		return Math.abs(toLong(obj));
+	}
+
+	private Double absDouble(Object obj) {
+		return Math.abs(toDouble(obj));
+	}
+	
+	private Long toLong(Object obj) {
+		return toDouble(obj).longValue();
+	}
+
+	private Double toDouble(Object obj) {
+		if (null == obj || obj.equals("") || obj.equals("null"))
+			return 0.0;
+		try {
+			if (obj instanceof Float) {
+				return 1.0 * (Float) obj;
+			}
+			if (obj instanceof Double) {
+				return (Double) obj;
+			}
+			return Double.valueOf(obj.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 0.0;
+	}
+
+	private BigDecimal toBigDecimal(Object obj) {
+		if (null == obj || obj.equals("") || obj.equals("null"))
+			return new BigDecimal("0");
+		try {
+			return new BigDecimal(obj.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return new BigDecimal("0");
+	}
+
+	private Boolean toBool(Object obj) {
+		if (null == obj)
+			return false;
+		if (obj instanceof Boolean)
+			return (Boolean) obj;
+		if ("1".equals(obj) || "y".equals(obj) || "Y".equals(obj)
+				|| "是".equals(obj))
+			return true;
+
+		return false;
+	}
+
+	private Boolean containsDict(String text, String str) {
+		if (null == text || null == str)
+			return false;
+		String[] tr = text.split(",");
+		for(int i = 0;i<tr.length;i++){
+			if(tr[i].contains(str)) return true;
+		}
+		return false;
+		//return new String(","+text+",").contains(","+str+",");
+	}
+
+	private Boolean contains(String text, String str) {
+		if (null == text || null == str)
+			return false;
+		return text.contains(str);
+	}
+
+	private Boolean notContains(String text, String str) {
+		return !contains(text, str);
+	}
+
+	private Boolean startsWith(String text, String str) {
+		if (null == text || null == str)
+			return false;
+		return text.startsWith(str);
+	}
+
+	private Boolean notStartsWith(String text, String str) {
+		return !startsWith(text, str);
+	}
+
+	private Boolean endsWith(String text, String str) {
+		if (null == text || null == str)
+			return false;
+		return text.endsWith(str);
+	}
+
+	private Boolean notEndsWith(String text, String str) {
+		return !endsWith(text, str);
+	}
+}

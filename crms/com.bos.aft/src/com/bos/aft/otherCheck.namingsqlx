@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:xiaoxia -->
+<sqlMap>
+    <select id="findContractList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from (
+    	select p.party_id,
+		       p.party_num,
+		       cc.corp_customer_type_cd,
+		       p.party_type_cd,
+		       p.party_name,
+		       cc.english_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       ci.contract_id,
+		       ci.contract_num,
+		       ci.contract_amt,
+		       ci.con_balance,
+		       ci.con_yu_e,
+		       to_char(ci.begin_date,'yyyy-MM-dd') as begin_date,
+       		   to_char(ci.end_date,'yyyy-MM-dd') as end_date,
+       		   to_char(x.create_date,'yyyy-MM-dd') as create_date
+		  from tb_con_contract_info ci 
+			  left join (
+	             select pc.contract_id contract_id,max(pc.create_date) create_date 
+	               from tb_aft_point_check pc where pc.check_status = '03' group by pc.contract_id
+	        ) x on x.contract_id = ci.contract_id, tb_csm_party p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id
+		 where ci.party_id = p.party_id
+		   and ci.con_status = '03'
+		   and ci.user_num = '$userNum$'
+		   and ci.org_num = '$orgNum$'
+		   ) a where 1=1 
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+ 		 <isNotNull property="transContractNum">  and a.contract_num = '$transContractNum$' </isNotNull>
+ 		 
+	</select>
+	
+	<select id="findSummaryList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+   	select * from (
+    	select p.party_id,
+		       p.party_num,
+		       cc.corp_customer_type_cd,
+		       p.party_type_cd,
+		       p.party_name,
+		       cc.english_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       li.loan_id,
+		       li.product_type,
+		       ls.summary_id,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.jjye,
+		       ls.begin_date,
+		       ls.end_date,
+		       ci.contract_id,
+		       ci.contract_num
+		  from tb_loan_info         li,
+		       tb_loan_summary      ls,
+		       tb_con_contract_info ci,
+		       tb_csm_party         p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id
+		 where li.loan_id = ls.loan_id
+		   and li.contract_id = ci.contract_id
+		   and li.party_id = p.party_id
+		   <!--and li.loan_status = '03'出账状态01-未提交03-已生效-->
+		   and ls.summary_status_cd in ('02','03')<!--借据状态01-未放款02-已放款03-逾期/垫款04-结清-->
+		<![CDATA[    and ls.end_date<=add_months(sysdate,1) ]]>
+		   
+		   and li.user_num = '$userNum$'
+		   and li.org_num = '$orgNum$'
+		   ) a where 1=1 
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+ 	     <!--从提醒页面传来的借据编号--> 
+ 		 <isNotNull property="receiptNum">  and a.summary_num = '$receiptNum$' </isNotNull>
+ 		 
+ 		 <isNotNull property="param"> <![CDATA[  and a.jjye >= (select credit_expire_yue from tb_pub_expire_check pe where pe.credit_expire_check_ind=#crediteExpireCheckInd#) ]]> </isNotNull>
+ 		 
+ 		 
+ 		 
+	</select>
+	
+	<select id="findParamList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	
+    	       select * from tb_pub_expire_check pe where pe.credit_expire_check_ind=#crediteExpireCheckInd#
+ 		 
+	</select>
+	
+	
+	<!--查询是否有在途业务-->
+    <select id="findFlowOnWayPoint" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_aft_point_check pc
+			 where pc.check_status in ('01', '02')
+			   and pc.contract_id = #contractId#
+    </select>
+    
+    <!--查询是否有在途业务-->
+    <select id="findFlowOnWayExpire" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_aft_expire_check ec
+			 where ec.check_status in ('01', '02')
+			   and ec.summary_id = #summaryId#
+    </select>
+    
+     <!-- 查询报告信息：授信到期 -->
+	<select id="findReportInfoExpire" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '对公客户'
+		         else
+		          '自然人'
+		       end) party_type_cd,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         else
+		          np.cert_type
+		       end) cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         else
+		          np.cert_num
+		       end) cert_num,
+		       li.product_type,
+		       pi.product_name,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.summary_amt * 0.0001 summary_amt1,
+		       ls.summary_term,
+		       ls.jjye,
+		       to_char(ls.begin_date, 'yyyy-MM-dd') begin_date,
+		       to_char(ls.end_date, 'yyyy-MM-dd') end_date,
+		       ci.loan_use LOAN_USE1,
+		       fc.check_num,
+		       (case
+		         when fc.is_risk = '1' then
+		          '是'
+		         else
+		          '否'
+		       end) is_risk,
+		       fc.risk_condition,
+		       fc.user_num,
+		       fc.bank_leader,
+		       to_char(fc.create_date, 'yyyy-MM-dd') create_date,
+		              (select distinct ac.operatorname  from ac_operatorrole ar,ac_operator ac,om_organization oo
+			where ar.operatorid=ac.operatorid and ar.orgid=oo.orgid
+			and ar.roleid='R1010' and oo.ORGCODE=fc.ORG_NUM and rownum=1) as hz,
+		       e.empname
+		  from tb_aft_expire_check  fc,
+		       tb_loan_summary      ls,
+		       tb_loan_info         li,
+		       tb_con_contract_info ci,
+		       tb_csm_party         p
+		  left join tb_csm_natural_person np on p.party_id = np.party_id
+		  left join tb_csm_corporation cc on p.party_id = cc.party_id,
+		 tb_biz_product_info pi, om_employee e
+		 where fc.summary_id = ls.summary_id
+		   and ls.loan_id = li.loan_id
+		   and fc.contract_id = ci.contract_id
+		   and fc.party_id = p.party_id
+		   and li.product_type = pi.product_cd
+		   and fc.user_num = e.empcode
+		   and fc.check_id = '$checkId$'
+		   and fc.user_num=#usernum#
+	</select>
+	
+	 <!-- 查询报告信息：重点 -->
+	<select id="findReportInfoPoint" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '对公客户'
+		         else
+		          '自然人'
+		       end) party_type_cd,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         else
+		          np.cert_type
+		       end) cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         else
+		          np.cert_num
+		       end) cert_num,
+		       pi.product_name,
+		       ci.loan_use LOAN_USE1,
+		       ci.contract_num,
+		       ci.contract_amt,
+		       ci.contract_amt * 0.0001 contract_amt1,
+		       ci.con_yu_e con_balance,
+		       to_char(ci.begin_date, 'yyyy-MM-dd') begin_date,
+		       to_char(ci.end_date, 'yyyy-MM-dd') end_date,
+		       fc.check_num,
+		       fc.user_num,
+		       fc.bank_leader,
+		       to_char(fc.create_date, 'yyyy-MM-dd') create_date,
+		       fc.problem_des,
+		       fc.collect_condition,
+		       fc.legal_condition,
+		       fc.other_condition,
+		       (case
+		         when fc.is_newadd = '1' then
+		          '是'
+		         else
+		          '否'
+		       end) is_newadd,
+		       fc.work_leader,
+		       fc.head_leader,
+		       fc.bank_leader,
+		       e.empname,
+		       x.QXHJ,
+		       x.FXFL
+		  from tb_aft_point_check fc, tb_con_contract_info ci, tb_csm_party p
+		  left join tb_csm_natural_person np on p.party_id = np.party_id
+		  left join tb_csm_corporation cc on p.party_id = cc.party_id,
+		 tb_biz_product_info pi, om_employee e,
+		 (select ls.contract_id,
+		                                             sum(ls.dft_itr) QXHJ,
+		                                             max(ls.fljg) FXFL
+		                                        from tb_loan_summary ls
+		                                       where ls.summary_status_cd in
+		                                             ('02', '03')
+		                                       group by ls.contract_id) x
+		 where fc.contract_id = ci.contract_id
+		   and fc.party_id = p.party_id
+		   and ci.product_type = pi.product_cd
+		   and fc.user_num = e.empcode
+		   and fc.contract_id = x.contract_id
+		   and fc.check_id = '$checkId$'
+	</select>
+	
+	<!--查询欠息分类-->
+    <select id="findQXFL" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select ls.contract_id CONTRACT_ID, sum(ls.dft_itr) QXHJ, max(ls.fljg) FXFL,sum(nvl(ls.jjyqbj,0)) YQBJ
+			  from tb_loan_summary ls
+			 where ls.summary_status_cd in ('02', '03')
+			   and ls.contract_id = #contractId#
+			 group by ls.contract_id 
+    </select>
+    
+   	<!--查询支行行长-->
+      <select id="findzhhz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+          select ac.operatorname  from ac_operatorrole ar,ac_operator ac,om_organization oo
+			where ar.operatorid=ac.operatorid and ar.orgid=oo.orgid
+			and ar.roleid='R1010' and ar.orgid=#OrgId#
+    </select>
+</sqlMap>

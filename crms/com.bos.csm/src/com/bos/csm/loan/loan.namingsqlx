@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="loan" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="isPotentialCust" column="IS_POTENTIAL_CUST"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="isFarmer" column="IS_FARMER" />
+			<result property="phoneNumber" column="PHONE_NUMBER" />
+			<result property="unitAdress" column="UNIT_ADRESS" />
+			<result property="orgNum" column="ORG_NUM" />
+			<result property="userNum" column="USER_NUM" />
+			<result property="createTime" column="CREATE_TIME" />
+			<result property="middleCode" column="MIDDLE_CODE" />
+	</resultMap>
+    <select id="loanList" parameterClass="java.util.HashMap" resultMap="loan">
+		SELECT T1.*, T2.*, T3.*
+		  FROM TB_CSM_MANAGEMENT_TEAM T1
+		  JOIN TB_CSM_PARTY T2 ON T1.PARTY_ID = T2.PARTY_ID
+		  JOIN TB_CSM_NATURAL_PERSON T3 ON T1.PARTY_ID = T3.PARTY_ID
+		 WHERE T2.PARTY_TYPE_CD = '02'
+		 AND T1.USER_PLACING_CD = '01'
+		 AND T1.USER_NUM = #userNum#
+		AND T1.org_NUM = #orgNum#
+		 <isNotNull property="partyNum">  AND T2.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		 <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND T3.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+		 <isNotNull property="certNum">  AND T3.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		 <isNotNull property="phoneNumber">  AND T3.PHONE_NUMBER LIKE '%$phoneNumber$%' </isNotNull>
+		 <isNotNull property="isPotentialCust">  AND T2.IS_POTENTIAL_CUST LIKE '%$isPotentialCust$%' </isNotNull>
+		 <isNotNull property="unitAdress">  AND T3.UNIT_ADRESS LIKE '%$unitAdress$%' </isNotNull>
+		 <isNotNull property="isFarmer">  AND T3.IS_FARMER LIKE '%$isFarmer$%' </isNotNull>
+		 <isNotNull property="isPotentialCust">  AND T2.IS_POTENTIAL_CUST LIKE '%$isPotentialCust$%' </isNotNull>
+		 order by t1.org_num,t1.user_num
+    </select>
+    
+    <select id="loanListByOrgId" parameterClass="java.util.HashMap" resultMap="loan">
+	SELECT T1.*, T2.*, T3.*
+	  FROM TB_CSM_MANAGEMENT_TEAM T1
+	  JOIN TB_CSM_PARTY T2
+	    ON T1.PARTY_ID = T2.PARTY_ID
+	  JOIN TB_CSM_NATURAL_PERSON T3
+	    ON T1.PARTY_ID = T3.PARTY_ID
+	 WHERE T2.PARTY_TYPE_CD = '02'
+	   AND T1.USER_PLACING_CD = '01'
+	   AND T1.ORG_NUM IN (SELECT O.ORGCODE
+		                        FROM OM_ORGANIZATION O
+		                       WHERE O.ORGSEQ LIKE '%$orgId$%')
+		 <isNotNull property="userNum">  AND T1.USER_NUM =#userNum# </isNotNull>
+		 <isNotNull property="orgNum">  AND T1.ORG_NUM =#orgNum# </isNotNull>
+		 <isNotNull property="partyNum">  AND T2.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		 <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="certType">  AND T3.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+		 <isNotNull property="certNum">  AND T3.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+		 <isNotNull property="isFarmer">  AND T3.IS_FARMER LIKE '%$isFarmer$%' </isNotNull>
+		 <isNotNull property="middleCode">  AND T3.MIDDLE_CODE LIKE '%$middleCode$%' </isNotNull>
+    </select>
+    
+    
+    
+    <resultMap id="relative" class="java.util.HashMap">
+   			<result property="naturalRelativeId" column="NATURAL_RELATIVE_ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+			<result property="appellation" column="APPELLATION" />
+	</resultMap>
+    <select id="relativeList" parameterClass="java.util.HashMap" resultMap="relative">
+		SELECT T.NATURAL_RELATIVE_ID,T.APPELLATION, T1.CERT_TYPE,T1.CERT_NUM, T2.PARTY_ID ,T2.PARTY_NUM,T2.PARTY_NAME
+		  FROM TB_CSM_NATURAL_RELATIVE T
+		  LEFT JOIN TB_CSM_NATURAL_PERSON T1 ON T1.PARTY_ID = T.RELATIVEID_PARTY_ID
+		  LEFT JOIN TB_CSM_PARTY T2 ON T2.PARTY_ID = T.RELATIVEID_PARTY_ID
+		 WHERE T.PARTY_ID = #partyId#
+    </select>
+    
+    <resultMap id="resultMap2" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+	</resultMap>
+    <select id="queryPrivateForBusi" parameterClass="java.util.HashMap" resultMap="resultMap2">
+			select p.party_id,
+		           p.party_num,
+		           p.party_name,
+		           np.cert_type,
+		           np.cert_num
+		      from tb_csm_party p,tb_csm_natural_person np,TB_CSM_NATURAL_RELATIVE r
+		     where p.party_id = np.party_id and r.relativeid_party_id=np.party_id
+		     and r.party_id=#partyId#
+		   <isNotNull property="partyName">  AND p.party_name LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND np.cert_type=#certType# </isNotNull>
+		   <isNotNull property="certNum">  AND np.cert_num=#certNum# </isNotNull>
+    </select>
+    
+    
+    
+</sqlMap>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caohaijie -->
+<sqlMap>
+	<resultMap id="adjustContList" class="java.util.HashMap">
+			<result property="contractNum" column="contract_num" />
+			<result property="partyId" column="party_id" />
+			<result property="currencyCd" column="currency_cd" />
+			<result property="contractAmt" column="contract_amt" />
+			<result property="beginDate" column="begin_date" />
+			<result property="endDate" column="end_date" />
+			<result property="productType" column="product_type" />
+			<result property="conBalance" column="con_balance" />
+			<result property="conYuE" column="con_yu_e" />
+			<result property="partyName" column="party_name" />
+			<result property="partyName2" javaType="string" column="party_name" />
+			<result property="overdueCapital" column="overdueCapital" />
+			<result property="inOverdueInterest" column="inOverdueInterest" />
+			<result property="outOverdueInterest" column="outOverdueInterest" />
+			<result property="clsResult" column="cls_result" />
+			<result property="cdInfoId" column="cd_info_id" />
+			<result property="corpCustomerTypeCd" column="corp_customer_type_cd" />
+			<result property="amountDetailId" column="amount_detail_id" />
+			<result property="contractId" column="contract_id" />
+			<result property="lastClsResult" column="last_cls_result" />
+			<result property="lastClaMethod" column="last_cla_method" />
+			<result property="approveResult" column="approve_result" />
+	</resultMap>
+	
+	<select id="queryAdjustContList" parameterClass="java.util.HashMap" resultMap="adjustContList">
+		SELECT
+			t1.contract_id,
+			t1.contract_num,
+			t1.product_type,
+			t1.currency_cd,
+			t1.contract_amt,
+			t1.con_balance,
+			t1.con_yu_e,
+			to_char(t1.begin_date,'yyyy-MM-dd') begin_date,
+			to_char(t1.end_date,'yyyy-MM-dd') end_date,
+			t2.party_id,
+			t2.party_name,
+			'' overdueCapital,
+			t4.dft_itr_in inOverdueInterest,
+			t4.dft_itr_out outOverdueInterest,
+			t.last_cls_result,
+			t.last_cla_method,
+			t.cls_result,
+			t.cd_info_id,
+			t3.corp_customer_type_cd,
+			t1.amount_detail_id,
+			t2.approve_result
+		FROM
+			tb_cla_classify_delt_info t
+			LEFT JOIN (select a.*,
+		                    row_number() over(partition by cd_info_id order by create_time desc) orders
+		               from tb_cla_approve_detail a) t2
+		    ON t2.cd_info_id = t.cd_info_id  and t2.orders = 1,
+		  	tb_con_contract_info t1
+     		LEFT JOIN (select contract_id,
+     				sum(dft_itr_in) dft_itr_in,
+     				sum(dft_itr_out) dft_itr_out
+		  			from tb_loan_summary a 
+		  			group by contract_id) t4
+		  	ON t4.contract_id = t1.contract_id,
+			tb_csm_party t2 
+			LEFT JOIN tb_csm_corporation t3 ON t3.party_id = t2.party_id
+	    WHERE t1.contract_num = t.contract_num
+	    	AND t1.con_status = '03'
+	     	AND t2.party_id = t1.party_id
+			AND t.ac_apply_id = #acApplyId#
+			<isNotNull property="contractNum">
+				AND t1.contract_num = '$contractNum$'
+			</isNotNull>
+			<isNotNull property="partyName">
+				AND t2.party_name LIKE '%$partyName$%'
+			</isNotNull>
+			<isNotNull property="clsResult">
+				AND t.cls_result = '$clsResult$'
+			</isNotNull>
+	</select>
+	
+	<resultMap id="FinanceData" class="java.util.HashMap">
+			<result property="financeId" column="finance_id" />
+			<result property="financeTypeCd" column="finance_type_cd" />
+			<result property="customerTypeCd" column="customer_type_cd" />
+			<result property="financeDeadline" column="finance_deadline" />
+	</resultMap>
+	<select id="queryCurrFinanceData" parameterClass="java.lang.String" resultMap="FinanceData">
+	    select 
+	       t1.finance_id,
+           t1.finance_type_cd,
+           t1.customer_type_cd,
+           t1.finance_deadline
+       	from (select  a.finance_id,
+		           a.finance_type_cd,
+		           a.customer_type_cd,
+		           a.finance_deadline,
+                   row_number() over(order by finance_deadline desc) rownums
+              from tb_acc_customer_finance a
+             where a.party_id = '$partyId$') t1
+     	where t1.rownums = 1
+	</select>
+	<select id = "queryDrafMortList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		<!--
+		select T6.MORTGAGE_STATUS,
+		       T6.PARTY_ID,
+		       T6.COLL_TYPE,
+		       T6.SORT_TYPE,
+		       t6.MORTGAGE_VALUE,
+		       a.ASSESS_VALUE,
+		       to_char(A.ASSESS_DATE, 'yyyy-MM-dd') ASSESS_DATE,
+		       A.ASSESS_ORG,
+		       decode(a.ASSESS_VALUE, 0, 0, round(t6.MORTGAGE_VALUE / a.ASSESS_VALUE, 4)) * 100 MORTGAGE_RATE,
+		       to_char(B.CARD_REG_DATE, 'yyyy-MM-dd') CARD_REG_DATE,
+		       to_char(B.REG_DUE_DATE, 'yyyy-MM-dd') REG_DUE_DATE,
+		       t6.surety_id,
+		       t6.if_data_move
+		  from tb_con_subcontract        t1,
+		       tb_con_contract_info      t2,
+		       tb_con_sub_grt_rel        t3,
+		       TB_CON_SUBCONTRACT_REL    t4,
+		       tb_cla_classify_cust_info t5,
+		       tb_grt_mortgage_basic     t6
+		  left join (select row_number() over(partition by t.surety_id order by t.assess_date desc) row_number,
+		                    t.*
+		               from (select surety_id,
+		                            nvl(assess_value, 0) assess_value,
+		                            assess_date,
+		                            nvl(assess_org, '内部评估') assess_org
+		                       from tb_grt_mybank_assess
+		                     union
+		                     select surety_id,
+		                            nvl(assess_value, 0) assess_value,
+		                            assess_date,
+		                            assess_org
+		                       from tb_grt_outer_assess) t
+		              where t.assess_date is not null) a
+		    on a.surety_id = t6.surety_id
+		       and row_number = 1
+		  left join (select distinct c.reg_due_date,
+		                             c.card_reg_date,
+		                             c.register_certi_no,
+		                             m.surety_id,
+		                             c.surety_key_id
+		               from tb_grt_reg_card       c,
+		                    tb_grt_card_mortagage m
+		              where c.surety_key_id = m.surety_key_id
+		                    and m.contract_id is not null) b
+		    on b.surety_id = t6.surety_id
+		 where t1.subcontract_id = t3.subcontract_id
+		       and t3.surety_id = t6.surety_id
+		       and t4.subcontract_id = t1.subcontract_id
+		       and t5.party_id = t2.party_id
+		       and t4.contract_id = t2.contract_id
+		       and t6.mortgage_status != '06'
+		       and t2.con_status = '03'
+		   and t5.ac_apply_id = #acApplyId#
+		   -->
+	select T6.MORTGAGE_STATUS,
+           T6.PARTY_ID,
+           T6.COLL_TYPE,
+           T6.SORT_TYPE,
+           t6.MORTGAGE_VALUE,
+           t6.MYBANK_AFFIRM_VALUE AS ASSESS_VALUE,
+           to_char(t6.ASSESS_DATE,'yyyy-MM-dd') ASSESS_DATE,
+           A.ASSESS_ORG,
+           decode(t6.MYBANK_AFFIRM_VALUE, 0, 0, round(t6.MORTGAGE_VALUE / t6.MYBANK_AFFIRM_VALUE, 4)) * 100 MORTGAGE_RATE,
+           to_char(B.CARD_REG_DATE, 'yyyy-MM-dd') CARD_REG_DATE,
+           to_char(B.REG_DUE_DATE, 'yyyy-MM-dd') REG_DUE_DATE,
+           t6.surety_id,
+           t6.if_data_move
+      from tb_con_subcontract        t1,
+           tb_con_contract_info      t2,
+           tb_con_sub_grt_rel        t3,
+           TB_CON_SUBCONTRACT_REL    t4,
+           tb_cla_classify_cust_info t5,
+           tb_grt_mortgage_basic     t6
+      left join (select row_number() over(partition by t.surety_id order by t.assess_date desc) row_number,
+                        t.*
+                   from (select surety_id,
+                                nvl(assess_value, 0) assess_value,
+                                assess_date,
+                                org.orgname AS assess_org
+                           from tb_grt_mybank_assess mybank , om_organization org where mybank.assess_org=org.orgcode
+                         union
+                         select surety_id,
+                                nvl(assess_value, 0) assess_value,
+                                assess_date,
+                                p.party_name AS assess_org
+                           from tb_grt_outer_assess out_as,TB_CSM_PARTY p where p.party_num=out_as.assess_org) t
+                  ) a
+        on a.surety_id = t6.surety_id
+           and row_number = 1
+      left join (select distinct c.reg_due_date,
+                                 c.card_reg_date,
+                                 c.register_certi_no,
+                                 m.surety_id,
+                                 c.surety_key_id
+                   from tb_grt_reg_card       c,
+                        tb_grt_card_mortagage m
+                  where c.surety_key_id = m.surety_key_id
+                        and m.contract_id is not null) b
+        on b.surety_id = t6.surety_id
+     where t1.subcontract_id = t3.subcontract_id
+           and t3.surety_id = t6.surety_id
+           and t4.subcontract_id = t1.subcontract_id
+           and t5.party_id = t2.party_id
+           and t4.contract_id = t2.contract_id
+           and t6.mortgage_status != '06'
+           and t2.con_status = '03'
+       and t5.ac_apply_id = #acApplyId#
+	</select>
+	
+	<select id="validClsCanSubmit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT c.LAST_CLS_RESULT,cd.APPROVE_RESULT FROM tb_cla_classify_delt_info c
+LEFT JOIN tb_cla_approve_detail cd ON c.CD_INFO_ID=cd.CD_INFO_ID
+where c.AC_APPLY_ID=#acApplyId#
+AND c.LAST_CLS_RESULT!=NVL(cd.APPROVE_RESULT,c.CLS_RESULT)
+	</select>
+</sqlMap>

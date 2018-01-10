@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lipengcheng -->
+<sqlMap>
+	<!--此方法不可删除，为集团授权使用com.bos.bizApply.SQ.java-->
+     <select id="getMember" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t.party_num ,
+		       t.party_name,
+		       t.party_type_cd,
+		       t.party_id,
+		       a.user_num,
+		       a.org_num,
+		       r.group_party_id ,
+	           e.empname,
+	           o.orgname
+		  from tb_csm_group_member r, tb_csm_party t,tb_csm_management_team a,om_organization o , om_employee e
+		 where r.corporation_party_id = t.party_id
+		       and a.party_id = t.party_id
+		       and o.orgcode = a.org_num
+		       and e.userid = a.user_num
+		       and a.user_placing_cd = '01'
+		       and r.group_party_id = #partyId#
+    </select>
+     <!--此方法不可删除，为集团授权使用com.bos.bizApply.SQ.java-->
+     <select id="getMemberBiz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     <![CDATA[
+		select t1.apply_id,
+	        t1.biz_happen_type,
+	        t1.biz_num,
+	        t1.status_type,
+	        t1.biz_type,
+	        t1.apply_date,
+	        t2.credit_amount,
+	        t2.credit_term,
+	        t2.currency_cd,
+	        t1.user_num,
+	        t1.org_num,
+	        t3.approve_id,
+	        c.party_num,
+	        c.party_name,
+	        c.party_type_cd,
+	        c.party_id
+	   from tb_biz_apply t1
+	   left join tb_biz_approve t3
+	     on t1.apply_id = t3.apply_id
+	   left join tb_biz_amount_apply t2
+	     on t1.apply_id = t2.apply_id, tb_csm_party c,
+	  (select t.biz_num,
+	                max(nvl(t.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))) ct,
+	                max(t.apply_date) ad
+	           from tb_biz_apply t
+	           left join tb_biz_approve ta
+	             on t.apply_id = ta.apply_id
+	          where t.party_id = #partyId#
+		        and t.status_type in  ('03',decode(#proFlag#,'1', '01'),decode(#proFlag#,'1', '02'),decode(#proFlag#,'1', '09'))
+	            and nvl(ta.become_effective_mark, '03') in ('03', '09')
+	            and nvl(ta.approve_conclusion, 1) <> '2'
+	          group by t.biz_num) t0
+	  where t1.biz_num = t0.biz_num
+	    and t1.apply_date = t0.ad
+	    and t1.party_id = c.party_id
+		and t1.low_risk_biz_type is null
+		and nvl(t1.is_bank_team_loan,'0') ='0'
+	    and t0.ct = nvl(t1.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))
+		and t1.biz_type in (decode(#showFlag#,'1','01') ,decode(#showFlag#,'1','04') ,decode(#showFlag#,'1','06'),
+			decode(#showFlag#,'2','02') ,decode(#showFlag#,'2','05'))
+	]]>
+    </select>
+    <!--此方法不可删除，为集团授权使用com.bos.bizApply.SQ.java-->
+     <select id="getMemberCreditAmount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     <![CDATA[
+		select 
+	       sum(t2.credit_amount) c
+	   from tb_biz_apply t1
+	   left join tb_biz_amount_apply t2
+	     on t1.apply_id = t2.apply_id, 
+	  (select t.biz_num,
+	                max(nvl(t.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))) ct,
+	                max(t.apply_date) ad
+	           from tb_biz_apply t
+	           left join tb_biz_approve ta
+	             on t.apply_id = ta.apply_id
+	          where t.party_id = #partyId#
+		        and t.status_type in  ('03',decode(#proFlag#,'1','01','0', '01'),decode(#proFlag#,'1', '02','0', '02'),decode(#proFlag#,'1', '09','0', '09'))
+	            and nvl(ta.become_effective_mark, '03') in ('03', '09')
+	            and nvl(ta.approve_conclusion, 1) <> '2'
+	          group by t.biz_num) t0
+	  where t1.biz_num = t0.biz_num
+	    and t1.apply_date = t0.ad
+		and t1.low_risk_biz_type is null
+		and nvl(t1.is_bank_team_loan,'0') ='0'
+	    and t0.ct = nvl(t1.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))
+    and t1.biz_type in (decode(#showFlag#,'1','01') ,decode(#showFlag#,'1','04') ,decode(#showFlag#,'1','06'),
+      decode(#showFlag#,'2','02') ,decode(#showFlag#,'2','05'))
+	]]>
+    </select>
+    <!--此方法不可删除，为集团授权使用com.bos.bizApply.SQ.java-->
+     <select id="getMemberCredit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     <![CDATA[
+		select 
+	       t1.apply_id as APPLY_ID,t2.credit_amount as ca
+	   from tb_biz_apply t1
+	   left join tb_biz_amount_apply t2
+	     on t1.apply_id = t2.apply_id, 
+	  (select t.biz_num,
+	                max(nvl(t.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))) ct,
+	                max(t.apply_date) ad
+	           from tb_biz_apply t
+	           left join tb_biz_approve ta
+	             on t.apply_id = ta.apply_id
+	          where t.party_id = #partyId#
+		        and t.status_type in  ('03',decode(#proFlag#,'1', '01'),decode(#proFlag#,'1', '02'),decode(#proFlag#,'1', '09'))
+	            and nvl(ta.become_effective_mark, '03') in ('03', '09')
+	            and nvl(ta.approve_conclusion, 1) <> '2'
+	          group by t.biz_num) t0
+	  where t1.biz_num = t0.biz_num
+	    and t1.apply_date = t0.ad
+		and t1.low_risk_biz_type is null
+		and nvl(t1.is_bank_team_loan,'0') ='0'
+	    and t0.ct = nvl(t1.create_time, to_date('1921-07-23', 'YYYY-MM-DD'))
+    and t1.biz_type in (decode(#showFlag#,'1','01') ,decode(#showFlag#,'1','04') ,decode(#showFlag#,'1','06'),
+      decode(#showFlag#,'2','02') ,decode(#showFlag#,'2','05'))
+	]]>
+    </select>
+</sqlMap>

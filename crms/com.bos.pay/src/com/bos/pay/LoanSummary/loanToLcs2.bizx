@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="loanToLcs2" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="7.0.0.0">
+  <nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释" nodeType="note" type="note" content="放款二次交易" title="3231&#x9;15-6-3 上午11:14">
+    <location x="135" y="255"/>
+    <size height="100" width="149"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>subprocess2</targetNode>
+    </sourceConnections>
+    <location x="60" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束" type="end">
+    <targetConnections>link10</targetConnections>
+    <location x="719" y="61"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="com.primeton.plus.PayOutRq" name="payOutVo" type="query" valueType="Java">payOutVo</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="62" y="96"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="721" y="97"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="放款交易" displayName="newPayTcSupLoanInfo" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" description="" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="NOTNULLANDEMPTY">
+          <process:leftOperand type="query">payOutVo/baseVO/rpsCod</process:leftOperand>
+          <process:rightOperand type="literal">200</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="350" y="61"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">com.primeton.tsl.TransferDataManager.newPayTcSupLoanInfo</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="iPayOutVo" type="query" value="com.primeton.plus.PayOutRq" valueType="Java" pattern="reference">payOutVo</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="oPayOutVo" type="query" value="com.primeton.plus.PayOutRq" valueType="Java">payOutVo</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="339" y="96"/>
+    <figSize height="17" width="49"/>
+    <node>subprocess2</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="3231" createTime="2015-06-03 11:07:29" date="2015-06-03Z" description="" name="放款第一次交易" version="7.0.0.0"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.pay.TbLoanSummary" name="summaryInfo"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input description="" isArray="false" name="trnCod" primitiveType="String"/>
+    <process:input anyType="com.primeton.plus.PayOutRq" description="" isArray="false" name="payOutVo"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output anyType="com.primeton.plus.PayOutRq" description="" isArray="false" name="payOutVo"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

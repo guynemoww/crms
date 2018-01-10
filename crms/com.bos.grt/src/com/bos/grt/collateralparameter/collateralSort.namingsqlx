@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <resultMap class="java.util.HashMap" id="sortUrlResultMap">
+        <result column="SORT_TYPE" javaType="string" property="sortType"/>
+        <result column="SORT_NAME" javaType="string" property="sortName"/>
+        <result column="SORT_MENU_URL" javaType="string" property="sortMenuUrl"></result>
+    </resultMap>
+    
+    <select id="selectcollateralsorturl" parameterClass="String" resultMap="sortUrlResultMap">
+    	with t(PARENT_SORT_TYPE, SORT_TYPE,SORT_NAME,SORT_MENU_URL,COLL_TYPE,ABLE_STATE) as (
+         	select PARENT_SORT_TYPE, SORT_TYPE,SORT_NAME,SORT_MENU_URL,COLL_TYPE,ABLE_STATE from TB_GRT_SORTARGUMENTS where SORT_TYPE=#sortType#
+        	union all
+        	select o.PARENT_SORT_TYPE, o.SORT_TYPE,o.SORT_NAME,o.SORT_MENU_URL,o.COLL_TYPE,o.ABLE_STATE from t p, TB_GRT_SORTARGUMENTS o where p.PARENT_SORT_TYPE=o.SORT_TYPE
+        )
+		select  SORT_TYPE,SORT_NAME,SORT_MENU_URL from t where SORT_TYPE !='01' and t.ABLE_STATE!='1' 
+    	 order by t.SORT_TYPE
+    </select>
+    
+  
+   <select id="selectcollateralsorturlEndFour" parameterClass="String" resultMap="sortUrlResultMap">
+   		select  SORT_TYPE,SORT_NAME,SORT_MENU_URL from TB_GRT_SORTARGUMENTS t where SORT_TYPE !='01' and t.ABLE_STATE!='1' and t.SORT_TYPE=#sortType#
+   </select>
+</sqlMap>

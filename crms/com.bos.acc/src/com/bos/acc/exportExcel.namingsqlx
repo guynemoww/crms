@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenjiangrui -->
+<sqlMap>
+<resultMap class="commonj.sdo.DataObject" id="reportMap">
+        <result column="REPORT_ID" property="reportId"/><!---->
+        <result column="PID" property="pId"/><!--客户名单ID -->
+</resultMap>
+
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <insert id="insertAccFinance" parameterClass="java.util.Map" >
+	insert into TB_ACC_CUSTOMER_FINANCE(FINANCE_ID,PARTY_ID,CREATE_TIME,UPDATE_TIME,USER_NUM,ORG_NUM,CUSTOMER_TYPE_CD,FINANCE_STATUS_CD,AUDITED_IND,FINANCE_DEADLINE,FINANCE_TYPE_CD,CALIBER_CD,REGULATED_IND,REGULATED_REASON,ACCOUNTING_PRINCIPLE,AUDIT_COMMENT_TYPE_CD,AUDIT_CO_NAME,BIZ_LICENSE_NUM,CURRENCY)
+	values(#FINANCE_ID#,#PARTY_ID#,#CREATE_TIME#,#UPDATE_TIME#,#USER_CD#,#ORG_CD#,#CUSTOMER_TYPE_CD#,#FINANCE_STATUS_CD#,#AUDITED_IND#,#FINANCE_DEADLINE#,#FINANCE_TYPE_CD#,#CALIBER_CD#,#REGULATED_IND#,#REGULATED_REASON#,#ACCOUNTING_PRINCIPLE#,#AUDIT_COMMENT_TYPE_CD#,#AUDIT_CO_NAME#,#BIZ_LICENSE_NUM#,#CURRENCY#)
+	</insert>
+	<update id="updateAccFinance" parameterClass="java.util.Map" >
+		update TB_ACC_CUSTOMER_FINANCE t 
+		set t.AUDITED_IND=#AUDITED_IND#,t.FINANCE_TYPE_CD=#FINANCE_TYPE_CD#,t.FINANCE_DEADLINE=#FINANCE_DEADLINE#
+		where t.FINANCE_ID = #FINANCE_ID#
+	</update>
+	<insert id="insertAccStatement" parameterClass="java.util.Map" >
+	insert into TB_ACC_FINANCIAL_STATEMENT(FINANCIAL_STATEMENT_ID,FINANCE_ID,FINANCIAL_STATEMENT_SORT_CD,CREATE_TIME,UPDATE_TIME)
+	values(#FINANCIAL_STATEMENT_ID#,#FINANCE_ID#,#FINANCIAL_STATEMENT_SORT_CD#,#CREATE_TIME#,#UPDATE_TIME#)
+	</insert>
+	<insert id="insertAccStatementData" parameterClass="java.util.Map" >
+	insert into TB_ACC_FINANCE_STATEMENT_DATA(FINANCE_STATEMENT_DATA_ID,FINANCIAL_STATEMENT_ID,FINANCE_ID,PROJECT_CD,PROJECT_VALUE,PRE_TOTAL_VALUE,CREATE_TIME,UPDATE_TIME)
+	values(#FINANCE_STATEMENT_DATA_ID#,#FINANCIAL_STATEMENT_ID#,#FINANCE_ID#,#PROJECT_CD#,$PROJECT_VALUE$,$PRE_TOTAL_VALUE$,#CREATE_TIME#,#UPDATE_TIME#)
+	</insert>
+	<insert id="insertIndexData" parameterClass="java.util.Map" >
+	insert into TB_ACC_FINANCE_INDEX_DATA(INDEX_DATA_ID,FINANCE_ID,INDEX_VALUE_DATA_TYPE,STRING_TYPE,INDEX_CD,CREATE_TIME,UPDATE_TIME)
+	values(#INDEX_DATA_ID#,#FINANCE_ID#,$INDEX_VALUE_DATA_TYPE$,#STRING_TYPE#,#INDEX_CD#,#CREATE_TIME#,#UPDATE_TIME#)
+	</insert>
+	<insert id="insertAnalyIndexData" parameterClass="java.util.Map" >
+	insert into TB_ACC_ANALYSIS_INDEX_DATA(INDEX_DATA_ID,FINANYSIS_DETAIL_ID,INDEX_VALUE_DATA_TYPE,STRING_TYPE,INDEX_CD,CREATE_TIME,UPDATE_TIME)
+	values(#INDEX_DATA_ID#,#FINANYSIS_DETAIL_ID#,$INDEX_VALUE_DATA_TYPE$,#STRING_TYPE#,#INDEX_CD#,#CREATE_TIME#,#UPDATE_TIME#)
+	</insert>
+	<insert id="insertAlertResult" parameterClass="java.util.Map" >
+	insert into TB_ACC_ALERT_RESULT(RESULT_ID,INDEX_CODE,INDEX_SCORE,ALERT_DESC,INFO_ID)
+	values(#RESULT_ID#,#INDEX_CODE#,#INDEX_SCORE#,#ALERT_DESC#,#INFO_ID#)
+	</insert>
+	<delete id="deleteIndexDataByFinanceId" parameterClass="java.util.Map" >
+	    delete from TB_ACC_FINANCE_INDEX_DATA where FINANCE_ID=#FINANCE_ID#
+	</delete>
+	<delete id="deleteAnalyDataByfinanysisDetailId" parameterClass="java.util.Map" >
+	    delete from TB_ACC_ANALYSIS_INDEX_DATA where FINANYSIS_DETAIL_ID=#finanysis_detail_id#
+	</delete>
+	<delete id="deleteAlertResultByinfoId" parameterClass="java.util.Map" >
+	    delete from TB_ACC_ALERT_RESULT where INFO_ID=#info_Id#
+	</delete>
+	<select id="queryAccReport" parameterClass="java.util.HashMap" resultMap="reportMap">
+		SELECT
+		   REPORT_ID,
+		   PID
+		FROM
+   			TB_ACC_NFD_REPORT a  
+   		where     1=1
+   			<isNotNull property="customerTypeCd">
+   			and	a.CUSTOMER_TYPE=#customerTypeCd#
+   			</isNotNull>
+    </select>
+    <select id="selectNfdReport" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT
+		   REPORT_ID,
+		   PID,
+		   INDEX_PID
+		FROM
+   			TB_ACC_NFD_REPORT a  
+   		where     1=1
+		<isNotNull prepend="AND" property="customerTypeCd">
+			a.CUSTOMER_TYPE=#customerTypeCd#
+		</isNotNull>
+		<isNotNull prepend="AND" property="reportStatus">
+			a.REPORT_STATUS=#reportStatus#
+		</isNotNull>
+	</select>
+	<select id="selectEverfinanceDatas" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT PROJECT_CD,
+        PROJECT_VALUE 
+		FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+		WHERE D.FINANCE_ID=  (         
+          select FINANCE_ID  from (         
+SELECT  rank() over (order by c.FINANCE_DEADLINE)  aa , C.FINANCE_ID FROM TB_ACC_CUSTOMER_FINANCE C
+                    where    C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.FINANCE_DEADLINE  = #eFinanceDate# AND
+                              C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD# AND
+						      C.PARTY_ID		  = #PARTY_ID# AND
+							  C.CUSTOMER_TYPE_CD  = #CUSTOMER_TYPE_CD#
+							  <isNotNull prepend="AND" property="CALIBER_CD">
+							  C.CALIBER_CD = #CALIBER_CD#
+							  </isNotNull>
+				     ) where aa =1 )
+	</select>
+	<select id="selectAnalysisDetail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+		FINANYSIS_DETAIL_ID,
+		FINANCE_DEADLINE 
+		FROM TB_ACC_ANALYSIS_DETAIL D 
+		WHERE D.FINANYSIS_PROGRAM_ID=#finanysisProgramId#
+		ORDER BY D.FINANCE_DEADLINE 
+	</select>
+	<select id="selectAlertInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+		CREATE_TIME,
+		INFO_ID 
+		FROM TB_ACC_ALERT_RULE_INFO D 
+		WHERE D.FINANYSIS_DETAIL_ID=#finanysisDetailId#
+	</select>
+	<select id="selectAlertData" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+		INDEX_CODE,
+		INDEX_SCORE,
+		ALERT_DESC 
+		FROM TB_ACC_ALERT_RESULT D 
+		WHERE D.INFO_ID=#INFO_ID#
+	</select>
+	<select id="selectModuleDetail" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+		INDEX_CODE,
+		INDEX_NAME 
+		FROM TB_ACC_ANY_MODULE_DETAIL D 
+		WHERE D.MODULE_ID=#moduleId#
+		ORDER BY INDEX_ORDER 
+	</select>
+	<select id="selectAnalysisIndexData" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT 
+		INDEX_CD,
+		STRING_TYPE,
+		INDEX_VALUE_DATA_TYPE 
+		FROM TB_ACC_ANALYSIS_INDEX_DATA D 
+		WHERE D.FINANYSIS_DETAIL_ID=#FINANYSIS_DETAIL_ID# 
+	</select>
+	<select id="selectFinanceDatasByFinanceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT  CUSTOMER_TYPE_CD,
+			FINANCE_DEADLINE,
+			FINANCE_STATUS_CD,
+			FINANCE_TYPE_CD,
+			REGULATED_IND,
+			REGULATED_REASON,
+			AUDITED_IND,
+			AUDIT_COMMENT_TYPE_CD,
+			BIZ_LICENSE_NUM,
+			AUDIT_DEPT,
+			AUDIT_CO_NAME,
+			AUDIT_DEPT_COMMENT_CD,
+			CALIBER_CD,
+			PARTY_ID,
+			FINANCE_ID 
+	FROM 	TB_ACC_CUSTOMER_FINANCE 
+	WHERE FINANCE_ID=#financeId# 
+	</select>
+	<select id="selectProjectDatasByFinanceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT PROJECT_CD,
+	       PROJECT_VALUE 
+	FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+	WHERE FINANCE_ID=#financeId#
+	</select>
+	<select id="selectPreDatasByFinanceId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT PROJECT_CD,
+	       PRE_TOTAL_VALUE 
+	FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+	WHERE FINANCE_ID=#financeId#
+	</select>
+	<select id="selectProjectDatasByPartyId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT PROJECT_CD,
+	       PROJECT_VALUE 
+	FROM TB_ACC_FINANCE_STATEMENT_DATA D 
+	WHERE FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.FINANCE_DEADLINE  &lt;= #FINANCE_DEADLINE# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+	<select id="selectRecentlyFinanceByYear" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT FINANCE_ID financeId,
+	CUSTOMER_TYPE_CD reportType  
+	FROM TB_ACC_CUSTOMER_FINANCE F 
+	WHERE 
+	SUBSTR(F.FINANCE_DEADLINE,1,4) IN (#year1#,#year2#,#year3#) 
+	AND FINANCE_TYPE_CD = #FINANCE_TYPE_CD#
+	</select>
+	<select id="selectIndexValueByFinanceId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE FINANCE_ID=#FINANCE_ID#
+	</select>
+	<select id="selectIndexValueByPartyId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE D.FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+	<select id="selectIndexValueByPartyIds" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT INDEX_CD,
+	       INDEX_VALUE_DATA_TYPE,
+	       STRING_TYPE 
+	FROM TB_ACC_FINANCE_INDEX_DATA D 
+	WHERE D.FINANCE_ID= (SELECT C.FINANCE_ID 
+						FROM TB_ACC_CUSTOMER_FINANCE C 
+						WHERE C.FINANCE_TYPE_CD   = #FINANCE_TYPE_CD# AND
+							  C.FINANCE_DEADLINE  = #FINANCE_DEADLINE# AND
+							  C.PARTY_ID		  = #PARTY_ID#
+							  <isNotNull prepend="AND" property="FINANCE_STATUS_CD">
+							  C.FINANCE_STATUS_CD = #FINANCE_STATUS_CD#
+							  </isNotNull>
+						ORDER BY FINANCE_DEADLINE DESC FETCH FIRST 1 ROWS ONLY)
+	</select>
+	
+	<select id="groupByOrgnum" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT ORG_NUM 
+		FROM TB_ACC_CUSTOMER_FINANCE F 
+		WHERE F.FINANCE_TYPE_CD='1' AND
+			F.FINANCE_DEADLINE IN ('2013-12-31',
+			'2012-12-31',
+			'2011-12-31') AND
+			F.FINANCE_STATUS_CD='02' 
+		GROUP BY ORG_NUM 
+	</select>
+	<!--指标全量计算，不计算已经存在的指标记录 -->
+	<select id="selectTaskParm" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT F.FINANCE_ID,
+			   F.CUSTOMER_TYPE_CD 
+		FROM TB_ACC_CUSTOMER_FINANCE F 
+		WHERE F.FINANCE_DEADLINE IN ('2013-12-31',
+			'2012-12-31',
+			'2011-12-31') AND
+			F.FINANCE_TYPE_CD='1' AND
+			F.FINANCE_STATUS_CD='02' AND
+			F.FINANCE_ID not in (select DISTINCT D.FINANCE_ID from TB_ACC_FINANCE_INDEX_DATA D )
+	</select>
+	
+	
+	<select id="selectFinanceDates" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT FINANCE_DEADLINE,FINANCE_TYPE_CD 
+		FROM TB_ACC_CUSTOMER_FINANCE D 
+		WHERE D.FINANCE_ID in (#FINANCEID1#,#FINANCEID2#,#FINANCEID3#) ORDER BY FINANCE_DEADLINE DESC
+	</select>
+	<select id="selectFinanceDates1" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT FINANCE_DEADLINE,FINANCE_TYPE_CD 
+		FROM TB_ACC_CUSTOMER_FINANCE D 
+		WHERE D.FINANCE_ID in (#FINANCEID1#,#FINANCEID2#) ORDER BY FINANCE_DEADLINE DESC
+	</select>
+	
+	<!--插入利润表明细表数据-->
+	<insert id="insertAccProfitData" parameterClass="java.util.Map" >
+		insert into tb_acc_finance_nprofit_data(profit_data_id,finance_id,report_type,sheet_code,profit_month,profit_zyywsr,profit_zyywcb,profit_jyfyhj,profit_lwgz,profit_zj,profit_sdf,profit_s,profit_qtjyfy,profit_cwfy,profit_jtkz,profit_tzxsr,profit_tzxzc,profit_qtyyjsr,profit_lrze)
+      		values(#profitDataId#,#financeId#,#reportType#,#sheetCode#,to_date(#profitMonth#,'yyyy-MM-dd'),#profitZyywsr#,#profitZyywcb#,#profitJyfyhj#,#profitLwgz#,#profitZj#,#profitSdf#,#profitS#,#profitQtjyfy#,#profitCwfy#,#profitJtkz#,#profitTzxsr#,#profitTzxzc#,#profitQtyyjsr#,#profitLrze#)
+	</insert>
+	
+	<!--插入对账单汇总表数据-->
+	<insert id="insertAccBillData" parameterClass="java.util.Map" >
+		insert into tb_acc_finance_bill_data(bill_data_id,finance_id,report_type,sheet_code,bill_year,bill_month,bill_in_cash,bill_in_count,bill_out_cash,bill_out_count,bill_month_rest)
+			values(#billDataId#,#financeId#,#reportType#,#sheetCode#,#billYear#,#billMonth#,#billInCash#,#billInCount#,#billOutCash#,#billOutCount#,#billMonthRest#)
+	</insert>
+	
+</sqlMap>

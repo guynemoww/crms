@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:kf_xdxt11 -->
+<sqlMap>
+
+    <select id="queryBaseRateInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+      select t2.int_rate,
+             t1.*
+        from (select b.summary_num,
+                     b.loan_id,
+                     b.org_num,
+                     substr(b.org_num, 0, 2) prv_cod,
+                     decode(d.product_type, '01013001', '02', '01013010', '02','01') prm_cls, <!--自营性贷款-->
+                     decode(d.product_type, '01006001', '010', '01006002','010', '01006010','010','000') ast_cls, <!---子类别-->
+                     case
+                       when ceil(months_between(b.end_date, b.begin_date)) &lt;= 6 then
+                        '1'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 6
+                            and ceil(months_between(b.end_date, b.begin_date)) &lt;= 12 then
+                        '2'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 12
+                            and ceil(months_between(b.end_date, b.begin_date)) &lt;= 36 then
+                        '3'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 36
+                            and ceil(months_between(b.end_date, b.begin_date)) &lt;= 60 then
+                        '4'
+                       when ceil(months_between(b.end_date, b.begin_date)) > 60 then
+                        '5'
+                     end int_rate_cd,
+                     a.ir_update_frequency,
+                     (select dictname
+	                  from eos_dict_entry
+	                 where dicttypeid = 'XD_SXCD1148'
+	                       and dictid = a.ir_update_frequency) frequency_name,
+                     a.base_rate_value, <!--执行利率-->
+                     a.year_rate, <!--执行利率-->
+                     a.overdue_rate_up_proportion, <!--罚息利率上浮比例%-->
+                     a.float_way,
+                     a.rate_float_proportion
+                from tb_loan_loanrate a,
+                     tb_loan_summary  b,
+                     tb_loan_info     d
+               where a.loan_id = b.loan_id
+                     and d.loan_id = b.loan_id
+                     and a.rate_type = '2' <!--浮动利率-->
+                     and a.float_type = '0' <!--按比例浮动-->
+                     and a.ir_update_frequency in ('01', '02', '03', '04')
+                     and b.summary_status_cd in ('02', '03')) t1,
+             tb_sys_basic_rate t2
+       where t1.int_rate_cd = t2.int_rate_cd
+             and t2.status = '1'
+             and t2.int_rate != nvl(t1.base_rate_value, 0)
+	    	<isNotNull property="summaryNum">
+		    	and t1.summary_num = #summaryNum#
+		    </isNotNull>
+    </select>
+    
+    <select id="countBaseRateInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select 1
+		  from tb_sup_intr_rate_adjust a
+		 where a.due_num = #due_num#
+		       and a.itr_date = #itr_date#
+		       and a.rcv_date = #rcv_date#
+		       and a.fin_flg = #fin_flg#
+    </select>
+
+    <insert id="insertRateInfo" parameterClass="java.util.HashMap">
+	    insert into tb_sup_intr_rate_adjust
+		  (uuid,
+		   rcv_date,
+		   leg_per_cod,
+		   prv_cod,
+		   opn_dep,
+		   tal_dep,
+		   due_num,
+		   prm_cls,
+		   ast_cls,
+		   tran_from,
+		   nor_itr_rate,
+		   del_itr_rate,
+		   cpd_itr_rate,
+		   itr_date,
+		   fin_flg,
+		   fin_date,
+		   rmk1,
+		   rmk2,
+		   create_time,
+		   update_time,
+		   trunc_no)
+		values
+		  (sys_guid(),
+		   #rcv_date#,
+		   #leg_per_cod#,
+		   #prv_cod#,
+		   #opn_dep#,
+		   #tal_dep#,
+		   #due_num#,
+		   #prm_cls#,
+		   #ast_cls#,
+		   #tran_from#,
+		   #nor_itr_rate#,
+		   #del_itr_rate#,
+		   #cpd_itr_rate#,
+		   #itr_date#,
+		   #fin_flg#,
+		   #fin_date#,
+		   #rmk1#,
+		   #rmk2#, <!--调整频率（01按月02按季03按半年04按年）-->
+		   #create_time#,
+		   #update_time#,
+		   #trunc_no#)
+    </insert>
+</sqlMap>

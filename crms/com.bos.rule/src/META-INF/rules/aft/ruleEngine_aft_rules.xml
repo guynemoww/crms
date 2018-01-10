@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+   
+	
+	<!-- 合同借据变更 -->
+	<rule id="RCHA_0001" name="变更信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="变更信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_loan_change lc where lc.change_id = @changeId and lc.change_reason is not null]]></sql>
+	</rule>
+	
+	<!-- 首次检查 -->
+	<rule id="RAFT_0001" name="首次检查信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="首次检查信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_aft_first_check fc where fc.first_check_id = @firstCheckId and fc.check_date is not null]]></sql>
+	</rule>
+	
+	<!-- 日常检查 -->
+	<rule id="RAFT_0002" name="日常检查信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="日常检查信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_aft_normal_check nc where nc.normal_check_id = @normalCheckId and nc.check_date is not null]]></sql>
+	</rule>
+	
+	<!-- 日常检查 -->
+	<rule id="RAFT_0003" name="日常检查信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="日常检查信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_aft_normal_check nc where nc.normal_check_id = @normalCheckId and nc.check_result is not null]]></sql>
+	</rule>
+	
+	<!-- 重点检查 -->
+	<rule id="RAFT_0004" name="重点检查信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="重点检查信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_aft_point_check pc where pc.check_id = @checkId and pc.problem_des is not null]]></sql>
+	</rule>
+	
+	<!-- 授信到期前跟踪检查 -->
+	<rule id="RAFT_0005" name="授信到期前跟踪检查信息未保存" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="授信到期前跟踪检查信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_aft_expire_check ec where ec.check_id = @checkId and ec.is_risk is not null]]></sql>
+	</rule>
+	
+	<!-- 预警信号新增 -->
+	<rule id="REWS_0001" name="未新增预警信号" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未新增预警信号" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_rew_csm_signal_list sl where sl.customer_warning_updateid = @bizId]]></sql>
+	</rule>
+	
+	<!-- 预警信号关闭 -->
+	<rule id="REWS_0002" name="未关闭预警信号" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未关闭预警信号" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_rew_csm_signal_list sl where sl.customer_warning_close = @bizId]]></sql>
+	</rule>
+	
+	<!-- 保存预警级别 -->
+	<rule id="REWS_0003" name="未保存预警级别" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未保存预警级别" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_rew_level_adjust rla where  rla.level_adjust_id = @bizId and rla.EARLY_WARNING_LEVEL_CD is not null]]></sql>
+	</rule>
+	
+	<!-- 预警信号新增：必须有级别或有信号 -->
+	<rule id="REWS_0004" name="未新增预警信号或未调整级别" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未新增预警信号或未调整级别" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+					  from tb_rew_level_adjust rla
+					 where 1 = 1
+					   and (rla.flag1 is not null or exists
+					        (select 1
+					           from tb_rew_csm_signal_list sl
+					          where sl.customer_warning_updateid = rla.level_adjust_id))
+					   and rla.level_adjust_id = @bizId]]>
+		</sql>
+	</rule>
+	
+	<!-- 预警信号新增：级别认定但未填写报告 -->
+	<rule id="REWS_0005" name="级别认定但未填写报告" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="级别认定但未填写报告" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+					  from (select (case
+					                 when  rla.matter_state is null then
+					                  'no'
+					                 else
+					                  'yes'
+					               end) ct
+					          from tb_rew_level_adjust rla
+					         where 1 = 1
+					           and rla.level_adjust_id = @bizId) a
+					 where a.ct = 'yes']]>
+		</sql>
+	</rule>
+	
+	<!-- 保存检查信息 -->
+	<rule id="REWS_0006" name="检查信息不完整" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="检查信息不完整" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(CHECK_WAY) c FROM TB_AFT_NORMAL_CHECK WHERE NORMAL_CHECK_ID=@checkId AND CHECK_WAY IS NOT null]]></sql>
+	</rule>
+	
+	<!-- 保存本期项目及相关信息 -->
+	<rule id="REWS_0007" name="未保存本期项目及相关信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未保存本期项目及相关信息" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_AFT_TRACK_HOUSE WHERE NORMAL_CHECK_ID=@checkId 
+		AND PAY_PROJECT_AMT IS NOT NULL 
+		AND PAY_OTHER_AMT IS NOT NULL 
+		AND AMT_CHANGE IS NOT NULL 
+		AND LOAN_CHANGE IS NOT NULL 
+		AND MYBANK_LOAN_CHANGE IS NOT NULL
+		AND WORKING_AREA IS NOT NULL AND FINISH_AREA IS NOT NULL
+		AND IS_PROBLEM IS NOT NULL AND GET_AREA IS NOT NULL
+		AND SELL_AREA IS NOT NULL AND CASH IS NOT NULL
+		AND MYBANK_LOAN IS NOT NULL AND OTHERBANK_LOAN IS NOT NULL
+		AND AVG_SELLAMT IS NOT NULL AND SELLAMT_CHANGE IS NOT NULL
+		AND MYBANK_SELL_RATE IS NOT NULL AND IS_REPAY IS NOT NULL
+		AND PROJECT_COMPARE IS NOT NULL AND SELL_COMPARE IS NOT NULL
+		AND INVEST_CONDITION IS NOT NULL AND IS_GUARANT_CHANGE IS NOT NULL]]></sql>
+	</rule>
+	
+	<!-- 保存贸易型企业检查信息 -->
+	<rule id="REWS_0008" name="未保存本期资产及其他项目情况" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未保存本期资产及其他项目情况" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_AFT_TRACK_TRADE WHERE NORMAL_CHECK_ID=@checkId 
+AND DEPOSIT_CHANGE IS NOT NULL 
+AND MYBANK_AMT_CHANGE IS NOT NULL AND MYBANK_LOAN_REPAY IS NOT NULL
+AND BANK_LOAN_CHANGE IS NOT NULL AND MYBANK_LOAN_CHANGE IS NOT NULL
+AND IS_GOODS_CHANGE IS NOT NULL AND IS_AMT_CHANGE IS NOT NULL
+AND IS_DEAL_ASSET IS NOT NULL AND MONTH_SELLAMT IS NOT NULL
+AND MONTH_PROFIT_RATE IS NOT NULL AND IS_BUSINESS_CHANGE IS NOT NULL
+AND IS_GUARANTOR IS NOT NULL AND IS_REPAY_OT IS NOT NULL 
+AND IS_REPAY_OWN IS NOT NULL AND IS_OTHERBANK_DEBT IS NOT NULL
+AND IS_ACCEPT_BILL IS NOT NULL AND IS_CON_SAME IS NOT NULL
+AND GOODS_CHANGE IS NOT NULL AND IS_GUARANT_CHANGE IS NOT NULL]]></sql>
+	</rule>
+	
+	
+	<rule id="REWS_0009" name="该借据在本系统或者国结系统中有在途的贷后变更" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该借据在本系统或国结系统中有在途的贷后变更，不允许重复申请" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_con_loan_change where contract_id=@contractId and summary_id=@summaryId and party_id=@partyId and loan_change_type = @changeType and change_status in('02','10')]]></sql>
+	</rule>
+	
+	<!-- 预警信号新增：级别未认定 -->
+	<rule id="REWS_0010" name="预警级别未认定" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="预警级别未认定" checkLevel="err">
+		<sql><![CDATA[select count(*) c
+					  from (select (case
+					                 when rla.early_warning_level_cd is null then
+					                  'no'
+					                 else
+					                  'yes'
+					               end) ct
+					          from tb_rew_level_adjust rla
+					         where 1 = 1
+					           and rla.level_adjust_id = @bizId) a
+					 where a.ct = 'yes']]>
+		</sql>
+		</rule>
+		<!-- 预警信号新增：如果批量的风险预警没有处理，不能手工新增预警 -->
+	<rule id="REWS_0011" name="提示列表中有风险预警未处理" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="提示列表中有风险预警未处理，先处理相关数据" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_tab_remind_info where remind_type = '06' and remind_status = '01' and party_id = @partyId]]>
+		</sql>
+	</rule>
+</checkrules>

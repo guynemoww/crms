@@ -1,0 +1,1938 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<trades>
+	<table name="TbPubNotice" displayName="公告信息">
+		<!-- trades的直接子元素中，table表示需记录参数日志，trade表示需按交易记录快照 -->
+		<col name="infoId" displayName="主键" />
+		<col name="infoTitle" displayName="公告标题" />
+		<col name="infoContent" displayName="公告内容" />
+		<col name="infoStatus" displayName="状态"
+			dictTypeId="pub_notice_info_status" />
+	</table>
+
+	<!-- name displayName是必须的 -->
+	<trade name="com.bos.pub.systechproduct.saveItem.biz.ext"
+		displayName="修改市场信息">
+
+		<!-- 本交易所需记录的表 -->
+		<table name="TbPubMarketInfo" displayName="市场信息">
+			<!-- 所需记录的字段 -->
+			<col name="infoId" displayName="主键" />
+			<col name="infoTitle" displayName="信息标题" />
+			<col name="infoContent" displayName="信息内容" />
+			<col name="infoStatus" displayName="状态"
+				dictTypeId="pub_notice_info_status" />
+		</table>
+	</trade>
+
+	<!-- 记录快照 -->
+	<snapshot name="marketInfos" displayName="市场信息">
+		<!-- 所需记录的表 -->
+		<table name="com.bos.pub.sys.TbPubMarketInfo" displayName="市场信息">
+			<sql>select * from tb_pub_market_info where info_id=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="infoId" displayName="主键" />
+			<col name="infoTitle" displayName="信息标题" />
+			<col name="infoContent" displayName="信息内容" />
+			<col name="infoStatus" displayName="状态"
+				dictTypeId="pub_notice_info_status" />
+		</table>
+	</snapshot>
+	<snapshot name="keyCustomerMessage" displayName="客户关键信息">
+		<!-- 所需记录的表 -->
+		<table name="com.bos.dataset.csm.TbCsmParty" displayName="参与人信息">
+			<sql>select * from tb_csm_party where party_id=#taskId#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="partyId" displayName="主键" />
+			<col name="partyNum" displayName="客户编号" />
+			<col name="partyName" displayName="客户名称" />
+			<col name="createTime" displayName="创建时间"/>
+		</table>
+		<table name="com.bos.dataset.csm.TbCsmCorporation" displayName="对公客户信息">
+			<sql>select * from tb_csm_corporation where party_id=#taskId#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="partyId" displayName="主键" />
+			<col name="partyNum" displayName="客户编号" />
+			<col name="partyName" displayName="客户名称" />
+			<col name="englishName" displayName="客户英文名称" />
+			<col name="orgnNum" displayName="组织机构代码" />
+			<col name="createTime" displayName="创建时间"/>
+		</table>
+		<table name="com.bos.dataset.csm.TbCsmManagementTeam" displayName="管理团队信息">
+			<sql>select * from tb_csm_management_team where party_id=#taskId#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="managementTeamId" displayName="主键" />
+			<col name="userId" displayName="用户" dictTypeId="user"/>
+			<col name="orgId" displayName="机构" dictTypeId="org"/>
+			<col name="partyId" displayName="参与人ID" />
+			<col name="createTime" displayName="创建时间"/>
+			<col name="updateTime" displayName="更新时间"/>
+		</table>
+	</snapshot>
+	<snapshot name="bizInfo" displayName="业务申请信息">
+		<!-- 业务批复信息 单一客户综合授信  by 3231 -->
+		<table name="com.bos.dataset.biz.TbBizAmountApprove" displayName="单一客户综合授信批复基本信息">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta where t.APPLY_ID=ta.APPLY_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="amountId" displayName="主键" />
+			<col name="creditPublicType" displayName="额度类型" dictTypeId="XD_EDCD2007" />
+			<col name="amountType" displayName="额度分类" dictTypeId="XD_EDCD2005"/>
+			<col name="creditTotalAmount" displayName="授信总额度"/>
+			<col name="creditTotalExposure" displayName="授信总敞口"/>
+			<col name="spareAmt" displayName="备用额度"/>
+			<col name="currencyCd" displayName="币种" dictTypeId="CD000001"/>
+			<col name="creditTerm" displayName="期限(月)" />
+			<col name="guarantyType" displayName="担保方式" dictTypeId="CDZC0005"/>
+			<col name="guarantDesc" displayName="担保描述" />
+			<col name="repaymentDesc" displayName="还款描述" />
+			<col name="otherDesc" displayName="其他描述" />
+		</table>
+		<table name="com.bos.dataset.biz.TbBizAmountAppdetail" displayName="单一客户综合授信批复明细信息">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,TB_BIZ_AMOUNT_APPDETAIL tb where t.APPLY_ID=ta.APPLY_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="approveDetailId" displayName="主键" />
+			<col name="productType" displayName="业务品种" dictTypeId="product" />
+			<col name="exchangeRate" displayName="汇率"/>
+			<col name="currencyCd" displayName="币种"  dictTypeId="CD000001"/>
+			<col name="creditTerm" displayName="期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="broadCycle" displayName="宽限期"/>
+			<col name="broadCycleUnit" displayName="宽期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="loanUse" displayName="贷款用途" dictTypeId="XD_SXCD1007"/>
+			<col name="repaymentType" displayName="还款方式" dictTypeId="XD_SXCD1162"/>
+			<col name="cycleInd" displayName="是否可循环" dictTypeId="XD_0002"/>
+			<col name="approveExposureLoanAmt" displayName="分项批复敞口"/>
+			<col name="loanUseType" displayName="贷款用途类型" dictTypeId="CDXY0032"/>
+			<col name="loanTurnType" displayName="贷款投向行业类型" dictTypeId="XD_SXCD1118"/>
+			<col name="loanTurn" displayName="贷款投向" dictTypeId="XD_KHCD0092"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizAppamLoanrate" displayName="单一客户综合授信批复利率信息">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,TB_BIZ_AMOUNT_APPDETAIL tb,tb_biz_appam_loanrate tc where t.APPLY_ID=ta.APPLY_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tc.APPROVE_DETAIL_ID=tb.APPROVE_DETAIL_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="approveLoanrateId" displayName="主键" />
+			<col name="rateType" displayName="利率类型" dictTypeId="XD_SXCD1016"/>
+			<col name="interestCollectType" displayName="利息收取方式" dictTypeId="XD_SXCD1153"/>
+			<col name="rateFloatingFrequency" displayName="利率浮动频率"  dictTypeId="XD_SXCD8022"/>
+			<col name="baseRateKey" displayName="基准利率代码" dictTypeId="XD_FHCD0026"/>
+			<col name="rateFloatProportion" displayName="上下浮动百分比(%)" />
+			<col name="rateFloatMember" displayName="上下浮率（%）" />
+			<col name="otherRateAgreement" displayName="其他利率约定"/>
+			<col name="yearRate" displayName="生效利率"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizYesornoApprove" displayName="单一客户综合授信业务批复是否判断信息">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_YESORNO_approve tb where t.APPLY_ID=ta.APPLY_ID and ta.YESORNO_ID=tb.YESORNO_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="XD_0002Id" displayName="主键" />
+			<col name="isRemoteService" displayName="是否异地业务" dictTypeId="XD_0002"/>
+			<col name="whetherScfCd" displayName="是否供应链业务" dictTypeId="XD_0002"/>
+			<col name="scfBusiness" displayName="供应链业务品种" dictTypeId="XD_SXCD8017"/>
+			<col name="isAgricultureLoans" displayName="是否涉农贷款" dictTypeId="XD_0002"/>
+			<col name="agroLoanType" displayName="涉农贷款种类" dictTypeId="CDXY0038"/>
+			<col name="isOffsetAgreements" displayName="是否抵消协议" dictTypeId="XD_0002"/>
+			<col name="isPhotovoltaic" displayName="是否光伏企业" dictTypeId="XD_0002"/>
+			<col name="isSteelTrade" displayName="是否钢贸" dictTypeId="XD_0002"/>
+			<col name="isExpedited" displayName="是否加急" dictTypeId="XD_0002"/>
+			<col name="expeditedReason" displayName="加急原因"/>
+			<col name="ruquireFinishDate" displayName="要求完成时间"/>
+			<col name="isProjectFinancing" displayName="是否项目融资" dictTypeId="XD_0002"/>
+			<col name="isCityBuildLoan" displayName="是否城镇化建设贷款" dictTypeId="XD_0002"/>
+			<col name="isSmallMediumHouseLoans" displayName="是否中小型普通商品住房开发" dictTypeId="XD_0002"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="isEliminationBackwardCredit" displayName="是否属于淘汰落后授信" dictTypeId="XD_0002"/>
+			<col name="isEliminationKeyIndustry" displayName="是否属于产能过剩行业，淘汰落后产能重点控制行业" dictTypeId="XD_0002"/>
+			<col name="isEnergyEmission" displayName="是否属于节能减排" dictTypeId="XD_0002"/>
+			
+		</table>
+		<!--<table name="tb_biz_amapv_liquidity_dtl" displayName="01-流动资金贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLiquidityDtl" displayName="01-流动资金贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_liquidity_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_overdraft_dtl" displayName="02-法人账户透支明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvOverdraftDtl" displayName="02-法人账户透支明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_overdraft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="overdraftDuration" displayName="透支持续期" dictTypeId="XD_SXCD1174"/>
+			<col name="oterSupportRenewalPeriod" displayName="其他透支持续期"/>
+			<col name="oterSupportRenewalUnit" displayName="其他透支持续期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="overdraftAccountNo" displayName="透支账户号"/>
+			<col name="overdraftAccountName" displayName="透支账户名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_cdcard_dtl" displayName="03-单位信用卡明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvCdcardDtl" displayName="03-单位信用卡明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_cdcard_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="cardCd" displayName="卡种" dictTypeId="XD_SXCD1175"/>
+			<col name="unitCreditCardId" displayName="单位信用卡ID"/>
+			<col name="whetherOurSettlementAccount" displayName="是否在我行开立结算账户" dictTypeId="XD_0002"/>
+			<col name="cardAccountLimitInitValue" displayName="主卡账户额度初始值"/>
+			<col name="whetherUserCardAccount" displayName="是否使用主卡额度限额" dictTypeId="XD_0002"/>
+			<col name="otherCreditBussiness" displayName="申请时是否在我行有其他授信业务" dictTypeId="XD_0002"/>
+			<col name="firstSupplementaryCardNum" displayName="首次附属卡申请数量"/>
+			<col name="firstApplyAmount" displayName="首次申领费用金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_drawback_dtl" displayName="04-出口退税账户贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvDrawbackDtl" displayName="04-出口退税账户贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_drawback_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="taxExportConfirmation" displayName="税务局是否对其退税账户托管进行" dictTypeId="XD_0002"/>
+			<col name="signedExportAccountBook" displayName="是否与我们签订的出口退税账户托管贷" dictTypeId="XD_0002"/>
+			<col name="financialDiscount" displayName="是否享有财政贴息" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_bbilltx_dtl" displayName="08-银行承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBbilltxDtl" displayName="08-银行承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_bbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息财政贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_bbilltx_draft" displayName="银行承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBbilltxDraft" displayName="银行承兑汇票信息额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_bbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="outAcct" displayName="出票人账号"/>
+			<col name="issuingBank" displayName="出票人全称"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_amapv_busbilltx_dtl" displayName="09-商业承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBusbilltxDtl" displayName="09-商业承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_busbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息票据贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_busbilltx_draft" displayName="商业承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBusbilltxDraft" displayName="商业承兑汇票信息额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_busbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="payerAcctNo" displayName="付款人账号"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="payerOpenBankName" displayName="付款人开户行"/>
+			<col name="whetherPaste" displayName="是否保贴" dictTypeId="XD_0002"/>
+			<col name="pastePerson" displayName="保贴人"/>
+			<col name="mountProtocolNum" displayName="保贴协议号" />
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_amapv_legalhouse_dtl" displayName="10-法人房产按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLegalhouseDtl" displayName="10-法人房产按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_legalhouse_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="typeHousing" displayName="房屋类型" dictTypeId="XD_DBCD3071"/>
+			<col name="developersName" displayName="开发商名称"/>
+			<col name="developersQualificationGrade" displayName="开发商资质等级" dictTypeId="XD_KHCD0036"/>
+			<col name="constructionEngineering" displayName="是否在建工程" dictTypeId="XD_0002"/>
+			<col name="secondaryIntermediaryName" displayName="二手中介名称"/>
+			<col name="address" displayName="房产地址"/>
+			<col name="houseArea" displayName="拟购房产面积（平方米）"/>
+			<col name="buildingArea" displayName="所售楼盘总面积（平方米）"/>
+			<col name="housePrice" displayName="房产总价"/>
+			<col name="raisePrice" displayName="自筹金额"/>
+			<col name="realEstateProperty" displayName="房产性质" dictTypeId="XD_SXCD8005"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_legalcar_dtl" displayName="11-法人汽车按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLegalcarDtl" displayName="11-法人汽车按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_legalcar_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="carType" displayName="汽车类型" dictTypeId="XD_SXCD1177"/>
+			<col name="performanceInsuranceCompany" displayName="履约保险公司名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_legaldevice_dtl" displayName="12-法人设备按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLegaldeviceDtl" displayName="12-法人设备按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_legaldevice_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="generalEquipment" displayName="是否通用设备" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_legalother_dtl" displayName="13-法人其他按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLegalotherDtl" displayName="13-法人其他按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_legalother_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_explc_dtl" displayName="15-出口信用证打包贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvExplcDtl" displayName="15-出口信用证打包贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_explc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="packageIntoNum" displayName="打包成数"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="bankInternationalNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="acceptingCreditBank" displayName="信用证开证行"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="acceptingPeriodValidity" displayName="信用证有效期"/>
+			<col name="periodValidityUnit" displayName="信用证有效期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingLoadPeriod" displayName="信用证装期"/>
+			<col name="loadPeriodUnit" displayName="信用证装期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="permitCountry" displayName="来证国家或地区" dictTypeId="XD_KHCD0087"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+		</table>
+		<!--<table name="tb_biz_amapv_purchased_dtl" displayName="16-出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvPurchasedDtl" displayName="16-出口押汇明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_purchased_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="currencyCd" displayName="托收币种" dictTypeId="CD000001"/>
+			<col name="collectionAmount" displayName="托收金额"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同金额"/>
+			<col name="internationalBankingNum" displayName="银行国际业务编号" />
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="bargainingCurrency" displayName="协议币种" dictTypeId="CD000001"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="negotiationZmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="issuingBank" displayName="开证银行"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="exportBillsType" displayName="出口押汇的类型" dictTypeId="XD_SXCD8014"/>
+		</table>
+		<!--<table name="tb_biz_amapv_buyjkbl_dtl" displayName="20-买方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBuyjkblDtl" displayName="20-买方进口保理明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_buyjkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="factoringBusinessName" displayName="保理商名称"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_saljkbl_dtl" displayName="21-卖方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvSaljkblDtl" displayName="21-卖方进口保理明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_saljkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="invoiceNum" displayName="发票号码"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="advanceRatio" displayName="预付比例"/>
+			<col name="rightRecourse" displayName="是否有追索权" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_bbill_dtl" displayName="22-银行承兑汇票明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBbillDtl" displayName="22-银行承兑汇票明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_bbill_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_bloan_dtl" displayName="23-B类贷款承诺函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBloanDtl" displayName="23-B类贷款承诺函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_bloan_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="bClassLoanCommitmentNum" displayName="B类贷款承诺函编号"/>
+			<col name="isUnconWith" displayName="是否可无条件撤销" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_rzbh_dtl" displayName="24-融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvRzbhDtl" displayName="24-融资性保函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_rzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>
+			<col name="agreementStartDate" displayName="协议起止日期"/>
+			<col name="agreementEndDate" displayName="协议到期日期"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_hzxyz_dtl" displayName="25-融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvHzxyzDtl" displayName="25-融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_hzxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_frzbh_dtl" displayName="26-非融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvFrzbhDtl" displayName="26-非融资性保函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_frzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!-- <col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_frzbyxyz_dtl" displayName="27-非融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvFrzbyxyzDtl" displayName="27-非融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_frzbyxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_jkxyz_dtl" displayName="28-进口信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvJkxyzDtl" displayName="28-进口信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_jkxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="creditType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="documentaryType" displayName="信用证跟单类型" dictTypeId="XD_SXCD8015"/>
+			<col name="creditTeam" displayName="远期期限"/>
+			<col name="cycleUnit" displayName="远期期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_wtdk_dtl" displayName="31-委托贷款明细额度批复">-->
+		<table name="com.bos.dataset
+		.TbBizAmapvWtdkDtl" displayName="31-委托贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_wtdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="groupCustomerCashPool" displayName="是否集团客户现金池业务" dictTypeId="XD_0002"/>
+			<col name="principalType" displayName="委托人类型" dictTypeId="XD_SXCD1063"/>
+			<col name="partyId" displayName="委托人ID"/>
+			<col name="partyName" displayName="客户名称"/>
+			<col name="entrustType" displayName="委托贷款性质" dictTypeId="XD_SXCD2003"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_jkdf_dtl" displayName="32-进口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvJkdfDtl" displayName="32-进口代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_jkdf_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="paymentForm" displayName="代付形式" dictTypeId="XD_SXCD1092"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="importRefinanceType" displayName="进口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="lcOfNo" displayName="信用证来单编号"/>
+			<col name="lcOfAmount" displayName="信用证来单金额"/>
+			<col name="invoiceNum" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_fft_dtl" displayName="33-福费廷明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvFftDtl" displayName="33-福费廷明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_fft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="forfaitingSpecies" displayName="福费廷种类" dictTypeId="XD_SXCD1187"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_eap_dtl" displayName="34-出口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvEapDtl" displayName="34-出口代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_eap_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="collectionBizno" displayName="托收业务编号"/>
+			<col name="letterCreditNo" displayName="信用证编号"/>
+			<col name="letterCreditAmount" displayName="信用证金额" />
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="letterCreditDreceiptNo" displayName="信用证交单编号"/>
+			<col name="letterCreditDreceiptAmount" displayName="信用证交单金额"/>
+			<col name="exportCreditType" displayName="出口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_sgp_dtl" displayName="35-保付加签明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvSgpDtl" displayName="35-保付加签明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_sgp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="issuedCurrency" displayName="签发币种" dictTypeId="CD000001"/>
+			<col name="issuedAmount" displayName="签发金额"/>
+			<col name="issuedDate" displayName="签发日"/>
+			<col name="issuedEndDate" displayName="到期日"/>
+			<col name="perAvalUse" displayName="保付受益人"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_pep_dtl" displayName="36-同业代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvPepDtl" displayName="36-同业代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_pep_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_frp_dtl" displayName="37-出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvFrpDtl" displayName="37-出资参与明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_frp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="negotiationAmount" displayName="议付金额"/>
+			<col name="negotiationAmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_nfrp_dtl" displayName="38-不出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvNfrpDtl" displayName="38-不出资参与明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_nfrp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="riskProportion" displayName="参与比例"/>
+			<col name="riskProportionAmount" displayName="参与金额"/>
+			<col name="benefitName" displayName="受益人名称"/>
+			<col name="riskProportionDate" displayName="参与日期"/>
+			<col name="riskProEnddate" displayName="到期日期"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_lcc_dtl" displayName="39-信用证保兑明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvLccDtl" displayName="39-信用证保兑明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_lcc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="benefitName" displayName="受益人名称" />
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcFinancingType" displayName="信用证项下融资类型" dictTypeId="XD_SXCD1126"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_gto_dtl" displayName="41-保函转开明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvGtoDtl" displayName="41-保函转开明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_gto_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="guaranteeFormat" displayName="保函格式" dictTypeId="XD_SXCD1128"/>
+			<col name="guaranteeType" displayName="保函类型" dictTypeId="CDXY0153"/>
+			<col name="guaranteeAddress" displayName="保函有效地"/>
+			<col name="guaranteeBenefitName" displayName="保函受益人"/>
+			<col name="parmentCycle" displayName="付款期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_glease_dtl" displayName="42-黄金租赁明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvGleaseDtl" displayName="42-黄金租赁明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_glease_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="goldWeigth" displayName="黄金重量（千克）"/>
+			<col name="rentalPurposes" displayName="租赁用途说明" />
+			<col name="goodsProperty" displayName="货物属性"/>
+			<col name="extractTreasury" displayName="提金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="leaseType" displayName="租赁品种" />
+			<col name="returnTreasury" displayName="还金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_operate_dtl" displayName="06-经营性物业贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvOperateDtl" displayName="06-经营性物业贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_operate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="propertyType" displayName="物业类型" dictTypeId="XD_SXCD1176"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_realestate_dtl" displayName="07-房地产开发贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvRealestateDtl" displayName="07-房地产开发贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_realestate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="estimatePersonLoanAmount" displayName="预计开发项目中我行可做个人按揭贷款的金额"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="lsApartmentHoursingLoan" displayName="是否中小户型普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="capital" displayName="资本金" dictTypeId="XD_KHCD0178"/>
+			<col name="firstYearRepayment" displayName="首次还款年份"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_construction_dtl" displayName="43-基本建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvConstructionDtl" displayName="43-基本建设贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_construction_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_assets_dtl" displayName="44-固定资产贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvAssetsDtl" displayName="44-固定资产贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_assets_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_cityconstru_dtl" displayName="45-城镇建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvCityconstruDtl" displayName="45-城镇建设贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_cityconstru_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapv_renovation_dtl" displayName="46-技术改造贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvRenovationDtl" displayName="46-技术改造贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_renovation_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		
+		
+		<!--<table name="tb_biz_amapv_billpsd_dtl" displayName="47-信用证项下出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBillpsdDtl" displayName="47-信用证项下出口押汇明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_billpsd_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcGoodsname" displayName="信用证项下货物名称" />
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="negotiationZmountCurrency" displayName="议付币种" dictTypeId="CD000001"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="issuingBank" displayName="开证银行" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_boz_amapv_jyq_dtl" displayName="假远期信用证融资额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvJyqDtl" displayName="假远期信用证融资额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_boz_amapv_jyq_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		<!--<table name="tb_biz_amapv_bgdk_dtl" displayName="并购贷款额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvBgdkDtl" displayName="并购贷款额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_bgdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="bgType" displayName="并购方式"  dictTypeId="XD_SXCD8020"/>
+			<col name="bgAmt" displayName="并购交易金额" />
+			<col name="bgCust" displayName="被并购方" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		
+		<!-- 业务批复信息 单一客户单笔单批  by 3231 -->
+		<table name="com.bos.dataset.biz.TbBizSingleApprove" displayName="单一客户单笔单批批复基本信息">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta where t.APPLY_ID=ta.APPLY_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="singleId" displayName="主键" />
+			<col name="loanAmt" displayName="申请总金额" />
+			<col name="currencyCd" displayName="币种" dictTypeId="CD000001" />
+			<col name="creditTotalExposure" displayName="敞口金额"/>
+			<col name="guarantyType" displayName="担保方式" dictTypeId="CDZC0005"/>
+			<col name="isAgentSign" displayName="是否委托代理签订" dictTypeId="XD_0002"/>
+			<col name="guarantDesc" displayName="担保描述" />
+			<col name="repaymentDesc" displayName="还款描述" />
+			<col name="otherDesc" displayName="其他描述" />
+			<col name="platformPartyId" displayName="平台额度占用方id" />
+		</table>
+		<table name="com.bos.dataset.biz.TbBizSingleAppdetail" displayName="单一客户单笔单批批复明细信息">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,TB_BIZ_single_APPDETAIL tb where t.APPLY_ID=ta.APPLY_ID and ta.single_id=tb.single_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="approveDetailId" displayName="主键" />
+			<col name="productType" displayName="业务品种" dictTypeId="product" />
+			<col name="exchangeRate" displayName="汇率"/>
+			<col name="currencyCd" displayName="币种"  dictTypeId="CD000001"/>
+			<col name="loanAmt" displayName="申请总金额" />
+			<col name="creditTotalExposure" displayName="敞口金额" />
+			<col name="creditTerm" displayName="期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="loanUseType" displayName="贷款用途类型" dictTypeId="CDXY0032"/>
+			<col name="loanUse" displayName="贷款用途" dictTypeId="XD_SXCD1007"/>
+			<col name="loanTurnType" displayName="贷款投向行业类型" dictTypeId="XD_SXCD1118"/>
+			<col name="loanTurn" displayName="贷款投向" dictTypeId="XD_KHCD0092"/>
+			<col name="repaymentType" displayName="还款方式" dictTypeId="XD_SXCD1162"/>
+			<col name="cycleInd" displayName="是否可循环" dictTypeId="XD_0002"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizAppsgLoanrate" displayName="单一客户单笔单批批复利率信息">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,TB_BIZ_single_APPDETAIL tb,tb_biz_appsg_loanrate tc where t.APPLY_ID=ta.APPLY_ID and ta.single_ID=tb.single_ID and tc.APPROVE_DETAIL_ID=tb.APPROVE_DETAIL_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="approveLoanrateId" displayName="主键" />
+			<col name="rateType" displayName="利率类型" dictTypeId="XD_SXCD1016"/>
+			<col name="interestCollectType" displayName="利息收取方式" dictTypeId="XD_SXCD1153"/>
+			<col name="rateFloatingFrequency" displayName="利率浮动频率"  dictTypeId="XD_SXCD8022"/>
+			<col name="baseRateKey" displayName="基准利率代码" dictTypeId="XD_FHCD0026"/>
+			<col name="rateFloatProportion" displayName="上下浮动百分比(%)" />
+			<col name="rateFloatMember" displayName="上下浮率（%）" />
+			<col name="otherRateAgreement" displayName="其他利率约定"/>
+			<col name="yearRate" displayName="生效利率"/>
+		</table>
+		<table name="com.bos.dataset.TbBizYesornoApprove" displayName="单一客户单笔单批业务批复是否判断信息">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_YESORNO_approve tb where t.APPLY_ID=ta.APPLY_ID and ta.YESORNO_ID=tb.YESORNO_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="XD_0002Id" displayName="主键" />
+			<col name="isRemoteService" displayName="是否异地业务" dictTypeId="XD_0002"/>
+			<col name="whetherScfCd" displayName="是否供应链业务" dictTypeId="XD_0002"/>
+			<col name="scfBusiness" displayName="供应链业务品种" dictTypeId="XD_SXCD8017"/>
+			<col name="isAgricultureLoans" displayName="是否涉农贷款" dictTypeId="XD_0002"/>
+			<col name="agroLoanType" displayName="涉农贷款种类" dictTypeId="CDXY0038"/>
+			<col name="isOffsetAgreements" displayName="是否抵消协议" dictTypeId="XD_0002"/>
+			<col name="isPhotovoltaic" displayName="是否光伏企业" dictTypeId="XD_0002"/>
+			<col name="isSteelTrade" displayName="是否钢贸" dictTypeId="XD_0002"/>
+			<col name="isExpedited" displayName="是否加急" dictTypeId="XD_0002"/>
+			<col name="expeditedReason" displayName="加急原因"/>
+			<col name="ruquireFinishDate" displayName="要求完成时间"/>
+			<col name="isProjectFinancing" displayName="是否项目融资" dictTypeId="XD_0002"/>
+			<col name="isCityBuildLoan" displayName="是否城镇化建设贷款" dictTypeId="XD_0002"/>
+			<col name="isSmallMediumHouseLoans" displayName="是否中小型普通商品住房开发" dictTypeId="XD_0002"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="isEliminationBackwardCredit" displayName="是否属于淘汰落后授信" dictTypeId="XD_0002"/>
+			<col name="isEliminationKeyIndustry" displayName="是否属于产能过剩行业，淘汰落后产能重点控制行业" dictTypeId="XD_0002"/>
+			<col name="isEnergyEmission" displayName="是否属于节能减排" dictTypeId="XD_0002"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_liquidity_dtl" displayName="01-流动资金贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLiquidityDtl" displayName="01-流动资金贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_liquidity_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_overdraft_dtl" displayName="02-法人账户透支明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvOverdraftDtl" displayName="02-法人账户透支明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_overdraft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="overdraftDuration" displayName="透支持续期" dictTypeId="XD_SXCD1174"/>
+			<col name="oterSupportRenewalPeriod" displayName="其他透支持续期"/>
+			<col name="oterSupportRenewalUnit" displayName="其他透支持续期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="overdraftAccountNo" displayName="透支账户号"/>
+			<col name="overdraftAccountName" displayName="透支账户名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_cdcard_dtl" displayName="03-单位信用卡明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvCdcardDtl" displayName="03-单位信用卡明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_cdcard_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="cardCd" displayName="卡种" dictTypeId="XD_SXCD1175"/>
+			<col name="unitCreditCardId" displayName="单位信用卡ID"/>
+			<col name="whetherOurSettlementAccount" displayName="是否在我行开立结算账户" dictTypeId="XD_0002"/>
+			<col name="cardAccountLimitInitValue" displayName="主卡账户额度初始值"/>
+			<col name="whetherUserCardAccount" displayName="是否使用主卡额度限额" dictTypeId="XD_0002"/>
+			<col name="otherCreditBussiness" displayName="申请时是否在我行有其他授信业务" dictTypeId="XD_0002"/>
+			<col name="firstSupplementaryCardNum" displayName="首次附属卡申请数量"/>
+			<col name="firstApplyAmount" displayName="首次申领费用金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_drawback_dtl" displayName="04-出口退税账户贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvDrawbackDtl" displayName="04-出口退税账户贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_drawback_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="taxExportConfirmation" displayName="税务局是否对其退税账户托管进行" dictTypeId="XD_0002"/>
+			<col name="signedExportAccountBook" displayName="是否与我们签订的出口退税账户托管贷" dictTypeId="XD_0002"/>
+			<col name="financialDiscount" displayName="是否享有财政贴息" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_bbilltx_dtl" displayName="08-银行承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBbilltxDtl" displayName="08-银行承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_bbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息财政贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_bbilltx_draft" displayName="银行承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBbilltxDraft" displayName="银行承兑汇票信息额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_bbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="outAcct" displayName="出票人账号"/>
+			<col name="issuingBank" displayName="出票人全称"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_sgapv_busbilltx_dtl" displayName="09-商业承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBusbilltxDtl" displayName="09-商业承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_busbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息票据贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_busbilltx_draft" displayName="商业承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBusbilltxDraft" displayName="商业承兑汇票信息额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_busbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="payerAcctNo" displayName="付款人账号"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="payerOpenBankName" displayName="付款人开户行"/>
+			<col name="whetherPaste" displayName="是否保贴" dictTypeId="XD_0002"/>
+			<col name="pastePerson" displayName="保贴人"/>
+			<col name="mountProtocolNum" displayName="保贴协议号" />
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_sgapv_legalhouse_dtl" displayName="10-法人房产按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLegalhouseDtl" displayName="10-法人房产按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_legalhouse_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="typeHousing" displayName="房屋类型" dictTypeId="XD_DBCD3071"/>
+			<col name="developersName" displayName="开发商名称"/>
+			<col name="developersQualificationGrade" displayName="开发商资质等级" dictTypeId="XD_KHCD0036"/>
+			<col name="constructionEngineering" displayName="是否在建工程" dictTypeId="XD_0002"/>
+			<col name="secondaryIntermediaryName" displayName="二手中介名称"/>
+			<col name="address" displayName="房产地址"/>
+			<col name="houseArea" displayName="拟购房产面积（平方米）"/>
+			<col name="buildingArea" displayName="所售楼盘总面积（平方米）"/>
+			<col name="housePrice" displayName="房产总价"/>
+			<col name="raisePrice" displayName="自筹金额"/>
+			<col name="realEstateProperty" displayName="房产性质" dictTypeId="XD_SXCD8005"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_legalcar_dtl" displayName="11-法人汽车按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLegalcarDtl" displayName="11-法人汽车按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_legalcar_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="carType" displayName="汽车类型" dictTypeId="XD_SXCD1177"/>
+			<col name="performanceInsuranceCompany" displayName="履约保险公司名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_legaldevice_dtl" displayName="12-法人设备按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLegaldeviceDtl" displayName="12-法人设备按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_legaldevice_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="generalEquipment" displayName="是否通用设备" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_legalother_dtl" displayName="13-法人其他按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLegalotherDtl" displayName="13-法人其他按揭贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_legalother_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_explc_dtl" displayName="15-出口信用证打包贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvExplcDtl" displayName="15-出口信用证打包贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_explc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+				<col name="packageIntoNum" displayName="打包成数"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="bankInternationalNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="acceptingCreditBank" displayName="信用证开证行"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="acceptingPeriodValidity" displayName="信用证有效期"/>
+			<col name="periodValidityUnit" displayName="信用证有效期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingLoadPeriod" displayName="信用证装期"/>
+			<col name="loadPeriodUnit" displayName="信用证装期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="permitCountry" displayName="来证国家或地区" dictTypeId="XD_KHCD0087"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_purchased_dtl" displayName="16-出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvPurchasedDtl" displayName="16-出口押汇明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_purchased_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="currencyCd" displayName="托收币种" dictTypeId="CD000001"/>
+			<col name="collectionAmount" displayName="托收金额"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同金额"/>
+			<col name="internationalBankingNum" displayName="银行国际业务编号" />
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="bargainingCurrency" displayName="协议币种" dictTypeId="CD000001"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="negotiationZmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="issuingBank" displayName="开证银行"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="exportBillsType" displayName="出口押汇的类型" dictTypeId="XD_SXCD8014"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_buyjkbl_dtl" displayName="20-买方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBuyjkblDtl" displayName="20-买方进口保理明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_buyjkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="factoringBusinessName" displayName="保理商名称"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_saljkbl_dtl" displayName="21-卖方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvSaljkblDtl" displayName="21-卖方进口保理明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_saljkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="invoiceNum" displayName="发票号码"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="advanceRatio" displayName="预付比例"/>
+			<col name="rightRecourse" displayName="是否有追索权" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_bbill_dtl" displayName="22-银行承兑汇票明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBbillDtl" displayName="22-银行承兑汇票明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_bbill_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_bloan_dtl" displayName="23-B类贷款承诺函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBloanDtl" displayName="23-B类贷款承诺函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_bloan_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="bClassLoanCommitmentNum" displayName="B类贷款承诺函编号"/>
+			<col name="isUnconWith" displayName="是否可无条件撤销" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_rzbh_dtl" displayName="24-融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvRzbhDtl" displayName="24-融资性保函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_rzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>
+			<col name="agreementStartDate" displayName="协议起止日期"/>
+			<col name="agreementEndDate" displayName="协议到期日期"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_hzxyz_dtl" displayName="25-融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvHzxyzDtl" displayName="25-融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_hzxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_frzbh_dtl" displayName="26-非融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvFrzbhDtl" displayName="26-非融资性保函明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_frzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!-- <col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_frzbyxyz_dtl" displayName="27-非融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvFrzbyxyzDtl" displayName="27-非融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_frzbyxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_jkxyz_dtl" displayName="28-进口信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvJkxyzDtl" displayName="28-进口信用证明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_jkxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="creditType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="documentaryType" displayName="信用证跟单类型" dictTypeId="XD_SXCD8015"/>
+			<col name="creditTeam" displayName="远期期限"/>
+			<col name="cycleUnit" displayName="远期期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_wtdk_dtl" displayName="31-委托贷款明细额度批复">-->
+		<table name="com.bos.dataset
+		.TbBizSgapvWtdkDtl" displayName="31-委托贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_wtdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="groupCustomerCashPool" displayName="是否集团客户现金池业务" dictTypeId="XD_0002"/>
+			<col name="principalType" displayName="委托人类型" dictTypeId="XD_SXCD1063"/>
+			<col name="partyId" displayName="委托人ID"/>
+			<col name="partyName" displayName="客户名称"/>
+			<col name="entrustType" displayName="委托贷款性质" dictTypeId="XD_SXCD2003"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_jkdf_dtl" displayName="32-进口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvJkdfDtl" displayName="32-进口代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_jkdf_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="paymentForm" displayName="代付形式" dictTypeId="XD_SXCD1092"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="importRefinanceType" displayName="进口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="lcOfNo" displayName="信用证来单编号"/>
+			<col name="lcOfAmount" displayName="信用证来单金额"/>
+			<col name="invoiceNum" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_fft_dtl" displayName="33-福费廷明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvFftDtl" displayName="33-福费廷明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_fft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="forfaitingSpecies" displayName="福费廷种类" dictTypeId="XD_SXCD1187"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_eap_dtl" displayName="34-出口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvEapDtl" displayName="34-出口代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_eap_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="collectionBizno" displayName="托收业务编号"/>
+			<col name="letterCreditNo" displayName="信用证编号"/>
+			<col name="letterCreditAmount" displayName="信用证金额" />
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="letterCreditDreceiptNo" displayName="信用证交单编号"/>
+			<col name="letterCreditDreceiptAmount" displayName="信用证交单金额"/>
+			<col name="exportCreditType" displayName="出口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_sgp_dtl" displayName="35-保付加签明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvSgpDtl" displayName="35-保付加签明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_sgp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="issuedCurrency" displayName="签发币种" dictTypeId="CD000001"/>
+			<col name="issuedAmount" displayName="签发金额"/>
+			<col name="issuedDate" displayName="签发日"/>
+			<col name="issuedEndDate" displayName="到期日"/>
+			<col name="perAvalUse" displayName="保付受益人"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_pep_dtl" displayName="36-同业代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvPepDtl" displayName="36-同业代付明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_pep_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_frp_dtl" displayName="37-出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvFrpDtl" displayName="37-出资参与明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_frp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+				<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="negotiationAmount" displayName="议付金额"/>
+			<col name="negotiationAmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_nfrp_dtl" displayName="38-不出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvNfrpDtl" displayName="38-不出资参与明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_nfrp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="riskProportion" displayName="参与比例"/>
+			<col name="riskProportionAmount" displayName="参与金额"/>
+			<col name="benefitName" displayName="受益人名称"/>
+			<col name="riskProportionDate" displayName="参与日期"/>
+			<col name="riskProEnddate" displayName="到期日期"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_lcc_dtl" displayName="39-信用证保兑明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvLccDtl" displayName="39-信用证保兑明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_lcc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="benefitName" displayName="受益人名称" />
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcFinancingType" displayName="信用证项下融资类型" dictTypeId="XD_SXCD1126"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_gto_dtl" displayName="41-保函转开明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvGtoDtl" displayName="41-保函转开明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_gto_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="guaranteeFormat" displayName="保函格式" dictTypeId="XD_SXCD1128"/>
+			<col name="guaranteeType" displayName="保函类型" dictTypeId="CDXY0153"/>
+			<col name="guaranteeAddress" displayName="保函有效地"/>
+			<col name="guaranteeBenefitName" displayName="保函受益人"/>
+			<col name="parmentCycle" displayName="付款期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_glease_dtl" displayName="42-黄金租赁明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvGleaseDtl" displayName="42-黄金租赁明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_glease_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="goldWeigth" displayName="黄金重量（千克）"/>
+			<col name="rentalPurposes" displayName="租赁用途说明" />
+			<col name="goodsProperty" displayName="货物属性"/>
+			<col name="extractTreasury" displayName="提金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="leaseType" displayName="租赁品种" />
+			<col name="returnTreasury" displayName="还金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_operate_dtl" displayName="06-经营性物业贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvOperateDtl" displayName="06-经营性物业贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_operate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="propertyType" displayName="物业类型" dictTypeId="XD_SXCD1176"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_realestate_dtl" displayName="07-房地产开发贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvRealestateDtl" displayName="07-房地产开发贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_realestate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="estimatePersonLoanAmount" displayName="预计开发项目中我行可做个人按揭贷款的金额"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="lsApartmentHoursingLoan" displayName="是否中小户型普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="capital" displayName="资本金" dictTypeId="XD_KHCD0178"/>
+			<col name="firstYearRepayment" displayName="首次还款年份"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_construction_dtl" displayName="43-基本建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvConstructionDtl" displayName="43-基本建设贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_construction_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_assets_dtl" displayName="44-固定资产贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvAssetsDtl" displayName="44-固定资产贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_assets_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_cityconstru_dtl" displayName="45-城镇建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvCityconstruDtl" displayName="45-城镇建设贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_cityconstru_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_sgapv_renovation_dtl" displayName="46-技术改造贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvRenovationDtl" displayName="46-技术改造贷款明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_renovation_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		
+		<!--<table name="tb_biz_sgapv_project_dtl" displayName="项目信息额度批复">-->
+	
+		<!--<table name="tb_biz_sgapv_billpsd_dtl" displayName="47-信用证项下出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBillpsdDtl" displayName="47-信用证项下出口押汇明细额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_billpsd_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcGoodsname" displayName="信用证项下货物名称" />
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="negotiationZmountCurrency" displayName="议付币种" dictTypeId="CD000001"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="issuingBank" displayName="开证银行" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_boz_sgapv_jyq_dtl" displayName="假远期信用证融资额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvJyqDtl" displayName="假远期信用证融资额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_boz_sgapv_jyq_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		<!--<table name="tb_biz_sgapv_bgdk_dtl" displayName="并购贷款额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizSgapvBgdkDtl" displayName="假远期信用证融资额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_single_approve ta,tb_biz_single_appdetail tb,tb_biz_sgapv_bgdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.single_id = tb.single_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="bgType" displayName="并购方式"  dictTypeId="XD_SXCD8020"/>
+			<col name="bgAmt" displayName="并购交易金额" />
+			<col name="bgCust" displayName="被并购方" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		
+		<!-- 业务批复信息 同业客户综合授信  by 3231 -->
+		<table name="com.bos.dataset.biz.TbBizPeersAmountApprove" displayName="同业客户综合授信批复基本信息">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta where t.APPLY_ID=ta.APPLY_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="amountId" displayName="主键" />
+			<col name="creditPublicType" displayName="额度类型" dictTypeId="XD_EDCD2007" />
+			<col name="amountType" displayName="额度分类" dictTypeId="XD_EDCD2005"/>
+			<col name="creditTotalAmount" displayName="授信总额度"/>
+			<col name="creditTerm" displayName="期限(月)" />
+			<col name="guarantyType" displayName="担保方式" dictTypeId="XD_SXCD1020"/>
+			<col name="guarantDesc" displayName="担保描述" />
+			<col name="repaymentDesc" displayName="还款描述" />
+			<col name="otherDesc" displayName="其他描述" />
+			<col name="creditTotalExposure" displayName="授信总敞口"/>
+			<col name="spareAmt" displayName="备用额度"/>
+			<col name="currencyCd" displayName="币种"  dictTypeId="CD000001"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizPeersAmountApvdtl" displayName="同业客户综合授信批复明细信息">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,tb_biz_peers_amount_apvdtl tb where t.APPLY_ID=ta.APPLY_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="amountDetailId" displayName="主键" />
+			<col name="productType" displayName="业务品种" dictTypeId="product" />
+			<col name="exchangeRate" displayName="汇率"/>
+			<col name="currencyCd" displayName="币种"  dictTypeId="CD000001"/>
+			<col name="approveExposureLoanAmt" displayName="分项批复敞口"/>
+			<col name="creditTerm" displayName="期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="BIZ_TERMUNITCDAPPR"/>
+			<col name="loanUseType" displayName="贷款用途类型" dictTypeId="CDXY0032"/>
+			<col name="loanUse" displayName="贷款用途" dictTypeId="XD_SXCD1007"/>
+			<col name="loanTurnType" displayName="贷款投向行业类型" dictTypeId="XD_SXCD1118"/>
+			<col name="loanTurn" displayName="贷款投向" dictTypeId="XD_KHCD0092"/>
+			<col name="repaymentType" displayName="还款方式" dictTypeId="XD_SXCD1162"/>
+			<col name="cycleInd" displayName="是否可循环" dictTypeId="XD_0002"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizPeersAppamLoanrate" displayName="同业客户综合授信批复利率信息">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_peers_appam_loanrate tc where t.APPLY_ID=ta.APPLY_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tc.APPROVE_DETAIL_ID=tb.APPROVE_DETAIL_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="approveLoanrateId" displayName="主键" />
+			<col name="rateType" displayName="利率类型" dictTypeId="XD_SXCD1016"/>
+			<col name="interestCollectType" displayName="利息收取方式" dictTypeId="XD_SXCD1153"/>
+			<col name="rateFloatingFrequency" displayName="利率浮动频率"  dictTypeId="XD_SXCD8022"/>
+			<col name="baseRateKey" displayName="基准利率代码" dictTypeId="XD_FHCD0026"/>
+			<col name="rateFloatProportion" displayName="上下浮动百分比(%)" />
+			<col name="rateFloatMember" displayName="上下浮率（%）" />
+			<col name="otherRateAgreement" displayName="其他利率约定"/>
+			<col name="yearRate" displayName="生效利率"/>
+		</table>
+		<table name="com.bos.dataset.biz.TbBizPeersYesornoApprove" displayName="同业客户综合授信业务批复是否判断信息">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,tb_biz_peers_yesorno_approve tb where t.APPLY_ID=ta.APPLY_ID and ta.YESORNO_ID=tb.YESORNO_ID and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="XD_0002Id" displayName="主键" />
+			<col name="whetherScfCd" displayName="是否供应链业务" dictTypeId="XD_0002"/>
+			<col name="scfBusiness" displayName="供应链业务品种" dictTypeId="XD_SXCD8017"/>
+			<col name="isAgricultureLoans" displayName="是否涉农贷款" dictTypeId="XD_0002"/>
+			<col name="agroLoanType" displayName="涉农贷款种类" dictTypeId="CDXY0038"/>
+			<col name="isOffsetAgreements" displayName="是否抵消协议" dictTypeId="XD_0002"/>
+			<col name="isPhotovoltaic" displayName="是否光伏企业" dictTypeId="XD_0002"/>
+			<col name="isSteelTrade" displayName="是否钢贸" dictTypeId="XD_0002"/>
+			<col name="isExpedited" displayName="是否加急" dictTypeId="XD_0002"/>
+			<col name="expeditedReason" displayName="加急原因"/>
+			<col name="ruquireFinishDate" displayName="要求完成时间"/>
+			<col name="isProjectFinancing" displayName="是否项目融资" dictTypeId="XD_0002"/>
+			<col name="isCityBuildLoan" displayName="是否城镇化建设贷款" dictTypeId="XD_0002"/>
+			<col name="isSmallMediumHouseLoans" displayName="是否中小型普通商品住房开发" dictTypeId="XD_0002"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="isEliminationBackwardCredit" displayName="是否属于淘汰落后授信" dictTypeId="XD_0002"/>
+			<col name="isEliminationKeyIndustry" displayName="是否属于产能过剩行业，淘汰落后产能重点控制行业" dictTypeId="XD_0002"/>
+			<col name="isEnergyEmission" displayName="是否属于节能减排" dictTypeId="XD_0002"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_liquidity_dtl" displayName="01-流动资金贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLiquidityDtl" displayName="01-流动资金贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_liquidity_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_overdraft_dtl" displayName="02-法人账户透支明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeOverdraftDtl" displayName="02-法人账户透支明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_overdraft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="overdraftDuration" displayName="透支持续期" dictTypeId="XD_SXCD1174"/>
+			<col name="oterSupportRenewalPeriod" displayName="其他透支持续期"/>
+			<col name="oterSupportRenewalUnit" displayName="其他透支持续期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="overdraftAccountNo" displayName="透支账户号"/>
+			<col name="overdraftAccountName" displayName="透支账户名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_cdcard_dtl" displayName="03-单位信用卡明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeCdcardDtl" displayName="03-单位信用卡明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_cdcard_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="cardCd" displayName="卡种" dictTypeId="XD_SXCD1175"/>
+			<col name="unitCreditCardId" displayName="单位信用卡ID"/>
+			<col name="whetherOurSettlementAccount" displayName="是否在我行开立结算账户" dictTypeId="XD_0002"/>
+			<col name="cardAccountLimitInitValue" displayName="主卡账户额度初始值"/>
+			<col name="whetherUserCardAccount" displayName="是否使用主卡额度限额" dictTypeId="XD_0002"/>
+			<col name="otherCreditBussiness" displayName="申请时是否在我行有其他授信业务" dictTypeId="XD_0002"/>
+			<col name="firstSupplementaryCardNum" displayName="首次附属卡申请数量"/>
+			<col name="firstApplyAmount" displayName="首次申领费用金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_drawback_dtl" displayName="04-出口退税账户贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeDrawbackDtl" displayName="04-出口退税账户贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_drawback_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="taxExportConfirmation" displayName="税务局是否对其退税账户托管进行" dictTypeId="XD_0002"/>
+			<col name="signedExportAccountBook" displayName="是否与我们签订的出口退税账户托管贷" dictTypeId="XD_0002"/>
+			<col name="financialDiscount" displayName="是否享有财政贴息" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_bbilltx_dtl" displayName="08-银行承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBbilltxDtl" displayName="08-银行承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_bbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息财政贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_bbilltx_draft" displayName="银行承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBbilltxDraft" displayName="银行承兑汇票信息额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_bbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="outAcct" displayName="出票人账号"/>
+			<col name="issuingBank" displayName="出票人全称"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_amapvee_busbilltx_dtl" displayName="09-商业承兑汇票贴现明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBusbilltxDtl" displayName="09-商业承兑汇票贴现明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_busbilltx_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="interestPaidAgreement" displayName="是否协议付息票据贴现" dictTypeId="XD_0002"/>
+			<col name="buyerInterestRate" displayName="买方承担利息比例"/>
+			<col name="sellerInterestRate" displayName="卖方承担利息比例"/>
+			<col name="billNumber" displayName="汇票张数"/>
+			<col name="billTotalAmount" displayName="汇票总金额"/>
+			<col name="discountRate" displayName="贴现比例"/>
+			<col name="isAgencyDiscount" displayName="是否代理贴现" dictTypeId="XD_0002"/>
+			<col name="partyId" displayName="代理人id"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_busbilltx_draft" displayName="商业承兑汇票信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBusbilltxDraft" displayName="商业承兑汇票信息额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_busbilltx_draft tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="draftInformationId" displayName="主键" />
+			<col name="draftAmt" displayName="汇票金额"/>
+			<col name="draftNum" displayName="汇票号码"/>
+			<col name="draftIssuringDate" displayName="汇票出票日期"/>
+			<col name="draftExpirationDate" displayName="汇票到期日期"/>
+			<col name="collectorName" displayName="收款人全称"/>
+			<col name="collectorAcctNo" displayName="收款人账户"/>
+			<col name="collectorOpenBank" displayName="收款人开户行"/>
+			<col name="billMaterials" displayName="汇票形式" dictTypeId="XD_SXCD1123"/>
+			<col name="payerAcctNo" displayName="付款人账号"/>
+			<col name="payerName" displayName="付款人全称"/>
+			<col name="payerOpenBankName" displayName="付款人开户行"/>
+			<col name="whetherPaste" displayName="是否保贴" dictTypeId="XD_0002"/>
+			<col name="pastePerson" displayName="保贴人"/>
+			<col name="mountProtocolNum" displayName="保贴协议号" />
+			<col name="currency" displayName="汇票币种"  dictTypeId="CD000001"/>
+			<col name="applyDetailId" displayName="申请明细ID" />
+		</table>
+		<!--<table name="tb_biz_amapvee_legalhouse_dtl" displayName="10-法人房产按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLegalhouseDtl" displayName="10-法人房产按揭贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_legalhouse_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="typeHousing" displayName="房屋类型" dictTypeId="XD_DBCD3071"/>
+			<col name="developersName" displayName="开发商名称"/>
+			<col name="developersQualificationGrade" displayName="开发商资质等级" dictTypeId="XD_KHCD0036"/>
+			<col name="constructionEngineering" displayName="是否在建工程" dictTypeId="XD_0002"/>
+			<col name="secondaryIntermediaryName" displayName="二手中介名称"/>
+			<col name="address" displayName="房产地址"/>
+			<col name="houseArea" displayName="拟购房产面积（平方米）"/>
+			<col name="buildingArea" displayName="所售楼盘总面积（平方米）"/>
+			<col name="housePrice" displayName="房产总价"/>
+			<col name="raisePrice" displayName="自筹金额"/>
+			<col name="realEstateProperty" displayName="房产性质" dictTypeId="XD_SXCD8005"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_legalcar_dtl" displayName="11-法人汽车按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLegalcarDtl" displayName="11-法人汽车按揭贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_legalcar_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="carType" displayName="汽车类型" dictTypeId="XD_SXCD1177"/>
+			<col name="performanceInsuranceCompany" displayName="履约保险公司名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_legaldevice_dtl" displayName="12-法人设备按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLegaldeviceDtl" displayName="12-法人设备按揭贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_legaldevice_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="generalEquipment" displayName="是否通用设备" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_legalother_dtl" displayName="13-法人其他按揭贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLegalotherDtl" displayName="13-法人其他按揭贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_legalother_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_explc_dtl" displayName="15-出口信用证打包贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeExplcDtl" displayName="15-出口信用证打包贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_explc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="packageIntoNum" displayName="打包成数"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="bankInternationalNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="acceptingCreditBank" displayName="信用证开证行"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="acceptingPeriodValidity" displayName="信用证有效期"/>
+			<col name="periodValidityUnit" displayName="信用证有效期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingLoadPeriod" displayName="信用证装期"/>
+			<col name="loadPeriodUnit" displayName="信用证装期单位" dictTypeId="XD_GGCD6009"/>
+			<col name="acceptingType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="permitCountry" displayName="来证国家或地区" dictTypeId="XD_KHCD0087"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_purchased_dtl" displayName="16-出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveePurchasedDtl" displayName="16-出口押汇明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_purchased_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="currencyCd" displayName="托收币种" dictTypeId="CD000001"/>
+			<col name="collectionAmount" displayName="托收金额"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同金额"/>
+			<col name="internationalBankingNum" displayName="银行国际业务编号" />
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="bargainingCurrency" displayName="协议币种" dictTypeId="CD000001"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="negotiationZmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="issuingBank" displayName="开证银行"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="exportBillsType" displayName="出口押汇的类型" dictTypeId="XD_SXCD8014"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_buyjkbl_dtl" displayName="20-买方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBuyjkblDtl" displayName="20-买方进口保理明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_buyjkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="factoringBusinessName" displayName="保理商名称"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_saljkbl_dtl" displayName="21-卖方进口保理明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeSaljkblDtl" displayName="21-卖方进口保理明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_saljkbl_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="couponOrDiscount" displayName="付息或贴现" dictTypeId="XD_SXCD8012"/>
+			<col name="domesticInternationalFactor" displayName="国内保理或国际保理" dictTypeId="XD_SXCD8010"/>
+			<col name="buy_or_not_buy" displayName="买断或非买断" dictTypeId="XD_SXCD8011"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号" />
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="invoiceNum" displayName="发票号码"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="advanceRatio" displayName="预付比例"/>
+			<col name="rightRecourse" displayName="是否有追索权" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_bbill_dtl" displayName="22-银行承兑汇票明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBbillDtl" displayName="22-银行承兑汇票明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_bbill_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_bloan_dtl" displayName="23-B类贷款承诺函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBloanDtl" displayName="23-B类贷款承诺函明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_bloan_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="bClassLoanCommitmentNum" displayName="B类贷款承诺函编号"/>
+			<col name="isUnconWith" displayName="是否可无条件撤销" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_rzbh_dtl" displayName="24-融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeRzbhDtl" displayName="24-融资性保函明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_rzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>
+			<col name="agreementStartDate" displayName="协议起止日期"/>
+			<col name="agreementEndDate" displayName="协议到期日期"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_hzxyz_dtl" displayName="25-融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeHzxyzDtl" displayName="25-融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_hzxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_frzbh_dtl" displayName="26-非融资性保函明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeFrzbhDtl" displayName="26-非融资性保函明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_frzbh_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!-- <col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_frzbyxyz_dtl" displayName="27-非融资性备用信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeFrzbyxyzDtl" displayName="27-非融资性备用信用证明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_frzbyxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/> -->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_jkxyz_dtl" displayName="28-进口信用证明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeJkxyzDtl" displayName="28-进口信用证明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_jkxyz_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<!--<col name="ratioMargin" displayName="保证金比例"/>-->
+			<col name="depositAmount" displayName="保证金金额"/>
+			<col name="creditType" displayName="信用证类型" dictTypeId="CDXY0138"/>
+			<col name="documentaryType" displayName="信用证跟单类型" dictTypeId="XD_SXCD8015"/>
+			<col name="creditTeam" displayName="远期期限"/>
+			<col name="cycleUnit" displayName="远期期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_wtdk_dtl" displayName="31-委托贷款明细额度批复">-->
+		<table name="com.bos.dataset
+		.TbBizAmapveeWtdkDtl" displayName="31-委托贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_wtdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="groupCustomerCashPool" displayName="是否集团客户现金池业务" dictTypeId="XD_0002"/>
+			<col name="principalType" displayName="委托人类型" dictTypeId="XD_SXCD1063"/>
+			<col name="partyId" displayName="委托人ID"/>
+			<col name="partyName" displayName="客户名称"/>
+			<col name="entrustType" displayName="委托贷款性质" dictTypeId="XD_SXCD2003"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_jkdf_dtl" displayName="32-进口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeJkdfDtl" displayName="32-进口代付明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_jkdf_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="paymentForm" displayName="代付形式" dictTypeId="XD_SXCD1092"/>
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="importRefinanceType" displayName="进口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="lcOfNo" displayName="信用证来单编号"/>
+			<col name="lcOfAmount" displayName="信用证来单金额"/>
+			<col name="invoiceNum" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_fft_dtl" displayName="33-福费廷明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeFftDtl" displayName="33-福费廷明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_fft_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="tradingContractNum" displayName="贸易合同号"/>
+			<col name="tradingContractTotalAmount" displayName="贸易合同总金额"/>
+			<col name="internationalBankNum" displayName="银行国际业务编号"/>
+			<col name="acceptingBankName" displayName="信用证承兑行名称"/>
+			<col name="forfaitingSpecies" displayName="福费廷种类" dictTypeId="XD_SXCD1187"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_eap_dtl" displayName="34-出口代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeEapDtl" displayName="34-出口代付明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_eap_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="invoiceNo" displayName="发票号"/>
+			<col name="invoiceCurrency" displayName="发票币种" dictTypeId="CD000001"/>
+			<col name="invoiceAmount" displayName="发票金额"/>
+			<col name="collectionBizno" displayName="托收业务编号"/>
+			<col name="letterCreditNo" displayName="信用证编号"/>
+			<col name="letterCreditAmount" displayName="信用证金额" />
+			<col name="letterCreditCurrency" displayName="信用证币种" dictTypeId="CD000001"/>
+			<col name="letterCreditDreceiptNo" displayName="信用证交单编号"/>
+			<col name="letterCreditDreceiptAmount" displayName="信用证交单金额"/>
+			<col name="exportCreditType" displayName="出口代付类型" dictTypeId="XD_SXCD8023"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_sgp_dtl" displayName="35-保付加签明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeSgpDtl" displayName="35-保付加签明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_sgp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="issuedCurrency" displayName="签发币种" dictTypeId="CD000001"/>
+			<col name="issuedAmount" displayName="签发金额"/>
+			<col name="issuedDate" displayName="签发日"/>
+			<col name="issuedEndDate" displayName="到期日"/>
+			<col name="perAvalUse" displayName="保付受益人"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_pep_dtl" displayName="36-同业代付明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveePepDtl" displayName="36-同业代付明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_pep_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_frp_dtl" displayName="37-出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeFrpDtl" displayName="37-出资参与明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_frp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcGoodsname" displayName="信用证项下货物名称"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="negotiationAmount" displayName="议付金额"/>
+			<col name="negotiationAmountCurrency" displayName="议付金额币种" dictTypeId="CD000001"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_nfrp_dtl" displayName="38-不出资参与明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeNfrpDtl" displayName="38-不出资参与明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_nfrp_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="riskProportion" displayName="参与比例"/>
+			<col name="riskProportionAmount" displayName="参与金额"/>
+			<col name="benefitName" displayName="受益人名称"/>
+			<col name="riskProportionDate" displayName="参与日期"/>
+			<col name="riskProEnddate" displayName="到期日期"/>
+			<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_lcc_dtl" displayName="39-信用证保兑明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeLccDtl" displayName="39-信用证保兑明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_lcc_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+		<col name="lcNo" displayName="信用证编号"/>
+			<col name="lcAmount" displayName="信用证金额"/>
+			<col name="lcOverflowProportion" displayName="信用证溢装比例"/>
+			<col name="lcDeadlineType" displayName="信用证期限类型" dictTypeId="XD_SXCD1125"/>
+			<col name="benefitName" displayName="受益人名称" />
+			<col name="lcStartDate" displayName="信用证开证日期"/>
+			<col name="lcEndDate" displayName="信用证到期日期"/>
+			<col name="lcFinancingType" displayName="信用证项下融资类型" dictTypeId="XD_SXCD1126"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_gto_dtl" displayName="41-保函转开明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeGtoDtl" displayName="41-保函转开明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_gto_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="guaranteeFormat" displayName="保函格式" dictTypeId="XD_SXCD1128"/>
+			<col name="guaranteeType" displayName="保函类型" dictTypeId="CDXY0153"/>
+			<col name="guaranteeAddress" displayName="保函有效地"/>
+			<col name="guaranteeBenefitName" displayName="保函受益人"/>
+			<col name="parmentCycle" displayName="付款期限" />
+			<col name="cycleUnit" displayName="期限单位" dictTypeId="XD_GGCD6009"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_glease_dtl" displayName="42-黄金租赁明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeGleaseDtl" displayName="42-黄金租赁明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_glease_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="goldWeigth" displayName="黄金重量（千克）"/>
+			<col name="rentalPurposes" displayName="租赁用途说明" />
+			<col name="goodsProperty" displayName="货物属性"/>
+			<col name="extractTreasury" displayName="提金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="leaseType" displayName="租赁品种" />
+			<col name="returnTreasury" displayName="还金金库" dictTypeId="XD_SXCD8021"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_operate_dtl" displayName="06-经营性物业贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeOperateDtl" displayName="06-经营性物业贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_operate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="propertyType" displayName="物业类型" dictTypeId="XD_SXCD1176"/>
+			<col name="directReplacementEstateLoan" displayName="是否为直接替换房地产开发贷款" dictTypeId="XD_0002"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_realestate_dtl" displayName="07-房地产开发贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeRealestateDtl" displayName="07-房地产开发贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_realestate_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="estimatePersonLoanAmount" displayName="预计开发项目中我行可做个人按揭贷款的金额"/>
+			<col name="ordinaryHousingLoan" displayName="是否普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="lsApartmentHoursingLoan" displayName="是否中小户型普通商品住房开发贷" dictTypeId="XD_0002"/>
+			<col name="capital" displayName="资本金" dictTypeId="XD_KHCD0178"/>
+			<col name="firstYearRepayment" displayName="首次还款年份"/>
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_construction_dtl" displayName="43-基本建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeConstructionDtl" displayName="43-基本建设贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_construction_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_assets_dtl" displayName="44-固定资产贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeAssetsDtl" displayName="44-固定资产贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_assets_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_cityconstru_dtl" displayName="45-城镇建设贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeCityconstruDtl" displayName="45-城镇建设贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_cityconstru_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_biz_amapvee_renovation_dtl" displayName="46-技术改造贷款明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeRenovationDtl" displayName="46-技术改造贷款明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_renovation_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		
+		<!--<table name="tb_biz_amapvee_project_dtl" displayName="项目信息额度批复">-->
+	
+		<!--<table name="tb_biz_amapvee_billpsd_dtl" displayName="47-信用证项下出口押汇明细额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBillpsdDtl" displayName="47-信用证项下出口押汇明细额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_billpsd_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="lcGoodsname" displayName="信用证项下货物名称" />
+			<col name="lcNo" displayName="信用证编号" />
+			<col name="negotiationZmountCurrency" displayName="议付币种" dictTypeId="CD000001"/>
+			<col name="negotiationAmount" displayName="议付金额" />
+			<col name="issuingBank" displayName="开证银行" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		<!--<table name="tb_boz_amapvee_jyq_dtl" displayName="假远期信用证融资额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeJyqDtl" displayName="假远期信用证融资额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_boz_amapvee_jyq_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		<!--<table name="tb_biz_amapvee_bgdk_dtl" displayName="并购贷款额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapveeBgdkDtl" displayName="并购贷款额度批复">
+			<sql>select * from tb_biz_peers_apply t,tb_biz_peers_amount_approve ta,TB_BIZ_PEERS_AMOUNT_APVDTL tb,tb_biz_amapvee_bgdk_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="applyDetailId" displayName="主键" />
+			<col name="bgType" displayName="并购方式"  dictTypeId="XD_SXCD8020"/>
+			<col name="bgAmt" displayName="并购交易金额" />
+			<col name="bgCust" displayName="被并购方" />
+			<col name="approveDetailId" displayName="授信批复额度ID" />
+		</table>
+		
+		<!--<table name="tb_biz_amapv_project_dtl" displayName="项目信息额度批复">-->
+		<table name="com.bos.dataset.biz.TbBizAmapvProjectDtl" displayName="项目信息额度批复">
+			<sql>select * from tb_biz_apply t,tb_biz_amount_approve ta,tb_biz_amount_appdetail tb,tb_biz_amapv_project_dtl tc where t.APPLY_ID=ta.APPLY_ID and ta.amount_id = tb.amount_id and tb.approve_detail_id = tc.approve_detail_id and t.BIZ_NUM=#bizNum#</sql>
+			<!-- 所需记录的字段 -->
+			<col name="projectlId" displayName="项目信息id" />
+			<col name="applyDetailId" displayName="申请明细Id" />
+			<col name="projectName" displayName="项目名称"/>
+			<col name="projectTotalAmt" displayName="项目总投资"/>
+			<col name="careerMyamt" displayName="自有资金"/>
+			<col name="projectApproveFile" displayName="立项批文"/>
+			<col name="projectAddress" displayName="项目地点"/>
+			<col name="projectPledge" displayName="项目四证" dictTypeId="XD_SXCD1184"/>
+			<col name="currencyCd" displayName="币种" dictTypeId="CD000001"/>
+			<col name="projectStartDate" displayName="项目开工日"/>
+			<col name="projectEndDate" displayName="项目竣工日" />
+			<col name="isFinancialDiscount" displayName="是否财政贴息" dictTypeId="XD_0002"/>
+			<col name="approvalDocumentNum" displayName="批文文号"/>
+			<col name="planningPermitNo" displayName="规划许可证编号"/>
+			<col name="constructionLandPermitNum" displayName="建设用地许可证编号"/>
+			<col name="eiaPermitNum" displayName="环评许可证编号"/>
+			<col name="constructionPermitNum" displayName="施工许可证编号"/>
+			<col name="oterPermit" displayName="其他许可证"/>
+			<col name="otherPermitNum" displayName="其他许可证编号"/>
+			<col name="projectFile" displayName="项目立项文件"/>
+			<col name="projectType" displayName="项目类型" dictTypeId="XD_KHCD8011"/>
+			<col name="projectLoanType" displayName="项目贷款类型标识" dictTypeId="XD_SXCD8010"/>
+			<col name="partyId" displayName="参与人ID"/>
+			<col name="createTime" displayName="创建时间"/>	
+			<col name="updateTime" displayName="更新时间" />
+			<col name="approveDetailId" displayName="授信批复额度ID"/>
+		</table>
+		
+	</snapshot>
+</trades>

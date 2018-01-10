@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+	    <result column="PARTY_ID" javaType="string" property="partyId"/>
+	    <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+	    <result column="PARTY_NAME" javaType="string" property="partyName"/>
+	    <result column="CERT_TYPE" javaType="string" property="certType"/>
+	    <result column="CERT_NUM" javaType="string" property="certNum"/>
+	    <result column="MIDDLE_CODE" javaType="string" property="middleCode"/>
+	    <result column="PARTY_TYPE_CD" javaType="string" property="partyTypeCd"/>
+	    <result column="ORG_REGISTER_CD" javaType="string" property="orgRegisterCd"/>
+	    <result column="REGISTR_CD" javaType="string" property="registrCd"/>
+	   	<result column="UNIFY_SOCIETY_CREDIT_NUM" javaType="string" property="unifySocietyCreditNum"/>
+	   	<result column="USER_NUM" javaType="string" property="userNum"/>	    
+	    <result column="ORG_NUM" javaType="string" property="orgNum"/>
+	</resultMap>
+	
+	<resultMap class="java.util.HashMap" id="resultNatureMap">
+	    <result column="PARTY_ID" javaType="string" property="partyId"/>
+	    <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+	    <result column="PARTY_NAME" javaType="string" property="partyName"/>
+	    <result column="CERT_TYPE" javaType="string" property="certType"/>
+	    <result column="CERT_NUM" javaType="string" property="certNum"/>
+	    <result column="MIDDLE_CODE" javaType="string" property="middelCode"/>
+	    <result column="PARTY_TYPE_CD" javaType="string" property="partyTypeCd"/>
+	    <result column="USER_NUM" javaType="string" property="userNum"/>	    
+	    <result column="ORG_NUM" javaType="string" property="orgNum"/>
+	 </resultMap>
+
+	
+	<!--抵质押人为对自然人引入对公客户时-->
+	<select id="importNatureCusVSCom" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.user_num,v.org_num,v.MIDDLE_CODE,v.unify_Society_Credit_Num,v.PARTY_TYPE_CD,con.ORG_REGISTER_CD,con.REGISTR_CD
+			 from TB_CSM_MANAGEMENT_TEAM mt,V_CSM_PARTY v ,TB_CSM_CORPORATION con
+			 where mt.USER_NUM = #curUserNum# 
+			 and mt.ORG_NUM = #orgcode#    
+			 and v.PARTY_ID=con.PARTY_ID
+	    	 and mt.PARTY_ID in(select orp.RELATIVEID_PARTY_ID from TB_CSM_NATURAL_RELATIVE orp where orp.PARTY_ID=#partyId#)
+	    	 and v.PARTY_ID=mt.PARTY_ID 
+	    	 and v.PARTY_TYPE_CD='01'
+    		<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--抵质押人为对自然人引入自然人时-->
+	<select id="importNatureCusVSNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+select * from (
+			select  v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD ,v.user_num,v.org_num
+			from V_CSM_PARTY v where v.party_id=#partyId#
+			union all
+	    	select distinct v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD ,v.user_num,v.org_num
+            FROM TB_CSM_NATURAL_RELATIVE T
+              LEFT JOIN TB_CSM_NATURAL_PERSON T1 ON T1.PARTY_ID = T.RELATIVEID_PARTY_ID
+              LEFT JOIN V_CSM_PARTY v ON v.PARTY_ID = T.RELATIVEID_PARTY_ID
+              left join TB_CSM_MANAGEMENT_TEAM m on m.PARTY_ID=v.PARTY_ID
+              WHERE T.PARTY_ID =#partyId#
+              and v.PARTY_TYPE_CD='02'
+              and m.USER_NUM = #curUserNum#
+              ) v where 1=1
+    		<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--共同借款人为对自然人引入自然人时-->
+	<select id="importCommonNatureCusVSNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+	    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD ,v.user_num,v.org_num
+            FROM TB_CSM_NATURAL_RELATIVE T
+              LEFT JOIN TB_CSM_NATURAL_PERSON T1
+                ON T1.PARTY_ID = T.RELATIVEID_PARTY_ID
+              LEFT JOIN V_CSM_PARTY v
+                ON v.PARTY_ID = T.RELATIVEID_PARTY_ID
+                left join TB_CSM_MANAGEMENT_TEAM m
+                on m.PARTY_ID=v.PARTY_ID
+                 WHERE T.PARTY_ID =#partyId#
+                 and v.PARTY_TYPE_CD='02'
+                 and m.USER_NUM = #curUserNum#
+    		<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--抵质押人为对公 引入对公客户时-->
+	<select id="importComVSCom" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.unify_Society_Credit_Num,v.PARTY_TYPE_CD ,
+    	con.ORG_REGISTER_CD,con.REGISTR_CD,v.user_num,v.org_num
+            from V_CSM_PARTY v,TB_CSM_MANAGEMENT_TEAM mt,TB_CSM_CORPORATION con
+	    	where v.PARTY_ID=mt.PARTY_ID 
+             and v.PARTY_ID=con.PARTY_ID
+	    	and mt.ORG_NUM = #orgcode# 
+	    	and mt.USER_NUM=#curUserNum#  
+	    	and v.PARTY_TYPE_CD='01'
+    		<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--抵质押人为对公 引入自然人客户时-->
+	<select id="importComVSNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD ,v.user_num,v.org_num
+            from V_CSM_PARTY v,TB_CSM_MANAGEMENT_TEAM mt
+	    	where v.PARTY_ID=mt.PARTY_ID 
+	    	and mt.ORG_NUM = #orgcode# 
+	    	and mt.USER_NUM=#curUserNum#  
+	    	and v.PARTY_TYPE_CD='02'
+    		<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--引入保证人 :保证人为自然人时可以引入(自然人)拥有管护权和业务权的借款关系人全行的关系人 -->
+	<!-- modi by shangmf:20171018:增加法人标识，各自只能查到自己的客户 -->
+     <select id="importbzrNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD,v.user_num,v.org_num
+			from V_CSM_PARTY v
+			where  v.PARTY_TYPE_CD='02'
+			and v.org_num in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# )
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--引入保证人 :保证人为自然人时可以引入(对公)拥有管护权和业务权的借款关系人全行的关系人 -->
+	<!-- modi by shangmf:20171018:增加法人标识，各自只能查到自己的客户 -->
+     <select id="importbzrComCus" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.user_num,v.org_num,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.unify_Society_Credit_Num,v.PARTY_TYPE_CD,con.ORG_REGISTER_CD,con.REGISTR_CD
+			from V_CSM_PARTY v,TB_CSM_CORPORATION con
+			where v.PARTY_ID=con.PARTY_ID
+            and v.PARTY_TYPE_CD='01'
+            and v.org_num in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# )
+			<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	
+	<!--引入保证人 :保证人为对公时可以引入(自然人)引入全行客户-->
+	<!-- modi by shangmf:20171018:增加法人标识，各自只能查到自己的客户 -->
+     <select id="importbzrComCusNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD,v.user_num,v.org_num
+			from V_CSM_PARTY v
+			where  v.PARTY_TYPE_CD='02'
+			and v.org_num in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# )
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--引入保证人 :保证人为对公时可以引入(对公)引入全行客户 -->
+	<!-- modi by shangmf:20171018:增加法人标识，各自只能查到自己的客户 -->
+     <select id="importbzrComCusComCus" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.user_num,v.org_num,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.unify_Society_Credit_Num,v.PARTY_TYPE_CD,con.ORG_REGISTER_CD,con.REGISTR_CD
+			from V_CSM_PARTY v,TB_CSM_CORPORATION con
+			where v.PARTY_ID=con.PARTY_ID
+            and v.PARTY_TYPE_CD='01'
+            and v.org_num in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# )
+			<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--押品管理 引入客户 拥有管护权和业务权的(对公)-->
+     <select id="importDGList" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.user_num,v.org_num,v.CERT_NUM,v.MIDDLE_CODE,v.unify_Society_Credit_Num,v.PARTY_TYPE_CD,con.ORG_REGISTER_CD,con.REGISTR_CD
+            from V_CSM_PARTY v,TB_CSM_MANAGEMENT_TEAM mt,TB_CSM_CORPORATION con
+	    	where v.PARTY_ID=mt.PARTY_ID 
+            and con.PARTY_ID=v.PARTY_ID
+	    	and mt.ORG_NUM = #orgcode# 
+	    	and mt.USER_NUM=#curUserNum#  
+	    	and v.PARTY_TYPE_CD='01'
+			<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--押品管理 引入客户 拥有管护权和业务权的(自然人)-->
+     <select id="importZRRList" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD,v.user_num,v.org_num
+            from V_CSM_PARTY v,TB_CSM_MANAGEMENT_TEAM mt
+	    	where v.PARTY_ID=mt.PARTY_ID 
+	    	and mt.ORG_NUM = #orgcode# 
+	    	and mt.USER_NUM=#curUserNum#  
+	    	and v.PARTY_TYPE_CD='02'
+			<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--录入权证选择拥有业务权的(对公)客户-->
+     <select id="getComList" parameterClass="java.util.HashMap" resultMap="resultMap">
+			    	select distinct v.party_id,
+			       v.party_num,
+			       v.party_name,
+			       v.cert_type,
+			       v.cert_num,
+			       v.middle_code,
+			       v.unify_society_credit_num,
+			       v.party_type_cd,
+			       con.org_register_cd,
+			       con.registr_cd,
+			       v.user_num,
+			       v.org_num
+			  from v_csm_party v, tb_csm_corporation con
+			 where con.party_id = v.party_id
+			   and v.party_type_cd = '01'
+			   and v.party_id in (select mt.party_id
+                        from tb_csm_management_team mt, om_organization o
+                       where mt.org_num = o.orgcode
+                          <!--and o.orgseq like '%$orgId$%' -->
+                          and o.orgcode in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# ))
+	    	<isNotNull prepend="" property="partyName"> and v.PARTY_NAME like '%$partyName$%'</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> and v.registr_cd  like '%$registrCd$%'</isNotNull>
+	    	<isNotNull prepend="" property="orgRegisterCd"> and v.org_register_cd like '%$orgRegisterCd$%'</isNotNull>
+	</select>
+	
+	<!--录入权证选择拥有业务权的(自然人)客户-->
+     <select id="getNatureList" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+	       select distinct v.party_id,
+	              v.party_num,
+	              v.party_name,
+	              v.cert_type,
+	              v.cert_num,
+	              v.middle_code,
+	              v.party_type_cd,
+	              v.user_num,
+	              v.org_num
+	         from v_csm_party v
+	        where v.party_type_cd = '02'
+	        and v.party_id in (select mt.party_id
+                        from tb_csm_management_team mt, om_organization o
+                       where mt.org_num = o.orgcode
+                        <!-- and o.orgseq like '%$orgId$%') 20171026陈彦妃要求查询全行。此时仅按照法人查询-->
+                        and o.orgcode in ( select om.orgcode from om_organization om where om.leg_org = #legOrg# ) )
+			<isNotNull prepend="" property="certType"> and v.CERT_TYPE=#certType#</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> and v.CERT_NUM=#certNum#</isNotNull>
+	    	<isNotNull prepend="" property="partyName">and v.PARTY_NAME like '%$partyName$%'</isNotNull>
+	</select>
+	
+	<!--引入共有人 :对公引入全行客户信息 -->
+     <select id="importComComCus" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,
+    	v.unify_Society_Credit_Num,v.PARTY_TYPE_CD,con.ORG_REGISTER_CD,con.REGISTR_CD,v.user_num,v.org_num
+			from V_CSM_PARTY v,TB_CSM_CORPORATION con
+			where v.PARTY_ID=con.PARTY_ID
+            and v.PARTY_TYPE_CD='01'
+			<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and con.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="registrCd"> 
+	    		and con.REGISTR_CD=#registrCd#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="unifySocietyCreditNum"> 
+	    		and v.unify_Society_Credit_Num like '%$unifySocietyCreditNum$%'
+	    	</isNotNull>
+	</select>
+	
+	<!--引入共有人:自然人引入全行客户信息-->
+     <select id="importComNatureCus" parameterClass="java.util.HashMap" resultMap="resultNatureMap">
+    	select v.PARTY_ID,v.PARTY_NUM,v.PARTY_NAME,v.CERT_TYPE,v.CERT_NUM,v.MIDDLE_CODE,v.PARTY_TYPE_CD,v.user_num,v.org_num
+			from V_CSM_PARTY v
+			where v.PARTY_TYPE_CD='02'
+			<isNotNull prepend="" property="certType"> 
+	    		and v.CERT_TYPE=#certType#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="certNum"> 
+	    		and v.CERT_NUM=#certNum#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="partyName"> 
+	    		and v.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	</select>
+	
+	<select id="queryAssessOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select b.PARTY_NAME,a.ORG_REGISTER_CD,a.PARTY_ID from TB_CSM_THIRD_PARTY a,V_CSM_PARTY b where a.PARTY_ID=b.PARTY_ID and CORP_CUSTOMER_TYPE_CD='5'
+    		<isNotNull prepend="" property="partyName"> 
+	    		and b.PARTY_NAME like '%$partyName$%'
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="orgRegisterCd"> 
+	    		and a.ORG_REGISTER_CD=#orgRegisterCd#
+	    	</isNotNull>
+	</select>
+	
+	<!--查询借款人所有信息-->
+     <select id="findByPartyId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from V_CSM_PARTY p where p.PARTY_ID=#partyId#
+	</select>
+	
+	<!--是否是专业担保公司-->
+     <select id="isZYDBGS" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 select t.party_id,
+        a.zh,
+        nvl(ta.FDBS, 0) amplify_ind,
+        t.guarant_org_real
+   from tb_crd_third_party_limit t, tb_con_guarant_org_info ta, tb_con_zh a
+  where t.party_id = ta.party_id
+    and ta.contract_id = a.contract_id
+    and t.status_cd = '03'
+    and ta.status_cd = '03'
+	and t.PARTY_ID=#partyId#
+	</select>
+	
+	<!--查询担保公司已用额度-->
+     <select id="comMoney" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select sum(nvl(a.SURETY_AMT, 0)) as useAmt
+  from tb_grt_guarantee_basic a, tb_biz_grt_rel b, tb_biz_approve c
+ where a.surety_id = b.surety_id
+   and b.apply_id = c.apply_id
+   and c.become_effective_mark in ('03', '07')
+   and c.approve_conclusion in ('1', '3')
+   and a.PARTY_ID=#partyId#
+	</select>
+</sqlMap>

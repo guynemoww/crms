@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lipengcheng -->
+<sqlMap>
+ 	<resultMap class="commonj.sdo.DataObject" id="queryHpxxsresult">
+        <result column="apply_detail_id" javaType="string" property="applyDetailId"/>
+        <result column="pye_acct_nm" javaType="string" property="pyeAcctNm"/>
+        <result column="pye_acct_no" javaType="string" property="pyeAcctNo"/>
+        <result column="pye_open_acct_bnk_nm" javaType="string" property="pyeOpenAcctBnkNm"/>
+        <result column="drwe_bnk_nm" javaType="string" property="drweBnkNm"/>
+        <result column="drwe_bnk_adr" javaType="string" property="drweBnkAdr"/>
+        <result column="drwe_bnk_no" javaType="string" property="drweBnkNo"/>
+        <result column="drft_exp_dt" javaType="string" property="drftExpDt"/>
+        <result column="issu_dt" javaType="string" property="issuDt"/>
+        <result column="bill_no" javaType="string" property="billNo"/>
+        <result column="money_use_id" javaType="string" property="moneyUseId"/>
+        <result column="loan_id" javaType="string" property="loanId"/>
+        <result column="loan_amt" javaType="string" property="loanAmt"/>
+        <result column="hpzt" javaType="string" property="hpzt"/>
+        <result column="pjhm" javaType="string" property="pjhm"/>
+    </resultMap>
+    <select id="queryHpxxs" parameterClass="java.util.HashMap" resultMap="queryHpxxsresult">
+	    	select r.money_use_id,
+			       r.loan_id,
+			       r.loan_amt,
+			       r.pye_acct_nm,
+			       r.pye_acct_no,
+			       r.pye_open_acct_bnk_nm,
+			       r.drwe_bnk_nm,
+			       r.drwe_bnk_no,
+			       r.drwe_bnk_adr,
+			       r.drft_exp_dt,
+			       r.issu_dt,
+			       r.bill_no,
+			       r.apply_detail_id,
+			       (case
+			         when nvl(t.summary_status_cd, '03') = '06' then
+			          '撤销'
+			         else
+			          '正常'
+			       end) hpzt,
+			       t.pjhm
+			  from tb_loan_hp_amt r
+			  <!-- left join有啥子用,看不懂  2017-10-26 -->
+			  left join (select b.summary_num, b.summary_status_cd, a.pjhm
+			               from tb_biz_pjxx_apply a, tb_loan_summary b
+			              where a.amount_detail_id = b.summary_id ) t
+			    on r.summary_num = t.summary_num
+			 where r.loan_id =  #loanId# 
+			 <!-- 排序20171113-->
+			 order by r.sort_order
+    </select>
+    
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryTxxxsresult">
+        <result column="apply_detail_id" javaType="string" property="applyDetailId"/>
+        <result column="pye_acct_nm" javaType="string" property="pyeAcctNm"/>
+        <result column="pye_acct_no" javaType="string" property="pyeAcctNo"/>
+        <result column="pye_open_acct_bnk_nm" javaType="string" property="pyeOpenAcctBnkNm"/>
+        <result column="drwe_bnk_nm" javaType="string" property="drweBnkNm"/>
+        <result column="drwe_bnk_adr" javaType="string" property="drweBnkAdr"/>
+        <result column="drwe_bnk_no" javaType="string" property="drweBnkNo"/>
+        <result column="drft_exp_dt" javaType="string" property="drftExpDt"/>
+        <result column="issu_dt" javaType="string" property="issuDt"/>
+        <result column="bill_no" javaType="string" property="billNo"/>
+        <result column="money_use_id" javaType="string" property="moneyUseId"/>
+        <result column="loan_id" javaType="string" property="loanId"/>
+        <result column="loan_amt" javaType="string" property="loanAmt"/>
+        <result column="hpzt" javaType="string" property="hpzt"/>
+    </resultMap>
+     <select id="queryTxxxs" parameterClass="java.util.HashMap" resultMap="queryTxxxsresult">
+	    	select r.money_use_id,
+			       r.loan_id,
+			       r.loan_amt,
+			       r.pye_acct_nm,
+			       r.pye_acct_no,
+			       r.pye_open_acct_bnk_nm,
+			       r.drwe_bnk_nm,
+			       r.drwe_bnk_no,
+			       r.drwe_bnk_adr,
+			       r.drft_exp_dt,
+			       r.issu_dt,
+			       r.bill_no,
+			       r.apply_detail_id,
+			       (case
+			         when nvl(t.summary_status_cd, '03') = '06' then
+			          '撤销'
+			         else
+			          '正常'
+			       end) hpzt
+			  from tb_loan_hp_amt r
+			  left join (select b.summary_num, b.summary_status_cd, a.billno
+			               from tb_biz_txxx_apply a, tb_loan_summary b
+			              where a.amount_detail_id = b.summary_id ) t
+			    on r.summary_num = t.summary_num
+			 where r.loan_id =  #loanId# 
+			<!-- 排序20171113-->
+			 order by r.sort_order
+    </select>
+    
+   <select id="queryLoanOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT * FROM TB_ORG_ACC_REL a LEFT JOIN OM_ORGANIZATION b ON a.ACC_ORG_NO = b.ORGCODE WHERE a.OPR_ORG_NO=#orgCode# and col2=#type#
+   </select>
+   
+   <update id="updateAcceptorbank" parameterClass="java.util.HashMap">
+    	UPDATE 
+    		TB_BIZ_PJXX_APPLY
+    	SET 
+    		ACCEPTORBANKNO = #acceptorbankno#,
+    		ACCEPTORBANKNAME = #acceptorbankname#,
+    		REMITTERBANKNO = #remitterbankno#,
+    		REMITTERBANKNAME = #remitterbankname#
+		WHERE AMOUNT_DETAIL_ID = #amountDetailId# AND HTBH = #contractNum#
+   </update>
+   
+   <select id="queryConYuE" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	   select nvl(sum(r.jjye),0) conyue
+			  from tb_loan_summary r
+			 where r.contract_id = #contractId#
+			   and r.summary_status_cd in ('02', '03')
+    </select>
+    
+     <!-- 保证金比例 -->
+    <select id="queryBzjxx" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	   select sub.BZJBL,sub.BZJJE, m.MARGIN_ACCOUNT, rel.contract_id
+		          from TB_CON_SUBCONTRACT_REL rel,
+		               TB_CON_SUBCONTRACT     sub,
+		               TB_CON_SUB_GRT_REL     r,
+		               TB_GRT_MARGIN          m
+		         where rel.SUBCONTRACT_ID = sub.SUBCONTRACT_ID
+		           and sub.SUBCONTRACT_ID = r.SUBCONTRACT_ID
+		           and sub.SUBCONTRACT_STATUS = '03'
+		           and r.SURETY_ID = m.SURETY_ID
+		           and rel.contract_id = #contractId#
+    </select>
+    
+     <select id="queryPJXX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select * from TB_BIZ_PJXX_APPLY where amount_Detail_Id = #amountDetailId# and htbh = #contractNum# 
+			<isNotNull property="contractId">
+			and contract_Id=#contractId# 
+			</isNotNull>
+    </select>
+     <select id="queryTXXX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select * from TB_BIZ_TXXX_APPLY where amount_Detail_Id = #amountDetailId#
+    </select>
+    
+    <select id="queryLoanInfoAndTXXX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select a.summary_num,b.* from tb_loan_hp_amt a 
+			left join tb_biz_txxx_apply b on a.apply_detail_id = b.apply_detail_id where a.loan_id = #loanId#
+    </select>
+    
+    <select id="queryLoanInfoAndPJXX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select a.summary_num,b.* from tb_loan_hp_amt a 
+			left join tb_biz_pjxx_apply b on a.apply_detail_id = b.apply_detail_id 
+			left join tb_loan_summary d on a.summary_num = d.summary_num
+			where a.loan_id = #loanId#
+			and d.summary_status_cd in ('02','03') 
+			order by a.summary_num
+    </select>
+    
+     <select id="queryForLoanAmt" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select sum(r.loan_amt) AS loan_amt  from tb_loan_hp_amt r where r.loan_id=#loanId#
+    </select>
+     <!-- 汇票总金额 r.HP_BILL_STATUS in('01','02') 已生效-->
+    <select id="queryHPLoanAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select sum(nvl(r.loan_amt,0)) AS loan_amt,sum(nvl(d.summary_amt,0)) AS summary_amt,sum(nvl(d.bzjje,0)) AS bzjje 
+		from tb_loan_hp_amt r 
+		left join tb_loan_summary d
+		on r.summary_num = d.summary_num
+		and d.summary_status_cd in ('02','03') 
+		where  r.loan_id=#loanId#
+    </select>
+    <!-- 汇票信息 a.HP_BILL_STATUS in('01','02') -->
+    <select id="queryHPInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		      select a.summary_num,a.bill_no,b.*,c.*,d.summary_amt,nvl(d.bzjje,0) as bzjje from tb_loan_hp_amt a 
+			left join tb_biz_txxx_apply b on a.apply_detail_id = b.apply_detail_id
+      left join tb_biz_pjxx_apply c on a.apply_detail_id = c.apply_detail_id  
+      left join tb_loan_summary d on a.summary_num = d.summary_num
+      where a.loan_id = #loanId# 
+      and d.summary_status_cd in ('02','03') 
+      order by a.summary_num
+    </select>
+</sqlMap>

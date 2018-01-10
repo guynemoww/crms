@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:xiaoxia -->
+<sqlMap>
+	<!-- 查询借据列表 -->
+    <select id="findBorList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from (
+    	select p.party_id,
+		       p.party_num,
+		       cc.corp_customer_type_cd,
+		       p.party_type_cd,
+		       p.party_name,
+		       cc.english_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       li.loan_id,
+		       li.product_type,
+		       sp.product_name,
+		       ls.summary_id,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.jjye,
+		       ls.begin_date,
+		       ls.end_date,
+		       ci.contract_id,
+		       ci.contract_num,
+		       fc.check_status,
+		       (case
+		         when fc.check_status = '03' then
+		          '是'
+		         else
+		          '否'
+		       end) as finish_des
+		  from tb_loan_info li, tb_loan_summary ls
+		  left join tb_aft_first_check fc on fc.summary_id = ls.summary_id
+		                                 and fc.check_status = '03',
+		 tb_con_contract_info ci, tb_csm_party p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id,
+		  tb_sys_product sp
+		 where li.loan_id = ls.loan_id
+		   and li.contract_id = ci.contract_id
+		   and li.party_id = p.party_id
+		   and li.product_type = sp.product_cd
+		   <!--and li.loan_status = '03'出账状态01-未提交03-已生效-->
+		   and ls.summary_status_cd in ('02','03')<!--借据状态01-未放款02-已放款03-逾期/垫款04-结清-->
+		   and li.user_num = '$userNum$'
+		   and li.org_num = '$orgNum$'
+		   <!--<![CDATA[
+		   		and (sysdate - ls.begin_date) <= 15
+		   ]]>放款后15天-->
+		   <!--and not exists (select 1
+		          from tb_aft_first_check fc
+		         where fc.summary_id = ls.summary_id
+		           and fc.check_status in ('01','02','03'))-->
+ 		 ) a where 1=1 
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+ 		 <!--从提醒列表传来的借据编号-->		 
+ 		 <isNotNull property="receiptNum">  and a.summary_num = '$receiptNum$' </isNotNull>
+ 		 
+	</select>
+	
+	<select id="impeventcusList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from (
+    	select t1.party_id,
+		       t1.party_num,
+ 		       t1.party_type_cd,
+		       t1.party_name,
+            t1.cert_type,
+              ab.jjye,
+		      t1.cert_num,
+          aa.amt 
+		  from V_CSM_PARTY t1, TB_CSM_MANAGEMENT_TEAM t2 ,
+		  (select a.party_id,
+                     sum(c.CREDIT_AMOUNT) amt
+                  from tb_biz_approve        a,
+                       TB_BIZ_AMOUNT_APPROVE c
+               where a.APPROVE_ID = c.APPROVE_ID     
+                 and a.approve_conclusion = '1'
+                 and a.become_effective_mark = '03'
+                group by a.party_id) aa,
+               (select party_id,sum(JJYE) as jjye from TB_LOAN_SUMMARY   where summary_status_cd in ('02', '03') group by  party_id) ab
+		  where t1.PARTY_ID=t2.PARTY_ID and t1.party_id=aa.party_id  and t1.PARTY_ID=ab.PARTY_ID  and t2.USER_NUM='$userNum$'
+ 		 ) a where    1=1
+ 
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+ 		 
+	</select>
+	
+	
+	<!-- 查询借据列表：小贷中心 -->
+	<select id="findBorListSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_id,
+		       p.party_num,
+		       p.party_type_cd,
+		       p.party_name,
+		       np.cert_type,
+		       np.cert_num,
+		       np.middle_code,
+		       li.loan_id,
+		       li.product_type,
+		       li.repay_type,
+		       li.org_num,
+		       li.user_num,
+		       ls.summary_id,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.jjye,
+		       to_char(ls.begin_date,'yyyy-MM-dd') begin_date,
+		       to_char(ls.end_date,'yyyy-MM-dd') end_date,
+		       to_char(sysdate,'yyyy-MM-dd') curr_date,
+		       ci.contract_id,
+		       ci.contract_num
+		  from tb_loan_info          li,
+		       tb_loan_summary       ls,
+		       tb_con_contract_info  ci,
+		       tb_csm_party          p,
+		       tb_csm_natural_person np
+		 where li.loan_id = ls.loan_id
+		   and li.contract_id = ci.contract_id
+		   and li.party_id = p.party_id
+		   and np.party_id = p.party_id
+		   and np.natural_person_type_cd in ('2', '3')
+		   <!--and li.loan_status = '03'出账状态01-未提交03-已生效-->
+		   and ls.summary_status_cd in ('02','03')<!--借据状态01-未放款02-已放款03-逾期/垫款04-结清-->
+		   and exists (select 1
+		          from tb_biz_approve               a,
+		               tb_biz_amount_approve        aa,
+		               tb_biz_amount_detail_approve da
+		         where a.approve_id = aa.approve_id
+		           and aa.amount_id = da.amount_id
+		           and da.amount_detail_id = ci.amount_detail_id
+		           and a.biz_type = '04')
+		   and li.user_num = '$userNum$'
+		   and li.org_num = '$orgNum$'
+		   <!--<![CDATA[
+		   		and (sysdate - ls.begin_date) <= 30
+		   ]]>放款后30天-->
+		   <!--and not exists (select 1
+		          from tb_aft_first_check fc
+		         where fc.summary_id = ls.summary_id)-->
+ 		 <isNotNull property="partyName">  and p.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and np.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and np.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="middleCode">  and np.middle_code = '$middleCode$' </isNotNull>
+ 		 <isNotNull property="summaryNum">  and ls.summary_num = '$summaryNum$' </isNotNull>
+ 		 <!--从提醒列表传来的借据编号-->		 
+ 		 <isNotNull property="receiptNum">  and ls.summary_num = '$receiptNum$' </isNotNull>
+ 		 order by ls.begin_date
+	</select>
+	
+	<!-- 查询检查列表：小贷中心 -->
+	<select id="findFirstCheckListSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_id,
+           p.party_num,
+           p.party_type_cd,
+           p.party_name,
+           (case
+               when p.party_type_cd = '01' then
+                '202'
+               when p.party_type_cd = '02' then
+                np.cert_type
+               else
+                ''
+             end) as cert_type,
+             (case
+               when p.party_type_cd = '01' then
+                cc.org_register_cd
+               when p.party_type_cd = '02' then
+			          np.cert_num
+			         else
+			          ''
+			       end) as cert_num,
+            ls.summary_id,
+           ls.summary_num,
+           ls.summary_amt,
+           ls.loan_id,
+           ls.jjye,
+           to_char(ls.begin_date,'yyyy-MM-dd') begin_date,
+           to_char(ls.end_date,'yyyy-MM-dd') end_date,
+           fc.first_check_id,
+           fc.report_num,
+           fc.report_name,
+           fc.report_des,
+           fc.update_person,
+           fc.update_date,
+           fc.user_num,
+           fc.create_date
+      from tb_aft_first_check    fc,
+           tb_csm_party          p 
+            left join tb_csm_natural_person np on p.party_id = np.party_id  
+            left join tb_csm_corporation cc on p.party_id = cc.party_id,
+           tb_loan_summary       ls
+     where fc.party_id = p.party_id
+        and fc.summary_id = ls.summary_id
+        and fc.update_date is not null 
+		      <isNotNull property="orglevel1"><!--总行用户-->
+			   and fc.org_num in (select o.orgcode from om_organization o)
+		   </isNotNull>
+		   <isNotNull property="orglevel2"><!--分行用户-->
+			   and fc.org_num in (select o.orgcode from om_organization o where o.parentorgid = #currentorgid#)
+		   </isNotNull>
+		   <isNotNull property="orglevel3"><!--支行用户-->
+			   and fc.org_num = #currentorgcode#
+		   </isNotNull>
+		   <isNotNull property="orglevel4"><!--总行小企业信贷中心-->
+			   and fc.org_num in (select o.orgcode from om_organization o where o.orgdegree = '2')
+		   </isNotNull>
+		   <isNotNull property="userNum"> and  fc.user_num = '$userNum$' </isNotNull>
+		   
+ 		 <isNotNull property="partyName">  and p.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="summaryNum">  and ls.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="reportNum">  and fc.report_num = '$reportNum$' </isNotNull>
+ 		 order by ls.begin_date
+	</select>
+	
+	<!--查询是否有在途业务-->
+    <select id="findFlowOnWay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_aft_first_check fc
+			 where fc.check_status in ('01', '02')
+			   and fc.summary_id = #summaryId#
+    </select>
+    
+    <!-- 查询报告信息 -->
+	<select id="findReportInfoSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '对公客户'
+		         else
+		          '自然人'
+		       end) party_type_cd,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         else
+		          np.cert_type
+		       end) cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         else
+		          np.cert_num
+		       end) cert_num,
+		       li.product_type,
+		       pi.product_name,
+		       ls.summary_num,
+		       ls.summary_amt * 0.0001 summary_amt,
+		       ls.summary_amt summary_amt1,
+		       ls.summary_term,
+		       ls.jjye,
+		       to_char(ls.begin_date, 'yyyy-MM-dd') begin_date,
+		       to_char(ls.end_date, 'yyyy-MM-dd') end_date,
+		       ls.cycle_unit,
+		       fc.check_way,
+		       ci.loan_use LOAN_USE1,
+		       fc.loan_use LOAN_USE2,
+		       (case
+		         when fc.is_same = '1' then
+		          '是'
+		         else
+		          '否'
+		       end) is_same,
+		       (case
+		         when fc.is_embezzle = '1' then
+		          '是'
+		         else
+		          '否'
+		       end) is_embezzle,
+		       fc.pay_way,
+		       fc.pay_object,
+		       fc.pay_amt,
+		       to_char(fc.pay_date, 'yyyy-MM-dd') PAY_DATE,
+		       fc.check_result,
+		       to_char(fc.check_date, 'yyyy-MM-dd') CHECK_DATE,
+		       fc.check_place,
+		       fc.check_num,
+		       fc.check_count,
+		       e.empname check_person,
+		       fc.is_small
+		  from tb_aft_first_check   fc,
+		       tb_loan_summary      ls,
+		       tb_loan_info         li,
+		       tb_con_contract_info ci,
+		       tb_csm_party         p
+		  left join tb_csm_natural_person np on p.party_id = np.party_id
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id,
+		 tb_biz_product_info pi,om_employee e 
+		 where fc.summary_id = ls.summary_id
+		   and ls.loan_id = li.loan_id
+		   and fc.contract_id = ci.contract_id
+		   and fc.party_id = p.party_id
+		   and li.product_type = pi.product_cd
+		   and fc.check_person = e.empcode
+		   and fc.first_check_id = '$checkId$'
+	</select>
+	
+	<select id="queryMoneyUse" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select rownum,t.money_use_id,t.pay_use,t.pay_object,to_char(t.pay_time,'yyyy-mm-dd') as pay_time ,
+			t.apply_amount,t.is_fit_deal,
+				  (CASE
+			         WHEN t.is_fit_deal = '1' THEN
+			          '是'
+			         ELSE
+			          '否'
+			       END) is_fit,ta.party_name
+			 from tb_loan_money_use t,tb_csm_party ta
+			where t.party_id=ta.party_id
+			  and t.party_id= '$partyId$'
+    </select>
+</sqlMap>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <!--  查询地区及上级名称 -->
+    <select id="queryDistrictNames" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+with pa(dictid,dictname,parentid,rank) as (
+select dictid,dictname,parentid,rank from tb_pub_district d where d.dictid=#dictid#
+union all
+select d2.dictid,d2.dictname,d2.parentid,d2.rank from tb_pub_district d2, pa where d2.dictid=pa.parentid
+)
+select listagg(dictname, ',')  within GROUP (order by dictid desc) dictname from (select * from pa order by rank ) 
+
+	]]></select>
+	    <!--  查询地区及上级名称 -->
+    <select id="queryDistrictNamesEcif" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+with pa(dictid,dictname,parentid,rank) as (
+select dictid,dictname,parentid,rank from tb_pub_district_ecif d where d.dictid=#dictid#
+union all
+select d2.dictid,d2.dictname,d2.parentid,d2.rank from tb_pub_district_ecif d2, pa where d2.dictid=pa.parentid
+)
+select listagg(dictname, ',')  within GROUP (order by dictid desc) dictname from (select * from pa order by rank ) 
+
+	]]></select>
+</sqlMap>

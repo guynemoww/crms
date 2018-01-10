@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:fjh com.bos.aft.queryFlowIsExist.queryNorExistFlow-->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="smExistFlow">
+        <result column="existCount" property="existCount"/>
+    </resultMap>
+    <select id="querySMExistFlow" parameterClass="java.util.HashMap" resultMap="smExistFlow">
+		SELECT
+		    count(*) as existCount
+		FROM
+		    TB_AFT_LOAN_INSPECT ts
+		
+		WHERE
+		    1=1
+		<isNotNull property="partyId">
+		AND ts.PARTY_ID = #partyId# 
+		</isNotNull>
+		AND  ts.INSPECT_STATE &lt; 3   <!--&lt; 转义字符 表示< -->
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="norExistFlow">
+        <result column="existCount" property="existCount"/>
+    </resultMap>
+    <select id="queryNorExistFlow" parameterClass="java.util.HashMap" resultMap="norExistFlow">
+		SELECT
+		    count(ta.ALC_INFO_ID) as existCount
+		FROM
+		    TB_AFT_LOAN_CHECK_CUST_INFO ta
+		
+		WHERE
+		    1=1
+		<isNotNull property="partyId">
+		AND ta.PARTY_ID = #partyId# 
+		</isNotNull>
+		AND  ta.STATUS &lt; 3    <!-- 转义字符 表示 > -->
+		AND  ta.INSPECT_TYPE=2
+    </select>
+    <!--lizhi-->
+    <resultMap class="commonj.sdo.DataObject" id="norExistFlow1">
+        <result column="existCount" property="existCount"/>
+    </resultMap>
+    <select id="queryNorExistFlowEdit" parameterClass="java.util.HashMap" resultMap="norExistFlow1">
+		SELECT
+		    count(ta.ALC_INFO_ID) as existCount
+		FROM
+		    TB_AFT_LOAN_CHECK_CUST_INFO ta
+		
+		WHERE
+		    1=1
+		<isNotNull property="partyId">
+		AND ta.PARTY_ID = #partyId# 
+		</isNotNull>
+		AND  ta.STATUS &lt; 3
+		AND  ta.INSPECT_TYPE=1
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryNorExistReport">
+        <result column="existCount" property="existCount"/>
+    </resultMap>
+    <select id="queryNorExistReport" parameterClass="java.util.HashMap" resultMap="norExistFlow1">
+	 
+		SELECT
+		    count(1) as existCount
+		FROM
+		    tb_aft_smb_inspect_detail ta
+		
+		WHERE
+		    ( ta.INSPECT_STATE != 4 or ta.INSPECT_STATE != 0 )
+		<isNotNull property="partyId">
+		AND ta.PARTY_ID = #partyId# 
+		</isNotNull>
+		
+		
+	   
+	 </select>
+</sqlMap>

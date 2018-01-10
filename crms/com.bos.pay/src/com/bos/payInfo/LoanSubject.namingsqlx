@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <select id="getLoanSummary" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select months_between(t.END_DATE,t.BEGIN_DATE) as m
+			from tb_loan_info t 
+			where t.loan_id=#loanId#
+    </select>
+    <!--之前的垫款处理备份-->
+    <select id="getDkListBackUp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.advamt,
+		       a.tradearea || a.tradeorg orgCode,
+		       a.tradearea,
+		         a.tradeorg,
+		         a.tradedate,
+		         a.advaccnum,
+		         c.end_date,
+		         a.billnum,
+		         c.summary_id,
+		         a.contractnum
+		    from tb_loan_diankuan  a,
+		         tb_biz_pjxx_apply b,
+		         tb_loan_summary   c,
+		         tb_con_contract_info d
+		   where a.billnum = b.pjhm
+		     and c.summary_id = b.amount_detail_id
+		     and d.contract_id = c.contract_id
+		     and c.summary_status_cd = '02'
+		     and nvl(a.dealflag,'1') = '1'
+    </select>
+    <!--新的垫款处理-->
+    <select id="getDkList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	  select 
+	   a.seqnum,
+	   a.tradedate,
+       a.tradeorg,
+       a.summary_num,
+       a.accagrnum,
+       a.ywbh,
+       a.advaccnum,
+       a.advaccname,
+       a.advorg,
+       a.payaccnum,
+       a.payaccname,
+       a.payacctype,
+       a.payorg,
+       a.advamt,
+       a.dealflag,
+       a.msg,
+       case when a.currency = '01' then 'CNY'
+            when a.currency = '38' then 'EUR'
+            when a.currency = '12' then 'GBP'
+            when a.currency = '13' then 'HKD'
+            when a.currency = '27' then 'JPY'
+            when a.currency = '14' then 'USD'
+            else '不支持的币种'
+            end currency,
+       case when substr(a.advfilename,3,3)='PDK' then '票据垫款'
+            when substr(a.advfilename,3,3)='GDK' then '国结垫款'
+            else '未知类型'
+            end advtype,
+       c.contract_id, 
+       c.party_id,     
+       c.contract_num      
+    from tb_core_diankuan  a 
+    left join tb_loan_summary b
+    on a.summary_num = b.summary_num
+    left join tb_con_contract_info c    
+    on b.contract_id = c.contract_id                
+    where 1 = 1
+	<isNotNull property="contractNum">  AND c.contract_num = #contractNum# </isNotNull>
+	<isNotNull property="summaryNum">  AND a.summary_num = #summaryNum# </isNotNull>
+    <isNotNull property="dealFlag">  AND a.dealflag = #dealFlag# </isNotNull>
+	<isNotNull property="dateBegin">  AND a.tradedate &gt;= to_char(to_date(#dateBegin#,'yyyy-MM-dd HH24:MI:ss'),'yyyyMMdd')</isNotNull>
+	<isNotNull property="dateEnd">  AND a.tradedate &lt;= to_char(to_date(#dateEnd#,'yyyy-MM-dd HH24:MI:ss'),'yyyyMMdd') </isNotNull>
+    </select>
+    <update id="updateHpEndDate" parameterClass="java.util.Map" >
+    	<!-- 银承纸票更新起始日期和到期日期, 电票不更新 -->
+		merge into tb_loan_hp_amt a
+		using (
+			select x.loan_id,x.begin_date, x.end_date from tb_loan_info x 
+			where x.loan_id = #loanId# and x.product_type like '01008%' and x.pjzl = '01'
+		) b on (a.loan_id = b.loan_id)
+		when matched then 
+			update set a.issu_dt=b.begin_date,a.drft_exp_dt=b.end_date
+	</update>
+	
+	
+	<select id="getHkjhsByLoanId" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.pay.TbLoanRepayPlan">
+		select repay_plan_id repayPlanId,
+			   repay_date repayDate,
+			   repay_amt repayAmt,
+			   periods_number periodsNumber,
+			   create_time createTime,
+			   update_time updateTime,
+			   contract_id contractId,
+			   loan_id loanId
+ 		  from tb_loan_repay_plan 
+		  where loan_id =#loanId#  order by repay_Date
+    </select>
+    
+     <select id="getZhsByLoanId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    <![CDATA[
+			select l.settle_accno zh1,
+			       p.party_name zhm1,
+			       l.deposit_accno_one zh2,
+			       l.deposit_accname_one zhm2,
+			       b.pay_direction payDirection,
+			       l.deposit_acc_org_one orgone,
+			       i.loan_amt,
+			       i.loan_status loanstatus,
+			       nvl(l.deposit_percent_one * i.loan_amt / 100,0) amt2,
+			       nvl(i.loan_amt * (1 - l.deposit_percent_one / 100),0) amt1
+			  from tb_con_contract_info         r,
+			       tb_loan_info                 i,
+			       tb_biz_amount_detail_approve t,
+			       tb_biz_amount_apply          c,
+			       tb_biz_xmxx_apply            b,
+			       tb_crd_third_party_limit     l,
+			       tb_csm_party                 p
+			 where r.amount_detail_id = t.amount_detail_id
+			   and i.contract_id = r.contract_id
+			   and t.amount_id = c.amount_id
+			   and c.apply_id = b.amount_detail_id
+			   and b.project_id = l.limit_id
+			   and l.party_id = p.party_id
+			   and i.loan_id = #loanId#
+		]]>
+	</select>
+	<select id="getZkflx" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 <![CDATA[
+		select count(1) c
+		  from tb_loan_info         r,
+		       tb_con_contract_info t,
+		       tb_biz_xmxx_apply    a,
+		       tb_csm_project_realty p
+		 where r.contract_id = t.contract_id
+		   and t.amount_detail_id = a.amount_detail_id
+		   and p.project_id = a.project_id
+		   and p.live_dev_area>=p.build_scale
+		   and r.loan_id =  #loanId#
+		   ]]>
+    </select>
+    <!-- 业务时关联的受托支付信息 -->
+	<select id="getLoanStzfxx" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 <![CDATA[
+		select x.relate_id,c.contract_id
+		  from tb_biz_amount_apply          r,
+		       tb_biz_amount_detail_approve t,
+		       tb_con_contract_info         c,
+		       tb_biz_xmxx_apply            x
+		 where r.apply_id = x.amount_detail_id
+		   and r.amount_id = t.amount_id
+		   and t.amount_detail_id = c.amount_detail_id
+		   and c.contract_id =  #contractId#
+		   ]]>
+    </select>
+    <!-- 根据loanid查询是否有受托支付账户信息 -->
+	<select id="getLoanOwnAccount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 <![CDATA[
+		select *
+		  from tb_loan_stzf f
+		 where f.loan_id=#loanId#
+		   ]]>
+    </select>
+</sqlMap>

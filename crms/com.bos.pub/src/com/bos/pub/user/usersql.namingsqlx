@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="selectUserMap">
+        <result column="EMPID"  property="userId"/>
+        <result column="USERID"  property="userNum"/>
+        <result column="EMPNAME"  property="userName"/>
+        <result column="ORGID"  property="orgId"/>
+        <result column="ORGCODE"  property="orgNum"/>
+        <result column="ORGNAME"  property="orgName"/>
+    </resultMap>
+    <select id="selectUser" parameterClass="java.util.Map" resultMap="selectUserMap">
+SELECT e.EMPID,e.USERID,e.EMPNAME,o.ORGID,o.ORGCODE,o.ORGNAME FROM OM_EMPORG eo 
+INNER JOIN OM_EMPLOYEE e ON e.EMPID=eo.EMPID
+INNER JOIN OM_ORGANIZATION o ON o.ORGID=eo.ORGID
+WHERE 1=1
+<isNotNull property="userNum"> AND e.USERID = #userNum#</isNotNull>
+<isNotNull property="orgId"> AND o.ORGID = #orgId#</isNotNull>
+<isNotNull property="orgNum"> AND o.ORGCODE = #orgNum#</isNotNull>
+<isNotNull property="legOrg"> AND o.LEG_ORG = #legOrg#</isNotNull>
+<isNotNull property="roles">
+AND EXISTS (SELECT 1 FROM AC_OPERATORROLE pr WHERE pr.OPERATORID=e.OPERATORID AND pr.ROLEID IN
+<iterate property="roles" open="(" close=")" conjunction=",">#roles[]#</iterate>
+)
+</isNotNull>
+<isNotNull property="userName"> AND e.EMPNAME LIKE '%'||#userName#||'%'</isNotNull>
+    </select>
+
+</sqlMap>

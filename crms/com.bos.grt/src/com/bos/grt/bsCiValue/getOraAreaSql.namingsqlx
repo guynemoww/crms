@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:smf -->
+<sqlMap>
+    <select id="queryOrgArea" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+    	 select area from om_organization where orgcode=#orgNum#
+    	]]>
+	</select>
+	
+	<select id="queryOrgParentLevel" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		<![CDATA[
+	    	 with parentOrg(parentorgid,orgid,orgcode,orgname,orglevel) as
+			(select parentorgid, orgid,orgcode,orgname,orglevel from om_organization where orgcode =#orgNum#
+			union all
+			select o.parentorgid, o.orgid,o.orgcode,o.orgname,o.orglevel
+			from parentOrg p, om_organization o
+			where p.parentorgid = o.orgid)
+			select * from parentOrg order by orglevel desc
+    	]]>
+	</select>
+	
+</sqlMap>

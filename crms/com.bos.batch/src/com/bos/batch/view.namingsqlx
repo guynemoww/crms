@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi -->
+<sqlMap>
+   <resultMap class="commonj.sdo.DataObject" id="resultMap">
+    	<result column="SERIALNO"  property="serialno"/>
+    	<result column="SUBJECTNO"  property="subjectno"/>
+    	<result column="DUESUBJECTNO"  property="duesubjectno"/>
+    	<result column="SUBJECTNAME"  property="subjectname"/>
+    	<result column="ORGNAME"  property="orgName"/>
+    	<result column="BUSINESSCURRENCY"  property="businesscurrency"/>
+    	<result column="OCCURDATE"  property="occurdate"/>
+    	<result column="MFBALANCE"  property="mfbalance"/>
+    	<result column="BALANCE"  property="balance"/>
+    	<result column="STATE"  property="state"/>
+    	<result column="BALANCETYPE"  property="balancetype"/>
+    	<result column="ORG_NUM"  property="orgNum"/>
+    </resultMap>
+	<!--总分对账查询 支持模糊查询-->
+     <select id="show" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="resultMap">
+   select 
+            cb.SERIALNO
+    	  ,cb.subjectno
+    	  ,cb.duesubjectno
+    	  ,cb.businesscurrency,
+    	  cb.occurdate,
+    	   cb.mfbalance,
+    	   cb.balance,
+    	   cb.state,
+    	   cb.balancetype,
+    	   cb.ORG_NUM,
+    	   (select subjectname from (
+				select distinct si.subjectname,row_number() over (order by si.subjectname) as mm 
+				from tb_batch_subject_info si, TB_BATCH_CHECK_BALANCE cb  where si.subjectno = cb.subjectno )) as subjectname,
+    	   (select orgname from OM_ORGANIZATION where orgcode=(select orgcode from (select orgcode ,row_number() over (order by orglevel) as mm from OM_ORGANIZATION,TB_BATCH_CHECK_BALANCE cb where PAYMENTSYSNO=cb.ORG_NUM) where mm = 1)) orgname
+from TB_BATCH_CHECK_BALANCE cb  where 
+cb.ORG_NUM in (select distinct PAYMENTSYSNO from OM_ORGANIZATION   where  ORGSEQ  like '%'|| (
+  select 
+      case when buno='1' then 
+         substr(orgseq,1,length(orgseq)-6) 
+     else  
+       orgseq 
+      end orgseq
+    from OM_ORGANIZATION where orgid= #orgid# )
+    ||'%') 
+   		 <isNotNull property="subjectno">
+          and cb.subjectno like '%$subjectno$%'
+    	</isNotNull>
+    	<isNotNull property="errordescribe">
+         and cb.ORG_NUM in (select ORGCODE from OM_ORGANIZATION where ORGNAME like '%$errordescribe$%')
+    	</isNotNull>
+    	<isNotNull property="businesscurrency">
+         and cb.businesscurrency=#businesscurrency#
+    	</isNotNull>
+    	<isNotNull property="occurdate">
+          and cb.occurdate=#occurdate#
+    	</isNotNull>
+    	<isNotNull property="state">
+          and cb.state=#state#
+    	</isNotNull>
+    	<isNotNull property="balancetype">
+          and cb.balancetype=#balancetype#
+    	</isNotNull>
+    	order by cb.occurdate desc
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="resultMap1">
+    	<result column="SUBJECTNO" property="subjectno"/>
+    	<result column="MAINORGID"  property="mainorgid"/>
+    	<result column="CURRENCY"  property="currency"/>
+    	<result column="SERIALNO"  property="serialno"/>
+    	<result column="BALANCE"  property="balance"/>
+    	<result column="BUSINESSSUM"  property="businesssum"/>
+    	<result column="ADVANCEFLAG"  property="advanceflag"/>
+    	<result column="SUBJECTNAME"  property="subjectname"/>
+    </resultMap>    
+     <select id="showDetail" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="resultMap1">
+    select bd.subjectno,si.subjectname,bd.mainorgid,bd.currency,bd.serialno,
+    	   bd.balance,bd.businesssum,bd.advanceflag 
+    from tb_batch_business_duebill bd
+   		 <isNotNull property="subjectno">
+          and bd.subjectno=#subjectno#
+    	</isNotNull>
+    	<isNotNull property="mainorgid">
+         and bd.mainorgid=#mainorgid#
+    	</isNotNull>
+    	<isNotNull property="currency">
+         and bd.currency=#currency#
+    	</isNotNull>
+    </select>
+</sqlMap>
+

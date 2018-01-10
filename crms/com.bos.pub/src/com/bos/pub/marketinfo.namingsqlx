@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+	<select id="selectMarketInfo" parameterClass="com.bos.pub.sys.TbPubMarketInfo"
+    	resultClass="com.bos.pub.sys.TbPubMarketInfo">
+	select t.info_id,
+       t.info_title,
+       t.info_content,
+       t.info_type,
+       t.info_range_cd,
+       t.info_status,
+       t.org_num,
+       t.user_num,
+       to_char(t.create_time, 'yyyy-mm-dd hh24:mi:ss') create_time
+  from TB_PUB_MARKET_INFO t
+ where 1=1 
+ 	<isNotNull property="superadmin">
+			and	t.org_num = #orgNum#  and t.user_num = #userNum#  
+	  </isNotNull>
+ 
+		<isNotEmpty prepend="" property="infoStatus"> 
+				and t.info_status = #infoStatus#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoType"> 
+				and t.info_type = #infoType#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoRangeCd"> 
+				and t.info_range_cd = #infoRangeCd#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoTitle">
+				and t.info_title like '%$infoTitle$%'
+		</isNotEmpty>
+		
+		order by t.create_time desc
+	</select>
+
+    <select id="selectMarketInfos" parameterClass="com.bos.pub.sys.TbPubMarketInfo"
+    	resultClass="com.bos.pub.sys.TbPubMarketInfo">
+	select t.info_id,
+       t.info_title,
+       t.info_content,
+       t.info_type,
+       t.info_range_cd,
+       t.info_status,
+       t.org_num,
+       t.user_num,
+       to_char(t.create_time, 'yyyy-mm-dd hh24:mi:ss') create_time
+  from TB_PUB_MARKET_INFO t
+ where (
+ 		(t.info_range_cd = '2' and t.org_num = #orgNum#)
+ 		<isNotEmpty property="parentorgids"> 
+ 		 or (t.info_range_cd = '1' and t.org_num in ($parentorgids$))
+ 		</isNotEmpty>
+       )
+		<isNotEmpty prepend="" property="infoStatus"> 
+				and t.info_status = #infoStatus#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoType"> 
+				and t.info_type = #infoType#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoRangeCd"> 
+				and t.info_range_cd = #infoRangeCd#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoTitle">
+				and t.info_title like '%$infoTitle$%'
+		</isNotEmpty>
+		order by t.create_time desc
+	</select>
+	
+	
+	<resultMap id="noticesMap" class="com.bos.pub.sys.TbPubNotice">
+			<result property="infoId" column="INFO_ID"/>
+			<result property="infoTitle" column="INFO_TITLE"/>
+			<result property="infoContent" column="INFO_CONTENT"/>
+			<result property="infoType" column="INFO_TYPE"/>
+			<result property="infoRangeCd" column="INFO_RANGE_CD"/>
+			<result property="infoStatus" column="INFO_STATUS" />
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM" />
+			<result property="createTime" column="CREATE_TIME" />
+	</resultMap>
+    <select id="selectNoticeInfos" parameterClass="com.bos.pub.sys.TbPubNotice" resultMap="noticesMap">
+  	select t.info_id,
+	       t.info_title,
+	       t.info_content,
+	       t.info_type,
+	       t.info_range_cd,
+	       t.info_status,
+	       t.org_num,
+	       t.user_num,
+	       to_char(t.create_time, 'yyyy-mm-dd hh24:mi:ss') create_time
+	  from TB_PUB_NOTICE t
+	 where ((t.info_range_cd = '2' and t.org_num = #orgNum#) or
+	       (t.info_range_cd = '1' and t.org_num in ($parentorgids$)
+	       ))
+		<isNotEmpty prepend="" property="infoStatus"> 
+				and t.info_status = #infoStatus#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoType"> 
+				and t.info_type = #infoType#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoRangeCd"> 
+				and t.info_range_cd = #infoRangeCd#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoTitle">
+				and t.info_title like '%$infoTitle$%'
+		</isNotEmpty>
+		order by t.create_time desc
+	</select>
+	
+	 <select id="selectNotices" parameterClass="com.bos.pub.sys.TbPubNotice" resultMap="noticesMap">
+  	select t.info_id,
+	       t.info_title,
+	       t.info_content,
+	       t.info_type,
+	       t.info_range_cd,
+	       t.info_status,
+	       t.org_num,
+	       t.user_num,
+	       to_char(t.create_time, 'yyyy-mm-dd hh24:mi:ss') create_time
+	  from TB_PUB_NOTICE t
+	 where 1=1 
+	 <isNotNull property="superadmin">
+			and	t.org_num = #orgNum#  and t.user_num = #userNum#  
+	  </isNotNull>
+		<isNotEmpty prepend="" property="infoStatus"> 
+				and t.info_status = #infoStatus#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoType"> 
+				and t.info_type = #infoType#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoRangeCd"> 
+				and t.info_range_cd = #infoRangeCd#
+		</isNotEmpty>
+		<isNotEmpty prepend="" property="infoTitle">
+				and t.info_title like '%$infoTitle$%'
+		</isNotEmpty>
+		order by t.create_time desc
+	</select>
+	
+	<select id="getPubDoc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+		t.DOC_ID as docId,
+		t.BIZ_NUM as bizNum,
+		t.DOC_NAME as docName,
+		t.USER_NUM as userNum,
+		t.CREATE_TIME as createTime
+		from tb_pub_doc t  
+		where ( t.ORG_NUM = #orgNum# or t.org_num in ('$parentorgids$'))
+		<isNotNull property="bizNum">
+				and t.biz_num = #bizNum#
+		</isNotNull>
+		 
+		<isNotNull property="bizPhase">
+				and t.BIZ_PHASE = #bizPhase#
+		</isNotNull>
+		<isNotNull property="docType">
+				and t.DOC_TYPE = #docType#
+		</isNotNull>
+		<isNotNull property="docAuth">
+				and t.USER_NUM = #docAuth#
+		</isNotNull>
+  </select>
+</sqlMap>

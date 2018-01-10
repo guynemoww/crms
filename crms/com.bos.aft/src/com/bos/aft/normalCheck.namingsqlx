@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:xiaoxia -->
+<sqlMap>
+	<!--查询可做日常检查的客户列表-->
+    <select id="findCusList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select * from (
+	    	select p.party_id,
+			       p.party_num,
+			       cc.corp_customer_type_cd,
+			       p.party_type_cd,
+			       p.party_name,
+			       cc.english_name,
+			       (case
+			         when p.party_type_cd = '01' then
+			          '202'
+			         when p.party_type_cd = '02' then
+			          np.cert_type
+			         else
+			          ''
+			       end) as cert_type,
+			       (case
+			         when p.party_type_cd = '01' then
+			          cc.org_register_cd
+			         when p.party_type_cd = '02' then
+			          np.cert_num
+			         else
+			          ''
+			       end) as cert_num,
+			       aa.amt,
+			       aa.ava,
+			       aa.balance balance1,
+			       y.jjye balance,
+			       to_char(sysdate, 'yyyy-MM-dd') as SYS_DATE,
+			       to_char(x.create_date, 'yyyy-MM-dd') as create_date
+			  from tb_csm_party p
+			  left join tb_csm_corporation cc on cc.party_id = p.party_id
+			  left join tb_csm_natural_person np on np.party_id = p.party_id
+			  left join (select nc.party_id party_id, max(nc.create_date) create_date
+			               from tb_aft_normal_check nc
+			              where nc.check_status = '03'
+			              group by nc.party_id) x on x.party_id = p.party_id,
+			 tb_csm_management_team mt,
+			 (select a.party_id,
+                     sum(c.CREDIT_AMOUNT) amt,
+                     sum(c.CREDIT_AVI) ava,
+                     (sum(c.CREDIT_AMOUNT)-sum(c.CREDIT_AVI)) balance
+                from tb_biz_approve        a,
+                     TB_BIZ_AMOUNT_APPROVE c
+               where a.APPROVE_ID = c.APPROVE_ID
+                 and a.approve_conclusion = '1'
+                 and a.become_effective_mark = '03'
+                 <!--and (a.low_risk_biz_type is null or
+                     a.low_risk_biz_type = '')-->
+                 and exists
+               (select 1
+                        from tb_loan_info    li,
+                             tb_loan_summary ls
+                       where li.loan_id =
+                             ls.loan_id
+                         and li.party_id =
+                             a.party_id
+                         and ls.summary_status_cd in
+                             ('02', '03'))
+               group by a.party_id) aa,
+			  (select tli.party_id,
+                                                 sum(tls.jjye) jjye
+                                            from tb_loan_info    tli,
+                                                 tb_loan_summary tls
+                                           where tli.loan_id = tls.loan_id
+                                             and tls.summary_status_cd in
+                                                 ('02', '03')
+                                           group by tli.party_id) y          
+			 where 1 = 1
+			   and p.party_id = mt.party_id
+			   and p.party_id = aa.party_id
+			   and p.party_id = y.party_id
+			   and mt.user_placing_cd = '01'
+			   and mt.user_num = '$userNum$'
+			   and mt.org_num = '$orgNum$'
+			 ) a where 1=1
+		 <isNotNull property="partyId">  and a.party_id = '$partyId$' </isNotNull>
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+	</select>
+	
+	<!--查询客户授信余额总和，不查借据，改查合同-->
+	<select id="queryTotalAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select p.party_id,
+			       p.party_num,
+			       p.party_name,
+			       p.party_type_cd,
+			       sum(ci.contract_amt) AMT,
+			       sum(ci.con_balance) BALANCE
+			  from tb_biz_approve               ba,
+			       tb_biz_amount_approve        baa,
+			       tb_biz_amount_detail_approve bada,
+			       tb_con_contract_info       ci,
+			       tb_csm_party               p
+			 where ba.approve_id = baa.approve_id
+			   and baa.amount_id = bada.amount_id
+			   and bada.amount_detail_id = ci.amount_detail_id
+			   and ci.party_id = p.party_id
+			   <!--and (ba.low_risk_biz_type is null or ba.low_risk_biz_type = '')-->
+			   and p.party_id = '$partyId$' 
+			 group by p.party_id, p.party_num, p.party_name, p.party_type_cd
+	</select>
+	
+	<!--查询客户汇总信息-->
+	<select id="queryCus" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select p.party_id,
+			       p.party_type_cd,
+			       p.party_num,
+			       p.party_name,
+			       (case
+			         when p.party_type_cd = '01' then
+			          '202'
+			         when p.party_type_cd = '02' then
+			          np.cert_type
+			         else
+			          ''
+			       end) as cert_type,
+			       (case
+			         when p.party_type_cd = '01' then
+			          cc.org_register_cd
+			         when p.party_type_cd = '02' then
+			          np.cert_num
+			         else
+			          ''
+			       end) as cert_num,
+			       x.pfje,
+			       x.ava,
+			       x.jjye jjye1,
+			       y.jjye 
+			  from tb_csm_party p
+			  left join tb_csm_corporation cc on cc.party_id = p.party_id
+			  left join tb_csm_natural_person np on np.party_id = p.party_id
+			  left join (select a.party_id,
+			                    sum(c.CREDIT_AMOUNT) pfje,
+			                    sum(c.credit_avi) ava,
+			                    (sum(c.CREDIT_AMOUNT)-sum(c.credit_avi)) jjye
+			               from tb_biz_approve        a,
+			                    TB_BIZ_AMOUNT_APPROVE c
+			              where a.APPROVE_ID = c.APPROVE_ID
+			                and a.approve_conclusion = '1'
+			                and a.become_effective_mark = '03'
+			                and exists
+			              (select 1
+			                       from tb_loan_info li, tb_loan_summary ls
+			                      where li.loan_id = ls.loan_id
+			                        and li.party_id = a.party_id
+			                        and ls.summary_status_cd in ('02', '03'))
+			              group by a.party_id) x on p.party_id = x.party_id
+			   left join (select tli.party_id, sum(tls.jjye) jjye
+			               from tb_loan_info tli, tb_loan_summary tls
+			              where tli.loan_id = tls.loan_id
+			                and tls.summary_status_cd in ('02', '03')
+			              group by tli.party_id) y on p.party_id = y.party_id
+			 where p.party_id = '$partyId$'  
+ 		 
+	</select>
+	
+	
+	<!--查询客户汇总信息-->
+	<select id="queryproject" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+ 		select pi.project_name from tb_Csm_project_Info pi where pi.party_id =#partyId#		 
+	</select>
+	
+	<!--查询财务类型-->
+	<select id="queryFinType" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select f.customer_type_cd FIN
+			  from tb_acc_customer_finance f
+			 where f.party_id = '$partyId$'  
+			 order by f.finance_deadline desc
+	</select>
+	
+	<!--查询财务信息-->
+	<select id="queryFin" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select 
+				(select BT_GET_FINANCE_DATA('$partyId$','应付账款','$finType$',null,null) from dual) A1,
+				(select BT_GET_FINANCE_DATA('$partyId$','预收款项','$finType$',null,null) from dual) A2,
+				(select BT_GET_FINANCE_DATA('$partyId$','预付款项','$finType$',null,null) from dual) A3,
+				(select BT_GET_FINANCE_DATA('$partyId$','其他应收款','$finType$',null,null) from dual) A4,
+				(select BT_GET_FINANCE_DATA('$partyId$','其他应付款','$finType$',null,null) from dual) A5 
+			from dual
+	</select>
+	
+	<!--查询授信基本情况，不查借据，改查合同-->
+	<select id="querySummaryList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select ci.contract_num,
+			       ci.product_type,
+			       ci.guaranty_type,
+			       ci.contract_amt,
+			       ci.con_balance,
+			       ci.con_yu_e,
+			       ci.contract_term,
+			       ci.CYCLE_UNIT,
+			       to_char(ci.begin_date, 'yyyy-mm-dd') as begin_date,
+			       to_char(ci.end_date, 'yyyy-mm-dd') as end_date,
+			       p.party_name
+			  from tb_con_contract_info ci, tb_csm_party p
+			 where ci.party_id = p.party_id
+			   <!--and ci.con_balance > 0-->
+			   and ci.con_status = '03'
+ 		       and ci.party_id = '$partyId$' 
+	</select>
+	
+	<!--每次插入授信条件及落实情况前先删除-->
+    <select id="deleteRequire" parameterClass="java.util.HashMap">
+            delete from tb_aft_require_execute re
+             where re.normal_check_id = #normalCheckId#
+    </select>
+    
+    <!--每次插入设备购置情况前先删除-->
+    <select id="deleteEquipment" parameterClass="java.util.HashMap">
+            delete from tb_aft_buy_equipment be
+             where be.normal_check_id = #normalCheckId#
+    </select>
+    
+    <!--查询是否有在途业务-->
+    <select id="findFlowOnWay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_aft_normal_check nc
+			 where nc.check_status in ('01', '02')
+			   and nc.party_id = #partyId#
+    </select>
+    
+    <!--撤销删除授信条件及落实情况-->
+    <select id="deleteRequireCancel" parameterClass="java.util.HashMap">
+            delete from tb_aft_require_execute re
+             where re.normal_check_id = #applyId#
+    </select>
+    
+    <!--撤销删除设备购置情况-->
+    <select id="deleteEquipmentCancel" parameterClass="java.util.HashMap">
+            delete from tb_aft_buy_equipment be
+             where be.normal_check_id = #applyId#
+    </select>
+    
+    <!--撤销删除各家银行授信情况-->
+    <select id="deleteCreditConditionCancel" parameterClass="java.util.HashMap">
+            delete from tb_aft_credit_condition cc
+             where cc.normal_check_id = #applyId#
+    </select>
+    
+    <!--查询可做日常检查的客户列表：小贷中心-->
+    <select id="findCusListSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select p.party_id,
+			       p.party_num,
+			       p.party_type_cd,
+			       p.party_name,
+			       np.cert_type,
+			       np.cert_num,
+			       aa.amt,
+			       aa.ava,
+			       aa.balance balance1,
+			       y.jjye balance,
+			       to_char(sysdate, 'yyyy-MM-dd') as SYS_DATE
+			  from tb_csm_party p,
+			       tb_csm_natural_person np,
+			       tb_csm_management_team mt,
+			       (select a.party_id,
+			               sum(c.CREDIT_AMOUNT) amt,
+			               sum(c.credit_avi) ava,
+			               (sum(c.CREDIT_AMOUNT)-sum(c.credit_avi)) balance
+			          from tb_biz_approve        a,
+			               TB_BIZ_AMOUNT_APPROVE c,
+			         where a.APPROVE_ID = c.APPROVE_ID
+			           and a.approve_conclusion = '1'
+			           and a.become_effective_mark = '03'
+			           and a.biz_type = '04'
+			           and exists
+			         (select 1
+			                  from tb_loan_info li, tb_loan_summary ls
+			                 where li.loan_id = ls.loan_id
+			                   and li.party_id = a.party_id
+			                   and ls.summary_status_cd in ('02', '03'))
+			         group by a.party_id) aa,
+			         (select tli.party_id, sum(tls.jjye) jjye
+					          from tb_loan_info tli, tb_loan_summary tls
+					         where tli.loan_id = tls.loan_id
+					           and tls.summary_status_cd in ('02', '03')
+					         group by tli.party_id) y
+			 where 1 = 1
+			   and np.party_id = p.party_id
+			   and p.party_id = mt.party_id
+			   and p.party_id = aa.party_id
+			   and p.party_id = y.party_id
+			   and mt.user_placing_cd = '01'
+			   and mt.user_num = '$userNum$'
+			   and mt.org_num = '$orgNum$'
+			   <!--and not exists (select 1 from tb_aft_normal_check nc where nc.party_id = p.party_id)-->
+ 		 <isNotNull property="partyName">  and p.party_name like '%$partyName$%' </isNotNull>
+
+ 		 <isNotNull property="certType">  and np.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and np.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="middleCode">  and np.middle_code = '$middleCode$' </isNotNull>
+ 		 <!--由提醒列表传来的数据-->
+ 		 <isNotNull property="partyId">  and p.party_Id = '$partyId$' </isNotNull>
+	</select>
+	
+	<!-- 查询检查列表：小贷中心 -->
+	<select id="findNormalCheckListSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_id,
+		       p.party_num,
+		       p.party_type_cd,
+		       p.party_name,
+		       nc.check_type,
+		       np.cert_type,
+		       np.cert_num,
+		       np.middle_code,
+		       nc.normal_check_id,
+		       nc.model_type,
+		       nc.report_num,
+		       nc.report_name,
+		       nc.report_des,
+		       nc.update_person,
+		       nc.update_date,
+		       nc.user_num,
+		       nc.create_date,
+		       aa.amt,
+		       y.jjye balance
+		  from tb_aft_normal_check nc,
+		       tb_csm_party p,
+		       v_csm_party np,
+		       (select a.party_id,
+		               sum(c.CREDIT_AMOUNT) amt,
+		               sum(c.credit_avi) ava,
+		               (sum(c.CREDIT_AMOUNT) - sum(c.credit_avi)) balance
+		          from tb_biz_approve        a,
+		               TB_BIZ_AMOUNT_APPROVE c
+		         where a.APPROVE_ID = c.APPROVE_ID
+		           and a.approve_conclusion = '1'
+		           and a.become_effective_mark = '03'
+ 		           and exists
+		         (select 1
+		                  from tb_loan_info li, tb_loan_summary ls
+		                 where li.loan_id = ls.loan_id
+		                   and li.party_id = a.party_id
+		                   and ls.summary_status_cd in ('02', '03'))
+		         group by a.party_id) aa,
+		       (select tli.party_id, sum(tls.jjye) jjye
+		          from tb_loan_info tli, tb_loan_summary tls
+		         where tli.loan_id = tls.loan_id
+		           and tls.summary_status_cd in ('02', '03')
+		         group by tli.party_id) y
+		 where nc.party_id = p.party_id
+		   and p.party_id = np.party_id
+		   and p.party_id = aa.party_id
+		   and p.party_id = y.party_id
+ 
+		 <!--  and nc.is_small = '1'  -->
+		   and nc.update_date is not null 
+		   <isNotNull property="orglevel1"><!--总行用户-->
+			   and nc.org_num in (select o.orgcode from om_organization o)
+		   </isNotNull>
+		   <isNotNull property="orglevel2"><!--分行用户-->
+			   and nc.org_num in (select o.orgcode from om_organization o where o.parentorgid = #currentorgid#)
+		   </isNotNull>
+		   <isNotNull property="orglevel3"><!--支行用户-->
+			   and nc.org_num = #currentorgcode#
+		   </isNotNull>
+		   <isNotNull property="orglevel4"><!--总行小企业信贷中心-->
+			   and nc.org_num in (select o.orgcode from om_organization o where o.orgdegree = '2')
+		   </isNotNull>
+		     <isNotNull property="userNum">
+	    	and nc.user_num=#userNum#
+	     </isNotNull>
+		   
+ 		 <isNotNull property="partyName">  and p.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="reportNum">  and nc.REPORT_NUM = '$reportNum$' </isNotNull>
+	</select>
+	
+	<!--查询次数：小贷中心 -->
+	<select id="findCount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (count(*) + 1) COUNT1
+		  from tb_aft_normal_check nc 
+		 where nc.is_small = '1'
+		   and nc.is_finish = '1' 
+		   and nc.party_id = '$partyId$'
+	</select>
+	
+	<!-- 授信资金使用用途 -->
+	<select id="queryMoneyUse" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t.money_use_id,t.pay_use,t.pay_object,to_char(t.pay_time,'yyyy-mm-dd') as pay_time ,t.pay_way,
+			t.apply_amount,t.is_fit_deal,
+				  (CASE
+			         WHEN t.is_fit_deal = '1' THEN
+			          '是'
+			         ELSE
+			          '否'
+			       END) is_fit,ta.party_name
+			 from tb_loan_money_use t,tb_csm_party ta
+			where t.party_id=ta.party_id
+			  and t.party_id= '$partyId$'
+    </select>
+    
+    <!--每次插入在各家银行授信情况前先删除-->
+    <select id="deleteOtherBank" parameterClass="java.util.HashMap">
+            delete from tb_aft_credit_condition cc
+             where cc.normal_check_id = #normalCheckId#
+    </select>
+    
+    <!-- 查询报告信息 -->
+	<select id="findReportInfoSmall" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_id,
+		       p.party_type_cd,
+		       p.party_num,
+		       p.party_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       x.pfje,
+		       x.pfje*0.0001 pfje1,
+		       y.jjye,
+		       
+		       to_char(nc.check_date, 'yyyy-MM-dd') CHECK_DATE,
+		       nc.check_way,
+		       nc.check_person,
+		       nc.check_result,
+		       nc.check_type,
+		       nc.check_count,
+		       nc.check_reason,
+		       nc.deal_opinion,
+		       nc.opinion_detail,
+		       nc.is_small,
+		       nc.report_num,
+		       nc.report_name,
+		       nc.is_finish,
+		       nc.check_num,
+		       nc.check_place,
+		       
+		       org.orgname,
+		            TANP.FLOW_CONDITION  FLOW_CONDITION_tanp  ,
+           	TANP.REPAY_CONDITION  REPAY_CONDITION_tanp  ,
+          	 TANP.NO_FINANCE_ANALYSIS  NO_FINANCE_ANALYSIS_tanp ,
+          	 TANP.FINANCE_ANALYSIS  FINANCE_ANALYSIS_tanp,
+           	TANP.REPAY_CHANGE  REPAY_CHANGE_tanp ,
+           	TANP.RISK_ANALYSIS    RISK_ANALYSIS_tanp ,
+           	TANP.OTHER_CONDITION   OTHER_CONDITION_tanp,
+		       tp.loan_amt,
+		       tp.repay_condition repay_condition_tp,
+		       tp.debt_condition,
+		       to_char(TP.FINANCE_END_DATE,'yyyy-MM-dd') FINANCE_END_DATE,
+          	   TP.ASSET_AMT,
+               TP.DEBT_AMT,
+               TP.ASSET_DEBT_RATE,
+			   TP.AMT_FLOW_CONDITION,
+               TP.LOAN_RATE,
+               TP.QZBL_CONDITION,
+               decode(TP.IS_NORMAL, '1', '是', '0', '否', '') IS_NORMAL_TP,
+		       decode(tp.guarantor_business, '01', '正常', '02', '不正常', '') guarantor_business,
+		       decode(tp.guarantor_finance, '01', '正常', '02', '不正常', '') guarantor_finance,
+		       decode(tp.guarantor_relation, '01', '正常', '02', '不正常', '') guarantor_relation,
+		       tp.guarantor_others,
+		       decode(tp.is_guarantor_debt, '1', '是', '0', '否', '') is_guarantor_debt,
+		       decode(tp.is_guarantor_risk, '1', '有', '2', '无', '') is_guarantor_risk,
+		       decode(tp.is_mortgage_good, '1', '是', '0', '否', '') is_mortgage_good,
+		       decode(tp.is_mortgage_change, '1', '是', '0', '否', '') is_mortgage_change,
+		       decode(tp.is_mortgage_control, '1', '是', '0', '否', '') is_mortgage_control,
+		       decode(tp.is_mortgage_cha_own, '1', '是', '0', '否', '') is_mortgage_cha_own,
+		       decode(tp.is_mortgage_rent, '1', '是', '0', '否', '') is_mortgage_rent,
+		       decode(tp.is_mortgage_risk, '1', '是', '0', '否', '') is_mortgage_risk,
+		       tp.mortgage_others,
+		       tp.customer_condition,
+		       (case
+		         when tp.is_family_affect = '1' then
+		          '是'
+		         else
+		          '否'
+		       end) is_family_affect,
+		       tp.other_condition other_condition_tp,
+		       tp.exceed_reason,
+		       
+		       a.dzyAmt dzy_amt,
+		       a.dzyCount dzy_count,
+		       b.bzrAmt bzr_amt,
+		       b.bzrCount bzr_count,
+		       
+		       (nvl(a.dzyAmt, 0) + nvl(b.bzrAmt, 0)) sub_amt,
+		       (nvl(a.dzyCount, 0) + nvl(b.bzrCount, 0)) sub_count,
+		       
+		       anp.flow_condition      flow_condition_anp,
+		       anp.trade_check         trade_check_anp,
+		       anp.no_finance_analysis no_finance_analysis_anp,
+		       anp.finance_analysis    finance_analysis_anp,
+		       anp.repay_change        repay_change_anp,
+		       anp.risk_analysis       risk_analysis_anp,
+		       anp.other_condition     other_condition_anp,
+		       
+		       ant.flow_condition      flow_condition_ant,
+		       ant.trade_check         trade_check_ant,
+		       ant.no_finance_analysis no_finance_analysis_ant,
+		       ant.finance_analysis    finance_analysis_ant,
+		       ant.repay_change        repay_change_ant,
+		       ant.risk_analysis       risk_analysis_ant,
+		       ant.other_condition     other_condition_ant,
+		       
+		       prj.new_condition    new_condition_prj,
+		       prj.inject_condition inject_condition_prj,
+		       prj.income_condition income_condition_prj,
+		       prj.risk_analysis    risk_analysis_prj,
+		       prj.repay_change     repay_change_prj,
+		       prj.other_condition  other_condition_prj,
+		       
+		       tru.charge_condition charge_condition_tru,
+		       tru.repay_change     repay_change_tru,
+		       tru.risk_analysis    risk_analysis_tru,
+		       tru.other_condition  other_condition_tru,
+		       
+		       h.pay_project_amt    pay_project_amt_h,
+		       h.pay_data_amt       pay_data_amt_h,
+		       h.pay_other_amt      pay_other_amt_h,
+		       h.amt_change         amt_change_h,
+		       h.loan_change        loan_change_h,
+		       h.mybank_loan_change mybank_loan_change_h,
+		       h.working_area       working_area_h,
+		       h.finish_area        finish_area_h,
+		       decode(h.is_problem, '1', '是', '0', '否', '') is_problem_h,
+		       h.get_area           get_area_h,
+		       h.sell_area          sell_area_h,
+		       h.cash               cash_h,
+		       h.mybank_loan        mybank_loan_h,
+		       h.otherbank_loan     otherbank_loan_h,
+		       h.avg_sellamt        avg_sellamt_h,
+		       h.sellamt_change     sellamt_change_h,
+		       h.mybank_sell_rate   mybank_sell_rate_h,
+		       decode(h.is_repay, '1', '是', '0', '否', '') is_repay_h,
+		       h.project_compare    project_compare_h,
+		       h.sell_compare       sell_compare_h,
+		       h.invest_condition   invest_condition_h,
+		       decode(h.is_guarant_change, '1', '是', '0', '否', '') is_guarant_change_h,
+		       h.other_condition    other_condition_h,
+		       
+		       o.deposit_change        deposit_change_o,
+		       o.mybank_amt_change     mybank_amt_change_o,
+		       o.mybank_loan_repay     mybank_loan_repay_o,
+		       o.bank_loan_change      bank_loan_change_o,
+		       o.mybank_loan_change    mybank_loan_change_o,
+		       o.data_type             data_type_o,
+		       o.data_monthend_amt     data_monthend_amt_o,
+		       o.data_price_change     data_price_change_o,
+		       o.product_type          product_type_o,
+		       o.product_monthend_amt  product_monthend_amt_o,
+		       o.product_price_change  product_price_change_o,
+		       o.pay_name              pay_name_o,
+		       o.change_reason         change_reason_o,
+		       o.debtage_change_reason debtage_change_reason_o,
+		       o.asset_name            asset_name_o,
+		       o.asset_value           asset_value_o,
+		       o.month_sellamt         month_sellamt_o,
+		       o.month_profit_rate     month_profit_rate_o,
+		       o.is_business_change    is_business_change_o,
+		       o.is_guarantor          is_guarantor_o,
+		       o.is_new_skill          is_new_skill_o,
+		       decode(o.is_repay_ot, '1', '是', '0', '否', '') is_repay_ot_o,
+		       decode(o.is_repay_own, '1', '是', '0', '否', '') is_repay_own_o,
+		       decode(o.is_otherbank_debt, '1', '是', '0', '否', '') is_otherbank_debt_o,
+		       decode(o.is_con_same, '1', '是', '0', '否', '') is_con_same_o,
+		       o.data_need_change      data_need_change_o,
+		       o.price_need_change     price_need_change_o,
+		       decode(o.is_guarant_change, '1', '是', '0', '否', '') is_guarant_change_o,
+		       o.other_condition       other_condition_o,
+		       
+		       a.deposit_change        deposit_change_a,
+		       a.mybank_amt_change     mybank_amt_change_a,
+		       a.mybank_loan_repay     mybank_loan_repay_a,
+		       a.bank_loan_change      bank_loan_change_a,
+		       a.mybank_loan_change    mybank_loan_change_a,
+		       a.goods_type            goods_type_a,
+		       a.endmonth_amt          endmonth_amt_a,
+		       a.price_change          price_change_a,
+		       a.pay_name              pay_name_a,
+		       a.change_reason         change_reason_a,
+		       a.debtage_change_reason debtage_change_reason_a,
+		       a.asset_name            asset_name_a,
+		       a.asset_value           asset_value_a,
+		       a.month_sellamt         month_sellamt_a,
+		       a.month_profit_rate     month_profit_rate_a,
+		       a.is_business_change    is_business_change_a,
+		       a.is_guarantor          is_guarantor_a,
+		       decode(a.is_repay_ot, '1', '是', '0', '否', '') is_repay_ot_a,
+		       decode(a.is_repay_own, '1', '是', '0', '否', '') is_repay_own_a,
+		       decode(a.is_otherbank_debt, '1', '是', '0', '否', '') is_otherbank_debt_a,
+		       decode(a.is_con_same, '1', '是', '0', '否', '') is_con_same_a,
+		       a.goods_change          goods_change_a,
+		       decode(a.is_guarant_change, '1', '是', '0', '否', '') is_guarant_change_a,
+		       a.other_condition       other_condition_a,
+		       
+		       s.pay_project_amt    pay_project_amt_s,
+		       s.pay_data_amt       pay_data_amt_s,
+		       s.pay_other_amt      pay_other_amt_s,
+		       s.amt_change         amt_change_s,
+		       s.loan_change        loan_change_s,
+		       s.mybank_loan_change mybank_loan_change_s,
+		       s.project_name       project_name_s,
+		       s.support_condition  support_condition_s,
+		       decode(s.is_problem, '1', '是', '0', '否', '') is_problem_s,
+		       s.teacher_change     teacher_change_s,
+		       s.student_change     student_change_s,
+		       s.charge_change      charge_change_s,
+		       s.patient_change     patient_change_s,
+		       s.income_compare     income_compare_s,
+		       s.charge_change_hos  charge_change_hos_s,
+		       s.mybank_rate_change mybank_rate_change_s,
+		       decode(s.is_mybank_repay_ot, '1', '是', '0', '否', '') is_mybank_repay_ot_s,
+		       decode(s.is_repay_income, '1', '是', '0', '否', '') is_repay_income_s,
+		       decode(s.is_otherbank_debt, '1', '是', '0', '否', '') is_otherbank_debt_s,
+		       s.invest_name        invest_name_s,
+		       decode(s.is_guarant_change, '1', '是', '0', '否', '') is_guarant_change_s,
+		       s.other_condition    other_condition_s
+		
+		  from tb_csm_party p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id
+		  left join (SELECT a.party_id, sum(c.CREDIT_AMOUNT) pfje
+		               FROM tb_biz_approve a, TB_BIZ_AMOUNT_APPROVE c
+		              WHERE a.APPROVE_ID = c.APPROVE_ID
+		                and a.approve_conclusion = '1'
+		                and a.become_effective_mark = '03'
+		                and a.biz_type in ('01', '02', '04')
+		              group by a.party_id) x on p.party_id = x.party_id
+		  left join (select li.party_id, sum(ls.jjye) jjye
+		               from tb_loan_info li, tb_loan_summary ls
+		              where li.loan_id = ls.loan_id
+		                and ls.summary_status_cd in ('02', '03')
+		              group by li.party_id) y on p.party_id = y.party_id
+		  left join (select p.party_id,
+		                    sum(s.subcontract_amt) dzyAmt,
+		                    count(s.subcontract_amt) dzyCount
+		               from tb_csm_party           p,
+		                    tb_con_contract_info   ci,
+		                    tb_con_subcontract_rel sr,
+		                    tb_con_subcontract     s
+		              where p.party_id = ci.party_id
+		                and ci.contract_id = sr.contract_id
+		                and sr.subcontract_id = s.subcontract_id
+		                and ci.con_status = '03'
+		                and s.subcontract_type in ('01', '02')
+		              group by p.party_id) a on a.party_id = p.party_id
+		  left join (select p.party_id,
+		                    sum(s.subcontract_amt) bzrAmt,
+		                    count(s.subcontract_amt) bzrCount
+		               from tb_csm_party           p,
+		                    tb_con_contract_info   ci,
+		                    tb_con_subcontract_rel sr,
+		                    tb_con_subcontract     s
+		              where p.party_id = ci.party_id
+		                and ci.contract_id = sr.contract_id
+		                and sr.subcontract_id = s.subcontract_id
+		                and ci.con_status = '03'
+		                and s.subcontract_type = '04'
+		              group by p.party_id) b on b.party_id = p.party_id,
+		 om_organization org,
+		 tb_aft_normal_check nc
+		  left join tb_aft_track_person tp on nc.normal_check_id =
+		                                      tp.normal_check_id
+		  left join tb_aft_normal_product anp on nc.normal_check_id =
+		                                         anp.normal_check_id
+		  left join tb_aft_normal_trade ant on nc.normal_check_id =
+		                                       ant.normal_check_id
+		  left join tb_aft_normal_project prj on nc.normal_check_id =
+		                                         prj.normal_check_id
+		  left join tb_aft_normal_trust tru on nc.normal_check_id =
+		                                       tru.normal_check_id
+		  left join tb_aft_track_house h on nc.normal_check_id = h.normal_check_id
+		  left join tb_aft_track_product o on nc.normal_check_id =
+		                                      o.normal_check_id
+		  left join tb_aft_track_trade a on nc.normal_check_id = a.normal_check_id
+		  left join tb_aft_track_schhos s on nc.normal_check_id = s.normal_check_id
+		  left join tb_Aft_Normal_Person tanp on nc.normal_check_id = tanp.normal_check_id
+		  
+		 where p.party_id = nc.party_id
+		   and nc.org_num = org.orgcode
+		   and nc.normal_check_id = '$checkId$'
+    </select>
+    
+    <!--查询公司及实际控制人在各家银行授信情况-->
+	<select id="queryCreditList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	SELECT CC.CUS_NAME,
+	    		   CC.LOAN_BANK,
+			       CC.LOAN_WAY,
+			       TO_CHAR(CC.LOAN_ST, 'yyyy-MM-dd') LOAN_ST,
+			       TO_CHAR(CC.LOAN_END, 'yyyy-MM-dd') LOAN_END,
+			       CC.LOAN_USE,
+			       CC.LOAN_AMT,
+			       CC.LOAN_GUARANTY,
+			       CC.LOAN_RATE,
+			       (CASE
+			         WHEN CC.IS_BREAK = '1' THEN
+			          '是'
+			         ELSE
+			          '否'
+			       END) IS_BREAK,
+			       CC.REPAY_CONDITION
+			  FROM TB_AFT_CREDIT_CONDITION CC WHERE CC.NORMAL_CHECK_ID = '$checkId$' 
+	</select>
+	
+	<!--查询担保合同-->
+	<select id="querySubContract" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select s.subcontract_type
+			  from tb_csm_party           p,
+			       tb_con_contract_info   ci,
+			       tb_con_subcontract_rel sr,
+			       tb_con_subcontract     s
+			 where p.party_id = ci.party_id
+			   and ci.contract_id = sr.contract_id
+			   and sr.subcontract_id = s.subcontract_id
+			   and ci.con_status = '03'
+			   and p.party_id = '$partyId$' 
+	</select>
+	
+	<!--查询授信基本情况-->
+	<select id="querySummaryListDown" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select 	'     '||rownum,
+	    			ci.contract_num,
+			       sp.product_name product_type,
+			       e.dictname guaranty_type,
+			       ci.contract_amt,
+			       ci.con_balance,
+			       ci.con_yu_e,
+			       ci.contract_term,
+			       to_char(ci.begin_date, 'yyyy-mm-dd') as begin_date,
+			       to_char(ci.end_date, 'yyyy-mm-dd') as end_date,
+			       p.party_name
+			  from tb_con_contract_info ci,
+			       tb_csm_party         p,
+			       tb_sys_product       sp,
+			       eos_dict_entry       e
+			 where ci.party_id = p.party_id
+			   and ci.product_type = sp.product_cd
+			   and ci.guaranty_type = e.dictid
+			   and e.dicttypeid = 'CDZC0005'
+			   and ci.con_status = '03'
+ 		       and ci.party_id = '$partyId$' 
+	</select>
+	
+	<!--查询落实情况-->
+	<select id="findRequireExecute" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select e.requirement,e.execute_result from tb_aft_require_execute e where e.normal_check_id = '$checkId$' 
+	</select>
+	
+	<!--查询设备情况-->
+	<select id="findBuyEquipment" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    	select b.equipment_name,b.equipment_value from tb_aft_buy_equipment b where b.normal_check_id = '$checkId$' 
+	</select>
+    
+</sqlMap>

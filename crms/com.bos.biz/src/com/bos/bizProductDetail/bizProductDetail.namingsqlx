@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!-- 综合授信包含单笔业务时，获取单笔业务的合同已用额度 作为综合授信分项的最小额度 -->
+	<select id="getConUseAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 select sum(t.JJYE) as useAmt from tb_loan_summary t,tb_biz_summary ta,tb_biz_apply tb,tb_biz_amount_apply tc,tb_biz_amount_detail_apply td
+		where t.SUMMARY_ID=ta.SUMMARY_ID
+		and ta.APPLY_ID=tb.APPLY_ID
+		and tb.APPLY_ID=tc.APPLY_ID
+		and tc.AMOUNT_ID=td.AMOUNT_ID
+		and t.SUMMARY_STATUS_CD in ('02','03')
+		and td.AMOUNT_DETAIL_ID=#amountDetailId#
+	</select>
+</sqlMap>

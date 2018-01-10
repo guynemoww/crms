@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+	 
+	 <select id="getVerifyOffOther" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ci.CONTRACT_NUM,ls.SUMMARY_NUM,cp.PARTY_NAME,cp.CERT_TYPE,cp.CERT_NUM,ci.PRODUCT_TYPE
+,(SELECT STATUS FROM TB_ASSET_HANDLE_PLAN WHERE ID= vo.ID) STATUS
+FROM TB_ASSET_VERIFY_OFF vo 
+LEFT JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=vo.SUMMARY_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN V_CSM_PARTY cp ON cp.PARTY_ID=ls.PARTY_ID
+WHERE vo.id=#planId#
+	 </select>
+	
+	 <select id="createVerifyOffInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ls.SUMMARY_ID,ls.SUMMARY_AMT,ls.JJYE,ls.BEGIN_DATE,ls.END_DATE,ci.REPAYMENT_TYPE,lr.INTEREST_COLLECT_TYPE,lr.YEAR_RATE
+,ls.NORMAL_ITR,ls.ARREAR_ITR,ls.PUNISH_ITR,zh.*
+FROM TB_LOAN_SUMMARY ls 
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN TB_LOAN_LOANRATE lr ON lr.LOAN_ID=ls.LOAN_ID
+LEFT JOIN (SELECT LOAN_ID,ZH,ZHMC FROM TB_LOAN_ZH WHERE ZHLX='1' AND ROWNUM=1) zh ON zh.LOAN_ID=ls.LOAN_ID
+WHERE ls.SUMMARY_ID=#summaryId#
+	 </select>
+	 
+	 <select id="createVerifyOffValid" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT p.ID,v.ID VID FROM TB_ASSET_HANDLE_PLAN p
+LEFT JOIN TB_ASSET_VERIFY_OFF v ON p.ID=v.ID
+WHERE (p.PARTY_ID=#partyId# AND p.STATUS IN('10','20') AND PLAN_TYPE &lt;&gt; '10') OR (v.SUMMARY_ID=#summaryId# AND p.STATUS IN ('10','20','30'))
+	 </select>
+	 
+	 <select id="verifyAcc" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT p.PLAN_NUM,cp.PARTY_NAME,cp.CERT_TYPE,cp.CERT_NUM,PLAN_TYPE,to_char(p.REG_DATE,'yyyy-mm-dd hh24:mi:ss')REG_DATE,p.REG_ORG_ID,p.REG_USER_ID
+,to_char(vo.SUM_BEGIN_DATE,'yyyy-mm-dd')SUM_BEGIN_DATE,to_char(vo.SUM_END_DATE,'yyyy-mm-dd')SUM_END_DATE,vo.SUMMARY_AMT,vo.SUMMARY_BAL,vo.PURSUE
+,vo.CANCEL_ARREAR_ITR,vo.CANCEL_AMT,vo.CANCEL_NORMAL_ITR,vo.CANCEL_PUNISH_ITR,vo.CANCEL_PUNISH_ITR,ls.SUMMARY_NUM,ci.CONTRACT_NUM,li.PRODUCT_TYPE
+,vo.ID,ls.LOAN_ID,ci.CONTRACT_ID
+FROM TB_ASSET_VERIFY_OFF vo
+LEFT JOIN TB_ASSET_HANDLE_PLAN p ON vo.id=p.ID
+LEFT JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=vo.SUMMARY_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN TB_LOAN_INFO li ON li.loan_id = ls.LOAN_ID
+LEFT JOIN V_CSM_PARTY cp ON cp.PARTY_ID=ls.PARTY_ID
+WHERE p.STATUS='30'
+<isNotNull property="summaryNum"> AND ls.SUMMARY_NUM = #summaryNum#</isNotNull>
+<isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+<isNotNull property="planType"> AND p.PLAN_TYPE=#planType#</isNotNull>
+<isNotNull property="userNum"> AND p.REG_USER_ID=#userNum#</isNotNull>
+<isNotNull property="orgNum"> AND p.REG_ORG_ID = #orgNum#</isNotNull>
+<isNotNull property="certNum"> AND cp.CERT_NUM = #certNum# </isNotNull>
+<isNotNull property="certType"> AND cp.CERT_TYPE = #certType#</isNotNull>
+<isNotNull property="partyName"> AND cp.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+	 </select>
+</sqlMap>

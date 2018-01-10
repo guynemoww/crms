@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="findCusInfo" detailDescription="" demonstration="" urls=""
+	gridVisibility="false" rulerVisibility="true" snapToGeometry="true"
+	productVersion="7.0.0.0">
+	<nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释"
+		nodeType="note" type="note" content="查询客户相关信息" title="xiaoxia&#x9;15-12-18 上午11:00">
+		<location x="120" y="285" />
+		<size height="100" width="163" />
+	</nodes>
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" type="start">
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link10" name="link10" displayName="连接线" isDefault="true"
+			type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>assign2</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="EQ">
+					<process:leftOperand type="query">aftType</process:leftOperand>
+					<process:rightOperand type="literal">3</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<location x="60" y="134" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束"
+		type="end">
+		<targetConnections>link7</targetConnections>
+		<targetConnections>link8</targetConnections>
+		<location x="788" y="134" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:returns>
+			<process:return id="0" language="com.bos.dataset.csm.TbCsmParty"
+				name="tbCsmParty" type="query" valueType="DataObject">tbCsmParty</process:return>
+			<process:return id="1"
+				language="com.bos.dataset.csm.TbCsmCorporation" name="tbCsmCorporation"
+				type="query" valueType="DataObject">tbCsmCorporation</process:return>
+			<process:return id="2"
+				language="com.bos.dataset.csm.TbCsmNaturalPerson" name="tbCsmNaturalPerson"
+				type="query" valueType="DataObject">tbCsmNaturalPerson</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="62" y="170" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="790" y="170" />
+		<figSize height="17" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo2"
+		name="查询公司客户信息" displayName="查询公司客户信息" collapsed="false" type="invoke"
+		index="0" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link8"
+			name="link8" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo2</sourceNode>
+			<targetNode>end0</targetNode>
+		</sourceConnections>
+		<targetConnections>link6</targetConnections>
+		<location x="646" y="60" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo2label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseUtil.expandEntity</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+			<process:inputVariable id="1" name="dataObject"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">tbCsmCorporation</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="int" valueType="Java" />
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo2label"
+		name="label" nodeType="label">
+		<location x="609" y="96" />
+		<figSize height="17" width="97" />
+		<node>invokePojo2</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo4"
+		name="查询客户信息" displayName="查询客户信息" collapsed="false" type="invoke"
+		index="0" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link4"
+			name="link4" displayName="link5" isDefault="true" type="transition">
+			<sourceNode>invokePojo4</sourceNode>
+			<targetNode>assign12</targetNode>
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link5" name="link5" displayName="link29" type="transition">
+			<sourceNode>invokePojo4</sourceNode>
+			<targetNode>assign11</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="EQ">
+					<process:leftOperand type="query">tbCsmParty/partyTypeCd</process:leftOperand>
+					<process:rightOperand type="literal">02</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="356" y="134" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo4label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseUtil.expandEntity</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+			<process:inputVariable id="1" name="dataObject"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">tbCsmParty</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="int" valueType="Java" />
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo4label"
+		name="label" nodeType="label">
+		<location x="331" y="170" />
+		<figSize height="17" width="73" />
+		<node>invokePojo4</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign12"
+		name="赋值12" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link6"
+			name="link6" displayName="link27" isDefault="true" type="transition">
+			<sourceNode>assign12</sourceNode>
+			<targetNode>invokePojo2</targetNode>
+		</sourceConnections>
+		<targetConnections>link4</targetConnections>
+		<location x="498" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign12label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">tbCsmParty/partyId</process:from>
+			<process:to type="query">tbCsmCorporation/partyId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign12label" name="label"
+		nodeType="label">
+		<location x="493" y="96" />
+		<figSize height="17" width="39" />
+		<node>assign12</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign11"
+		name="赋值11" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link1"
+			name="link1" displayName="link30" isDefault="true" type="transition">
+			<sourceNode>assign11</sourceNode>
+			<targetNode>invokePojo5</targetNode>
+		</sourceConnections>
+		<targetConnections>link5</targetConnections>
+		<location x="498" y="208" />
+		<size height="28" width="28" />
+		<nodeLabel>assign11label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">tbCsmParty/partyId</process:from>
+			<process:to type="query">tbCsmNaturalPerson/partyId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign11label" name="label"
+		nodeType="label">
+		<location x="493" y="244" />
+		<figSize height="17" width="39" />
+		<node>assign11</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign2"
+		name="赋值2" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="link14" isDefault="true" type="transition">
+			<sourceNode>assign2</sourceNode>
+			<targetNode>invokePojo4</targetNode>
+		</sourceConnections>
+		<targetConnections>link10</targetConnections>
+		<location x="208" y="134" />
+		<size height="28" width="28" />
+		<nodeLabel>assign2label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">partyId</process:from>
+			<process:to type="query">tbCsmParty/partyId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label"
+		nodeType="label">
+		<location x="206" y="170" />
+		<figSize height="17" width="32" />
+		<node>assign2</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo5"
+		name="查询自然人信息" displayName="查询自然人信息" collapsed="false" type="invoke"
+		index="0" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link7"
+			name="link7" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo5</sourceNode>
+			<targetNode>end0</targetNode>
+		</sourceConnections>
+		<targetConnections>link1</targetConnections>
+		<location x="646" y="208" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo5label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseUtil.expandEntity</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+			<process:inputVariable id="1" name="dataObject"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">tbCsmNaturalPerson</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="int" valueType="Java" />
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo5label"
+		name="label" nodeType="label">
+		<location x="615" y="244" />
+		<figSize height="17" width="85" />
+		<node>invokePojo5</node>
+	</nodes>
+	<topRuler />
+	<leftRuler />
+	<process:info author="xiaoxia" createTime="2015-08-25 20:37:55"
+		date="2015-08-25Z" description="" name="findAftInfo" version="7.0.0.0" />
+	<process:variables />
+	<process:inputs varArgs="false">
+		<process:input description="" isArray="false" name="partyId"
+			primitiveType="String" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="false"
+			modelType="com.bos.dataset.csm.TbCsmParty" name="tbCsmParty" />
+		<process:output description="" isArray="false"
+			modelType="com.bos.dataset.csm.TbCsmCorporation" name="tbCsmCorporation" />
+		<process:output description="" isArray="false"
+			modelType="com.bos.dataset.csm.TbCsmNaturalPerson" name="tbCsmNaturalPerson" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+	<process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

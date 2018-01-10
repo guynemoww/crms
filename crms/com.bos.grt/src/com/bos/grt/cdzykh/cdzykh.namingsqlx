@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lenovo -->
+<sqlMap>
+   <select id="queryCdzykhList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+		tcp.party_id,
+		tcp.party_name,
+		tcci.contract_id,
+		tcci.contract_num,
+		tcci.currency_cd,
+		nvl(tcci.contract_amt,0) as contract_amt,
+		tcci.begin_date+0 as contract_begin_date,
+		tcci.end_date+0 as contract_end_date,
+		tcs.subcontract_num,
+		tgmb.surety_no,
+		tgmb.surety_name,
+		tgmb.currency_cd as cd_currency_cd,
+		nvl(tgmb.mortgage_value,0) as mortgage_value,
+		tls.summary_num,
+		nvl(tls.jjye,0) as jjye,
+		tls.begin_date as summary_begin_date,
+		tls.end_date as summary_end_date
+	from 
+		tb_con_contract_info tcci,  
+		tb_con_subcontract_rel tcsr,
+		tb_con_subcontract tcs，    
+		tb_con_sub_grt_rel tcsgr,   
+		tb_grt_mortgage_basic tgmb, 
+		tb_csm_party tcp,           
+		tb_loan_summary tls         
+	where tcci.contract_id = tcsr.contract_id
+	and tcsr.subcontract_id = tcs.subcontract_id
+	and tcs.subcontract_id = tcsgr.subcontract_id
+	and tcsgr.surety_id = tgmb.surety_id
+	and tcci.party_id = tcp.party_id
+	and tcci.contract_id = tls.contract_id
+	<!--以借据状态为准，不参考合同状态-->
+	<!--and tcci.con_status = '03'-->
+	<!--以借据状态为准，不参考担保合同状态-->
+	<!--and tcs.subcontract_status = '03' -->
+	<!--担保合同担保类型：质押-->
+	and tcs.subcontract_type = '02'   
+	<!--借据状态：正常|逾期/垫款-->
+	and tls.summary_status_cd in ('02','03')  
+	<!--押品状态：已入库-->
+	and tgmb.mortgage_status = '09'  
+	<!--押品抵质押类型：质押-->
+	and tgmb.coll_type = '02'         
+	<!-- 外币存单不做质押扣划-->
+	<!--and tgmb.sort_type in('A01010101','A01010102')-->
+	and tgmb.sort_type ='A01010101'
+	<!--贸易融资产品不做质押扣划-->
+	and tcci.product_type not like '01007%' 
+	<!--银承产品不做质押扣划：只有垫款的银承才能做质押扣划-->
+	and tcci.product_type not like '01008%' 
+	<!--保函产品不做质押扣划-->
+	and tcci.product_type not like '01009%' 
+	and abs(nvl(tgmb.mortgage_value,0) - nvl(tgmb.total_kh_amt,0)) &gt; 0
+	<isNotNull property="busiDate">
+    	and tls.end_date &lt;= #busiDate#
+    </isNotNull>
+	<isNotNull property="userNum">
+    	and tcci.user_num = #userNum#
+    </isNotNull>
+    <isNotNull property="orgNum">
+    	and tcci.org_num = #orgNum#
+    </isNotNull>
+    <isNotNull property="contractNum">
+    	and tcci.contract_num = #contractNum#
+    </isNotNull>
+    <isNotNull property="subcontractNum">
+    	and tcs.subcontract_num = #subcontractNum#
+    </isNotNull>
+    <isNotNull property="suretyNo">
+    	and tgmb.surety_no = #suretyNo#
+    </isNotNull>
+    <isNotNull property="summaryNum">
+    	and tls.summary_num = #summaryNum#
+    </isNotNull>
+    <!--order by tls.end_date -->
+	union all
+  	select 
+    	tcp.party_id,
+    	tcp.party_name,
+    	tcci.contract_id,
+    	tcci.contract_num,
+    	tcci.currency_cd,
+    	nvl(tcci.contract_amt,0) as contract_amt,
+    	tcci.begin_date+0 as contract_begin_date,
+    	tcci.end_date+0 as contract_end_date,
+    	tcs.subcontract_num,
+    	tgmb.surety_no,
+    	tgmb.surety_name,
+    	tgmb.currency_cd as cd_currency_cd,
+    	nvl(tgmb.mortgage_value,0) as mortgage_value,
+    	tls.summary_num,
+    	nvl(tls.jjye,0) as jjye,
+    	tls.begin_date as summary_begin_date,
+    	tls.end_date as summary_end_date
+ 	from 
+    	tb_con_contract_info tcci,  
+    	tb_con_subcontract_rel tcsr,
+    	tb_con_subcontract tcs，    
+    	tb_con_sub_grt_rel tcsgr,   
+    	tb_grt_mortgage_basic tgmb, 
+    	tb_csm_party tcp,           
+    	tb_loan_summary tls         
+  	where tcci.contract_id = tcsr.contract_id
+  	and tcsr.subcontract_id = tcs.subcontract_id
+  	and tcs.subcontract_id = tcsgr.subcontract_id
+  	and tcsgr.surety_id = tgmb.surety_id
+  	and tcci.party_id = tcp.party_id
+  	and tcci.contract_id = tls.contract_id
+  	and tcs.subcontract_type = '02'   
+  	and tls.summary_status_cd ='03'  
+  	and tgmb.mortgage_status = '09'  
+  	and tgmb.coll_type = '02'         
+  	and tgmb.sort_type ='A01010101'
+  	and tcci.product_type like '01008%'
+  	and abs(nvl(tgmb.mortgage_value,0) - nvl(tgmb.total_kh_amt,0)) &gt; 0
+	<isNotNull property="busiDate">
+    	and tls.end_date &lt;= #busiDate#
+    </isNotNull>
+	<isNotNull property="userNum">
+    	and tcci.user_num = #userNum#
+    </isNotNull>
+    <isNotNull property="orgNum">
+    	and tcci.org_num = #orgNum#
+    </isNotNull>
+    <isNotNull property="contractNum">
+    	and tcci.contract_num = #contractNum#
+    </isNotNull>
+    <isNotNull property="subcontractNum">
+    	and tcs.subcontract_num = #subcontractNum#
+    </isNotNull>
+    <isNotNull property="suretyNo">
+    	and tgmb.surety_no = #suretyNo#
+    </isNotNull>
+    <isNotNull property="summaryNum">
+    	and tls.summary_num = #summaryNum#
+    </isNotNull>
+    <!--order by tls.end_date -->
+	</select>
+	
+	<select id="getCdzykhInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+		tls.summary_num,
+		tcci.contract_num,
+		tcp.party_name,
+		nvl(tls.summary_amt,0) as summary_amt,
+		nvl(tls.jjye,0) as jjye,
+		tls.summary_status_cd,
+		tgmb.surety_no,
+		tls.begin_date as summary_begin_date,
+		tls.end_date as summary_end_date,
+		nvl(tgmb.mortgage_value,0) as mortgage_value ,
+		nvl(tgmb.total_amt,0) as total_amt,
+		nvl(tgmb.total_kh_amt,0) as total_kh_amt,
+		tgmb.currency_cd as cd_currency_cd,
+		nvl(tcsgr.surety_amt,0) as surety_amt,
+		tgf.frenum,
+		tgf.cuacno,
+		tli.loan_org,
+		tcza.kh_amt,
+		tcza.bxhj_amt,
+		tcza.apply_date
+	from 
+		tb_con_contract_info tcci,  
+		tb_con_subcontract_rel tcsr,
+		tb_con_subcontract tcs，    
+		tb_con_sub_grt_rel tcsgr,   
+		tb_grt_mortgage_basic tgmb, 
+		tb_grt_freeze tgf,
+		tb_csm_party tcp,           
+		tb_loan_summary tls,
+		tb_loan_info tli,
+		tb_cd_zykh_apply tcza
+	where tcci.contract_id = tcsr.contract_id
+	and tcsr.subcontract_id = tcs.subcontract_id
+	and tcs.subcontract_id = tcsgr.subcontract_id
+	and tcsgr.surety_id = tgmb.surety_id
+	and tgmb.surety_id = tgf.surety_id
+	and tcci.party_id = tcp.party_id
+	and tcci.contract_id = tls.contract_id
+	and tls.loan_id = tli.loan_id
+	and tgmb.surety_no = tcza.surety_no
+	and tls.summary_num = tcza.loan_summary
+    and tcza.zykh_id = #zykhId#
+	</select>
+	
+	<select id="getCdzykhInfo1" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	select 
+		tls.summary_num,
+		tcci.contract_num,
+		tcp.party_name,
+		nvl(tls.summary_amt,0) as summary_amt,
+		nvl(tls.jjye,0) as jjye,
+		tls.summary_status_cd,
+		tgmb.surety_no,
+		tls.begin_date as summary_begin_date,
+		tls.end_date as summary_end_date,
+		nvl(tgmb.mortgage_value,0) as mortgage_value,
+		tgmb.currency_cd as cd_currency_cd,
+		nvl(tcsgr.surety_amt,0) as surety_amt,
+		tgf.frenum,
+		tgf.cuacno,
+		tli.loan_org,
+		tli.org_num,
+		nvl(tcza.kh_amt,0) as kh_amt,
+		nvl(tcza.bxhj_amt,0) as bxhj_amt
+	from 
+		tb_con_contract_info tcci,  
+		tb_con_subcontract_rel tcsr,
+		tb_con_subcontract tcs，    
+		tb_con_sub_grt_rel tcsgr,   
+		tb_grt_mortgage_basic tgmb, 
+		tb_grt_freeze tgf,
+		tb_csm_party tcp,           
+		tb_loan_summary tls,
+		tb_loan_info tli,
+		tb_cd_zykh_apply tcza
+	where tcci.contract_id = tcsr.contract_id
+	and tcsr.subcontract_id = tcs.subcontract_id
+	and tcs.subcontract_id = tcsgr.subcontract_id
+	and tcsgr.surety_id = tgmb.surety_id
+	and tgmb.surety_id = tgf.surety_id
+	and tcci.party_id = tcp.party_id
+	and tcci.contract_id = tls.contract_id
+	and tls.loan_id = tli.loan_id
+	and tgmb.surety_no = tcza.surety_no
+	and tls.summary_num = tcza.loan_summary
+    and tcza.zykh_id = #zykhId#
+	</select>
+	
+	<select id="queryCdzykhDoneList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+		tcp.party_id,
+		tcp.party_name,
+		tcci.contract_id,
+		tcci.contract_num,
+		tgmb.surety_no,
+		tgmb.surety_name,
+		tls.summary_num,
+		tls.summary_status_cd,
+		nvl(tls.jjye,0) as jjye,
+		tcza.apply_date,
+		nvl(tcza.kh_amt,0) as kh_amt,
+		nvl(tcza.bxhj_amt,0) as bxhj_amt
+	from 
+		tb_con_contract_info tcci,  
+		tb_grt_mortgage_basic tgmb, 
+		tb_csm_party tcp,           
+		tb_loan_summary tls,
+		tb_cd_zykh_apply tcza
+	where  tcci.party_id = tcp.party_id
+	and tcci.contract_id = tls.contract_id
+	and tgmb.surety_no = tcza.surety_no
+	and tls.summary_num = tcza.loan_summary
+	and tcza.status = '03'
+	<isNotNull property="userNum">
+    	and tcci.user_num = #userNum#
+    </isNotNull>
+    <isNotNull property="orgNum">
+    	and tcci.org_num = #orgNum#
+    </isNotNull>
+    <isNotNull property="contractNum">
+    	and tcci.contract_num = #contractNum#
+    </isNotNull>
+    <isNotNull property="suretyNo">
+    	and tgmb.surety_no = #suretyNo#
+    </isNotNull>
+    <isNotNull property="summaryNum">
+    	and tls.summary_num = #summaryNum#
+    </isNotNull>
+     <isNotNull property="applyDate">
+    	and tcza.apply_date = to_date(#applyDate#,'yyyy-MM-dd hh24:mi:ss')
+    </isNotNull>
+    order by tcza.apply_date desc
+	</select>
+	<!--查询存单是不是担保公司的存单-->
+	<select id="queryCdIsAssure" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select tcc.party_id from tb_cd_zykh_apply tcza,tb_grt_mortgage_basic tgmb,TB_CSM_CORPORATION tcc
+		where tcza.surety_no = tgmb.surety_no
+		and tgmb.party_id = tcc.party_id
+		and tcc.third_cust_type_cd = '1'
+		and tcza.zykh_id = #zykhId#
+	</select>
+</sqlMap>

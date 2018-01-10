@@ -1,0 +1,185 @@
+<html>
+<head>
+<title></title>
+<script language="javascript" src="drawline.js" ></script>
+<style>
+	*{
+		font-weight: bold;
+		font-size:13px;
+		
+	}
+	
+	
+</style>
+
+</head>
+<body>
+	<div id="mainDiv"  style="text-align:middle">
+		<div id="mainParty" style="border:1px solid black;position:absolute;width:100px;height:60px;" >
+			
+		</div>
+	</div>
+</body>
+</html>
+
+
+<script language="JavaScript">
+var draw = new FlowGraphic();
+//param 1:left
+//param 2:top
+
+</script>
+<script language="JavaScript">
+//���ڴ˷�����ʹ�÷�ʽ
+	//param 1:left����㣩
+	//param 2:top ����㣩
+	//param 3:left���յ㣩
+	//param 4:top ���յ㣩
+	//draw.drawArrow(150,130,250,130,"red");//��������
+
+
+	//����Div
+	var MainDiv  = document.getElementById("mainDiv");
+
+	//���ҳ��width;
+	var winWidth = window.screen.width;
+
+	
+	//���߹���
+	var draw = new FlowGraphic();
+
+	//�������Դ
+	var JsonData = [
+	{partyName:"�ͻ�a",partyId:"1",partyId2:"mainParty"},
+	{partyName:"�ͻ�b",partyId:"2",partyId2:"mainParty"},
+	{partyName:"�ͻ�c",partyId:"3",partyId2:"mainParty"},
+	{partyName:"�ͻ�d",partyId:"4",partyId2:"mainParty"},
+	{partyName:"�ͻ�e",partyId:"5",partyId2:"mainParty"},
+	];
+	
+	var JsonData2 = [
+	{partyName:"�ͻ�A",partyId:"6",partyId2:"1"},
+	{partyName:"�ͻ�B",partyId:"7",partyId2:"2"},
+	{partyName:"�ͻ�C",partyId:"8",partyId2:"3"},
+	{partyName:"�ͻ�D",partyId:"9",partyId2:"4"},
+	{partyName:"�ͻ�E",partyId:"10",partyId2:"5"},
+	];
+
+	var JsonData3 = [
+	{partyName:"�ͻ�A",partyId:"11",partyId2:"6"},
+	{partyName:"�ͻ�B",partyId:"12",partyId2:"6"},
+	{partyName:"�ͻ�C",partyId:"13",partyId2:"6"},
+	{partyName:"�ͻ�D",partyId:"14",partyId2:"6"},
+	{partyName:"�ͻ�E",partyId:"15",partyId2:"6"},
+	{partyName:"�ͻ�A",partyId:"16",partyId2:"6"},
+	{partyName:"�ͻ�B",partyId:"17",partyId2:"7"},
+	{partyName:"�ͻ�C",partyId:"18",partyId2:"7"},
+	{partyName:"�ͻ�D",partyId:"19",partyId2:"7"},
+	{partyName:"�ͻ�E",partyId:"20",partyId2:"7"},
+	{partyName:"�ͻ�A",partyId:"21",partyId2:"7"},
+	{partyName:"�ͻ�B",partyId:"22",partyId2:"7"},
+	{partyName:"�ͻ�C",partyId:"23",partyId2:"8"},
+	{partyName:"�ͻ�D",partyId:"24",partyId2:"8"},
+	{partyName:"�ͻ�E",partyId:"25",partyId2:"8"},
+	{partyName:"�ͻ�A",partyId:"26",partyId2:"8"},
+	{partyName:"�ͻ�B",partyId:"27",partyId2:"8"},
+	{partyName:"�ͻ�C",partyId:"28",partyId2:"8"},
+	{partyName:"�ͻ�D",partyId:"29",partyId2:"9"},
+	{partyName:"�ͻ�E",partyId:"30",partyId2:"9"},
+	{partyName:"�ͻ�A",partyId:"31",partyId2:"9"},
+	{partyName:"�ͻ�B",partyId:"32",partyId2:"9"},
+	{partyName:"�ͻ�C",partyId:"33",partyId2:"9"},
+	{partyName:"�ͻ�D",partyId:"34",partyId2:"9"},
+	{partyName:"�ͻ�E",partyId:"35",partyId2:"10"}
+	];
+
+	//������Ŀͻ�
+	var mainObj = document.getElementById("mainParty");
+	mainObj.innerHTML = "���Ŀͻ�";
+	mainObj.style.backgroundColor="#ff7f50";
+	mainObj.style.textAlign="center";
+	mainObj.style.left=(winWidth/2)-(mainObj.offsetWidth/2)+'px'; 
+	mainObj.style.top='20px';  
+	mainObj.style.position='absolute';
+	
+
+	//默认样式数据源 可修改
+	var SouceData = {border:"1px solid #FF0000",width:"100",height:"60"};
+
+	//生成的Div样式特定样式，考虑是否使用
+	var VisType   = {"A":{style:"",onclick:""}};
+
+	//Div背景色（可用于区分客户类型）
+	var backGround = {"1":"#ff7f50","2":"#77cdfb","3":"#87cdfa"};
+
+	//prama1 数据源
+	//prama2 行数
+	CreateCust(JsonData,1);
+	CreateCust(JsonData2,2);
+	CreateCust(JsonData3,3);
+	
+
+	
+	//获取X轴坐标（div对象,是否子节点）
+	function getPointX(obj,type){
+		if(type=="node"){
+			return parseInt(obj.style.left.replace(/[^0-9]/ig,""))+parseInt(obj.style.width.replace(/[^0-9]/ig,"")/2-10)
+		}else{
+			return parseInt(obj.style.left.replace(/[^0-9]/ig,""))+(obj.offsetWidth/2-10);
+		}
+		
+	}
+
+	//获取Y轴坐标（div对象,是否子节点）
+	function getPointY(obj,type){
+		if(type=="node"){
+			return parseInt(obj.style.top.replace(/[^0-9]/ig,""))-15;
+		}else{
+			return parseInt(obj.style.top.replace(/[^0-9]/ig,""))+obj.offsetHeight-18;
+		}
+		
+	}
+	
+	//����һ����ϵ����
+	//custs:��ѯ���Ĺ�ϵ�ͻ�Ⱥ
+	//lineNum����ǰ��Ҫ�������
+	function CreateCust(custs,lineNum){
+		num = custs.length+1;		
+		//alert(custs[0].partyId);
+		
+		for(var i =0;i<custs.length-1;i++){
+			//���Div
+			var obj = document.createElement("DIV");
+			obj.id = custs[i].partyId;
+			obj.innerHTML = custs[i].partyName;
+			obj.style.backgroundColor = backGround["2"];
+			obj.style.textAlign="center";
+			obj.style.left=(winWidth/num)+((i+1)*145)+'px';  // ָ��������DIV���ĵ��о�������λ��
+			obj.style.top=180*lineNum+'px';  // ָ��������DIV���ĵ��о��붥����λ��
+			//obj.style.border=SouceData.border; // ���ñ߿�
+			obj.style.position='absolute'; // Ϊ�´�����DIVָ����Զ�λ
+			obj.style.width=SouceData.width+'px'; // ָ�����
+			obj.style.height=SouceData.height+'px'; // ָ���߶�
+			//��ø�����ϵ����
+			var Pobj = document.getElementById(custs[i].partyId2);
+			//alert(getPointX(obj));
+			draw.drawArrow(getPointX(obj,"node"),getPointY(obj,"node"),getPointX(Pobj),getPointY(Pobj),"#878d");//��������
+			MainDiv.appendChild(obj);
+			
+		}
+		
+		 
+	}
+
+	//������������Ҫ�����ж�
+	function VisCust(cust){
+		 for(var j=0;j<visType.length;j++){
+			
+		 }
+	}
+	 
+	
+
+</script>
+
+

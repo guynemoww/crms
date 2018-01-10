@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:谭凯 -->
+<sqlMap>
+	<!-- 删除人员机构管理信息 -->    
+    <delete id="deleteEmporg" parameterClass="java.util.Map" >
+    	DELETE OM_EMPORG T WHERE T.ORGID IN  (SELECT ORGID FROM OM_ORGANIZATION 
+				WHERE ORGSEQ LIKE (SELECT ORGSEQ FROM OM_ORGANIZATION WHERE ORGID = #orgid#)||'%')
+    </delete>
+    <!-- 删除操作者角色关联信息 -->    
+    <delete id="deleteOperatorrole" parameterClass="java.util.Map" >
+    	DELETE AC_OPERATORROLE T  WHERE T.OPERATORID IN (SELECT OPERATORID FROM OM_EMPLOYEE T
+	       WHERE T.ORGID IN (SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ LIKE (SELECT ORGSEQ
+	             FROM OM_ORGANIZATION WHERE ORGID = #orgid#) || '%'))
+    </delete>
+    <!-- 删除操作者信息 -->    
+    <delete id="deleteOperator" parameterClass="java.util.Map" >
+    	DELETE AC_OPERATOR T  WHERE T.OPERATORID IN (SELECT OPERATORID FROM OM_EMPLOYEE T
+	       WHERE T.ORGID IN (SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ LIKE (SELECT ORGSEQ
+	             FROM OM_ORGANIZATION WHERE ORGID = #orgid#) || '%'))
+    </delete>
+    <!-- 删除员工信息 -->    
+    <delete id="deleteEmployee" parameterClass="java.util.Map" >
+    	DELETE OM_EMPLOYEE T WHERE T.ORGID IN (SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ 
+       			LIKE (SELECT ORGSEQ FROM OM_ORGANIZATION T WHERE T.ORGID = #orgid#)||'%')
+    </delete>
+    <!-- 删除机构信息 -->    
+    <delete id="deleteOrganizaiton" parameterClass="java.util.Map" >
+    	DELETE OM_ORGANIZATION WHERE ORGID IN (SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ LIKE 
+        	(SELECT ORGSEQ FROM OM_ORGANIZATION WHERE ORGID = #orgid#)||'%')
+    </delete>
+    <!-- 查询机构下是否存在下级机构 -->
+    <select id="queryLowerOrg" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.OmOrganization">
+    	<![CDATA[
+    		SELECT *
+			  FROM OM_ORGANIZATION
+			 WHERE ORGID IN
+			       (SELECT ORGID
+			          FROM OM_ORGANIZATION
+			         WHERE ORGSEQ LIKE
+			               (SELECT ORGSEQ FROM OM_ORGANIZATION WHERE ORGID = #orgid#) || '%')
+    	]]>
+    </select>
+    <!-- 查询机构下是否存在下级机构 -->
+    <select id="queryLowerEmpByOrg" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.OmEmployee">
+    	<![CDATA[
+    		SELECT * FROM OM_EMPLOYEE T WHERE T.ORGID IN (SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ 
+       			LIKE (SELECT ORGSEQ FROM OM_ORGANIZATION T WHERE T.ORGID = #orgid#)||'%')
+    	]]>
+    </select>
+    
+</sqlMap>

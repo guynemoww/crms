@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+   
+<resultMap class="commonj.sdo.DataObject" id="getExchangeRate">
+        <result column="MIDEXCHANGERATE" javaType="string" property="midExchangeRate"/>
+    </resultMap>
+    <select id="getExchangeRate" parameterClass="java.util.HashMap" resultMap="getExchangeRate">
+SELECT
+    MIDEXCHANGERATE
+FROM
+    TB_BATCH_MONEYEXCHANGE_B
+WHERE
+    FROM_CURRENCY_NUM=#fromCurrencyNum#
+AND TO_CURRENCY_NUM = '156'
+
+</select>
+
+
+    <resultMap class="commonj.sdo.DataObject" id="optionCards">
+		<result column="INDEX_CD_ID" property="indexCdId"/>
+		<result column="INDEX_CD" property="indexCd"/>
+        <result column="INDEX_NAME" property="indexName"/>
+        <result column="STANDARD_INDEX_CD" property="standardIndexCd"/>
+    </resultMap>
+    <!--取选项卡 com.bos.aft.queryRiskIndexCode.queryOptionCards-->
+    <select id="queryOptionCards" parameterClass="java.util.HashMap" resultMap="optionCards">
+		
+		SELECT
+			t1.INDEX_CD_ID,
+			t1.INDEX_CD,
+		    t1.INDEX_NAME,
+		    t1.STANDARD_INDEX_CD
+		FROM 
+			TB_CLA_RISK_INDEX_CODE t1 
+		WHERE
+		    t1.CLASS_THREE_INDEX_CD=#indexCd#
+	    
+    </select>
+
+</sqlMap>

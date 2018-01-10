@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lenovo -->
+<sqlMap>
+   <delete id="delGrtRel" parameterClass="java.util.Map">
+	
+ 	delete from crms.TB_BIZ_GRT_REL where SURETY_ID in (select SURETY_ID from crms.TB_GRT_MORTGAGE_BASIC where SURETY_NO =#clt_no#)
+	
+	</delete>
+	<delete id="delMortgageBasic" parameterClass="java.util.Map">
+	
+ 	delete from crms.TB_GRT_MORTGAGE_BASIC where SURETY_NO =#clt_no#
+	
+	</delete>
+	<!--sdl  20171117 删除押品与权证关联关系-->
+	<delete id="delGrtCardMortgage" parameterClass="java.util.Map">
+	
+ 	delete from crms.tb_grt_card_mortagage where SURETY_ID in (select SURETY_ID from crms.TB_GRT_MORTGAGE_BASIC where SURETY_NO =#clt_no#)
+	
+	</delete>
+	 <delete id="delMybankAssess" parameterClass="java.util.Map">
+	
+ 	delete from crms.tb_grt_mybank_assess where SURETY_ID in (select SURETY_ID from crms.TB_GRT_MORTGAGE_BASIC where SURETY_NO =#clt_no#)
+	
+	</delete>
+	 <delete id="delOuterAssess" parameterClass="java.util.Map">
+	
+ 	delete from crms.TB_GRT_OUTER_ASSESS where SURETY_ID in (select SURETY_ID from crms.TB_GRT_MORTGAGE_BASIC where SURETY_NO =#clt_no#)
+	
+	</delete>
+	<!-- add by shangmf:20171020:先查询业务押品关联表 -->
+	<select id="queryGrtRel" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from crms.TB_BIZ_GRT_REL ta where ta.apply_id=#apply_id# and ta.surety_id in
+		(select SURETY_ID  from  crms.TB_GRT_MORTGAGE_BASIC  where  SURETY_NO = #clt_no#)
+    </select>
+    <insert id="insertGrtRel" parameterClass="java.util.Map" >
+	insert into crms.TB_BIZ_GRT_REL
+		  (relation_id, approve_id, apply_id, surety_id, surety_type, surety_amt, mortgage_rate, create_time, update_time, mortgage_value)
+		values
+		  (lower(sys_guid()), 
+		   #approvelId#, 
+		   #apply_id#, 
+		   #suretyId#, 
+		   #clt_flag#, 
+		   #surety_amt#, 
+		   #mortgage_rate#, 
+		   sysdate, 
+		   sysdate, 
+		   #mortgagaAmt#)		
+	</insert>
+    
+	<insert id="mergeGrtRel" parameterClass="java.util.Map" >
+	merge into crms.TB_BIZ_GRT_REL mc using (select SURETY_ID ,surety_no from  crms.TB_GRT_MORTGAGE_BASIC  
+		where  SURETY_NO = #clt_no# ) uc
+	on (uc.SURETY_ID = mc.SURETY_ID )
+	 	when matched then 
+      	update set 
+      	  <isNotNull prepend="" property="apply_id"> apply_id = #apply_id#,</isNotNull>
+      	  <isNotNull prepend="" property="clt_flag"> surety_type = #clt_flag#,</isNotNull>
+       	 update_time = sysdate
+		when not matched then 
+		insert 
+		  (relation_id, approve_id, apply_id, surety_id, surety_type, surety_amt, mortgage_rate, create_time, update_time, mortgage_value)
+		values
+		  (lower(sys_guid()), 
+		   #approvelId#, 
+		   #apply_id#, 
+		   #suretyId#, 
+		   #clt_flag#, 
+		   #surety_amt#, 
+		   #mortgage_rate#, 
+		   sysdate, 
+		   sysdate, 
+		   #mortgagaAmt#)
+		
+	</insert>
+	<insert id="mergeMortgageBasic" parameterClass="java.util.Map" >
+  	merge into crms.TB_GRT_MORTGAGE_BASIC mc using (select to_char($clt_no$) as SURETY_NO from DUAL) uc
+	on (uc.SURETY_NO = mc.SURETY_NO)
+	when matched then
+  		update set 
+  		<isNotNull prepend="" property="party_id"> mc.PARTY_ID=#party_id#,</isNotNull>
+  		<isNotNull prepend="" property="clt_tp_cd"> mc.SORT_TYPE=#clt_tp_cd#,</isNotNull>
+  		<isNotNull prepend="" property="sys_eval_ccy_cd"> mc.CURRENCY_CD=#sys_eval_ccy_cd#,</isNotNull>
+  		<isNotNull prepend="" property="orgNum"> mc.ORG_NUM=#orgNum#,</isNotNull>
+  		<isNotNull prepend="" property="userNum"> mc.USER_NUM=#userNum#,</isNotNull>
+  		<isNotNull prepend="" property="mortgagaAmt"> mc.MORTGAGE_VALUE = #mortgagaAmt#,mc.avi_amt = #mortgagaAmt#,</isNotNull>
+  		<isNotNull prepend="" property="clt_flag"> mc.coll_type = #clt_flag#,</isNotNull> 
+  		<isNotNull prepend="" property="initial_amt"> mc.assess_value = #initial_amt#,</isNotNull>
+  		<isNotNull prepend="" property="clt_nm"> mc.surety_name = #clt_nm#,</isNotNull>
+  		<isNotNull prepend="" property="warrant_no"> mc.ownership_num = #warrant_no#,</isNotNull>
+  		<isNotNull prepend="" property="mortgage_status"> mc.mortgage_status = #mortgage_status#,</isNotNull>
+  		mc.CREATE_TIME=sysdate,
+  		mc.UPDATE_TIME=sysdate
+  	
+	when not matched then 
+  		insert
+ 		(surety_id, 
+ 		surety_no, 
+ 		party_id, 
+ 		sort_type, 
+ 		coll_type, 
+ 		assess_form, 
+ 		assess_date, 
+ 		assess_end_date, 
+ 		currency_cd, 
+ 		assess_value, 
+ 		mortgage_value, 
+ 		mybank_set_value, 
+ 		if_other_common, 
+ 		mortgage_status, 
+ 		mortgage_gain_way,
+ 		cash_ability, 
+ 		mortgage_mobility, 
+ 		org_num, 
+ 		user_num, 
+ 		create_time, 
+ 		update_time, mybank_affirm_value, surety_amt, mortgage_rate, total_amt, avi_amt, if_data_move, ownership_num, insurance_condition, insurance_company, insurance_num,surety_name,TRANS_FLAG)
+		values
+		(#suretyId#,
+		 #clt_no#, 
+		 #party_id#,
+		 #clt_tp_cd#, 
+		 #clt_flag#,
+	  	 '', 
+		 sysdate, 
+		 null,
+		 #sys_eval_ccy_cd#,
+		 #initial_amt#,
+		 #mortgagaAmt#,
+		 0.0,
+		 '',
+		 #mortgage_status#,
+		 '',
+		 '', 
+		 '',
+		 #orgNum#, 
+		 #userNum#, 
+		 sysdate, 
+		 sysdate, 
+		 0.0,
+		 0.0, 
+		 0.0,
+		 0.0,
+		 #mortgagaAmt#, 
+		 '',
+		 #warrant_no#,
+		 '', 
+		 '', 
+		 '',
+		 #clt_nm#,'0')
+	</insert>
+	
+	<insert id="mergeMybankAssess" parameterClass="java.util.Map" >
+	merge into crms.tb_grt_mybank_assess mc using (select SURETY_ID ,surety_no from  crms.TB_GRT_MORTGAGE_BASIC 
+		where  SURETY_NO = #clt_no#  ) uc
+	on (uc.SURETY_ID = mc.SURETY_ID)
+		when matched then  update set 
+		   sort_type = #clt_tp_cd#,
+	       assess_way = #asesType_cd#, 
+	       currency_cd = #sys_eval_ccy_cd#, 
+	       assess_value =  #sys_eval_amt#, 
+	       assess_date = #sys_eval_dt#, 
+	       update_time = sysdate
+		when not matched then 
+		 insert
+	      (surety_key_id, surety_id, sort_type, assess_way, currency_cd, assess_value, mortgage_value, assess_date, remark, create_time, update_time, assess_org, cost_value)
+	    values
+	      (lower(sys_guid()),
+	       #suretyId#, 
+	       #clt_tp_cd#, 
+	       #asesType_cd#, 
+	       #sys_eval_ccy_cd#, 
+	       #sys_eval_amt#, 
+	       #mortgagaAmt#, 
+	       #sys_eval_dt#, 
+	       '', 
+	       sysdate, 
+	       sysdate, 
+	       #orgNum#, 
+	       0.0)
+	</insert>
+	<insert id="mergeOuterAssess" parameterClass="java.util.Map" >
+	merge into crms.TB_GRT_OUTER_ASSESS mc using (select SURETY_ID ,surety_no from  crms.TB_GRT_MORTGAGE_BASIC 
+		where  SURETY_NO = #clt_no# ) uc
+	on (uc.SURETY_ID = mc.SURETY_ID)
+		when matched then  update set 
+		   sort_type = #clt_tp_cd#,
+	       assess_way = #asesType_cd#, 
+	       currency_cd = #sys_eval_ccy_cd#, 
+	       assess_value =  #sys_eval_amt#, 
+	       assess_date = #sys_eval_dt#, 
+	       update_time = sysdate
+		when not matched then 
+		insert
+		  (surety_key_id, surety_id, sort_type, assess_way, assess_org, currency_cd, assess_value, mortgage_value, assess_date, remark, create_time, update_time, cost_value)
+		values
+		  (lower(sys_guid()), 
+		  #suretyId#, 
+	      #clt_tp_cd#, 
+		  #asesType_cd#, 
+		  #extl_eval_org_name#, 
+		  #extl_eval_ccy_cd#, 
+		  #extl_eval_amt#, 
+		  #mortgagaAmt#, 
+		  #extl_eval_dt#, 
+		  '', 
+		  sysdate,
+		  sysdate, 
+		  '')
+	</insert>
+	<update id="updateMortgagaValue" parameterClass="java.util.HashMap" >
+	   update crms.TB_GRT_MORTGAGE_BASIC set ASSESS_VALUE = #initial_amt# ,UPDATE_TIME = sysdate ,mortgaga_amt = #mortgagaAmt#
+	   where surety_no = #clt_no#
+	</update>
+	
+	<insert id="mergeDeposit" parameterClass="java.util.Map" >
+	merge into crms.tb_grt_deposit mc using (select SURETY_ID ,surety_no from  crms.TB_GRT_MORTGAGE_BASIC 
+    where  SURETY_NO = #clt_no# ) uc
+  on (uc.SURETY_ID = mc.SURETY_ID)
+    when matched then  update set 
+         deposit_acc = #accountNo#,
+         deposit_no = #depsNo#,
+         update_time = sysdate
+    when not matched then 
+     insert
+        (surety_key_id, 
+         surety_id, 
+         sort_type, 
+         deposit_acc,
+         deposit_no,
+         open_bank,
+         begin_date, 
+         end_date,
+         currency_cd, 
+         deposit_amt, 
+         deposit_rate,
+         remark,
+         create_time,
+         update_time,
+         deposit_type,
+         expire_total_amt)
+      values
+        (lower(sys_guid()),
+         #suretyId#, 
+         #clt_tp_cd#,
+         #accountNo#,
+         #depsNo#,
+         '', 
+         sysdate, 
+         null,
+         '',
+         #accountAmt#, 
+         0.0,
+         '',
+         sysdate, 
+         sysdate,
+         #depositType#, 
+         #accountAmt#)
+	</insert>
+	
+	<update id="updateCollType" parameterClass="java.util.Map" >
+	  update crms.tb_grt_mortgage_basic
+            set 
+                coll_type = #clt_flag#,
+                ORG_NUM=#orgNum#,
+  				USER_NUM=#userNum#,
+                update_time = sysdate
+          where surety_no = #clt_no#
+	</update>
+</sqlMap>

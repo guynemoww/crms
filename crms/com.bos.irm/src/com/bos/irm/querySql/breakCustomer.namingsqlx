@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:huanglonglong -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="breakCustomerValid">
+        <result column="DEFAULT_REASON"  property="defaultReason"/> 				<!-- 违约状态 -->
+        <result column="DEFAULT_STATE"  property="defaultState"/> 				<!-- 违约状态 -->
+        <result column="DR_ID"  property="drId"/> 								<!-- 违约ID -->
+        <result column="DEFAULT_CONFIRM_DT"  property="defaultConfirmCd"/>		<!-- 违约确认时间 -->
+       	<result column="USER_NUM"  property="userNum"/>							<!-- 用户Id -->
+        <result column="EMPNAME"  property="empname"/>							<!-- 用户名 -->
+        <result column="DEFAULT_CONDITION"  property="defaultCondition"/>		<!-- 违约条件 -->
+        <result column="PARTY_NAME"  property="partyName"/>						<!-- 客户姓名 -->
+        <result column="PARTY_ID"  property="partyId"/>							<!-- 客户id -->
+        <result column="PARTY_NUM"  property="partyNum"/>						<!-- 客户编码 -->
+        <result column="CORP_CUSTOMER_TYPE_CD"  property="corpCustomerTypeCd"/>						<!-- 客户编码 -->
+        <result column="PARTY_TYPE_CD"  property="partyTypeCd"/> 				<!-- 客户类型 -->
+        <result column="ORGNAME"  property="ORGNAME"/> 							<!-- 客户类型 -->
+        <result column="DEFAULT_CANCEL_START_DT"  property="defaultCancelStartDt"/> 				<!-- 客户类型 -->
+        <result column="DEFAULT_CANCEL_DT"  property="defaultCancelDt"/> 							<!-- 客户类型 -->
+        
+       
+        <!--result column="ORGN_NUM"  property="orgnNum"/-->							<!-- 组织机构代码 -->
+    </resultMap>
+    
+    <select id="queryBreakCustomerValid"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject"  resultMap="breakCustomerValid">
+    	SELECT  distinct
+    	te.DEFAULT_REASON,
+    	TBDR.DEFAULT_CANCEL_START_DT,
+	 	TBDR.DEFAULT_CANCEL_DT,
+    	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+           OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_ID,
+	            TBCP.PARTY_NUM,
+	             TBCP.PARTY_TYPE_CD,
+	              /*voo.ORGCODE as ORGN_NUM,*/
+	              TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		   LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		   LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		   left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('10','12')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  != '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>			      
+	<isNotNull property="userPlacingCd">
+    	and t.USER_PLACING_CD = #userPlacingCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>   	      
+    UNION
+    
+    SELECT  distinct
+    	te.DEFAULT_REASON,
+    	TBDR.DEFAULT_CANCEL_START_DT,
+	 	TBDR.DEFAULT_CANCEL_DT,
+   		 omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+           OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_ID,
+	            TBCP.PARTY_NUM,
+	             TBCP.PARTY_TYPE_CD,
+	              /*voo.ORGCODE as ORGN_NUM,*/
+	              TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		   LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		   LEFT JOIN  tb_csm_management_team  t ON TBCP.party_id=t.party_id
+		   left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('10','12')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  = '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>	    
+	<isNotNull property="userRoleCd">
+    	and t.USER_ROLE_CD = #userRoleCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>
+    
+    
+    
+    </select>
+    <select id="queryDefaultRecordInfo"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="breakCustomerValid">
+    	SELECT  distinct
+    	te.DEFAULT_REASON,
+    	TBDR.DEFAULT_CANCEL_START_DT,
+	 	TBDR.DEFAULT_CANCEL_DT,
+    	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('15','21','20','26')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  != '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>			      
+	<isNotNull property="userPlacingCd">
+    	and t.USER_PLACING_CD = #userPlacingCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>   
+	 UNION 
+	 
+	 SELECT  distinct
+	 	te.DEFAULT_REASON,
+		 TBDR.DEFAULT_CANCEL_START_DT,
+		 TBDR.DEFAULT_CANCEL_DT,
+	 	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('15','21','20','26')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  = '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>	    
+	<isNotNull property="userRoleCd">
+    	and t.USER_ROLE_CD = #userRoleCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>
+    </select>
+    <select id="queryBreakCustomerIneffectively"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="breakCustomerValid">
+    	SELECT  distinct
+    	te.DEFAULT_REASON,
+    	TBDR.DEFAULT_CANCEL_START_DT,
+		 TBDR.DEFAULT_CANCEL_DT,
+    	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('21','20')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  != '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>			      
+	<isNotNull property="userPlacingCd">
+    	and t.USER_PLACING_CD = #userPlacingCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>   
+	 UNION 
+	 
+	 SELECT  distinct
+	 	te.DEFAULT_REASON,
+		 TBDR.DEFAULT_CANCEL_START_DT,
+		 TBDR.DEFAULT_CANCEL_DT,
+	 	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('21','20')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  = '05'
+		<isNotNull property="orgNum">
+	    	and voo.PARENTORGID = #orgNum#
+	    </isNotNull>	    
+		<isNotNull property="userRoleCd">
+	    	and t.USER_ROLE_CD = #userRoleCd#
+	    </isNotNull>
+			     
+		<isNotNull property="userNum">
+	    	and t.USER_NUM= #userNum#
+	    </isNotNull>
+		
+	  	<isNotNull property="orgcode">
+	    	and voo.parentorgcode = #orgcode#
+	    </isNotNull>
+	    
+		<isNotNull property="defaultState">
+		   and  TBDR.DEFAULT_STATE = #defaultState#
+		</isNotNull>
+		
+		<isNotNull property="defaultConfirmCdStr">
+		   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+		</isNotNull>
+		
+		<isNotNull property="defaultConfirmCd">
+		   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+		</isNotNull>
+		
+		<isNotNull property="empname">
+		   and OMEM.EMPNAME like '%$empname$%' 
+		</isNotNull>
+		
+		<isNotNull property="partyTypeCd">
+		   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+		</isNotNull>
+		
+		<isNotNull property="partyName">
+		   and TBCP.PARTY_NAME like  '%$partyName$%' 
+		</isNotNull>
+		
+		<isNotNull property="partyNum">
+		   and TBCP.PARTY_NUM  = #partyNum# 
+		</isNotNull>
+    </select>
+    
+    <select id="queryBreakCustomerHistoryInfo"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="breakCustomerValid">
+    	SELECT  distinct
+    	te.DEFAULT_REASON,
+    	TBDR.DEFAULT_CANCEL_START_DT,
+	 	TBDR.DEFAULT_CANCEL_DT,
+    	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('16','25','37','38')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  != '05'
+ 
+    <isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>			      
+	<isNotNull property="userPlacingCd">
+    	and t.USER_PLACING_CD = #userPlacingCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>
+     
+	 UNION 
+	 
+	 SELECT distinct
+	 te.DEFAULT_REASON,
+		 TBDR.DEFAULT_CANCEL_START_DT,
+		 TBDR.DEFAULT_CANCEL_DT,
+	 	omor.ORGNAME,
+    	 TBDR.DEFAULT_STATE,
+    	 TBDR.DR_ID,
+          TBDR.DEFAULT_CONFIRM_DT,
+           TBDR.USER_NUM,
+            OMEM.EMPNAME,
+             TBDR.DEFAULT_CONDITION,
+             TBCP.PARTY_ID,
+	          TBCP.PARTY_NAME,
+	           TBCP.PARTY_NUM,
+	            TBCP.PARTY_TYPE_CD,
+	            /*voo.ORGCODE as ORGN_NUM,*/
+	             TBCC.CORP_CUSTOMER_TYPE_CD
+		 FROM TB_IRM_DEFAULT_RECORD TBDR
+		  LEFT JOIN TB_CSM_PARTY TBCP ON TBDR.PARTY_ID = TBCP.PARTY_ID
+		  LEFT JOIN  tb_csm_management_team t ON TBCP.party_id=t.party_id
+		  left join OM_ORGANIZATION omor on t.ORG_NUM = omor.ORGCODE
+		   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+		    LEFT JOIN OM_EMPLOYEE OMEM ON TBDR.USER_NUM = OMEM.USERID 
+		    LEFT JOIN TB_CSM_CORPORATION TBCC ON TBDR.PARTY_ID = TBCC.PARTY_ID
+		    left join (select distinct b.dr_id,b.default_dt,a.DEFAULT_REASON from TB_IRM_DEFAULT_RECORD_detail a 
+		       left join (select DR_ID,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail group by dr_id) b
+		       on a.dr_id = b.dr_id and a.default_dt = b.default_dt 
+		       where b.dr_id is not  null) te 
+		       on TBDR.dr_id = te.dr_id
+		      WHERE TBDR.DEFAULT_STATE in ('16','25','37','38')
+		       and t.party_id is not null
+		       and tbcp.party_Type_Cd  = '05'
+	<isNotNull property="orgNum">
+    	and voo.PARENTORGID = #orgNum#
+    </isNotNull>	    
+	<isNotNull property="userRoleCd">
+    	and t.USER_ROLE_CD = #userRoleCd#
+    </isNotNull>
+		     
+	<isNotNull property="userNum">
+    	and t.USER_NUM= #userNum#
+    </isNotNull>
+	
+  	<isNotNull property="orgcode">
+    	and voo.parentorgcode = #orgcode#
+    </isNotNull>
+    
+	<isNotNull property="defaultState">
+	   and  TBDR.DEFAULT_STATE = #defaultState#
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCdStr">
+	   and  TBDR.DEFAULT_CONFIRM_DT &gt;= #defaultConfirmCdStr# 
+	</isNotNull>
+	
+	<isNotNull property="defaultConfirmCd">
+	   and  TBDR.DEFAULT_CONFIRM_DT &lt;= #defaultConfirmCd# 
+	</isNotNull>
+	
+	<isNotNull property="empname">
+	   and OMEM.EMPNAME like '%$empname$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyTypeCd">
+	   and TBCP.PARTY_TYPE_CD = #partyTypeCd# 
+	</isNotNull>
+	
+	<isNotNull property="partyName">
+	   and TBCP.PARTY_NAME like  '%$partyName$%' 
+	</isNotNull>
+	
+	<isNotNull property="partyNum">
+	   and TBCP.PARTY_NUM  = #partyNum# 
+	</isNotNull>
+	   
+    </select>
+
+    <resultMap class="commonj.sdo.DataObject" id="queryDefaultRecordIsExist">
+        <result column="DR_ID"  property="drId"/> 						
+    </resultMap>
+    <select id="queryDefaultRecordIsExist"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryDefaultRecordIsExist">
+		select DR_ID   from tb_irm_default_record
+			 where default_state in ('10','12','15','20','21','26') 
+        <isNotNull property="partyId">
+		   and party_id  = #partyId# 
+		</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryOrgId">
+        <result column="ORGID"  property="orgId"/> 						
+    </resultMap>
+    <select id="queryOrgId"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryOrgId">
+		 select ORGID from OM_ORGANIZATION 
+			 where 1=1
+        <isNotNull property="orgCode">
+		   and ORGCODE  = #orgCode# 
+		</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryLoanSummaryId">
+        <result column="DEFAULT_OBJECT_NUM"  property="defaultObjectNum"/> 						
+    </resultMap>
+    <select id="queryLoanSummaryId"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryLoanSummaryId">
+		 select DEFAULT_OBJECT_NUM from tb_irm_default_record_detail
+			where DEFAULT_CONDITION !='3'
+        <isNotNull property="drId">
+		   and dr_id  = #drId# 
+		</isNotNull>
+    </select>
+
+    <resultMap class="commonj.sdo.DataObject" id="queryMinDefaultDt">
+        <result column="dr_id"  property="drId"/> 						
+        <result column="DEFAULT_DT"  property="defaultDt"/> 						
+    </resultMap>
+    <select id="queryMinDefaultDt"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryMinDefaultDt">
+		  select dr_id,min(DEFAULT_DT) as DEFAULT_DT from TB_IRM_DEFAULT_RECORD_detail 
+			where 1=1
+	        <isNotNull property="drId">
+			   and dr_id = #drId# 
+			</isNotNull>
+			group by dr_id
+    </select>
+    
+  
+</sqlMap>

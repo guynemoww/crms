@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="queryFatherIndex">
+        <result column="REF_INDEX_CD" javaType="string" property="refIndexCd"/>
+        <result column="STANDARD_INDEX_CD" javaType="string" property="standardIndexCd"/>
+    </resultMap>
+    <select id="queryFatherIndex" parameterClass="java.util.HashMap" resultMap="queryFatherIndex">
+select 
+       t1.REF_INDEX_CD,
+       t2.STANDARD_INDEX_CD 
+ from
+       TB_CLA_RISK_INDEX_DISPLAY t1
+ left join 
+       TB_CLA_RISK_INDEX_CODE t2
+ on 
+    t1.REF_INDEX_CD = t2.INDEX_CD
+where 
+    t1.REF_MARK=#pageName#
+</select>
+
+<resultMap class="commonj.sdo.DataObject" id="getChooseIndex">
+        <result column="INDEX_NAME" javaType="string" property="indexName"/>
+    </resultMap>
+    <select id="getChooseIndex" parameterClass="java.util.HashMap" resultMap="getChooseIndex">
+SELECT
+    t2.INDEX_NAME
+FROM
+    TB_AFT_LOAN_CHECK_IDX_DATA t1
+LEFT JOIN
+    TB_CLA_RISK_INDEX_CODE t2
+ON
+    t1.INDEX_CHOICE = t2.INDEX_CD
+where 
+    t1.INDEX_ID = #refIndexCd#
+and 
+    t1.ALC_INFO_ID=#alcInfoId#
+    order by t1.UPDATE_TIME desc 
+    fetch first 1 rows only
+   
+</select>
+
+    <resultMap class="commonj.sdo.DataObject" id="getLastAlcInfoId"> 
+        <result column="ALC_INFO_ID" javaType="string" property="alcInfoId"/>
+    </resultMap>
+    <select id="getLastAlcInfoId" parameterClass="java.util.HashMap" resultMap="getLastAlcInfoId">
+    select ALC_INFO_ID from (
+SELECT
+    ALC_INFO_ID
+FROM
+    TB_AFT_LOAN_CHECK_CUST_INFO
+WHERE 
+    PARTY_ID=#partyId#
+AND
+    INSPECT_TYPE='1'
+AND
+    STATUS=#status# 
+ORDER BY
+    CREATE_TIME DESC) where rownum=1
+    
+
+    
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="getLastSecondAlcInfoId">
+        <result column="ALC_INFO_ID" javaType="string" property="alcInfoId"/>
+    </resultMap>
+    <select id="getLastSecondAlcInfoId" parameterClass="java.util.HashMap" resultMap="getLastSecondAlcInfoId">
+SELECT
+    ALC_INFO_ID
+FROM
+    TB_AFT_LOAN_CHECK_CUST_INFO
+WHERE 
+    PARTY_ID=#partyId#
+AND
+    INSPECT_TYPE='1'
+AND 
+    ALC_INFO_ID NOT IN
+    (
+    SELECT
+          ALC_INFO_ID
+    FROM
+          TB_AFT_LOAN_CHECK_CUST_INFO
+    WHERE 
+          PARTY_ID=#partyId#
+    AND
+          INSPECT_TYPE='1'
+    AND 
+          STATUS=#status# 
+    ORDER BY
+          CREATE_TIME DESC
+    FETCH
+          FIRST 1 rows only
+    )
+    AND 
+          STATUS=#status#
+ORDER BY
+    CREATE_TIME DESC
+FETCH
+    FIRST 1 rows only
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="getCurrentLastAlcInfoId"> 
+        <result column="ALC_INFO_ID" javaType="string" property="alcInfoId"/>
+    </resultMap>
+    <select id="getCurrentLastAlcInfoId" parameterClass="java.util.HashMap" resultMap="getCurrentLastAlcInfoId">
+ <![CDATA[
+SELECT
+    ALC_INFO_ID
+FROM
+    TB_AFT_LOAN_CHECK_CUST_INFO
+WHERE
+    PARTY_ID=#partyId#
+AND 
+    INSPECT_TYPE='1'
+AND 
+    CREATE_TIME < #createTime#
+AND 
+    ALC_INFO_ID != #alcInfoId#
+    order by CREATE_TIME desc
+    fetch first 1 rows only
+    
+    ]]>
+
+    </select>
+</sqlMap>

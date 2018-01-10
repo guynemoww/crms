@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <!-- 获取岗位ID
+ 	-->
+    <select id="queryPositionId" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+		select max(positionid)+1 as positionid from om_position
+	</select>
+	
+	<resultMap id="resultMap" class="java.util.HashMap">
+			<result property="pId" column="p_id"/>
+			<result property="toMutexPosicode" column="TO_MUTEX_POSICODE"/>
+			<result property="toMutexPosiname" column="POSINAME"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="createUserNum" column="CREATE_USER_NUM"/>
+			<result property="createOrgNum" column="CREATE_ORG_NUM" />
+	</resultMap>
+	<select id="queryPositionMutex" parameterClass="java.util.Map" resultMap="resultMap">
+	
+		select t.p_id,
+		       t.to_mutex_posicode,
+		       p.posiname,
+		       t.create_date,
+		       t.create_user_num,
+		       t.create_org_num
+		  from (select m.p_id,
+		               decode(m.to_mutex_posicode,
+		                      #posicode#,
+		                      m.mutex_posicode,
+		                      m.to_mutex_posicode) as to_mutex_posicode,
+		               
+		               to_char(m.create_date, 'yyyy-MM-dd hh24:mi:ss') as create_date,
+		               m.create_user_num,
+		               m.create_org_num
+		          from om_position_mutex m
+		         where m.mutex_posicode = #posicode#
+		            or m.to_mutex_posicode = #posicode#) t,
+		       om_position p
+		 where t.to_mutex_posicode = p.posicode
+	</select>
+	
+	<resultMap id="resultMap3" class="java.util.HashMap">
+			<result property="pId" column="p_id"/>
+			<result property="toMutexPosicode" column="TO_MUTEX_POSICODE"/>
+			<result property="toMutexPosiname" column="POSINAME"/>
+			<result property="positionid" column="POSITIONID"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="createUserNum" column="CREATE_USER_NUM"/>
+			<result property="createOrgNum" column="CREATE_ORG_NUM" />
+	</resultMap>
+	<select id="checkPositionMutex" parameterClass="java.util.Map" resultMap="resultMap3">
+	
+		select t.p_id,
+		       t.to_mutex_posicode,
+		       p.posiname,
+		       p.positionid,
+		       t.create_date,
+		       t.create_user_num,
+		       t.create_org_num
+		  from (select m.p_id,
+		               decode(m.to_mutex_posicode,
+		                      (select posicode from om_position where positionid=#positionid#),
+		                      m.mutex_posicode,
+		                      m.to_mutex_posicode) as to_mutex_posicode,
+		               
+		               to_char(m.create_date, 'yyyy-MM-dd hh24:mi:ss') as create_date,
+		               m.create_user_num,
+		               m.create_org_num
+		          from om_position_mutex m
+		         where m.mutex_posicode = (select posicode from om_position where positionid=#positionid#)
+		            or m.to_mutex_posicode = (select posicode from om_position where positionid=#positionid#)) t,
+		       om_position p
+		 where t.to_mutex_posicode = p.posicode
+	</select>
+	
+	
+	<resultMap id="resultMap2" class="java.util.HashMap">
+			<result property="posicode" column="POSICODE"/>
+			<result property="posiname" column="POSINAME"/>
+	</resultMap>
+	<resultMap class="commonj.sdo.DataObject" id="PositionInfo">
+        	<result property="posicode" column="POSICODE"/>
+			<result property="posiname" column="POSINAME"/>
+			<result property="positionid" column="POSITIONID"/>
+			<result property="posistate" column="POSISTATE"/>
+    </resultMap>
+	
+	<select id="queryPositionInfo" parameterClass="commonj.sdo.DataObject" resultMap="PositionInfo">
+	select posicode,posiname,positionid,posistate from om_position where 1=1 
+	<isNotNull property="posiname">
+			and posiname like '%$posiname$%' 
+    	</isNotNull>
+	<isNotNull property="superadmin">
+			and (leg_org=#legorg# or leg_org is null)
+    	</isNotNull>
+    	order by posicode
+    </select>
+	
+	<select id="queryPositionNoMutex" parameterClass="java.util.Map" resultMap="resultMap2">
+	<![CDATA[
+		select p.posicode, p.posiname
+		  from om_position p
+		 where p.posicode not in
+		       (
+		        
+		        select to_mutex_posicode
+		        
+		          from (select m.p_id,
+		                        decode(m.to_mutex_posicode,
+		                               #posicode#,
+		                               m.mutex_posicode,
+		                               m.to_mutex_posicode) as to_mutex_posicode,
+		                        
+		                        to_char(m.create_date, 'yyyy-MM-dd hh24:mi:ss') as create_date,
+		                        m.create_user_num,
+		                        m.create_org_num
+		                   from om_position_mutex m
+		                  where m.mutex_posicode = #posicode#
+		                     or m.to_mutex_posicode = #posicode#))
+		   and p.posicode <> #posicode#
+  	]]>
+	</select>
+</sqlMap>

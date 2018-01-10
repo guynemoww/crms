@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+	
+	<!-- 流程校验 -->
+	<rule id="RBPS_0001" name="根据流程ID，校验是否有0或1个的人审批" checktype="greater"  checkedFieldName="$c" startValue="1"  errCode="2015110-001" errMsg="没有0或1个人审批" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_wfm_workiteminstance where  process_id=@processId   ]]></sql>
+	</rule>
+	<rule id="RBPS_0002" name="根据流程ID，校验是否有两个以上的人审批" checktype="greater"  checkedFieldName="$c" startValue="2"  errCode="2015110-001" errMsg="没有两个以上人审批" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_wfm_workiteminstance where  process_id=@processId  ]]></sql>
+	</rule>
+	<rule id="RBPS_0003" name="判断多人审批时，是否有人退回" checktype="less"  checkedFieldName="$c" endValue="1"  errCode="2015110-001" errMsg="该任务已被退回，请刷新列表" checkLevel="err">
+		<sql><![CDATA[
+				select count(1) c
+				  from tb_wfm_workiteminstance
+				 where process_id = @processId
+				   and activity_id = @activityId
+				   and user_num<>@userNum
+				   and conclusion = '99'
+		  ]]></sql>
+	</rule>
+</checkrules>

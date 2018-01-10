@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:LPC -->
+<sqlMap>
+	 <resultMap class="commonj.sdo.DataObject" id="queryForXyzLoanResult">
+        <result column="contract_num" javaType="string" property="ctrNo"/>
+        <result column="loan_num" javaType="string" property="dbtNo"/>
+        <result column="ecif_party_num" javaType="string" property="eCIFCstNo"/>
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="loan_amt" javaType="double" property="aplyAmt"/>
+        <result column="begin_date" javaType="string" property="ittDt"/>
+        <result column="end_date" javaType="string" property="expDt"/>
+        <result column="main_guaranty_type" javaType="string" property="mainGryTy"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="jyq" javaType="string" property="spotFwdInd"/>
+        <result column="kzsfbl" javaType="string" property="upPct"/>
+        <result column="kzxfbl" javaType="string" property="dwPct"/>
+        <result column="syrmc" javaType="string" property="benfNm"/>
+        <result column="xyzyxq" javaType="string" property="lCEfftDt"/>
+        <result column="htbh" javaType="string" property="trdCtrNo"/>
+        <result column="htzje" javaType="double" property="trdCtrTotAmt"/>
+    </resultMap>
+    <select id="queryForXyzLoan" parameterClass="java.util.HashMap" resultMap="queryForXyzLoanResult">
+    	select r.contract_num,
+		       t.loan_num,
+		       p.ecif_party_num,
+		       r.currency_cd,
+		       t.loan_amt,
+		       to_char(t.begin_date,'yyyymmdd') begin_date,
+		       to_char(t.end_date,'yyyymmdd') end_date,
+		       r.main_guaranty_type,
+		       t.loan_org,
+		       c.jyq,
+		       c.kzsfbl,
+		       c.kzxfbl,
+		       c.syrmc,
+		       to_char(c.xyzyxq,'yyyymmdd') xyzyxq,
+		       m.htzje,
+		       m.htbh
+		  from tb_con_contract_info r,
+		       tb_loan_info         t,
+		       tb_csm_party         p,
+		       tb_con_jkxyz         c,
+		       tb_biz_myhtxx_apply  m
+		 where r.contract_id = t.contract_id
+		   and r.party_id = p.party_id
+		   and r.contract_id = c.contract_id
+		   and r.contract_id = m.amount_detail_id
+		   and t.loan_id = #loanId#
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryForBhLoanResult">
+        <result column="contract_num" javaType="string" property="ctrNo"/>
+        <result column="loan_num" javaType="string" property="dbtNo"/>
+        <result column="ecif_party_num" javaType="string" property="eCIFCstNo"/>
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="loan_amt" javaType="double" property="aplyAmt"/>
+        <result column="begin_date" javaType="string" property="ittDt"/>
+        <result column="end_date" javaType="string" property="expDt"/>
+        <result column="main_guaranty_type" javaType="string" property="mainGryTy"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="syrmc" javaType="string" property="benfNm"/>
+        <result column="bhlx" javaType="string" property="gntTp"/>
+        <result column="htbh" javaType="string" property="trdCtrNo"/>
+        <result column="htzje" javaType="double" property="trdCtrTotAmt"/>
+    </resultMap>
+    <select id="queryForBhLoan" parameterClass="java.util.HashMap" resultMap="queryForBhLoanResult">
+    	select r.contract_num,
+		       t.loan_num,
+		       p.ecif_party_num,
+		       r.currency_cd,
+		       t.loan_amt,
+		       to_char(t.begin_date,'yyyymmdd') begin_date,
+		       to_char(t.end_date,'yyyymmdd') end_date,
+		       r.main_guaranty_type,
+		       t.loan_org,
+		       c.syrmc,
+		       c.bhlx,
+		       m.htzje,
+		       m.htbh
+		  from tb_con_contract_info r,
+		       tb_loan_info         t,
+		       tb_csm_party         p,
+		       tb_con_jkbh         c,
+		       tb_biz_myhtxx_apply  m
+		 where r.contract_id = t.contract_id
+		   and r.party_id = p.party_id
+		   and r.contract_id = c.contract_id
+		   and r.contract_id = m.amount_detail_id
+		   and t.loan_id = #loanId#
+    </select>
+    
+    
+    <!-- 押汇类 -->
+    <resultMap class="commonj.sdo.DataObject" id="queryForYhlLoanResult">
+        <result column="contract_num" javaType="string" property="ctrNo"/>
+        <result column="loan_num" javaType="string" property="dbtNo"/>
+        <result column="ecif_party_num" javaType="string" property="eCIFCstNo"/>
+        <result column="year_rate" javaType="double" property="execIntRate"/>
+        <result column="fxl" javaType="double" property="odueIntRate"/>
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="loan_amt" javaType="double" property="aplyAmt"/>
+        <result column="begin_date" javaType="string" property="ittDt"/>
+        <result column="end_date" javaType="string" property="expDt"/>
+        <result column="main_guaranty_type" javaType="string" property="mainGryTy"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="htbh" javaType="string" property="trdCtrNo"/>
+        <result column="htzje" javaType="double" property="trdCtrTotAmt"/>
+        
+        <result column="czzh" javaType="string" property="pyeAcctNo"/>
+        <result column="repayment_type" javaType="string" property="intSetlMth"/>
+        <result column="ywhm" javaType="string" property="bsnNo"/>
+        <result column="xyzhm" javaType="string" property="lCNo"/>
+        <result column="yhtxbz" javaType="string" property="doctyDcnInd"/>
+        <result column="fph" javaType="string" property="invNo"/>
+        <result column="qxr" javaType="string" property="doctyValDt"/>
+    </resultMap>
+    <!-- 出口信用证押汇 -->
+    <select id="queryForCkxyzyhLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+	  select r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.yfh as busiCode,
+             '' as prdCode,
+             '' as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_ckxyzyh       c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+         and t.loan_id = #loanId#
+    </select>
+    <!-- 出口托收押汇 -->
+    <select id="queryForCktsyhLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	select       r.contract_num as contractNo,
+             r.contract_amt as agreeAmt, 
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.tsh as busiCode,
+             '' as prdCode,
+             '' as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_cktsyh        c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+         and t.loan_id = #loanId#
+    </select>
+    <!-- 出口TT押汇 -->
+    <select id="queryForCkttLoan" parameterClass="java.util.HashMap" resultMap="queryForYhlLoanResult">
+    	select r.contract_num,
+	           t.loan_num,
+	           p.ecif_party_num,
+	           l.year_rate,
+	           r.currency_cd,
+	           t.loan_amt,
+	           to_char(t.begin_date,'yyyymmdd') begin_date,
+	           to_char(t.begin_date,'yyyymmdd') qxr,
+	           to_char(t.end_date,'yyyymmdd') end_date,
+	           r.main_guaranty_type,
+	           t.loan_org,
+	           c.rzhm as czzh,
+	           l.year_rate*(1+l.overdue_rate_up_proportion/100) fxl,
+	           c.fph,
+	           r.repayment_type,
+	           c.ywhm,
+             m.htbh,
+             m.htzje,
+             '' as xyzhm,
+             '' as yhtxbz
+             
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_ckttfprz      c,
+             tb_con_loanrate      l,
+             tb_biz_myhtxx_apply  m
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and r.contract_id = m.amount_detail_id
+         and r.contract_id = l.contract_id
+		   and t.loan_id = #loanId#
+    </select>
+    <!--国际信用证打包贷款-->
+    <select id="queryForGjxyzdbdkLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	 select   r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.xyzh as busiCode,
+             '' as prdCode,
+             c.tzlx as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_gjxyzdbdk     c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z           
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+       and t.loan_id = #loanId#
+    </select>
+    
+    <!-- 进口信用证押汇 -->
+    <select id="queryForJkxyzLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	<!--select r.contract_num,
+	           t.loan_num,
+	           p.ecif_party_num,
+	           l.year_rate,
+	           r.currency_cd,
+	           t.loan_amt,
+	           to_char(t.begin_date,'yyyymmdd') begin_date,
+	           to_char(t.begin_date,'yyyymmdd') qxr,
+	           to_char(t.end_date,'yyyymmdd') end_date,
+	           r.main_guaranty_type,
+	           t.loan_org,
+	           c.rzzh as czzh,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) fxl,
+             c.xyzhm,
+             c.yhtxbz,
+            r.repayment_type ,
+             m.htbh,
+             m.htzje,
+             '' as fph,
+             c.ddbh as ywhm
+             
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkxyzyh      c,
+             tb_con_loanrate      l,
+             tb_biz_myhtxx_apply  m
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and r.contract_id = m.amount_detail_id
+         and r.contract_id = l.contract_id
+		   and t.loan_id = #loanId#-->
+	select r.contract_num as contractNo,
+              r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,           
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.yfh as busiCode,
+             '' as prdCode,
+             '' as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkxyzyh      c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id    
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'   
+         and t.loan_id = #loanId#
+    </select>
+    <!--进口代付-->
+    <select id="queryForJkdfLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	select   r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.ywbh as busiCode,
+             '' as prdCode,
+             c.cplx as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkdf          c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+       and t.loan_id = #loanId#
+    </select>
+    <!--国际福费廷-->
+    <select id="queryForGjfftLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	select   r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.ywbh as busiCode,
+             '' as prdCode,
+             c.cplx as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_gjfft         c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id 
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+       and t.loan_id = #loanId#
+    </select>
+    <!-- 进口代收押汇 -->
+    <select id="queryForJkdsyhLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	select   r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.ywbh as busiCode,
+             '' as prdCode,
+             '' as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkdsyh        c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id 
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+       and t.loan_id = #loanId#
+    </select>
+    <!-- 进口TT押汇 -->
+    <select id="queryForJkttyhLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000001Req">
+    	<!--select r.contract_num,
+	           t.loan_num,
+	           p.ecif_party_num,
+	           l.year_rate,
+	           r.currency_cd,
+	           t.loan_amt,
+	           to_char(t.begin_date,'yyyymmdd') begin_date,
+	           to_char(t.begin_date,'yyyymmdd') qxr,
+	           to_char(t.end_date,'yyyymmdd') end_date,
+	           r.main_guaranty_type,
+	           t.loan_org,
+	           c.rzzh as czzh,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) fxl,
+             r.repayment_type,
+             m.htbh,
+             m.htzje,
+             c.fph,
+             '' as ywhm,
+             '' as xyzhm,
+             '' as yhtxbz
+             
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkttyh      c,
+             tb_con_loanrate      l,
+             tb_biz_myhtxx_apply  m
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and r.contract_id = m.amount_detail_id
+         and r.contract_id = l.contract_id
+		 and t.loan_id = #loanId#-->
+		  select   r.contract_num as contractNo,
+             r.contract_amt as agreeAmt,
+             r.contract_id as agreeSeqNo,
+             t.summary_num as debitNo,
+             t.loan_org as acctBrch,
+             t.loan_id as paySeqnNo,
+             to_char(t.begin_date,'yyyymmdd') as dateOfValue,
+             to_char(t.end_date,'yyyymmdd') as matuDat,
+             p.ecif_party_num as custNo,
+             z.zh as debAcct,
+             l.year_rate as dealRate,
+             l.year_rate*(1+l.overdue_rate_up_proportion/100) as overRate,
+             t.currency_cd as currency, 
+             t.loan_amt as debAmt,
+             c.ywbh as busiCode,
+             '' as prdCode,
+             '' as proSubTp
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkttyh        c,
+             tb_loan_loanrate      l,
+             tb_loan_zh z
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id
+         and t.loan_id = l.loan_id 
+         and t.loan_id = z.loan_id
+         and z.zhlx = '0'
+       and t.loan_id = #loanId#
+    </select>
+    <!-- 信保融资标签 -->
+    <select id="queryForXbrz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select c.POLICY_NUM
+			from TB_GRT_CREDITSAFE c,TB_BIZ_GRT_REL r ,tb_biz_amount_apply a , tb_biz_amount_detail_apply d,tb_con_contract_info i
+			where c.SURETY_ID=r.SURETY_ID
+			and r.apply_id = a.apply_id
+			and a.amount_id = d.amount_id
+			and d.amount_detail_id = i.amount_detail_id
+			and i.guaranty_type like '%01%'
+			and i.contract_id = #contractId#
+    </select>
+    <!-- 保证金比例 -->
+    <select id="queryBzjbl" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	   select nvl(sum(ta.bzjbl),0) bzjbl
+           from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,
+           TB_CON_SUB_GRT_REL tb,TB_GRT_MORTGAGE_BASIC tc,TB_GRT_MARGIN td
+		      where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+		      and ta.SUBCONTRACT_TYPE = '03'
+		      and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+		      and tb.SURETY_ID=tc.SURETY_ID
+		      and tc.SURETY_ID=td.SURETY_ID
+		      and t.contract_id  = #contractId#
+    </select>
+    <!--国际信用证开证-->
+    <select id="queryForGjxyzkzLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501110000002Req">
+    	select   r.contract_num as contractNo,
+             t.summary_num as debitNo,
+             t.loan_org as dealBrch,        
+             p.ecif_party_num as ioaner,
+             c.gngjz as stateVout,
+             c.myhtje as tradeAgreeAmt,
+             c.myhth as tradeAgreeNo,
+             c.bzjje as bondAmt,
+             c.bzjblbdy as bondRate,
+             c.bzjbz as bondCurr,
+             c.bzjzh as bondAcct,
+             to_char(c.dqrq,'yyyymmdd') as matuDat,
+             c.jyq as letOfCreDate,
+             c.yqts as forwDay,
+             '' as  matuType,
+             c.dzbl as stornPro,
+             c.yzbl as shipPro,
+             c.kzje as issAmt, 
+             r.currency_cd as currency    
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_gjxyzkz       c            
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id  
+       and t.loan_id = #loanId#
+    </select>
+    <!--国际保函-->
+    <select id="queryForGjbhLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501110000004Req">
+    	select       t.summary_num as debitNo,
+             r.contract_num as contractNo,            
+             t.loan_org as dealBrch,  
+             r.currency_cd as currency,
+             t.loan_amt as amt,         
+             c.bhlx as grantType,
+             to_char(c.klrq,'yyyymmdd') as opernDate,
+             to_char(c.dqrq,'yyyymmdd') as matuDat,
+             c.syr as ioanBene,
+             p.ecif_party_num as ioaner,
+             c.myhtje as tradeAgreeAmt,
+             c.myhth as tradeAgreeNo,
+             c.bzjje as bondAmt,
+             c.bzjblbdy as bondRate,
+             c.bzjbz as bondCurr,
+             c.bzjzh as bondAcct,
+             c.jyq as certMatuType,
+             c.yqts as forwDay,
+             '' as  matuType
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_jkbh          c            
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id  
+       and t.loan_id = #loanId#
+    </select>
+    <!--提货担保-->
+     <select id="queryForThdbLoan" parameterClass="java.util.HashMap" resultClass="com.primeton.crmsgj.GJS01501030000006Req">
+    	select       t.summary_num as debitNo,
+             r.contract_num as contractNo,            
+             t.loan_org as dealBrch,  
+             r.currency_cd as currency,
+             t.loan_amt as amt,                   
+             p.ecif_party_num as ioaner,             
+             c.xyzhm as credNo,
+             c.tdhm as billNo,
+             to_char(c.tdrq,'yyyymmdd') as billDate,
+             to_char(c.dqrq,'yyyymmdd') as matuDat,           
+             c.bzjje as bondAmt,
+             c.bzjblbdy as bondRate,
+             c.bzjbz as bondCurr,
+             c.bzjzh as bondAcct
+        from tb_con_contract_info r,
+             tb_loan_info         t,
+             tb_csm_party         p,
+             tb_con_thdb          c            
+       where r.contract_id = t.contract_id
+         and r.party_id = p.party_id
+         and r.contract_id = c.contract_id  
+       and t.loan_id = #loanId#
+    </select>
+</sqlMap>

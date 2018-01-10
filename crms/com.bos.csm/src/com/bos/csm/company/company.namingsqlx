@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+
+<sqlMap>
+	<resultMap id="memberChange" class="java.util.HashMap">
+			<result property="pkId" column="PK_ID"/>
+			<result property="actionType" column="ACTION_TYPE"/>
+			<result property="changeMemberId" column="CHANGE_MEMBER_ID"/>
+			<result property="changeDate" column="CHANGE_DATE"/>
+			<result property="changeReason" column="CHANGE_REASON"/>
+			<result property="operateUserId" column="OPERATE_USER_ID" />
+			<result property="changeContext" column="CHANGE_CONTEXT"/>
+			<result property="groupPartId" column="GROUP_PART_ID" />
+			<result property="partyNum" column="PARTY_NUM" />
+			<result property="partyName" column="PARTY_NAME" />
+	</resultMap>
+    <select id="memberChangeList" parameterClass="java.util.HashMap" resultMap="memberChange">
+		SELECT T.PK_ID,
+		       T.ACTION_TYPE,
+		       T.CHANGE_MEMBER_ID,
+		       T.CHANGE_DATE,
+		       T.CHANGE_REASON,
+		       T.OPERATE_USER_ID,
+		       T.CHANGE_CONTEXT,
+		       T.GROUP_PART_ID,
+		       T1.PARTY_NUM,
+		       T1.PARTY_NAME
+		  FROM TB_CSM_GROUP_MEMBER_CHANGE_HIS T, TB_CSM_PARTY T1
+		 WHERE T1.PARTY_ID = T.CHANGE_MEMBER_ID
+		 	AND T.GROUP_PART_ID = #partyId#
+		 	order by T.CHANGE_DATE
+    </select>
+    <resultMap id="member" class="java.util.HashMap">
+			<result property="groupMemberId" column="GROUP_MEMBER_ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="groupRelTypeCd" column="GROUP_REL_TYPE_CD"/>
+			<result property="memberTypeCd" column="MEMBER_TYPE_CD"/>
+			<result property="relationshipState" column="RELATIONSHIP_STATE"/>
+			<result property="memberStatusCd" column="MEMBER_STATUS_CD"/>
+			<result property="memberSrc" column="MEMBER_SRC" />
+			<result property="operType" column="OPER_TYPE"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="groupPartyId" column="GROUP_PARTY_ID"/>
+			<result property="isGroup" column="IS_GROUP"/>
+	</resultMap>
+	<!--查询统一授信客户下的成员列表-->
+    <select id="memberList" parameterClass="java.util.HashMap" resultMap="member">
+	  select t.GROUP_MEMBER_ID,
+            t.GROUP_PARTY_ID,
+            t.CORPORATION_PARTY_ID,
+            t.RELATIONSHIP_STATE,
+            v.PARTY_ID,
+            v.PARTY_NAME,
+            v.PARTY_NUM,
+            t.GROUP_REL_TYPE_CD,
+            t.MEMBER_TYPE_CD,
+            t.MEMBER_STATUS_CD,
+            t.MEMBER_SRC,
+            t.is_group,
+            t.OPER_TYPE,
+            v.CERT_TYPE,
+            v.CERT_NUM from TB_CSM_GROUP_MEMBER t,v_csm_party v where t.corporation_party_id=v.PARTY_ID
+  and t.GROUP_PARTY_ID =#groupPartyId#
+		   <isNotNull property="memberStatusCd">  AND  t.MEMBER_STATUS_CD = #memberStatusCd# </isNotNull>
+    </select>
+    
+    <resultMap id="resultMap" class="java.util.HashMap">
+		<result property="partyId" column="PARTY_ID"/>
+		<result property="partyNum" column="PARTY_NUM" />
+		<result property="partyName" column="PARTY_NAME" />
+		<result property="creditAmt" column="CREDIT_AMT" />
+		<result property="availableAmt" column="AVAILABLE_AMT" />
+		<result property="usedAmt" column="credit_used" />
+		<result property="mainUserNum" column="USER_NUM" />
+	</resultMap>
+	
+	<!--我的客户 统一授信客户-->
+	<select id="queryGroupCustForDesk" parameterClass="java.util.HashMap" resultMap="resultMap">
+		select p.party_id,
+		       p.party_num,
+		       p.party_name,
+		       t.user_num,
+		       biz.*
+		from tb_csm_group_company g
+		left join (
+		select sum(nvl(credit_used,0)) credit_used, sum(nvl(available_amt,0)) available_amt,sum(nvl(credit_amt,0)) credit_amt,group_party_id 
+		from v_crd_gm_party_limit group by group_party_id
+		) biz on g.party_id = biz.group_party_id 
+		LEFT JOIN tb_csm_party p ON g.party_id = p.party_id
+		LEFT JOIN tb_csm_management_team t ON g.party_id = t.party_id
+		where 
+		g.status = '03'
+		and t.user_placing_cd = '01'
+		and t.user_num =#curUserId#
+		and t.org_num=#orgcode#
+		 <isNotNull property="partyName">  AND p.party_name LIKE '%$partyName$%' </isNotNull>
+    </select>
+    
+    <resultMap id="company" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="status" column="STATUS"/>
+			<result property="groupManageWayCd" column="GROUP_MANAGE_WAY_CD"/>
+	</resultMap>
+	
+	<!--客户管理	统一社会授信客户-->
+    <select id="companyList" parameterClass="java.util.HashMap" resultMap="company">
+		SELECT  T2.*, T3.*
+		      FROM TB_CSM_MANAGEMENT_TEAM T1
+		      JOIN TB_CSM_PARTY T2 ON T1.PARTY_ID = T2.PARTY_ID
+		      JOIN tb_csm_group_company T3 ON T1.PARTY_ID = T3.PARTY_ID
+		     WHERE T2.PARTY_TYPE_CD = '06'   and t1.user_placing_cd = '01'
+		 AND T1.USER_NUM = #userNum#
+		 AND T1.org_NUM = #orgNum#
+		 <isNotNull property="partyNum">  AND T2.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		 <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		 <isNotNull property="status">  AND T3.STATUS = #status# </isNotNull>
+		 <isNotNull property="memberName">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, TB_CSM_PARTY T6
+		         WHERE T5.GROUP_PARTY_ID = T1.PARTY_ID
+		           AND T6.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND T6.PARTY_NAME LIKE '%$memberName$%') 
+ 		   </isNotNull>
+ 		   <isNotNull property="certType">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = T1.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.CERT_TYPE = #certType#) 
+ 		   </isNotNull>
+ 		   <isNotNull property="certNum">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GROUP_MEMBER T5, V_CSM_PARTY V
+		         WHERE T5.GROUP_PARTY_ID = T1.PARTY_ID
+		           AND V.PARTY_ID = T5.CORPORATION_PARTY_ID
+		           AND V.CERT_NUM LIKE '%$certNum$%') 
+ 		   </isNotNull>
+    </select>
+    
+    <select id="manageWay" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+	SELECT CASE
+	         WHEN (SELECT COUNT(*)
+	                 FROM (SELECT DISTINCT MT.ORG_NUM
+	                         FROM TB_CSM_GROUP_MEMBER    GM,
+	                              TB_CSM_MANAGEMENT_TEAM MT
+	                        WHERE GM.CORPORATION_PARTY_ID = MT.PARTY_ID
+	                          AND GM.GROUP_PARTY_ID =
+	                              #partyId#
+	                          AND MT.USER_PLACING_CD = '01')) = 1 THEN
+	          3
+	         ELSE
+	          CASE
+	            WHEN (SELECT COUNT(*)
+	                    FROM (SELECT DISTINCT O.PARENTORGID, O.ORGLEVEL
+	                          
+	                            FROM OM_ORGANIZATION O
+	                           WHERE O.ORGCODE IN
+	                                 (SELECT MT.ORG_NUM
+	                                    FROM TB_CSM_GROUP_MEMBER    GM,
+	                                         TB_CSM_MANAGEMENT_TEAM MT
+	                                   WHERE GM.CORPORATION_PARTY_ID = MT.PARTY_ID
+	                                     AND GM.GROUP_PARTY_ID =
+	                                         #partyId#
+	                                     AND MT.USER_PLACING_CD = '01'))) = 1 THEN
+	             2
+	            ELSE
+	             1
+	          END
+	       END AS WAY
+	  FROM DUAL
+    </select>
+</sqlMap>

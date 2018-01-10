@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:江品廷 -->
+<!-- modify:蔡述尧 修改sql语法适用性问题 -->
+<sqlMap>
+	<parameterMap class="com.bos.utp.dataset.privilege.OmPartyrole" id="orgRoleParam">
+    	<parameter javaType="string" jdbcType="VARCHAR" property="partytype"/>
+        <parameter javaType="int" jdbcType="INTEGER" property="partyid"/>
+    </parameterMap>
+    <parameterMap class="com.bos.utp.dataset.privilege.OmPartyrole" id="acOperatorRoleParam">
+        <parameter javaType="int" jdbcType="INTEGER" property="partyid"/>
+    </parameterMap>
+	 <resultMap class="com.bos.utp.dataset.privilege.AcRole" id="orgRoleResult">
+        <result column="roleid"  property="roleid"/>
+        <result column="rolename"  property="rolename"/>
+    </resultMap>
+    <select id="orgRoleAllowAdd" parameterMap="orgRoleParam" resultMap="orgRoleResult">
+		  SELECT A.ROLEID, A.ROLENAME
+			  FROM AC_ROLE A
+			 WHERE A.ROLEID NOT IN (SELECT B.ROLEID
+			                          FROM OM_PARTYROLE B
+			                         WHERE B.PARTYTYPE = #partytype#
+			                           AND B.PARTYID = #partyid#)
+      <isNotEmpty prepend="" property="superadmin">
+			and A.leg_org=#legorg#
+	  </isNotEmpty>
+    </select>
+    
+    <select id="orgRoleAllowAddExt"  parameterClass="commonj.sdo.DataObject" resultMap="orgRoleResult"><![CDATA[
+		  SELECT A.ROLEID, A.ROLENAME
+			  FROM AC_ROLE A
+			 WHERE A.ROLEID NOT IN (SELECT B.ROLEID
+			                          FROM OM_PARTYROLE B
+			                         WHERE B.PARTYTYPE = #partytype#
+			                           AND B.PARTYID = #partyid# ) AND A.ROLEID IN(SELECT B.ROLEID
+													                          FROM OM_PARTYROLE B
+													                         WHERE B.PARTYTYPE = #partytype#
+													                           AND B.PARTYID IN (SELECT PARENTORGID 
+													                           						FROM OM_ORGANIZATION  
+													                           						WHERE ORGID = #partyid#)
+			                           										)
+      ]]>
+    </select>
+    
+    <select id="queryPartyRole" parameterMap="orgRoleParam" resultMap="orgRoleResult"><![CDATA[
+		  select r.roleid,r.rolename from OM_PARTYROLE pr,ac_role r where pr.roleid=r.roleid and pr.partytype=? and pr.partyid=?
+      ]]>
+    </select>
+    
+    <select id="queryAcOperatorRole" parameterMap="acOperatorRoleParam" resultMap="orgRoleResult"><![CDATA[
+		  select r.roleid,r.rolename from ac_operatorrole pr,ac_role r where pr.roleid=r.roleid and pr.operatorid=(select operatorid from om_employee where empid=?)
+      ]]>
+    </select>
+    
+    
+    <!--刘子良 2013/10/17 未授权角色查询条件-->
+    <parameterMap class="com.bos.utp.dataset.privilege.AcOperatorrole" id="orgRoleParam2">
+        <parameter javaType="long" jdbcType="Long" property="operatorid"/>
+    </parameterMap>
+	 <resultMap class="com.bos.utp.dataset.privilege.AcRole" id="orgRoleResult2">
+        <result column="roleid"  property="roleid"/>
+        <result column="rolename"  property="rolename"/>
+    </resultMap>
+    
+     <!--刘子良 2013/10/17 未授权角色查询-->
+     <select id="orgRoleAllowAdd2" parameterClass="java.util.HashMap" resultMap="orgRoleResult2"><![CDATA[
+		  SELECT A.ROLEID, A.ROLENAME
+			  FROM AC_ROLE A
+			 WHERE A.ROLEID NOT IN (SELECT B.ROLEID FROM Ac_Operatorrole B WHERE  B.operatorid = (select operatorid from om_employee where empid=#operatorid#))
+      ]]>
+    </select>	
+    
+    <select id="judgeEmpOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+    		SELECT ORGID,EMPID,ISMAIN 
+    			FROM OM_EMPORG 
+    			WHERE ORGID=#orgid# AND EMPID = (
+    											SELECT EMPID 
+    											FROM OM_EMPLOYEE
+    											WHERE EMPCODE=#empcode#
+    											)
+    	]]>
+    </select>
+</sqlMap>

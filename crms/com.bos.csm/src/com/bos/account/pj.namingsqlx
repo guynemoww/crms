@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="pj" class="java.util.HashMap">
+			<result property="orgname" column="ORGNAME"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="effectiveStartDt" column="EFFECTIVE_START_DT"/>
+			<result property="effectiveEndDt" column="EFFECTIVE_END_DT"/>
+			<result property="iraApplyId" column="IRA_APPLY_ID"/>
+			<result property="generalAdjustRatingCd" column="GENERAL_ADJUST_RATING_CD"/>
+			<result property="operatorname" column="OPERATORNAME"/>
+	</resultMap>
+    <select id="pj" parameterClass="java.util.HashMap" resultMap="pj">
+		SELECT (SELECT ORGNAME FROM OM_ORGANIZATION WHERE ORGCODE = T4.ORG_NUM) AS ORGNAME,
+		       T3.ORG_NUM,
+		       T2.PARTY_NAME,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       T1.IRA_APPLY_ID,
+		       T1.GENERAL_ADJUST_RATING_CD,
+		       to_char(T4.EFFECTIVE_START_DT,'yyyy-mm-dd') EFFECTIVE_START_DT,
+           	   to_char(T4.EFFECTIVE_END_DT,'yyyy-mm-dd') EFFECTIVE_END_DT,
+		       (SELECT OPERATORNAME FROM AC_OPERATOR WHERE USERID = T4.USER_NUM) AS OPERATORNAME
+		  FROM TB_IRM_INTERNAL_RATING_APPLY T1,
+		       TB_CSM_PARTY T2,
+		       TB_CSM_MANAGEMENT_TEAM T3,
+		       V_CSM_PARTY V,
+		       TB_IRM_INTERNAL_RATING_RESULT T4 
+		 WHERE T1.RATING_STATE = '03'
+		   AND T4.RATING_STATE = '03' 
+		   AND T1.PARTY_ID = T2.PARTY_ID
+		   AND T2.PARTY_ID = T3.PARTY_ID
+		   AND V.PARTY_ID = T2.PARTY_ID 
+		   AND T1.IRA_APPLY_ID = T4.IRA_APPLY_ID  
+		   AND T3.ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		   <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">    AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="userNum">    AND T3.User_Num = #userNum# </isNotNull>
+		   <isNotNull property="generalAdjustRatingCd">    AND T1.GENERAL_ADJUST_RATING_CD = #generalAdjustRatingCd# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="dy" class="java.util.HashMap">
+	 		<result property="partyId" column="PARTY_ID"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="sortType" column="SORT_TYPE"/>
+			<result property="suretyNo" column="SURETY_NO"/>
+			<result property="assessValue" column="ASSESS_VALUE"/>
+			<result property="mortgageValue" column="MORTGAGE_VALUE"/>
+			<result property="totalAmt" column="TOTAL_AMT"/>
+			<result property="cardRegDate" column="CARD_REG_DATE"/>
+			<result property="regDueDate" column="REG_DUE_DATE"/>
+			<result property="mortgageStatus" column="STATUS"/>
+			<result property="saveOrg" column="SAVE_ORG"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="mansNum" column="MANS_NUM"/>
+			<result property="SURETY_KEY_ID" column="SURETY_KEY_ID"/>
+	</resultMap>
+    <select id="dy" parameterClass="java.util.HashMap" resultMap="dy">
+	select  a.*,to_char(d.REG_DUE_DATE,'yyyy-MM-dd') REG_DUE_DATE ,to_char(d.CARD_REG_DATE,'yyyy-MM-dd')CARD_REG_DATE ,d.REGISTER_CERTI_NO,d.SURETY_KEY_ID,
+              ( case  a.MORTGAGE_STATUS when '09' then '已入库' when '04' then '已出库' else '未入库'  end) status,d.SAVE_ORG,
+              a.user_num AS MANS_NUM 
+                 from(
+			select  basic.SURETY_ID,basic.ORG_NUM,basic.SURETY_NO,p.PARTY_ID,p.PARTY_NAME,basic.COLL_TYPE,basic.SORT_TYPE,
+			    basic.ASSESS_VALUE,basic.MORTGAGE_VALUE, (nvl(basic.MORTGAGE_VALUE,0)-nvl(basic.avi_amt,0)) TOTAL_AMT,basic.UPDATE_TIME,basic.MORTGAGE_STATUS,p.USER_NUM
+			    from TB_GRT_MORTGAGE_BASIC basic,V_CSM_PARTY p
+			    where basic.PARTY_ID=p.PARTY_ID and basic.SURETY_NO is not null 
+			      <isNotNull   property="userNum">
+			 	and basic.USER_NUM=#userNum#
+			 	    	</isNotNull>
+			 	 <isNotNull prepend=""  property="suretyNo">
+		    		and basic.SURETY_NO=#suretyNo#
+		    	</isNotNull>
+			    and basic.MORTGAGE_STATUS!='06'
+                <isNotNull prepend=""  property="certType">
+		    		AND p.CERT_TYPE = #certType#
+		    	</isNotNull>
+		    	<isNotNull prepend=""  property="certNum">
+		    		AND p.CERT_NUM = #certNum#
+		    	</isNotNull>
+		    	<isNotNull prepend=""  property="suretyPartyName">
+		    		AND p.PARTY_NAME LIKE '%$suretyPartyName$%'
+		    	</isNotNull>
+		    	<isNotNull prepend=""  property="orgId">
+		    	and basic.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.$orgId$.%')
+		    	</isNotNull>
+                ) a left join
+			(
+			     select distinct c.REG_DUE_DATE,c.CARD_REG_DATE,c.REGISTER_CERTI_NO,m.SURETY_ID,c.SURETY_KEY_ID,c.SAVE_ORG
+			    from tb_grt_reg_card c ,TB_GRT_CARD_MORTAGAGE m
+                where c.SURETY_KEY_ID=m.SURETY_KEY_ID
+                and m.CONTRACT_ID is not null
+			)d
+			 on a.SURETY_ID=d.SURETY_ID
+			 where 1=1
+	    	<isNotNull prepend=""  property="mortgageStatus">
+	    		and a.MORTGAGE_STATUS=#mortgageStatus#
+	    	</isNotNull>
+	    	
+	    	order by a.UPDATE_TIME desc
+	 </select>
+	 
+	 <resultMap id="fxfl" class="java.util.HashMap">
+			<result property="acApplyId" column="AC_APPLY_ID"/>
+			<result property="acApplyNum" column="AC_APPLY_NUM"/>
+			
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middelCode" column="MIDDLE_CODE"/>
+			<result property="claMethod" column="CLA_METHOD"/>
+			<!--
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="clsResult" column="CLS_RESULT"/>
+			-->
+			<result property="createTime" column="CREATE_TIME"/>
+	</resultMap>
+    <select id="fxfl" parameterClass="java.util.HashMap" resultMap="fxfl">
+		
+	<!--	
+		 SELECT * FROM
+		 (SELECT A.AC_APPLY_ID,
+		 		nvl((select ac_apply_num from tb_cla_assets_classify_apply where AC_APPLY_ID=A.AC_APPLY_ID),' ') ac_apply_num,
+		        A.CONTRACT_NUM,
+		        A.ORG_NUM,
+		        A.USER_NUM,
+		        B.PARTY_ID,
+		        B.PARTY_NAME,
+		        C.CERT_TYPE,
+		        C.CERT_NUM,
+		        C.MIDDEL_CODE,
+		        A.CLA_METHOD,
+		        A.CLS_RESULT,
+		        to_char(A.CREATE_TIME,'yyyy-mm-dd') CREATE_TIME
+		   FROM TB_CLA_DEBT_DETAILINFO A,
+		        TB_CSM_PARTY B,
+		        (SELECT PARTY_ID, CERT_TYPE, CERT_NUM,MIDDLE_CODE as MIDDEL_CODE
+		           FROM TB_CSM_NATURAL_PERSON
+		         UNION
+		         SELECT PARTY_ID,
+		                '202' CERT_TYPE,
+		                ORG_REGISTER_CD CERT_NUM,
+		                MIDDEL_CODE
+		           FROM TB_CSM_CORPORATION) C
+		  WHERE A.PARTY_ID = B.PARTY_ID
+		    AND B.PARTY_ID = C.PARTY_ID
+		    AND A.STATUS = '0' 
+		    AND A.CLA_METHOD != 'auto' 
+		  ORDER BY A.CONTRACT_NUM)
+		  WHERE 1=1
+		  -->
+		  
+		    SELECT T1.AC_APPLY_ID,
+			       T1.AC_APPLY_NUM,
+			       T2.ORG_NUM,
+			       T2.USER_NUM,
+			       T2.PARTY_ID,
+			       T2.PARTY_NAME,
+			       T2.CERT_NUM,
+			       T2.CERT_TYPE,
+			       T2.MIDDLE_CODE,
+			       T1.CLA_METHOD,
+			       TO_CHAR(T1.APPLY_DT, 'yyyy-mm-dd') CREATE_TIME
+			  FROM (SELECT DISTINCT B.PARTY_ID,
+			                        A.AC_APPLY_ID,
+			                        A.AC_APPLY_NUM,
+			                        B.CLA_METHOD,
+			                        A.APPLY_DT
+			          FROM TB_CLA_ASSETS_CLASSIFY_APPLY A, TB_CLA_CLASSIFY_DELT_INFO B
+			         WHERE A.AC_APPLY_ID = B.AC_APPLY_ID
+			           AND A.APPLY_STATUS = '2') T1,
+			       V_CSM_PARTY T2
+			 WHERE T1.PARTY_ID = T2.PARTY_ID 
+		  
+		  
+		  <isNotNull property="orgId">
+		      AND T2.ORG_NUM IN (SELECT O.ORGCODE
+			                        FROM OM_ORGANIZATION O
+			                       WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		   </isNotNull>                    
+		   <isNotNull property="partyName">  AND T2.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND T2.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">  AND T2.CERT_NUM = #certNum#</isNotNull>
+		   <isNotNull property="claMethod">  AND T1.CLA_METHOD = #claMethod# </isNotNull>
+		   <!--
+		   <isNotNull property="clsResult">  AND CLS_RESULT = #clsResult# </isNotNull>
+		   -->
+		   <isNotNull property="userNum">    AND T2.USER_NUM = #userNum# </isNotNull>
+	 </select>
+</sqlMap>

@@ -1,0 +1,2307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+    <rule id="R0001" name="判断字符串是否相等" checktype="eqn" checkedFieldName="#sum(#sum($v1,$v3),-454)" targetDataList="$v2" errCode="2101015-011" errMsg="$[v1]+$[v3]-454不等于$[v2]" checkLevel="warn">
+        <sql>select count(1) v1 from tc_pub_dic</sql>
+        <sql>select count(1) v3 from tc_pub_dicsub</sql>
+        <sql><![CDATA[select count(1) v2 from tc_pub_dicsub where BIGCLASS_CD <> @bigclasscd]]></sql>
+        <condition>C0001</condition>
+        <condition>C0002</condition>
+        <condition>C0003</condition>
+        <formula><![CDATA[((C0001&&C0002)&&(C0003||C0002))]]></formula>
+    </rule>
+    <rule id="R0002" name="判断数字是否相等" checktype="eqn" checkedFieldName="@num" targetDataList="0" errCode="2101015-012" errMsg="@[num]不等于0" checkLevel="info">
+    </rule>
+    <rule id="R0003" name="判断身份证合法" checktype="idvalid" checkedFieldName="@cardId" errCode="2101015-013" errMsg="身份证号@[cardId]不合法" checkLevel="error">
+    </rule>
+    <rule id="R0004" name="判断日期在某个日期之前" checktype="datebefore" checkedFieldName="@date1" targetDataList="@date2" errCode="2101015-013" errMsg="日期@[date1]没有在日期@[date2]之前" checkLevel="err">
+    </rule>
+    <rule id="R0005" name="判断日期在某个日期之后" checktype="dateafter" checkedFieldName="@date1" targetDataList="@date2" errCode="2101015-013" errMsg="日期@[date1]没有在日期@[date2]之后" checkLevel="err">
+    </rule>
+
+    <rule id="R0006" name="当客户存在不良贷款时" checktype="greater" checkedFieldName="$A" startValue="1" errCode="2101015-013" errMsg="客户存在不良贷款" checkLevel="err">
+        <sql><![CDATA[select count(loan_id)A from TB_LON_LOAN where CLOSE_FLAG = '0' and LOAN_LEVEL_FIVE_CLASS in ('3','4','5') and CUS_ID = @cusId]]></sql>
+    </rule>
+    <rule id="R0007" name="当客户存在多头贷款时" checktype="greater" checkedFieldName="$A" startValue="1" errCode="2101015-013" errMsg="客户存在多头贷款" checkLevel="err">
+        <sql><![CDATA[select count(loan_id)A from TB_LON_LOAN_APPLICATION where CUS_ID = @cusId]]></sql>
+    </rule>
+    <rule id="R0008" name="根据机构经营授权状态参数，如当前机构无办理当前产品的权限，则进行提示。(APP_AUTH_STATUS业务授权状态-0：暂停，1：开办)" checktype="eqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="当前机构无办理当前产品的权限" checkLevel="err">
+        <sql><![CDATA[select ACCREDIT_STATUS A from TB_PUB_AGENCYOPERATE where BIG_BUSINESS = '@app_op_id' and ORG_ID = '@ORG_ID']]></sql>
+    </rule>
+    <rule id="R0009" name="如用户名下业务与当前选择的产品存在互斥关系" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="户名下业务与当前选择的产品存在互斥关系" checkLevel="err">
+        <sql><![CDATA[select count(*)A from tb_lon_loan where close_flag='0' and cusid = @cus_id and app_op_id in(select REJECT_APP_OP_ID from TB_PUB_LOAN_LOANRELATION where app_op_id = '@app_op_id')  ]]></sql>
+    </rule>
+    <rule id="R0010" name="如“月供期限”超出后台参数设置" checktype="greater" checkedFieldName="@MONTH_PAYMENT_LENGTH" startValue="$A" errCode="2101015-013" errMsg="月供期限@[MONTH_PAYMENT_LENGTH]超出参数设置$[A]" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’MONTH_PAYMENT_LENGTH’ AND LIMIT = 'EQUAL' ]]></sql>
+    </rule>
+    <rule id="R0011" name="如“累计宽限期”超出后台参数设置" checktype="greater" checkedFieldName="@COUNT_GRACE_LENGTH" startValue="$A" errCode="2101015-013" errMsg="累计宽限期@[COUNT_GRACE_LENGTH]超出设定值$[A]" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’COUNT_GRACE_LENGTH’ AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0012" name=" 如“灵活宽限期”明细中记录累加期数与“累计宽限期”不一致" checktype="less" checkedFieldName="@ADVANCE_REPAY_AMOUNT" endValue="$A" errCode="2101015-013" errMsg="最低提前还本限额@[ADVANCE_REPAY_AMOUNT]低于产品参数值$A" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’ADVANCE_REPAY_AMOUNT’ AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0013" name=" 如“最低提前还本限额”低于产品参数值" checktype="less" checkedFieldName="@ADVANCE_REPAY_AMOUNT" endValue="$A" errCode="2101015-013" errMsg="最低提前还本限额@[ADVANCE_REPAY_AMOUNT]低于产品参数值$[A]" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’ADVANCE_REPAY_AMOUNT’ AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0014" name=" 如借款人年龄不在18-40周岁范围内" checktype="greater-less" checkedFieldName="$A"  startValue="18" endValue="40" errCode="2101015-013" errMsg="18-40周岁范围外借款人，创业贷款标志不能为“是”" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’CUS_AGE’ AND LIMIT = 'EQUAL']]></sql>
+        <condition>C0004</condition>
+    </rule>
+    <rule id="R0015" name="如单户授信笔数超过产品参数设置的贷款笔数上限" checktype="ineqn" checkedFieldName=" #sum($A,$B)" targetDataList="$C" errCode="2101015-013" errMsg="超出过产品参数设置的贷款笔数上限" checkLevel="info">
+        <sql><![CDATA[select count(*)A from tb_lon_loan lon where lon.cus_id='@cus_id' ]]></sql>
+        <sql><![CDATA[select count(*)B from tb_lon_application app where app.approve_status in('1','2','3') app.cus_id='@cus_id']]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE C FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’单户授信笔数’ AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0016" name=" 如单户授信金额超过产品参数设置的单户授信金额上\下限" checktype="greater-less" checkedFieldName=" @APP_OP_ACCOUNT_AMOUNT" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="超出产品参数设置的单户授信金额上限$[A],下限$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’APP_OP_ACCOUNT_AMOUNT’ AND LIMIT = 'GREATER' ]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’APP_OP_ACCOUNT_AMOUNT’ AND LIMIT = 'LESS']]></sql>
+    </rule>
+    <rule id="R0017" name="如单笔金额超过产品参数设置的单笔金额上\下限" checktype="greater-less" checkedFieldName=" @APP_OP_ACCOUNT_AMOUNT" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="超出产品参数设置的单笔金额上限$[A],下限$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’APP_OP_SINGLE_AMOUNT’ AND LIMIT = 'GREATER' ]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = ’@APP_OP_ID’ AND EN_NAME = ’APP_OP_SINGLE_AMOUNT’ AND LIMIT = 'LESS']]></sql>
+    </rule>
+    <rule id="R0018" name="如贷款期限大于支用贷款最长期限" checktype="greater" checkedFieldName=" @LOAN_LENGTH" startValue="$A" errCode="2101015-013" errMsg="贷款期限超出支用贷款最长期限$A" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'LOAN_MAX_PERIOD' AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0019" name=" 如贷款浮动比例低于参数设置的浮动比例下限，或者高于参数设置的浮动比例上限" checktype="greater-less" checkedFieldName=" @APP_OP_SINGLE_AMOUNT" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="超出浮动比例下限$[B],浮动比例上限$[A]" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'FLOATING_RATIO' AND LIMIT = 'GREATER' ]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'FLOATING_RATIO' AND LIMIT = 'LESS']]></sql>
+        <condition>C0006</condition>
+        <condition>C0007</condition>
+        <formula><![CDATA[C0006||C0007]]></formula>
+    </rule>
+    <rule id="R0020" name=" 如贷款利率加点幅度低于参数设置的利率加点幅度下限，或者高于参数设置的利率加点幅度上限" checktype="greater-less" checkedFieldName=" @APP_OP_SINGLE_AMOUNT" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="超出利率加点幅度下限$[B],利率加点幅度上限$[A]" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'FLOATING_VALUE' AND LIMIT = 'GREATER']]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'FLOATING_VALUE' AND LIMIT = 'LESS']]></sql>
+        <condition>C0006</condition>
+        <condition>C0007</condition>
+        <formula><![CDATA[C0006||C0007]]></formula>
+    </rule>
+    <rule id="R0021" name="当每期固定还款日存在值时，如还款方式不为阶段性等额本息或阶段性等额本金" checktype="ineqn" checkedFieldName=" @REPAY_KIND" targetDataList="03;04" errCode="2101015-013" errMsg="非阶段性等额本息或阶段性等额本金还款方式，不能设置固定还款日的值（还款方式-REPAY_KIND-03：阶段性等额本金，04：阶段性等额本息）" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'LOAN_MAX_PERIOD' AND LIMIT = 'EQUAL']]></sql>
+        <condition>C0008</condition>
+    </rule>
+    <rule id="R0022" name="如借款人年龄超出产品参数设置的借款人年龄上\下限" checktype="greater-less" checkedFieldName="$A" startValue="$B" endValue='$C' errCode="2101015-013" errMsg="超出产品参数设置的借款人年龄上限$[C],下限$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT SUM(A.LOAN_LENGTH/12, ROUND(MONTHS_BETWEEN(SYSDATE,B.BIRTHDAY)/12))A FROM TB_LON_LOAN_APPLICATION  ,TB_CSM_INDV_CUSTOMER  WHERE TB_LON_LOAN_APPLICATION.CUS_ID = TB_CSM_INDV_CUSTOMER.CUS_ID ]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'CUS_AGE' AND LIMIT = 'GREATER']]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE C FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'CUS_AGE' AND LIMIT = 'LESS']]></sql>
+    </rule>
+    <rule id="R0023" name="如贷款期限大于产品参数设置的贷款最长期限" checktype="greater" checkedFieldName="@LOAN_LENGTH" startValue="$A" errCode="2101015-013" errMsg="期限超出设定值$A" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = '@ORG_ID' AND APP_OP_ID = '@APP_OP_ID' AND EN_NAME = 'LOAN_LENGTH' AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0024" name="如借款人年龄与贷款期限之和大于产品参数设置的上限" checktype="greater" checkedFieldName="#sum(@LOAN_LENGTH,$A)" startValue="$B" errCode="2101015-013" errMsg="借款人年龄与贷款期限之和超出设定值" checkLevel="err">
+        <sql><![CDATA[SELECT SUM(A.LOAN_LENGTH/12, ROUND(MONTHS_BETWEEN(SYSDATE,B.BIRTHDAY)/12))A FROM TB_LON_LOAN_APPLICATION  ,TB_CSM_INDV_CUSTOMER  WHERE TB_LON_LOAN_APPLICATION.CUS_ID = TB_CSM_INDV_CUSTOMER.CUS_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'AGE_AND_LENGTH' AND LIMIT = 'EQUAL']]></sql>
+    </rule>
+    <rule id="R0025" name=" 如支用金额高于50万" checktype="greater" checkedFieldName="$A" startValue="50" errCode="2101015-013" errMsg="支用金额超出设定值50万" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0009</condition>
+        <condition>C0010</condition>
+    </rule>
+    <rule id="R0026" name=" 期限高于60个月" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LOAN_LENGTH B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='LOAN_LENGTH']]></sql>
+        <condition>C0009</condition>
+        <condition>C0010</condition>
+    </rule>
+    <rule id="R0027" name=" 支用金额高于200万" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="支用金额超出设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_AMOUNT B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='LINE_AMOUNT']]></sql>
+        <condition>C0009</condition>
+        <condition>C0011</condition>
+    </rule>
+    <rule id="R0028" name=" 如支用金额高于车辆认可价值的70%" checktype="greater" checkedFieldName="$A" startValue="$B*70%" errCode="2101015-013" errMsg="支用金额超出设定值$[B]*70%" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT APPEND_FIELD_VALUE B FROM TB_LON_APP_APPEND_INDEX_VALUE WHERE APPEND_FIELD_NAME='BUY_CAR_EVALUATE_VALUE']]></sql>
+        <condition>C0009</condition>
+        <condition>C0011</condition>
+    </rule>
+    <rule id="R0029" name=" 如支用金额高于50万" checktype="greater" checkedFieldName="$A" startValue="50" errCode="2101015-013" errMsg="支用金额超出设定值50万" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0012</condition>
+    </rule>
+    <rule id="R0030" name=" 期限高于108个月" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LOAN_LENGTH B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='LOAN_LENGTH']]></sql>
+        <condition>C0012</condition>
+    </rule>
+    <rule id="R0031" name=" 如支用金额高于50万" checktype="greater" checkedFieldName="$A" startValue="50" errCode="2101015-013" errMsg="支用金额超出设定值50万" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0013</condition>
+    </rule>
+    <rule id="R0032" name=" 如支用金额高于车辆认可价值的70%" checktype="greater" checkedFieldName="$A" startValue="$B*70%" errCode="2101015-013" errMsg="支用金额超出设定值$[B]*70%" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT APPEND_FIELD_VALUE B FROM TB_LON_APP_APPEND_INDEX_VALUE WHERE APPEND_FIELD_NAME='BUY_CAR_EVALUATE_VALUE']]></sql>
+        <condition>C0013</condition>
+    </rule>
+    <rule id="R0033" name=" 期限高于36个月" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_AMOUNT B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='$LOAN_LENGTH']]></sql>
+        <condition>C0013</condition>
+    </rule>
+    <rule id="R0034" name="如额度低于3万元" checktype="less" checkedFieldName="$A" endValue="$B" errCode="2101015-013" errMsg="低于设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LINE_AMOUNT A FROM TB_LON_APPLICATION A, TB_LON_LINE_USE_INFO B, TB_LIN_LINE C, WHERE A.LOAN_ID = B.LOAN_ID AND B.LINE_ID = C.LINE_ID AND B.LINE_KIND = '3' A.LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_AMOUNT B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='$LINE_AMOUNT']]></sql>
+    </rule>
+    <rule id="R0035" name=" 如额度高于50万元" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="高于设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LINE_AMOUNT A FROM TB_LON_APPLICATION A, TB_LON_LINE_USE_INFO B, TB_LIN_LINE C, WHERE A.LOAN_ID = B.LOAN_ID AND B.LINE_ID = C.LINE_ID  AND B.LINE_KIND = '3' A.LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_AMOUNT B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME ='$LINE_AMOUNT']]></sql>
+    </rule>
+    <rule id="R0036" name=" 如申请日期不在“提款型支用期”内" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="超出支用期$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'ATM_LINE_SUPPPERIOD']]></sql>
+        <condition>C0014</condition>
+    </rule>
+    <rule id="R0037" name=" 如申请金额超过可用提款型额度" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="额度超出$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'LOAN_LENGTH']]></sql>
+        <condition>C0014</condition>
+    </rule>
+    <rule id="R0038" name=" 如申请金额超过可用额度" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="额度超出$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_BALANCE B FROM TB_LON_APPLICATION A, TB_LON_LINE_USE_INFO B, TB_LIN_LINE C, WHERE A.LOAN_ID = B.LOAN_ID AND B.LINE_ID = C.LINE_ID AND B.LINE_KIND = '3' A.LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0014</condition>
+    </rule>
+    <rule id="R0039" name=" 如贷款期限超过108个月，或超过额度有效期" checktype="greater" checkedFieldName="$A" startValue="$B;$C" errCode="2101015-013" errMsg="贷款期限超过$[B]个月" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH  A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'LOAN_LENGTH']]></sql>
+        <sql><![CDATA[SELECT CC.LINE_MATURE_DATE C FROM TB_LON_APPLICATION AA, TB_LON_LIN_USE_INFO BB, TB_LIN_LINE CC WHERE A.LOAN_ID = BB.LOAN_ID AND BB.LINE_ID = CC.LINE_ID AND BB.LINE_ID = CC.LINE_ID AND BB.LINE_KIND = '3' AND AA.LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0014</condition>
+    </rule>
+
+    <rule id="R0041" name=" 当贷款用途为“提款型”且贷款期限超过12个月时，还款方式如选择非“一次性还本付息”方式的选项" checktype="eqn" checkedFieldName="$A" targetDataList="12" errCode="2101015-013" errMsg="贷款期限超过$[B]个月" checkLevel="info">
+        <sql><![CDATA[SELECT REPAY_KIND A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID ]]></sql>
+        <condition>C0014</condition>
+    </rule>
+    <rule id="R0042" name=" 如申请日期不在“非提款型支用期”内" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="超出支用期$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT APPLICATION_DATE A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID ]]></sql>
+        <sql><![CDATA[SELECT 非提款型支用期 B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@ORG_ID AND APP_OP_ID=@APP_OP_ID AND EN_NAME =非提款型支用期 ]]></sql>
+        <condition>C0015</condition>
+    </rule>
+    <rule id="R0043" name=" 如贷款期限超过108个月，或超过额度有效期" checktype="greater" checkedFieldName="$A" startValue="100;$C" errCode="2101015-013" errMsg="超出支用期" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LINE_AMOUNT C FROM TB_LON_APPLICATION AA, TB_LON_LINE_USE_INFO BB, TB_LIN_LINE CC WHERE AA.LOAN_ID = BB.LOAN_ID AND BB.LINE_ID = CC.LINE_ID AND BB.LINE_KIND = '3' A.LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0015</condition>
+    </rule>
+
+    <rule id="R0045" name=" 如贷款期限超过36个月，或超过额度有效期" checktype="greater" checkedFieldName="$A" startValue="36;$C" errCode="2101015-013" errMsg="期限超出设定值" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT CC.LINE_MATURE_DATE C FROM TB_LON_APPLICATION AA, TB_LON_LIN_USE_INFO BB, TB_LIN_LINE CC WHERE AA.LOAN_ID = B.LOAN_ID AND BB.LINE_ID = CC.LINE_ID AND BB.LINE_ID = CC.LINE_ID AND BB.LINE_KIND = '3' AND AA.LOAN_ID = @LOAN_ID]]></sql>
+        <condition>C0015</condition>
+    </rule>
+
+    <rule id="R0047" name=" 如还款方式选择“一次性还本付息”方式" checktype="eqn" checkedFieldName="$A" targetDataList="12" errCode="2101015-013" errMsg="一次性还本付息方式只适用于一年期抵押贷款" checkLevel="info">
+        <sql><![CDATA[SELECT REPAY_KIND A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+    </rule>
+    <rule id="R0048" name=" 如贷款期限超过2年" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH  A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LOAN_LENGTH B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'LOAN_LENGTH']]></sql>
+        <condition>C0018</condition>
+    </rule>
+    <rule id="R0049" name=" 如贷款期限超过2年" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH  A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LOAN_LENGTH B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'LOAN_LENGTH']]></sql>
+        <condition>C0019</condition>
+    </rule>
+    <rule id="R0050" name=" 如累计宽限期大于3个月" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="超出宽限期设定值$[B]" checkLevel="info">
+        <sql><![CDATA[SELECT COUNT_GRACE_LENGTH  A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT COUNT_GRACE_LENGTH B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'COUNT_GRACE_LENGTH']]></sql>
+        <condition>C0020</condition>
+    </rule>
+    <rule id="R0051" name=" 如贷款期限+借款人年龄大于65年" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="期限超出设定值" checkLevel="info">
+        <sql><![CDATA[SELECT SUM(A.LOAN_LENGTH/12, ROUND(MONTHS_BETWEEN(SYSDATE,B.BIRTHDAY)/12)) A FROM TB_LON_LOAN_APPLICATION ,TB_CSM_INDV_CUSTOMER WHERE TB_LON_LOAN_APPLICATION.CUS_ID = TB_CSM_INDV_CUSTOMER.CUS_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'AGE_AND_LENGTH']]></sql>
+    </rule>
+    <rule id="R0052" name=" 如贷款期限大于30年" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg=":贷款期限不能大于$[B]年" checkLevel="info">
+        <sql><![CDATA[SELECT LOAN_LENGTH A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'LOAN_LENGTH']]></sql>
+    </rule>
+    <rule id="R0053" name=" 贷款申请金额小于所关联的无交易贷款的申请金额" checktype="less" checkedFieldName="$A" endValue="$B" errCode="2101015-013" errMsg="贷款申请金额应大于等于所关联的无交易贷款的申请金额" checkLevel="info">
+        <sql><![CDATA[SELECT LON_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LOAN_AMOUNT B FROM TB_LON_LOAN WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </rule>
+    <rule id="R0054" name=" 系统强制要求“贷款期限+借款人年龄≤65年”，且贷款期限不超过30年" checktype="less" checkedFieldName="#sum($A,$B)" endValue="$C" errCode="2101015-013" errMsg="贷款期限+借款人年龄应≤65年" checkLevel="info">
+        <sql><![CDATA[SELECT SUM(A.LOAN_LENGTH/12, ROUND(MONTHS_BETWEEN(SYSDATE,B.BIRTHDAY)/12)) A FROM TB_LON_LOAN_APPLICATION  ,TB_CSM_INDV_CUSTOMER WHERE TB_LON_LOAN_APPLICATION.CUS_ID = TB_CSM_INDV_CUSTOMER.CUS_ID]]></sql>
+        <sql><![CDATA[SELECT LON_LENGTH B FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE C FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID = @ORG_ID AND APP_OP_ID = @APP_OP_ID AND EN_NAME = 'AGE_AND_LENGTH']]></sql>
+    </rule>
+    <rule id="R0055" name=" 系统强制要求“贷款期限+借款人年龄≤65年”，且贷款期限不超过30年" checktype="less" checkedFieldName="$B" endValue="30" errCode="2101015-013" errMsg="" checkLevel="info">
+        <sql><![CDATA[SELECT LON_LENGTH B FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID = @LOAN_ID]]></sql>
+    </rule>
+    <rule id="R0056" name="民间借款金额合计大于等于申请金额" checktype="less" checkedFieldName="$A" endValue="@LOANSUM" errCode="2101015-013" errMsg="民间借款金额合计小于申请金额@[LOANSUM]" checkLevel="info">
+        <sql><![CDATA[select sum(FOLK_LOAN_AMOUNT) A from TB_LON_APP_APPEND_INDEX_VALUE where RECORD_ID=(select RECORD_ID from TB_LON_APP_APPEND_INDEX where LOAN_ID='@LOAN_ID')]]></sql>
+    </rule>
+    <rule id="R0057" name="家庭原有住房套数应该0-10的整数" checktype="ge-le" checkedFieldName="$A" startValue="0" endValue='10' errCode="2101015-013" errMsg="家庭原有住房套数应该0-10的整数" checkLevel="info">
+        <sql><![CDATA[select had_many_house A from tb_lon_application_des_accno where LOAN_ID='@LOAN_ID']]></sql>
+    </rule>
+    <rule id="R0058" name="如契税完税证日期大于系统当前日期" checktype="greater" checkedFieldName="$A" startValue="@CURRENT_TIME" endValue='10' errCode="2101015-013" errMsg="契税完税证日期大于系统当前日期@[CURRENT_TIME]" checkLevel="info">
+        <sql><![CDATA[select PAY_TAX_DATE A from TB_LON_APP_APPEND_INDEX_VALUE where RECORD_ID=(select RECORD_ID from TB_LON_APP_APPEND_INDEX where LOAN_ID='@LOAN_ID')]]></sql>
+    </rule>
+    <rule id="R0059" name="如房屋登记簿记载的过户日期大于系统当前日期" checktype="greater" checkedFieldName="$A" startValue="@CURRENT_TIME"  errCode="2101015-013" errMsg="房屋登记簿记载的过户日期大于系统当前日期@[CURRENT_TIME]" checkLevel="info">
+        <sql><![CDATA[select CHANGE_OWNER_DATE A from TB_LON_APP_APPEND_INDEX_VALUE where RECORD_ID=(select RECORD_ID from TB_LON_APP_APPEND_INDEX where LOAN_ID='@LOAN_ID')]]></sql>
+    </rule>
+    <rule id="R0060" name="共同借款人与借款人关系仅限于配偶" checktype="eqn" checkedFieldName="@A" targetDataList="2" errCode="2101015-011" errMsg="" checkLevel="info">
+        <sql><![CDATA[select IS_TOGETHER_BORROWER A from TB_LON_LOAN_APPLICATION where loan_id=‘@LOAN_ID’]]></sql>
+    </rule>
+    <rule id="R0061" name=" 借款人应为单位职工，借款人配偶应为非自雇人士" checktype="ineqn" checkedFieldName="@A" targetDataList="2" errCode="2101015-011" errMsg="" checkLevel="info">
+        <sql><![CDATA[select METIER A from TB_CSM_INDV_CUSTOMER where cus_id=(select object_id from tb_csm_relationship where subject_id='@CUS_ID' AND RELATION_SUBCLASS='2')]]></sql>
+        <condition>C0025</condition>
+    </rule>
+    <rule id="R0062" name="如申请日期小于额度起期(额度起期显示最晚日期)" checktype="less" checkedFieldName="@RECORD_DATE" endValue="$A" errCode="2101015-013" errMsg="申请日期小于额度起期$[A]" checkLevel="info">
+        <sql><![CDATA[select line_begin_date A from tb_Lin_Line where line_id=(select LINE_ID from tb_lon_line_use_info where LINE_KIND='3' and loan_id='@LOAN_ID')]]></sql>
+    </rule>
+    <rule id="R0063" name="如申请日期大于额度止期(额度止期显示最早日期)" checktype="less" checkedFieldName="@RECORD_DATE" endValue="$A" errCode="2101015-013" errMsg="申请日期大于额度起期$[A]" checkLevel="info">
+        <sql><![CDATA[select line_mature_date A from tb_Lin_Line where line_id=(select LINE_ID from tb_lon_line_use_info where LINE_KIND='3' and loan_id='@LOAN_ID'))]]></sql>
+    </rule>
+    <rule id="R0064" name="如申请日期大于额度止期(额度止期显示最早日期)" checktype="greater" checkedFieldName="@LOAN_LENGTH" startValue="5" errCode="2101015-013" errMsg="贷款期限超过5年" checkLevel="info">
+        <condition>C0021</condition>
+    </rule>
+    <rule id="R0065" name="本次申请笔数+借款人及配偶名下未结清汽车消费贷款笔数+借款人及配偶名下综合消费贷款用途“汽车消费”未结清笔数≤3笔" checktype="greater" checkedFieldName="#sum($A+$B)" startValue="$C" errCode="2101015-013" errMsg="" checkLevel="info">
+        <sql><![CDATA[ select object_id A from tb_csm_relationship where subject_id='@CUS_ID' AND RELATION_SUBCLASS='配偶']]></sql>
+        <sql><![CDATA[SELECT COUNT(*)B FROM TB_LON_APPLICATION a, TB_LON_APPLICATION_KIND_FLAG b WHERE
+                   a.loan_id = b.loan_id AND
+                   ( (a.app_op_id = '综合消费贷款' and b.CONSUME_KIND = '2')OR
+                    a.APP_OP_ID = '汽车消费贷款') AND
+                   a.APPROVE_STATUS IN ('1','2','3')
+                    and a.cus_id in('@CUS_ID',@$A)]]></sql>
+        <sql><![CDATA[ SELECT COUNT(*)C FROM TB_LON_LOAN a, TB_LON_APPLICATION_KIND_FLAG b WHERE a.loan_id = b.loan_id AND( (a.app_op_id = '综合消费贷款' and b.CONSUME_KIND = '2') OR
+                    a.APP_OP_ID = '汽车消费贷款') AND
+                    a.CLOSE_FLAG = '未结清'
+                     and a.cus_id in('@CUS_ID',@$A)]]></sql>
+        <condition>C0022</condition>
+    </rule>
+    <rule id="R0066" name="担保物应包含存单" checktype="eqn" checkedFieldName="$A" targetDataList="201" errCode="2101015-013" errMsg="担保物应包含存单" checkLevel="info">
+        <sql><![CDATA[select ASSET_TYPE A from tb_Pub_Security where app_id='@LOAN_ID']]></sql>
+    </rule>
+    <rule id="R0067" name="担保物应包含国债" checktype="eqn" checkedFieldName="$A" targetDataList="203" errCode="2101015-013" errMsg="担保物应包含国债" checkLevel="info">
+        <sql><![CDATA[select ASSET_TYPE A from tb_Pub_Security where app_id='@LOAN_ID']]></sql>
+    </rule>
+
+
+
+    <rule id="R0068" name="当前机构办理业务时进行提示" checktype="eqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="$[A]等于1当前机构下的该业务未开办" checkLevel="err">
+        <sql><![CDATA[select ACCREDIT_STATUS A from TB_PUB_AGENCYOPERATE  where ORG_ID = @ORG_ID and BIG_BUSINESS = @app_op_id]]></sql>
+    </rule>
+    <rule id="R0069" name="额度类别互斥关系" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="$[A]大于0当前业务品种不允许办理存在互斥关系" checkLevel="err">
+        <sql><![CDATA[select count(0) A from TB_PUB_LOAN_LOANRELATION where APP_OP_ID = @app_op_id]]></sql>
+    </rule>
+    <rule id="R0070" name="单一借款人授信笔数" checktype="less" checkedFieldName="$B" endValue="$A" errCode="2101015-013" errMsg="当前客户单一借款人授信笔数$[B]已超出限制$[A]" checkLevel="err">
+        <sql><![CDATA[
+                 SELECT LOAN_NUM_UPLIMIT A
+                      FROM (SELECT L.LOAN_NUM_UPLIMIT
+                              FROM
+                                    TB_SYS_SECURITY_ORGANISATION O,
+                                    TB_PUB_CUS_ONEBORROWERITEMS L
+                             WHERE
+                                O.Org_id = l.Org_Id
+                                AND l.app_op_id = @appOpId
+                                AND EXISTS(SELECT
+                                            ORG_ID
+                                        FROM
+                                            TB_SYS_SECURITY_ORGANISATION
+                                        WHERE TB_SYS_SECURITY_ORGANISATION.ORG_ID = L.ORG_ID
+                                            START WITH TB_SYS_SECURITY_ORGANISATION.ORG_ID = @orgId
+                                            CONNECT BY TB_SYS_SECURITY_ORGANISATION.ORG_CD = PRIOR TB_SYS_SECURITY_ORGANISATION.PARENT_CD)
+                             ORDER BY O.ORG_LEVEL DESC)
+                     WHERE ROWNUM = '1'
+        ]]></sql>
+        <sql><![CDATA[select count(0) B from tb_lin_application a,tb_lin_line_application l where a.line_id = l.line_id and l.cus_id=@cusId and approve_status in ('1','2','3','4','5','9','10','11') and ACT_FLAG = '1' and app_op_id = @appOpId ]]></sql>
+        <condition>C0026</condition>
+    </rule>
+    <rule id="R0071" name="借款人年龄" checktype="ge-le" checkedFieldName="$A" startValue="$C"  endValue="$B" errCode="2101015-013" errMsg="当前客户年龄$[A]不在许可范围$[C]至$[B]内" checkLevel="err">
+        <sql><![CDATA[select ceil((sysdate-BIRTHDAY)/365) A from TB_CSM_INDV_CUSTOMER where cus_id = @cusId ]]></sql>
+        <sql><![CDATA[select FN_PUB_GET_AGE_UP_LIMIT(@orgId,@appOpId) B from dual]]></sql>
+        <sql><![CDATA[select FN_PUB_GET_AGE_DOWN_LIMIT(@orgId,@appOpId) C from dual]]></sql>
+        <condition>C0027</condition>
+    </rule>
+
+    <rule id="R0072" name="单户授信金额不超过产品参数设置的上限" checktype="le" checkedFieldName="@LINE_AMOUNT"  endValue="$A" errCode="2101015-013" errMsg="申请金额超出单户授信上限" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'LESSEQUAL' ]]></sql>
+        <condition>C0029</condition>
+    </rule>
+    <rule id="R0155" name="单户授信金额不超过产品参数设置的下限" checktype="ge" checkedFieldName="@LINE_AMOUNT"  startValue="$A" errCode="2101015-013" errMsg="申请金额低于单户授信下限" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'GREATEREQUAL' ]]></sql>
+        <condition>C0043</condition>
+    </rule>
+    <rule id="R0073" name="单笔授信金额不超过产品参数设置的上限" checktype="le" checkedFieldName="@LINE_AMOUNT" endValue="$A" errCode="2101015-013" errMsg="申请金额不能大于单笔授信金额上限" checkLevel="err">
+        <sql><![CDATA[select LIMIT_VALUE A from TB_PUB_APPLICATION_LIMIT where APP_OP_ID = @appOpId and ORG_ID = @orgId AND EN_NAME='LINE_AMOUNT' and LIMIT = 'LESSEQUAL' ]]></sql>
+        <condition>C0030</condition>
+    </rule>
+    <rule id="R0156" name="单笔授信金额不超过产品参数设置的下限" checktype="ge" checkedFieldName="@LINE_AMOUNT" startValue="$A" errCode="2101015-013" errMsg="申请金额不能大于单笔授信金额下限" checkLevel="err">
+        <sql><![CDATA[select LIMIT_VALUE A from TB_PUB_APPLICATION_LIMIT where APP_OP_ID = @appOpId and ORG_ID = @orgId AND EN_NAME='LINE_AMOUNT' and LIMIT = 'GREATEREQUAL' ]]></sql>
+        <condition>C0044</condition>
+    </rule>
+    <rule id="R0074" name="额度存续期限不超过产品参数设置的上限" checktype="le" checkedFieldName="@LINE_DURATION" endValue="$A" errCode="2101015-013" errMsg="额度存续期限大于后台参数上限" checkLevel="err">
+        <sql><![CDATA[SELECT  LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='LINE_DURATION' and LIMIT = 'LESSEQUAL' ]]></sql>
+        <condition>C0031</condition>
+    </rule>
+    <rule id="R0157" name="额度存续期限不超过产品参数设置的下限" checktype="ge" checkedFieldName="@LINE_DURATION" startValue="$A" errCode="2101015-013" errMsg="额度存续期限小于后台参数下限" checkLevel="err">
+        <sql><![CDATA[SELECT  LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='LINE_DURATION' and LIMIT = 'GREATEREQUAL' ]]></sql>
+        <condition>C0045</condition>
+    </rule>
+    <rule id="R0159" name="年龄加额度存续期上限" checktype="le" checkedFieldName="LINE_DURATION" endValue="$A" errCode="2101015-013" errMsg="年龄加额度存续期大于后台参数上限" checkLevel="err">
+        <sql><![CDATA[SELECT  LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='AGE_AND_DURATION' and LIMIT = 'LESSEQUAL' ]]></sql>
+        <condition>C0042</condition>
+    </rule>
+    <rule id="R0160" name="年龄加额度存续期下限" checktype="ge" checkedFieldName="LINE_DURATION" startValue="$A" errCode="2101015-013" errMsg="年龄加额度存续期小于后台参数下限" checkLevel="err">
+        <sql><![CDATA[SELECT  LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@orgId AND APP_OP_ID=@appOpId AND EN_NAME='AGE_AND_DURATION' and LIMIT = 'GREATEREQUAL' ]]></sql>
+        <condition>C0052</condition>
+    </rule>
+    <rule id="R0078" name="借款人是本行关系人（借款人或借款人的配偶在本系统有工号，用借款人姓名和身份证号码在我行个贷系统中搜索），主担保方式和组合担保方式不得选择“信用”。" checktype="ineqs" checkedFieldName="@SECURITY_KIND" targetDataList="100" errCode="2101015-013" errMsg="借款人或借款人的配偶是本行关系人，主担保方式和组合担保方式不得选择“信用”" checkLevel="info">
+        <condition>C0023</condition>
+        <condition>C0024</condition>
+        <formula><![CDATA[C0023||C0024]]></formula>
+    </rule>
+    <rule id="R0079" name="人配偶、共同借款人配偶，如果出现“历史逾期记录分类”为“0-未分类”" checktype="ge" checkedFieldName="$A" startValue="1" errCode="2101015-013" errMsg="提示“借款人、配偶、自然人保证人全部需要查询历史逾期记录！”" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_PUB_CREDIT_RECORD where APP_ID =@lineid and CREDIT_OVERDUE_KIND = '1']]></sql>
+    </rule>
+    <rule id="R0080" name="授信调查意见限选“否决”" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="提示“借款人、配偶、自然人保证人有不良信用记录，只能选择否决意见！”" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_PUB_CREDIT_RECORD where APP_ID =@lineid and ((CREDIT_OVERDUE_KIND = '2' and CREDIT_PBC_KIND = '1')
+                  or (CREDIT_PBC_KIND = '2' and CHANGE_CREDIT_PBC_KIND = '1')
+                  or (CREDIT_PBC_KIND = '2' and CHANGE_CREDIT_PBC_KIND = '2'))]]></sql>
+    </rule>
+    <rule id="R0081" name="终审金额必须在后台配置的最低金额和最高金额之间" checktype="ge-le" checkedFieldName="@LINE_DURATION" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="终审金额不在单户授信范围内" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@org_id AND APP_OP_ID=@app_op_id AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'GREATEREQUAL']]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@org_id AND APP_OP_ID=@app_op_id AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'LESSEQUAL']]></sql>
+    </rule>
+    <rule id="R0082" name="建议额度必须在后台配置的最低金额和最高金额之间" checktype="ge-le" checkedFieldName="@LINE_DURATION" startValue="$B" endValue="$A" errCode="2101015-013" errMsg="建议额度不在单户授信范围内" checkLevel="info">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@org_id AND APP_OP_ID=@app_op_id AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'GREATEREQUAL']]></sql>
+        <sql><![CDATA[SELECT LIMIT_VALUE B FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@org_id AND APP_OP_ID=@app_op_id AND EN_NAME='LINE_AMOUNT_PERSON' and LIMIT = 'LESSEQUAL']]></sql>
+    </rule>
+    <rule id="R0083" name="联保协议份数减去联保小组人数不能小于1" checktype="less" checkedFieldName="#sum(@CONTRACT_QUANTITY,-$A)" endValue="1" errCode="2101015-013" errMsg="联保协议份数减去联保小组人数不能小于1" checkLevel="info">
+        <sql><![CDATA[select count(0) A from tb_csm_group_member where group_id = @GROUP_ID]]></sql>
+    </rule>
+    <rule id="R0084" name="从事各类经营性车辆销售年限" checktype="less" checkedFieldName="$A" endValue="2" errCode="2101015-013" errMsg="请核实是否符合准入标准" checkLevel="info">
+        <sql><![CDATA[select count(0) A from tb_csm_group_member where group_id = @GROUP_ID]]></sql>
+    </rule>
+    <rule id="R0085" name="持股比例（%）合计：校验，应不大于100%" checktype="ge" checkedFieldName="@LINE_DURATION" startValue="100"  errCode="2101015-013" errMsg="持股比例合计应不大于100%" checkLevel="info">
+        <sql><![CDATA[select sum(HOLDINGS_RATIO) A from TB_LIN_CORPEVALUATE_EQUSTRUCTU where ADMITTANCE_ID = @ADMITTANCE_ID]]></sql>
+    </rule>
+    <rule id="R0086" name="征信情况检查" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="借款人、配偶、自然人保证人全部需要查询历史逾期记录！" checkLevel="info">
+        <sql><![CDATA[select count(0)A from TB_PUB_CREDIT_RECORD where APP_ID =@lineid and CREDIT_OVERDUE_KIND = '1']]></sql>
+    </rule>
+    <rule id="R0087" name="留学额度申请金额" checktype="ge-le" checkedFieldName="@LINE_AMOUNT" startValue="@ATM_LINE_LIMIT" endValue="2000000" errCode="2101015-013" errMsg="" checkLevel="info"></rule>
+    <rule id="R0088" name="保证+抵押+质押+保证金>=授信建议金额" checktype="ge" checkedFieldName="#sum($A,$B,$C,$D)" startValue="$LINE_AMOUNT"  errCode="2101015-013" errMsg="要求所有的担保方式额度之和大于等于授信建议金额" checkLevel="info">
+        <sql><![CDATA[select NVL(SUM(SECURITY_AMOUNT),0) A from TB_PUB_SECURITY where APP_ID = @lineId]]></sql>
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) B from TB_PUB_GUARANTEE where APP_ID = @lineId]]></sql>
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) C from TB_PUB_GUARANTEE_ACCOUNT_INFO where APP_ID = @lineId]]></sql>
+        <sql><![CDATA[SELECT NVL(SUM(ASSOCIATE_AMOUNT),0) D FROM TB_LIN_ASSOCIATE_LINE WHERE LINE_ID = @lineId]]></sql>
+        <sql><![CDATA[select ADVISE_CREDIT_AMOUNT LINE_AMOUNT from TB_LIN_CREDIT_SURVEY_APPROVAL where LINE_ID = @lineId]]></sql>
+        <condition>C0128</condition>
+    </rule>
+    <rule id="R0089" name="上报前校验合同是否签署成功" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="上报前校验合同是否签署成功" checkLevel="warn">
+        <sql><![CDATA[select count(0)A from TB_LIN_LINE_AGREEMENT where line_id = @lineid]]></sql>
+    </rule>
+    <rule id="R0090" name="是否查询人行征信" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先查询历史逾期记录，再查询人行征信系统！系统不向人行查询征信" checkLevel="warn">
+        <sql><![CDATA[select CREDIT_OVERDUE_KIND A from TB_PUB_CREDIT_RECORD where APP_ID =  @appid and CUS_ID  = @cusid]]></sql>
+    </rule>
+    <rule id="R0091" name="联保小组受理" checktype="ge-le" checkedFieldName="@LINE_DURATION" startValue="$A" endValue="$B" errCode="2101015-013" errMsg="建立联保小组时校验联保小组成员数量必须小于等于后台配置的联保小组总人数上下限参数" checkLevel="info">
+        <sql><![CDATA[select  pnum_up_limit A from TB_PUB_CUS_TGPL where group_kind=@group_kind and org_id= @org_id]]></sql>
+        <sql><![CDATA[select pnum_down_limit B from TB_PUB_CUS_TGPL where group_kind=@group_kind and org_id= @org_id]]></sql>
+        <sql><![CDATA[select count(group_id) from TB_CSM_GROUP_MEMBER  where group_id=@group_id]]></sql>
+    </rule>
+    <rule id="R0092" name="联保小组内有未结清贷款，不允许删除" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="删除联保小组时校验联保小组额度下贷款都已经全部结清" checkLevel="warn">
+        <sql><![CDATA[select count(*) A from tb_lin_line , tb_lon_loan_duebill d, tb_lon_line_use_info i where l.line_id = i.line_id   and d.loan_id = i.loan_id
+                    and l.group_id = @group_id and d.close_flag='1']]></sql>
+    </rule>
+    <rule id="R0093" name="该客户配偶已参加联保小组" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="该客户的配偶已加入联保小组 " checkLevel="err">
+        <sql><![CDATA[ select count(cus_id) A from tb_csm_relationship ,tb_csm_group_member where relation_kind = 'KIN' and object_id = cus_id and relation_subclass = '1' and member_state = '0' and subject_id = @cus_id]]></sql>
+    </rule>
+
+    <rule id="R0094" name="新额度金额越界" checktype="le" checkedFieldName="@new_line_amount"  endValue="$B" errCode="2101015-013" errMsg="新额度金额越界" checkLevel="err">
+        <sql><![CDATA[select sum(SECURITY_EVALUATE*BONDED_RATE)B from TB_LAC_LINE_PUB_SECURITY where APP_ID=@app_id and SERCURITY_ALTERATE_STATUS!=3]]></sql>
+    </rule>
+    <rule id="R0095" name="新额度金额越界" checktype="le" checkedFieldName="@new_line_amount"  endValue="$B" errCode="2101015-013" errMsg="新额度金额越界" checkLevel="err">
+        <sql><![CDATA[SELECT LIMIT_VALUE A FROM TB_PUB_APPLICATION_LIMIT WHERE ORG_ID=@org_id AND  APP_OP_ID=@app_op_id AND EN_NAME='LINE_AMOUNT' and LIMIT = 'GREATEREQUAL']]></sql>
+    </rule>
+    <rule id="R0096" name="新额度金额越界" checktype="le" checkedFieldName="@new_line_amount"  endValue="$B" errCode="2101015-013" errMsg="新额度金额越界" checkLevel="err">
+        <sql><![CDATA[SELECT min(a.LOAN_END_DATE) end_date FROM TB_LON_LOAN_APPLICATION a,TB_LON_LINE_USE_INFO b,TB_LON_APPLICATION C
+			WHERE a.LOAN_ID = b.LOAN_ID AND C.APPROVE_STATUS IN ('1', '2', '3') AND b.LINE_ID = @line_id ''UNION ALL SELECT CASE
+			WHEN a.EXTENSION_DATE IS NOT NULL THEN a.EXTENSION_DATE ELSE a.LOAN_END_DATE END end_date  FROM tb_lon_loan a, tb_lon_line_use_info b
+			WHERE a.LOAN_ID = b.LOAN_ID AND a.close_flag='0' and b.LINE_ID =@line_id]]></sql>
+    </rule>
+    <rule id="R0097" name="额度支用截至日不能超过额度止期" checktype="le" checkedFieldName="@new_line_ajustend_date"  endValue="$A" errCode="2101015-013" errMsg="额度支用截至日不能超过额度止期" checkLevel="err">
+        <sql><![CDATA[select line_mature_date A from tb_lin_line where LINE_ID=@line_id]]></sql>
+    </rule>
+    <rule id="R0098" name="商务贷款、抵押类贷款额度内贷款最长到期日不能超过额度存续期" checktype="le" checkedFieldName="@new_line_ajustend_date"  endValue="$A" errCode="2101015-013" errMsg="商务贷款、抵押类贷款额度内贷款最长到期日不能超过额度存续期" checkLevel="err">
+        <sql><![CDATA[select LINE_DURATION A from tb_lin_line a ,tb_pub_applicationconfig b where a.app_op_id=b.app_op_id and a.app_op_id=@app_op_id and a.line_id=@line_id]]></sql>
+    </rule>
+    <rule id="R0099" name="入账的抵押物不能在补录" checktype="ineqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="入账的抵押物不能在补录" checkLevel="err">
+        <sql><![CDATA[select entry_flag A from TB_PUB_SECURITY sec where sec.app_id=@APP_ID and sec.security_id=@SECURITY_ID]]></sql>
+    </rule>
+    <rule id="R0100" name="非“登记”状态下资产信息修改，请申请资产信息修改业务" checktype="ineqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="非“登记”状态下资产信息修改，请申请资产信息修改业务" checkLevel="err">
+        <sql><![CDATA[select ASSET_STATUS A from TB_AST_ASSET  where ASSET_ID =  @ASSET_ID]]></sql>
+    </rule>
+    <rule id="R0101" name="非“登记”状态下资产信息不能申请删除" checktype="ineqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="非“登记”状态下资产信息不能申请删除" checkLevel="err">
+        <sql><![CDATA[select ASSET_STATUS A from TB_AST_ASSET  where ASSET_ID =  @ASSET_ID]]></sql>
+    </rule>
+    <rule id="R0102" name="非当日录入预评估信息不能删除" checktype="eqs" checkedFieldName="$A" targetDataList="$B" errCode="2101015-013" errMsg="非当日录入预评估信息不能删除" checkLevel="err">
+        <sql><![CDATA[select to_char(Create_Time,'yyyymmdd')A from TB_AST_VALUATION  where ASSET_ID =  @ASSET_ID and VALUATION_TYPE like '1__%']]></sql>
+        <sql><![CDATA[select to_char(work_date,'yyyymmdd')B from tb_sys_business_date where org_cd = 1]]></sql>
+    </rule>
+    <rule id="R0103" name="同一天只能对同一个押品进行评估一次" checktype="le" checkedFieldName="$B" endValue="0" errCode="2101015-013" errMsg="同一天只能对同一个押品进行评估一次" checkLevel="err">
+        <sql><![CDATA[select count(0) B from TB_AST_VALUATION where ASSET_ID =  @assetId and app_id = @paramValue and to_char(evaluation_time,'yyyymmdd') = @evaluation_time and VALUATION_TYPE = @valuationType  ]]></sql>
+    </rule>
+
+
+    <rule id="R0104" name="正式评估价值低于预评估价值的95%，不能放款。" checktype="less" checkedFieldName="$A" endValue="0.95" errCode="2101015-013" errMsg="正式评估价值低于预评估价值的95%，不能放款。" checkLevel="err">
+        <sql><![CDATA[select ORIGINAL_VALUE/ASSESSMENT_VALUE A from TB_AST_VALUATION  where ASSET_ID =  @ASSET_ID and VALUATION_TYPE like '2__%']]></sql>
+    </rule>
+    <rule id="R0105" name="押品的抵押率高于系统控制上线,不允许上报" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="押品的抵押率高于系统控制上线,不允许上报" checkLevel="err">
+        <sql><![CDATA[select ASSESSMENT_VALUE A from TB_AST_VALUATION  where ASSET_ID =  @ASSET_ID and VALUATION_TYPE like '2__%']]></sql>
+        <sql><![CDATA[select b.assets_rate_up B from  TB_PUB_LOAN_COLLATERALRATIO b where b.org_id = @org_id and b.loan_kind = @loan_kind and b.assets_kind = @assets_kind]]></sql>
+    </rule>
+    <rule id="R0106" name="请确认录入个人商务贷款调查报告业务概要及家庭信息表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告业务概要及家庭信息表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_BUS_FAMILY_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0107" name="请确认录入汽车消费贷款调查报告申请概况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告申请概况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_vehicle_basic_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0108" name="请确认录入调查报告之房贷申请概况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告房贷申请概况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_house_basic_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0109" name="请确认录入小额贷款调查报告基本信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告基本信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_petty_basic_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0110" name="请确认录入调查报告中信贷历史信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告中信贷历史信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_his_loan_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0111" name="请确认录入消费留学调查报告业务申请信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告业务申请信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_application_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0112" name="请确认录入个人商务贷款额度内支用调查表之基本信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入个人商务贷款额度内支用调查表之基本信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_draw_basic_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0113" name="请确认录入调查报告财务信息之损益表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告财务信息之损益表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_income_statement where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0114" name="请确认录入调查报告损益表之营业收入支出明细表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告损益表之营业收入支出明细表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_profit_loss_item where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0115" name="请确认录入个商和自雇人士经营实体基本信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入经营实体基本信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_BUSINESS_ENTITY where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0116" name="请确认录入调查报告之资产负债表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告之资产负债表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_BALANCE_SHEET where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0117" name="请确认录入个商和自雇人士经营实体利润表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入经营实体利润表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_PUB_RPT_PROFIT_LOSS_ITEM where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0118" name="请确认录入个商经营实体现金流分析" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入现金流分析" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_cash_flow_analysis where app_id = @appId and cus_id = @cusId]]></sql>
+        <condition>C0162</condition>
+    </rule>
+
+    <rule id="R0119" name="请确认录入个商经营实体现金流量表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入现金流量表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_cash_flow_statement where app_id = @appId and cus_id = @cusId]]></sql>
+        <condition>C0162</condition>
+    </rule>
+    <rule id="R0120" name="请确认录入个商调查报告信用状况分析" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告信用状况分析" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_Credit_state where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0121" name="请确认录入调查报告中客户信用记录" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告中客户信用记录" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_credit_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0122" name="请确认录入调查报告合作方担保信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告合作方担保信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_PUB_RPT_corp_guarantee_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0123" name="请确认录入调查报告联保小组情况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告之房贷申请概况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_united_group_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0124" name="请确认录入调查报告自然人担保人信息"  checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="2101015-013" errMsg="调查报告自然人担保人信息录入不完整" checkLevel="err">
+        <sql><![CDATA[select count(0) A from TB_pub_RPT_indv_guarantee_info where app_id = @appId]]></sql>
+        <sql><![CDATA[SELECT COUNT(0) B FROM TB_PUB_GUARANTEE WHERE APP_ID=@appId and GUARANTEE_KIND = '2']]></sql>
+    </rule>
+    <rule id="R0125" name="请确认录入调查报告担保物情况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告担保物情况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_security_info where app_id = @appId and cus_id = @cusId]]></sql>
+        <condition>C0134</condition>
+    </rule>
+    <rule id="R0126" name="请确认录入调查报告担保物情况之担保明细信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告担保物情况之担保明细信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_security_item where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0127" name="请确认录入调查报告中原有负债信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告中原有负债信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_his_debt_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0128" name="请确认录入调查报告担保情况之车辆抵押" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告担保情况之车辆抵押" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_vehicle_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0129" name="请确认录入借款人自有房产和其他资产情况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入借款人自有房产和其他资产情况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_self_housing_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0130" name="请确认录入调查报告其他人评价情况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告其他人评价情况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_other_opinion_INFO where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0131" name="请确认录入调查报告种养殖信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告种养殖信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_plant_culture_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0132" name="请确认录入调查报告种养殖生产周期详情" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告种养殖生产周期详情" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_plant_culture_cycle where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0133" name="请确认录入个商调查报告点分析及其他特点说明" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告点分析及其他特点说明" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_risk_point_analyse where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0134" name="请确认录入调查报告中贷款评估" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告中贷款评估" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_risk_analyse where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0135" name="请确认录入小贷调查报告中生产经营信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告中生产经营信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_BUSINESS_product where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0136" name="请确认录入生产经营信息之采购销售信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入生产经营信息之采购销售信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_stock_sell_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0137" name="请确认录入生产经营信息之毛利率计算表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入生产经营信息之毛利率计算表" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_gross_profit_rate where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0138" name="请确认录入调查报告之家庭成员收入能力核查记录" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告之家庭成员收入能力核查记录" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_income_ability where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0139" name="请确认录入额度内支用与还款情况" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入额度内支用与还款情况" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_draw_repay_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0140" name="请确认录入额度支用贷款用途信息调查" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入额度支用贷款用途信息调查" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_loan_purpose where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0141" name="请确认录入贷款用途信息调查之资金使用计划" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入贷款用途信息调查之资金使用计划" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_fund_using_plan where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0142" name="请确认录入额度内支用时变动情况调查与分析" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入额度内支用时变动情况调查与分析" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_change_info where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0143" name="请确认录入个商调查报告综合分析与授信建议" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查报告综合分析与授信建议" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_analysis_advise where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0144" name="请确认录入小贷调查结论及建议" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认录入调查结论及建议" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_verdict_advise where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0145" name="请确认录入消费贷调查意见" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认消费贷调查意见" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_house_advise where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0146" name="请确认录入调查报告总表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请确认调查报告总表信息" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_pub_RPT_survey where app_id = @appId and cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0147" name="该关系类型已经建立！" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="该关系类型已经建立！" checkLevel="err">
+        <sql><![CDATA[select count(*)A from tb_csm_relationship a where a.subject_id = @subject_id and a.object_id = @object_idand a.relation_kind = 'KIN' and a.relation_subclass != '4' and a.relation_subclass = @relation_subclass]]></sql>
+    </rule>
+    <rule id="R0148" name="黑名单校验" checktype="ineqn" checkedFieldName="$A" targetDataList="3" errCode="2101015-013" errMsg="黑名单客户不准申请" checkLevel="err">
+        <sql><![CDATA[select nvl(cus_class,0) A from tb_csm_customer where cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0149" name="额度申请(额度生效)--校验客户是否有在途业务" checktype="le" checkedFieldName="$A" endValue="0" errCode="2101015-013" errMsg="该客户有在途业务！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_LIN_LINE_APPLICATION L,TB_LIN_APPLICATION A
+     WHERE L.LINE_ID = A.LINE_ID AND L.CUS_ID  = @cusId  AND A.APP_OP_ID = @appOpId
+     AND (A.APPROVE_STATUS NOT IN ('6','9') AND  A.ACT_FLAG NOT IN ('2','3','6') )]]></sql>
+    </rule>
+    <rule id="R0150" name="额度申请--产品互斥" checktype="le" checkedFieldName="$A" endValue="0" errCode="2101015-013" errMsg="已有互斥产品在途！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_LIN_LINE_APPLICATION L, TB_LIN_APPLICATION A
+     WHERE L.LINE_ID = A.LINE_ID AND L.CUS_ID  = @cusId
+     AND (A.APPROVE_STATUS NOT IN ('6' ) AND  A.ACT_FLAG NOT IN ('2','3','6') )
+     AND A.APP_OP_ID in
+     (SELECT REJECT_APP_OP_ID FROM TB_PUB_LOAN_LOANRELATION  L WHERE L.APP_OP_ID = @appOpId
+     UNION ALL
+     SELECT APP_OP_ID FROM TB_PUB_LOAN_LOANRELATION  L WHERE L.REJECT_APP_OP_ID =  @appOpId
+     )]]></sql>
+    </rule>
+
+
+    <rule id="R0151" name="担保录入" checktype="ineqn" checkedFieldName="$A" endValue="0" errCode="2101015-013" errMsg="该担保物未进行价值评估，不能进行担保录入" checkLevel="err">
+        <sql><![CDATA[select count(UUID)A from tb_ast_valuation where APP_ID=@APP_ID]]></sql>
+    </rule>
+    <rule id="R0152" name="联保小组额度申请--产品互斥" checktype="le" checkedFieldName="$A" endValue="0" errCode="2101015-013" errMsg="已有互斥产品在途！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_LINE_APPLICATION L, TB_LIN_APPLICATION A
+      WHERE L.LINE_ID = A.LINE_ID
+        AND L.CUS_ID in (select gm.cus_id
+                      from tb_csm_group_member gm, tb_csm_united_group ug
+                     where gm.group_id = ug.group_id
+                       and ug.head_id = @cusId)
+        AND (A.APPROVE_STATUS NOT IN ('6') AND
+            A.ACT_FLAG NOT IN ('2', '3','6'))
+        AND A.APP_OP_ID in (SELECT REJECT_APP_OP_ID
+                         FROM TB_PUB_LOAN_LOANRELATION L
+                        WHERE L.APP_OP_ID = @appOpId
+                       UNION ALL
+                       SELECT APP_OP_ID
+                         FROM TB_PUB_LOAN_LOANRELATION L
+                        WHERE L.REJECT_APP_OP_ID = @appOpId)]]></sql>
+    </rule>
+    <rule id="R0153" name="联保小组额度申请--小组成员黑名单校验" checktype="le" checkedFieldName="$A" endValue="0" errCode="2101015-013" errMsg="该小组存在黑名单成员！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(CUS_ID) A FROM TB_CSM_CUSTOMER C WHERE CUS_CLASS = '3' AND CUS_ID = @cusId
+                  AND EXISTS(SELECT GM.CUS_ID FROM TB_CSM_GROUP_MEMBER GM, TB_CSM_UNITED_GROUP UG
+                  WHERE GM.GROUP_ID = UG.GROUP_ID AND UG.HEAD_ID =  C.CUS_ID)]]></sql>
+    </rule>
+    <rule id="R0154" name="业务开办授权" checktype="eqn" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="该机构本业务未授权" checkLevel="err">
+        <sql><![CDATA[select ACCREDIT_STATUS A from tb_pub_loan_loanapplication where APP_OP_ID = @appOpId and ORG_ID=@orgId]]></sql>
+        <condition>C0028</condition>
+    </rule>
+    <rule id="R0169" name="浮动比必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@APP_FLOATING_RATIO" errCode="2101015-R0154" errMsg="浮动比例超出上限值" checkLevel="err">
+        <sql><![CDATA[select nvl(limit_value,1000) limitValue from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'LESS' and EN_NAME = 'FLOATING_RATIO']]></sql>
+        <condition>C0053</condition>
+    </rule>
+
+    <rule id="R0170" name="浮动比必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@APP_FLOATING_RATIO" errCode="2101015-R0155" errMsg="浮动比例超出下限值" checkLevel="err">
+        <sql><![CDATA[select nvl(limit_value,0) limitValue from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'GREATER' and EN_NAME = 'FLOATING_RATIO']]></sql>
+        <condition>C0054</condition>
+    </rule>
+
+    <rule id="R0171" name="加点幅度必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@APP_FLOATING_VALUE" errCode="2101015-R0155" errMsg="加点幅度超出上限值" checkLevel="err">
+        <sql><![CDATA[select nvl(limit_value,1000) limitValue from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'LESS' and EN_NAME = 'FLOATING_VALUE']]></sql>
+        <condition>C0055</condition>
+    </rule>
+
+    <rule id="R0172" name="加点幅度必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@APP_FLOATING_VALUE" errCode="2101015-R0156" errMsg="加点幅度超出下限值" checkLevel="err">
+        <sql><![CDATA[select nvl(limit_value,0) limitValue from TB_PUB_APPLICATION_LIMIT where  org_id = @ORG_ID and APP_OP_ID = @APP_OP_ID and  limit = 'GREATER' and EN_NAME = 'FLOATING_VALUE']]></sql>
+        <condition>C0056</condition>
+    </rule>
+    <rule id="R0173" name="请先完成贷款业务基本信息的录入" checktype="greater" checkedFieldName="$loanOrgManageCount" startValue="0" errCode="2101015-R0173" errMsg="请先完成贷款业务基本信息的录入" checkLevel="err">
+        <sql><![CDATA[select count(LOAN_ID) loanOrgManageCount from TB_LON_ORG_MANAGE where LOAN_ID = @appId]]></sql>
+    </rule>
+    <rule id="R0174" name="添加联保小组成员时校验该客户未参加任何联保小组" checktype="less" checkedFieldName="$CUSNUM" endValue="1" errCode="2101015-013" errMsg="该客户已参加联保小组 " checkLevel="err">
+        <sql><![CDATA[ select count(cus_id) CUSNUM from tb_csm_group_member where member_state = '0' and cus_id = @cus_id]]></sql>
+    </rule>
+
+
+    <rule id="R0175" name="必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-R0154" errMsg="@[cnName]超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0057</condition>
+    </rule>
+    <rule id="R0176" name="必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-R0155" errMsg="@[cnName]超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER',@enName) limitValue from dual]]></sql>
+        <condition>C0058</condition>
+    </rule>
+    <rule id="R0177" name="必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-R0155" errMsg="@[cnName]超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0059</condition>
+    </rule>
+    <rule id="R0178" name="必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-R0156" errMsg="@[cnName]超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0060</condition>
+    </rule>
+    <rule id="R0179" name="必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-R0156" errMsg="@[cnName]不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0061</condition>
+    </rule>
+    <rule id="R0180" name="添加客户时校验客户唯一性" checktype="eqs" checkedFieldName="$CUSNUM" targetDataList="0" errCode="2101015-013" errMsg="该客户存在 " checkLevel="err">
+        <sql><![CDATA[ select count(cus_id) CUSNUM from tb_csm_customer where cus_name = @cus_name and certificate_type = @certificate_type and certificate_code =@certificate_code ]]></sql>
+    </rule>
+    <rule id="R0181" name="添加客户时校验客户唯一性" checktype="eqs" checkedFieldName="$CUSNUM" targetDataList="0" errCode="2101015-013" errMsg="该客户已存在 " checkLevel="err">
+        <sql><![CDATA[ select count(cus_id) CUSNUM from tb_csm_customer where corp_code = @corp_code and certificate_type = @certificate_type and certificate_code = @certificate_code ]]></sql>
+    </rule>
+    <rule id="R0182" name="单笔贷款最长期限必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单笔贷款最长期限超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','LOAN_MAX_PERIOD') limitValue from dual]]></sql>
+        <condition>C0062</condition>
+    </rule>
+    <rule id="R0183" name="单笔贷款最长期限必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单笔贷款最长期限超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','LOAN_MAX_PERIOD') limitValue from dual]]></sql>
+        <condition>C0063</condition>
+    </rule>
+    <rule id="R0184" name="单笔贷款最长期限必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单笔贷款最长期限超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LOAN_MAX_PERIOD') limitValue from dual]]></sql>
+        <condition>C0064</condition>
+    </rule>
+    <rule id="R0185" name="单笔贷款最长期限必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单笔贷款最长期限超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LOAN_MAX_PERIOD') limitValue from dual]]></sql>
+        <condition>C0065</condition>
+    </rule>
+    <rule id="R0186" name="单笔贷款最长期限必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="单笔贷款最长期限不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','LOAN_MAX_PERIOD') limitValue from dual]]></sql>
+        <condition>C0066</condition>
+    </rule>
+
+    <rule id="R0187" name="额度支用期必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="额度支用期超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','LINE_EXPENSE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0067</condition>
+    </rule>
+    <rule id="R0188" name="额度支用期必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="额度支用期超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','LINE_EXPENSE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0068</condition>
+    </rule>
+    <rule id="R0189" name="额度支用期必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="额度支用期超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LINE_EXPENSE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0069</condition>
+    </rule>
+    <rule id="R0190" name="额度支用期必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="额度支用期超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LINE_EXPENSE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0070</condition>
+    </rule>
+    <rule id="R0191" name="额度支用期必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="额度支用期不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','LINE_EXPENSE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0071</condition>
+    </rule>
+
+    <rule id="R0192" name="年龄加额度存续期必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="年龄加额度存续期超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[SELECT FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','AGE_AND_DURATION') - ROUND(MONTHS_BETWEEN(SYSDATE,BIRTHDAY)) limitValue  FROM TB_CSM_INDV_CUSTOMER C WHERE C.CUS_ID = @cusId]]></sql>
+        <condition>C0072</condition>
+    </rule>
+    <rule id="R0193" name="年龄加额度存续期必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="年龄加额度存续期超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[SELECT FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','AGE_AND_DURATION') - ROUND(MONTHS_BETWEEN(SYSDATE,BIRTHDAY)) limitValue FROM TB_CSM_INDV_CUSTOMER C WHERE C.CUS_ID = @cusId]]></sql>
+        <condition>C0073</condition>
+    </rule>
+    <rule id="R0194" name="年龄加额度存续期必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="年龄加额度存续期超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[SELECT FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','AGE_AND_DURATION') - ROUND(MONTHS_BETWEEN(SYSDATE,BIRTHDAY)) limitValue FROM TB_CSM_INDV_CUSTOMER C WHERE C.CUS_ID = @cusId]]></sql>
+        <condition>C0074</condition>
+    </rule>
+    <rule id="R0195" name="年龄加额度存续期必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="年龄加额度存续期超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[SELECT FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','AGE_AND_DURATION') - ROUND(MONTHS_BETWEEN(SYSDATE,BIRTHDAY)) limitValue FROM TB_CSM_INDV_CUSTOMER C WHERE C.CUS_ID = @cusId]]></sql>
+        <condition>C0075</condition>
+    </rule>
+    <rule id="R0196" name="年龄加额度存续期必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="年龄加额度存续期不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[SELECT FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','AGE_AND_DURATION') - ROUND(MONTHS_BETWEEN(SYSDATE,BIRTHDAY)) limitValue FROM TB_CSM_INDV_CUSTOMER C WHERE C.CUS_ID = @cusId]]></sql>
+        <condition>C0076</condition>
+    </rule>
+
+    <rule id="R0197" name="单户授信金额必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单户授信金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','LINE_AMOUNT_PERSON') limitValue from dual]]></sql>
+        <condition>C0077</condition>
+    </rule>
+    <rule id="R0198" name="单户授信金额必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单户授信金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','LINE_AMOUNT_PERSON') limitValue from dual]]></sql>
+        <condition>C0078</condition>
+    </rule>
+    <rule id="R0199" name="单户授信金额必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单户授信金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LINE_AMOUNT_PERSON') limitValue from dual]]></sql>
+        <condition>C0079</condition>
+    </rule>
+    <rule id="R0200" name="单户授信金额必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单户授信金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LINE_AMOUNT_PERSON') limitValue from dual]]></sql>
+        <condition>C0080</condition>
+    </rule>
+    <rule id="R0201" name="单户授信金额必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="单户授信金额不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','LINE_AMOUNT_PERSON') limitValue from dual]]></sql>
+        <condition>C0081</condition>
+    </rule>
+
+    <rule id="R0202" name="单笔授信金额必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单笔授信金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','LINE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0082</condition>
+    </rule>
+    <rule id="R0203" name="单笔授信金额必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单笔授信金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','LINE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0083</condition>
+    </rule>
+    <rule id="R0204" name="单笔授信金额必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="单笔授信金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LINE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0084</condition>
+    </rule>
+    <rule id="R0205" name="单笔授信金额必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="单笔授信金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LINE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0085</condition>
+    </rule>
+    <rule id="R0206" name="单笔授信金额必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="单笔授信金额不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','LINE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0086</condition>
+    </rule>
+
+    <rule id="R0207" name="额度存续期限必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','LINE_DURATION') limitValue from dual]]></sql>
+        <condition>C0087</condition>
+    </rule>
+    <rule id="R0208" name="额度存续期限必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','LINE_DURATION') limitValue from dual]]></sql>
+        <condition>C0088</condition>
+    </rule>
+    <rule id="R0209" name="额度存续期限必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LINE_DURATION') limitValue from dual]]></sql>
+        <condition>C0089</condition>
+    </rule>
+    <rule id="R0210" name="额度存续期限必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LINE_DURATION') limitValue from dual]]></sql>
+        <condition>C0090</condition>
+    </rule>
+    <rule id="R0211" name="额度存续期限必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="额度存续期限不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','LINE_DURATION') limitValue from dual]]></sql>
+        <condition>C0091</condition>
+    </rule>
+
+    <rule id="R0212" name="同一个额度下只允许申请一个项目信息" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="同一个额度下只允许申请一个项目信息！！！" checkLevel="err">
+        <sql><![CDATA[select project_id A from tb_lin_project  where a.app_id=@LINE_ID]]></sql>
+    </rule>
+
+    <rule id="R0213" name="额度金额必须等于最小变动单位的整数倍" checktype="eqn" checkedFieldName="$limitValue" targetDataList="0" errCode="2101015-013" errMsg="额度金额必须是最小变动单位$[pLimitValue]的整数倍" checkLevel="err">
+        <sql><![CDATA[select mod(@lineAmount,FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','SMALLEST_CHANGE_UNIT')) limitValue,FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','SMALLEST_CHANGE_UNIT') pLimitValue from dual]]></sql>
+        <condition>C0092</condition>
+    </rule>
+
+    <rule id="R0214" name="分段利率@cnName超出限制值" checktype="ge-le" checkedFieldName="@floatingParam" startValue="$DOWN_LIMIT" endValue="$UP_LIMIT" errCode="R0214-01" errMsg="@[cnName]超出参数限制值，上限:$[UP_LIMIT],下限:$[DOWN_LIMIT]" checkLevel="err">
+        <sql><![CDATA[SELECT UP_LIMIT FROM TB_PUB_DIVIDE_RATE WHERE APP_OP_ID=(SELECT APP_OP_ID FROM TB_LON_APPLICATION WHERE LOAN_ID=@loanId) AND RATE_PRICE_KIND=@ratePriceKind AND TO_NUMBER(BEGIN_LENGTH)<=TO_NUMBER(@beginLength) AND TO_NUMBER(END_LENGTH)>=TO_NUMBER(@endLength)]]></sql>
+        <sql><![CDATA[SELECT DOWN_LIMIT FROM TB_PUB_DIVIDE_RATE WHERE APP_OP_ID=(SELECT APP_OP_ID FROM TB_LON_APPLICATION WHERE LOAN_ID=@loanId) AND RATE_PRICE_KIND=@ratePriceKind AND TO_NUMBER(BEGIN_LENGTH)<=TO_NUMBER(@beginLength) AND TO_NUMBER(END_LENGTH)>=TO_NUMBER(@endLength)]]></sql>
+    </rule>
+
+    <rule id="R0215" name="未检索到分段利率@cnName上限值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="R0215-01" errMsg="未检索到分段利率@[cnName]上限值" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(APP_OP_ID) LIMIT_COUNT FROM TB_PUB_DIVIDE_RATE WHERE APP_OP_ID=(SELECT APP_OP_ID FROM TB_LON_APPLICATION WHERE LOAN_ID=@loanId) AND RATE_PRICE_KIND=@ratePriceKind AND TO_NUMBER(BEGIN_LENGTH)<=TO_NUMBER(@beginLength) AND TO_NUMBER(END_LENGTH)>=TO_NUMBER(@endLength) AND UP_LIMIT IS NOT NULL]]></sql>
+    </rule>
+
+    <rule id="R0216" name="未检索到分段利率@cnName下限值" checktype="greater" checkedFieldName="$LIMIT_COUNT" startValue="0" errCode="R0216-01" errMsg="未检索到分段利率@[cnName]下限值" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(APP_OP_ID) LIMIT_COUNT FROM TB_PUB_DIVIDE_RATE WHERE APP_OP_ID=(SELECT APP_OP_ID FROM TB_LON_APPLICATION WHERE LOAN_ID=@loanId) AND RATE_PRICE_KIND=@ratePriceKind AND TO_NUMBER(BEGIN_LENGTH)<=TO_NUMBER(@beginLength) AND TO_NUMBER(END_LENGTH)>=TO_NUMBER(@endLength) AND DOWN_LIMIT IS NOT NULL]]></sql>
+    </rule>
+
+    <!-- loan   -->
+    <rule id="R0217" name="产品单户金额必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="产品单户金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','APP_OP_ACCOUNT_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0093</condition>
+    </rule>
+    <rule id="R0218" name="产品单户金额必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="产品单户金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','APP_OP_ACCOUNT_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0094</condition>
+    </rule>
+    <rule id="R0219" name="产品单户金额必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="产品单户金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','APP_OP_ACCOUNT_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0095</condition>
+    </rule>
+    <rule id="R0220" name="产品单户金额必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="产品单户金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','APP_OP_ACCOUNT_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0096</condition>
+    </rule>
+    <rule id="R0221" name="产品单户金额必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="产品单户金额不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','APP_OP_ACCOUNT_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0097</condition>
+    </rule>
+
+    <rule id="R0222" name="产品单笔金额必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="产品单笔金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','APP_OP_SINGLE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0098</condition>
+    </rule>
+    <rule id="R0223" name="产品单笔金额必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="产品单笔金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','APP_OP_SINGLE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0099</condition>
+    </rule>
+    <rule id="R0224" name="产品单笔金额必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="产品单笔金额超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','APP_OP_SINGLE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0100</condition>
+    </rule>
+    <rule id="R0225" name="产品单笔金额必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="产品单笔金额超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','APP_OP_SINGLE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0101</condition>
+    </rule>
+    <rule id="R0226" name="产品单笔金额必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-013" errMsg="产品单笔金额不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','APP_OP_SINGLE_AMOUNT') limitValue from dual]]></sql>
+        <condition>C0102</condition>
+    </rule>
+
+    <!-- 留学贷款额度  -->
+    <rule id="R0227" name="留学贷款额度,额度存续期必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="15" errCode="2101015-013" errMsg="额度存续期必须小于等于上限值15" checkLevel="err">
+        <condition>C0103</condition>
+    </rule>
+    <rule id="R0228" name="留学贷款额度,额度存续期必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="120" errCode="2101015-013" errMsg="额度存续期必须小于等于上限值120" checkLevel="err">
+        <condition>C0104</condition>
+    </rule>
+    <rule id="R0229" name="留学贷款额度,额度存续期必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="36" errCode="2101015-013" errMsg="额度存续期必须小于等于上限值36" checkLevel="err">
+        <condition>C0105</condition>
+    </rule>
+    <rule id="R0230" name="留学贷款额度,额度存续期必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="36" errCode="2101015-013" errMsg="额度存续期必须小于等于上限值36" checkLevel="err">
+        <condition>C0106</condition>
+    </rule>
+    <rule id="R0231" name="留学贷款额度,额度存续期必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="120" errCode="2101015-013" errMsg="额度存续期必须小于等于上限值120" checkLevel="err">
+        <condition>C0107</condition>
+    </rule>
+
+    <!-- 合作方额度申请 -->
+    <rule id="R0232" name="额度期限必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','LINE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0129</condition>
+    </rule>
+    <rule id="R0233" name="额度期限必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-013" errMsg="额度存续期限超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','LINE_PERIOD') limitValue from dual]]></sql>
+        <condition>C0130</condition>
+    </rule>
+
+    <!-- 客户存在不良贷款或此客户为黑名单客户   -->
+    <rule id="R0234" name="客户不能有不良贷款" checktype="eqn" checkedFieldName="$recount" targetDataList="0" errCode="2101015-013" errMsg="该客户存在不良贷款" checkLevel="err">
+        <sql><![CDATA[select (SELECT COUNT(LOAN_ID) cFour FROM TB_LON_LOAN WHERE LOAN_LEVEL_FOUR_CLASS='2' AND LOAN_LEVEL_FIVE_CLASS IS NULL  AND CUS_ID = @cusId )+(select COUNT(LOAN_ID) cFive FROM TB_LON_LOAN WHERE LOAN_LEVEL_FIVE_CLASS in ('3','4','5') AND CUS_ID = @cusId ) recount from dual]]></sql>
+    </rule>
+
+    <!-- loan 最低提前还本限额小于等于贷款金额   -->
+    <rule id="R0235" name="最低提前还本限额小于等于贷款金额" checktype="le" checkedFieldName="@paramValue" endValue="$param" errCode="2101015-013" errMsg="最低提前还本限额必须小于等于贷款金额" checkLevel="err">
+        <sql><![CDATA[select nvl(@loanAmount,0) param from dual]]></sql>
+    </rule>
+
+    <!-- loan 明细信息中的止期应该小于等于贷款期限   -->
+    <rule id="R0236" name="止期应小于等于贷款期限" checktype="le" checkedFieldName="@endLength" endValue="@loanLength" errCode="2101015-013" errMsg="止期应小于等于贷款期限" checkLevel="err" />
+
+    <!-- cus 县域重复记录控制    begin-->
+    <rule id="R0237" name="已经建立了该县域" checktype="le" checkedFieldName="$allresult" endValue="0" errCode="2101015-013" errMsg="已经建立了该县域" checkLevel="err">
+        <sql><![CDATA[select count(*) allresult from tb_cif_county_information  where county_name = @paramValue]]></sql>
+    </rule>     <rule id="R0238" name="已经建立了该关系！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+                      errMsg="已经建立了该关系！" checkLevel="err">
+    <sql><![CDATA[select count(1) allResult from tb_csm_relationship r where r.subject_id = @subjectId and r.object_id = @paramValue and r.relation_subclass = @subclass and r.relation_kind = @bigclass ]]></sql>
+</rule>
+    <rule id="R0239" name="关联人未结婚,不能添加配偶!" checktype="ineqn" checkedFieldName="$MARITAL_STATUS" targetDataList="10;40;30" errCode="2101015-013"
+          errMsg="关联人未结婚,不能添加配偶!" checkLevel="err">
+        <sql><![CDATA[select MARITAL_STATUS from tb_csm_indv_customer where cus_id = @paramValue]]></sql>
+    </rule>
+    <rule id="R0240" name="借款人未结婚,不能添加配偶!" checktype="ineqn" checkedFieldName="$MARITAL_STATUS" targetDataList="10;40;30" errCode="2101015-013"
+          errMsg="借款人未结婚,不能添加配偶!" checkLevel="err">
+        <sql><![CDATA[select MARITAL_STATUS from tb_csm_indv_customer where cus_id = @subjectId]]></sql>
+    </rule>
+
+    <rule id="R0241" name="两人的性别都为男性（女性）不能添加为配偶关系！" checktype="le" checkedFieldName="$allresult" endValue="0" errCode="2101015-013"
+          errMsg="两人的性别都为男性（女性）不能添加为配偶关系！" checkLevel="err">
+        <sql><![CDATA[select count(1) allresult from (select obg.gender og from tb_csm_indv_customer obg where cus_id = @subjectId) o,
+            (select sbg.gender sg from tb_csm_indv_customer sbg where cus_id = @paramValue) s where o.og = s.sg and o.og in ('1','2')]]></sql>
+    </rule>
+
+
+    <!-- cus 添加关联关系人校验   end-->
+
+    <!-- 带标志级联的前置条件的通用校验 -->
+    <rule id="R0242" name="不涉及老客户 并且 不是额度下 并且 必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0242" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0057</condition>
+    </rule>
+    <rule id="R0243" name="不涉及老客户 并且 不是额度下 并且 必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0243" errMsg="@[cnName]超出参数下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0058</condition>
+    </rule>
+    <rule id="R0244" name="不涉及老客户 并且 不是额度下 并且 必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0244" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0059</condition>
+    </rule>
+    <rule id="R0245" name="不涉及老客户 并且 不是额度下 并且 必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0245" errMsg="@[cnName]超出参数下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0060</condition>
+    </rule>
+    <rule id="R0246" name="不涉及老客户 并且 不是额度下 并且 必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="R0246" errMsg="@[cnName]不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0061</condition>
+    </rule>
+
+    <!-- 浮动比例、加点幅度校验 -->
+    <rule id="R0247" name="必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-R0154" errMsg="@[cnName]超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0108</condition>
+        <condition>C0109</condition>
+        <condition>C0057</condition>
+    </rule>
+    <rule id="R0248" name="必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-R0155" errMsg="@[cnName]超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER',@enName) limitValue from dual]]></sql>
+        <condition>C0108</condition>
+        <condition>C0109</condition>
+        <condition>C0058</condition>
+    </rule>
+    <rule id="R0249" name="必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="2101015-R0155" errMsg="@[cnName]超出上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0108</condition>
+        <condition>C0109</condition>
+        <condition>C0059</condition>
+    </rule>
+    <rule id="R0250" name="必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="2101015-R0156" errMsg="@[cnName]超出下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0108</condition>
+        <condition>C0109</condition>
+        <condition>C0060</condition>
+    </rule>
+    <rule id="R0251" name="必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="2101015-R0156" errMsg="@[cnName]不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0108</condition>
+        <condition>C0109</condition>
+        <condition>C0061</condition>
+    </rule>
+
+    <rule id="R0252" name="联保小组添加成员" checktype="less" checkedFieldName="$C" endValue="$A" errCode="2101015-013" errMsg="成员数量已到上限" checkLevel="err">
+        <sql><![CDATA[select  pnum_up_limit A from TB_PUB_CUS_TGPL where unite_type=@group_kind and org_id= @org_id]]></sql>
+        <sql><![CDATA[select count(group_id) C from TB_CSM_GROUP_MEMBER  where group_id=@group_id]]></sql>
+        <condition>C0110</condition>
+    </rule>
+    <rule id="R0253" name="联保小组添加成员" checktype="ge" checkedFieldName="$C" startValue="$B" errCode="2101015-013" errMsg="成员数量低于下限" checkLevel="err">
+        <sql><![CDATA[select pnum_down_limit B from TB_PUB_CUS_TGPL where unite_type=@group_kind and org_id= @org_id]]></sql>
+        <sql><![CDATA[select count(group_id) C from TB_CSM_GROUP_MEMBER  where group_id=@group_id]]></sql>
+        <condition>C0111</condition>
+    </rule>
+
+
+    <rule id="R0254" name="关联人已经建立了婚姻关系！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+          errMsg="关联人已经建立了婚姻关系！" checkLevel="err">
+        <sql><![CDATA[select count(1) allResult
+                  from tb_csm_relationship r
+                 where r.object_id = @paramValue
+                   and r.relation_kind = @bigclass
+                   and r.relation_subclass = @subclass]]></sql>
+    </rule>
+    <rule id="R0255" name="借款人已经建立了婚姻关系！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+          errMsg="借款人已经建立了婚姻关系！" checkLevel="err">
+        <sql><![CDATA[select count(1) allResult
+                  from tb_csm_relationship r
+                 where r.subject_id = @subjectId
+                   and r.relation_kind = @bigclass
+                   and r.relation_subclass = @subclass]]></sql>
+    </rule>
+
+    <rule id="R0266" name="请签署贷款合同" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署贷款合同" checkLevel="err">
+        <sql><![CDATA[select count(0)A from TB_LON_LOAN_CONTRACT where loan_id = @appId]]></sql>
+    </rule>
+    <rule id="R0267" name="保证金未止付" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="保证金未止付" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_PUB_GUARANTEE_ACCOUNT_INFO WHERE APP_ID =@appId AND guarantee_status='2']]></sql>
+        <condition>C0112</condition>
+        <condition>C0142</condition>
+    </rule>
+
+
+    <!--担保方式选择抵押，质押，保证人，保证金的校验  -->
+    <rule id="R0271" name="非额度项下贷款没有添加抵押物" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="非额度项下贷款没有添加抵押物" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_AST_ASSETTYPE A ,TB_PUB_SECURITY B WHERE A.ASSETTYPE_ID=B.ASSET_TYPE AND A.SECURITY_KIND='MOR' AND b.APP_ID=@appId]]></sql>
+        <condition>C0117</condition>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0272" name="非额度项下贷款没有添加质押物" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="非额度项下贷款没有添加质押物" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_AST_ASSETTYPE A ,TB_PUB_SECURITY B WHERE A.ASSETTYPE_ID=B.ASSET_TYPE AND A.SECURITY_KIND='IMP' AND b.APP_ID=@appId]]></sql>
+        <condition>C0118</condition>
+        <condition>C0142</condition>
+    </rule>
+
+    <rule id="R0273" name="非额度项下贷款没有添加保证人" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="非额度项下贷款没有添加保证人" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_PUB_GUARANTEE WHERE APP_ID=@appId]]></sql>
+        <condition>C0116</condition>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0274" name="非额度项下贷款没有录入保证金" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="非额度项下贷款没有录入保证金" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_PUB_GUARANTEE_ACCOUNT_INFO WHERE APP_ID=@appId]]></sql>
+        <condition>C0119</condition>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0275" name="此用户存在在途未处理的贷后业务，不允许再办理其他贷后业务" checktype="le" checkedFieldName="$loanAcCount" endValue="0" errCode="2101015-013" errMsg="此用户存在在途未处理的贷后业务，不允许再办理其他贷后业务" checkLevel="err">
+        <!-- 2013.1.29 by wujiaxu 暂时屏蔽此sql <sql><![CDATA[SELECT COUNT(ID) LOANACCOUNT FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.CUS_ID = @cusId AND LAP.APPROVE_STATUS IN ('1', '10','11') UNION ALL SELECT AAP.ASP_ID AS ID FROM TB_ASP_APPLICATION AAP WHERE AAP.CUS_ID = @cusId AND AAP.APPROVE_STATUS IN ('1', '10','11'))]]></sql>-->
+        <sql><![CDATA[select 0 loanAcCount from dual]]></sql>
+
+    </rule>
+    <rule id="R0276" name="请录入贷款终审信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请录入贷款终审信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(LOAN_ID) A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID =@appId AND FINAL_LOAN_LENGTH IS NOT NULL AND FINAL_LOAN_AMOUNT IS NOT NULL]]></sql>
+    </rule>
+
+    <rule id="R0277" name="超出年龄限制" checktype="ge-le" checkedFieldName="@age" startValue="$ageDownLimit" endValue="$ageUpLimit" errCode="2101015-013" errMsg="超出年龄限制" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GET_AGE_UP_LIMIT(@orgId,@appOpId) ageUpLimit from dual]]></sql>
+        <sql><![CDATA[select FN_PUB_GET_AGE_DOWN_LIMIT(@orgId,@appOpId) ageDownLimit from dual]]></sql>
+    </rule>
+    <rule id="R0278" name="存在产品互斥的贷款业务,请确认" checktype="le" checkedFieldName="$rowCount" endValue="0" errCode="R0278" errMsg="存在产品互斥的贷款业务,请确认" checkLevel="err">
+        <sql><![CDATA[
+             SELECT
+                nvl(COUNT(L.LOAN_ID),0) rowCount
+            FROM
+                TB_LON_LOAN_APPLICATION L, TB_LON_APPLICATION A
+            WHERE
+                L.LOAN_ID = A.LOAN_ID AND L.CUS_ID  = @cusId
+            AND
+                A.APPROVE_STATUS  IN('1','2','3','4','5')
+            AND
+                A.ACT_FLAG = '1'
+            AND
+                A.APP_OP_ID in
+                (SELECT REJECT_APP_OP_ID FROM TB_PUB_LOAN_LOANRELATION  L WHERE L.APP_OP_ID = @appOpId
+                UNION ALL
+                SELECT APP_OP_ID FROM TB_PUB_LOAN_LOANRELATION  L WHERE L.REJECT_APP_OP_ID = @appOpId)
+        ]]></sql>
+    </rule>
+    <rule id="R0279" name="超出年龄+期限限制" checktype="le" checkedFieldName="$ageLength" endValue="$ageLengthUpLimit" errCode="2101015-013" errMsg="超出年龄+期限限制，要求值$[ageUpLimit]，实际值$[ageLength]" checkLevel="err">
+        <sql><![CDATA[select  to_number(@age)+round(to_number(@length)/12,0) ageLength from dual]]></sql>
+        <sql><![CDATA[select FN_PUB_GET_AGE_L_UP_LIMIT(@orgId,@appOpId) ageLengthUpLimit from dual]]></sql>
+    </rule>
+    <rule id="R0280" name="请先录入完整调查报告" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0280" errMsg="请先录入完整调查报告"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		where exists (select * from TB_pub_RPT_analysis_advise t where app_id = @appId and FINANCE_ANALYSE_DEGREE is not null)
+		or exists (select * from TB_pub_RPT_verdict_advise where app_id = @appId)
+		or exists (select * from TB_pub_RPT_house_advise where app_id = @appId)
+		or exists (select * from TB_pub_RPT_change_info where app_id = @appId)
+		]]></sql>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0281" name="请签署审查意见" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署审查意见"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select record_id from tb_lon_review_opinion1 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id from tb_lon_review_opinion2 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id from tb_lon_review_opinion3 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  ]]>
+        </sql>
+    </rule>
+    <rule id="R0282" name="请签署审批意见" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署审批意见"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select record_id from tb_lon_approve_opinion1 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id record_id from tb_lon_approve_opinion2 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id from tb_lon_approve_opinion3 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  ]]>
+        </sql>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0283" name="请签署抵质押合同" checktype="eqs"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署抵质押合同" checkLevel="err">
+        <sql><![CDATA[select COUNT(0) A from tb_pub_security WHERE app_id=@appId AND security_contract_no IS NULL AND SECURITY_STATUS != '5' ]]></sql>
+    </rule>
+    <rule id="R0284" name="请签署保证人合同" checktype="eqs"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署保证人合同"
+          checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_PUB_GUARANTEE g WHERE app_id=@appId AND g.GUARANTEE_CONTRACT_NUM IS NULL]]></sql>
+    </rule>
+    <rule id="R0285" name="担保物未进行价值评估" checktype="eqs" targetDataList="0"
+          checkedFieldName="$A" errCode="2101015-013" errMsg="担保物未进行价值评估"
+          checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(1) A FROM (SELECT ASSET_ID FROM TB_PUB_SECURITY WHERE
+   APP_ID=@appId AND SECURITY_STATUS != '5' MINUS SELECT ASSET_ID FROM TB_AST_VALUATION WHERE APP_ID=@appId AND VALUATION_TYPE='2')]]></sql>
+        <condition>C0142</condition>
+
+    </rule>
+    <!-- 提交  修改  其次校验-->
+    <rule id="R0286" name="抵押登记后放款校验是否录入权利登记信息" checktype="ineqn"
+          checkedFieldName="$rowCount" targetDataList="0" errCode="R0286" errMsg="未录入权利登记信息"
+          checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(0) rowCount FROM TB_PUB_SECURITY WHERE APP_ID=@appId AND SECURITY_STATUS !='5' AND REGISTER_NO IS NOT NULL]]></sql>
+        <condition>C0127</condition>
+        <condition>C0142</condition>
+        <condition>C0163</condition>
+    </rule>
+    <rule id="R0287" name="首付款未进行止付" checktype="eqs"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="首付款未进行止付"
+          checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(1) A FROM TB_LON_FIRST_REPAY_INFO WHERE FIRST_REPAY_STATUS <> '4' AND FIRST_REPAY_KIND='2' AND LOAN_ID=@appId]]></sql>
+        <condition>C0120</condition>
+    </rule>
+    <rule id="R0288" name="账号未加办" checktype="eqs" checkedFieldName="$A" targetDataList="1" errCode="2101015-013" errMsg="账号未加办" checkLevel="err">
+        <sql><![CDATA[SELECT ADD_FLAG A FROM TB_LAC_LOAN_ACCNOADDDEAL WHERE ACC_NO = @accNo]]></sql>
+    </rule>
+    <rule id="R0289" name="对公资金未划转" checktype="eqs" checkedFieldName="$A" targetDataList="3" errCode="2101015-013" errMsg="对公资金未划转" checkLevel="err">
+        <sql><![CDATA[SELECT FI.FILE_STATUS A FROM TB_LON_TRAN_CORP_FILE_DETAIL DE, TB_LON_TRAN_CORP_FILE FI
+        			WHERE DE.FILE_ID = FI.FILE_ID AND FI.FILE_OPERATION_TYPE = @fileOperationType AND DE.DUEBILL_ID = @duebillId]]></sql>
+    </rule>
+
+    <rule id="R0290" name="添加客户时校验客户唯一性" checktype="eqs"
+          checkedFieldName="$CUSNUM" targetDataList="0" errCode="2101015-013"
+          errMsg="已存在证件类型为身份证或者户口簿的客户 " checkLevel="err">
+        <sql><![CDATA[ select count(cus_id) CUSNUM from tb_csm_customer where cus_name = @cus_name and certificate_type in ('10','40') and certificate_code =@certificate_code ]]></sql>
+    </rule>
+
+    <rule id="R0291" name="添加客户时校验客户唯一性" checktype="eqn"
+          checkedFieldName="#sum($countNum,$appNum)" targetDataList="0" errCode="2101015-013"
+          errMsg="联保小组额度未注销不允许注销联保小组 " checkLevel="err">
+        <sql><![CDATA[ select count(line.line_id) countNum
+  from tb_lin_line line
+ where line.line_status not in ('3', '6')
+   and line.group_id = @group_id
+   and line.virtual_flag = '0' ]]></sql>
+        <sql><![CDATA[ select count(lin.line_id) appNum
+          from tb_lin_application app, tb_lin_line_application lin
+         where lin.line_id = app.line_id
+           and app.approve_status in ('1', '10', '11')
+           and lin.group_id = @group_id ]]></sql>
+    </rule>
+
+    <rule id="R0292" name="请先查询人行征信" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先查询人行征信" checkLevel="err">
+        <sql><![CDATA[SELECT count(0)A FROM TB_LON_INDV_CREDIT WHERE cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0293" name="添加联保小组成员校验是否本行员工" checktype="ineqs"
+          checkedFieldName="$CUSNUM" targetDataList="1" errCode="2101015-013"
+          errMsg="本行员工不允许加入联保小组 " checkLevel="err">
+        <sql><![CDATA[ select a.bank_employee_flag CUSNUM from tb_csm_indv_customer a where a.cus_id=@cus_id ]]></sql>
+    </rule>
+
+    <rule id="R0294" name="请录完额度申请信息" checktype="ineqn" checkedFieldName="$ORGMANAGE" targetDataList="0" errCode="2101015-013" errMsg="请录完额度申请信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) ORGMANAGE FROM TB_LIN_ORG_MANAGE WHERE LINE_ID = @lineId]]></sql>
+    </rule>
+
+    <rule id="R0295" name="请录完授信调查意见" checktype="ineqn" checkedFieldName="$CREDITAPPROVAL" targetDataList="0" errCode="2101015-013" errMsg="请录完授信调查意见" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) CREDITAPPROVAL FROM TB_LIN_CREDIT_SURVEY_APPROVAL WHERE LINE_ID = @lineId]]></sql>
+    </rule>
+
+    <rule id="R0296" name="请进行个人信用评级" checktype="ineqn" checkedFieldName="$CREDITBUS" targetDataList="0" errCode="2101015-013" errMsg="请进行个人信用评级" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) CREDITBUS FROM tb_pub_bm_business WHERE APP_ID = @lineId and cus_Kind = '2' ]]></sql>
+    </rule>
+
+
+    <!--担保方式选择抵押，质押，保证人，保证金，第三方担保额度的校验  -->
+    <rule id="R0297" name="没有添加保证人" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="担保方式为保证时，需录入保证人" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_PUB_GUARANTEE WHERE APP_ID=@appId]]></sql>
+        <condition>C0122</condition>
+    </rule>
+    <rule id="R0298" name="没有添加抵押物" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="担保方式为抵押时，需录入抵押物" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_AST_ASSETTYPE A ,TB_PUB_SECURITY B WHERE A.ASSETTYPE_ID=B.ASSET_TYPE AND A.SECURITY_KIND='MOR' AND b.APP_ID=@appId]]></sql>
+        <condition>C0123</condition>
+    </rule>
+    <rule id="R0299" name="没有添加质押物" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="担保方式为质押时，需录入质押物" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_AST_ASSETTYPE A ,TB_PUB_SECURITY B WHERE A.ASSETTYPE_ID=B.ASSET_TYPE AND A.SECURITY_KIND='IMP' AND b.APP_ID=@appId AND b.SECURITY_STATUS != '5']]></sql>
+        <condition>C0124</condition>
+    </rule>
+    <rule id="R0300" name="没有录入保证金" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="担保方式为保证金时，需录入第三方担保额度信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_PUB_GUARANTEE_ACCOUNT_INFO WHERE APP_ID=@appId]]></sql>
+        <condition>C0125</condition>
+    </rule>
+    <rule id="R0301" name="没有录入第三方担保额度信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="担保方式为全程性保证、阶段性保证、保函时，需录入第三方担保额度信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_ASSOCIATE_LINE WHERE LINE_ID=@appId]]></sql>
+        <condition>C0126</condition>
+    </rule>
+    <!-- 彭家军要求去掉2013-1-25
+    <rule id="R0302" name="请先录入个人消费授信审查表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入个人消费授信审查表" checkLevel="err">
+        <sql><![CDATA[SELECT count(0) A FROM TB_LIN_PERSON_CONSUMER_REVIEW WHERE LINE_ID=@appId]]></sql>
+    </rule>
+    <rule id="R0303" name="请先录入个人消费授信审批表" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入个人消费授信审批表" checkLevel="err">
+        <sql><![CDATA[SELECT count(0) A FROM TB_LIN_PERSON_CONSUMER_APPROV WHERE LINE_ID=@appId]]></sql>
+    </rule>
+    -->
+    <rule id="R0304" name="请先录入终审信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入终审信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_LIN_LINE_APPLICATION WHERE FINAL_APPROVAL_AMOUNT IS NOT NULL AND LINE_ID=@appId]]></sql>
+    </rule>
+    <rule id="R0305" name="请先录入合同信息" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入合同信息" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0)A FROM TB_LIN_LINE_AGREEMENT WHERE LINE_ID=@appId]]></sql>
+    </rule>
+    <rule id="R0306" name="请录入权利登记信息" checktype="eqs" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请录入抵质押物权利登记信息" checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(0) A FROM TB_PUB_SECURITY WHERE APP_ID=@appId AND REGISTER_NO IS NULL AND SECURITY_STATUS != '5']]></sql>
+        <condition>C0127</condition>
+    </rule>
+    <rule id="R0307" name="该客户已被评选信用户！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+          errMsg="该客户已被评选信用户！" checkLevel="err">
+        <sql><![CDATA[select count(1) allResult from tb_csm_integrity t where t.cus_id = @paramValue ]]></sql>
+    </rule>
+    <rule id="R0308" name="项目下有为结清的贷款！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+          errMsg="项目下有为结清的贷款！" checkLevel="err">
+        <sql><![CDATA[select count(loan.loan_id) allResult from TB_LON_DISCOUNT_INTEREST_INFO disProject,TB_LON_LOAN loan where disProject.LOAN_ID = loan.LOAN_ID and loan.CLOSE_FLAG = '0' and disProject.PROJECT_ID = @paramValue]]></sql>
+    </rule>
+    <rule id="R0309" name="请先录入项目信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入项目信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_PROJECT WHERE APP_ID=@lineId]]></sql>
+    </rule>
+    <rule id="R0310" name="请先录入再就业担保贴息项目信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入再就业担保贴息项目信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_DISCOUNT_PROJECT WHERE LINE_ID=@lineId]]></sql>
+    </rule>
+    <rule id="R0311" name="请先录入审查信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入审查信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_LIN_CREDIT_SURVEY_APPROVAL WHERE LINE_ID=@lineId]]></sql>
+    </rule>
+    <rule id="R0312" name="请先录入终审信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入终审信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(FINAL_APPROVAL_AMOUNT) A FROM TB_LIN_LINE_APPLICATION WHERE LINE_ID=@lineId]]></sql>
+    </rule>
+    <rule id="R0313" name="请确认录入小贷调查结论及建议" checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="2101015-013" errMsg="请确认录入调查结论及建议" checkLevel="err">
+        <sql><![CDATA[select count(0) A from TB_pub_RPT_verdict_advise where app_id = @appId and cus_id in (select cus_id from tb_csm_group_member where group_id = @groupId)]]></sql>
+        <sql><![CDATA[select count(0) B from tb_csm_group_member where group_id = @groupId]]></sql>
+    </rule>
+    <rule id="R0314" name="请先录入合同信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入合同信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(CONTRACT_QUANTITY) A FROM TB_LIN_LINE_AGREEMENT WHERE LINE_ID=@lineId]]></sql>
+    </rule>
+    <rule id="R0315" name="该资产已添加此共有人！" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013"
+          errMsg="该资产已添加此共有人！" checkLevel="err">
+        <sql><![CDATA[select count(p.asset_id) allResult from tb_ast_partowner p where p.asset_id = @paramValue and p.cus_id = @cusId]]></sql>
+    </rule>
+    <rule id="R0316" name="联保小组注销校验" checktype="eqs"
+          checkedFieldName="$CUSNUM" targetDataList="0" errCode="2101015-013"
+          errMsg="联保小组有在途额度不允许注销联保小组 " checkLevel="err">
+        <sql><![CDATA[ select count(a.line_id) CUSNUM from tb_lin_line_application a,tb_lin_application b where a.line_id = b.line_id and  b.approve_status in ('1') and a.group_id =@group_id ]]></sql>
+    </rule>
+    <rule id="R0317" name="联保小组注销校验" checktype="ineqs"
+          checkedFieldName="$CUSNUM" targetDataList="1" errCode="2101015-013"
+          errMsg="联保小组已注销 " checkLevel="err">
+        <sql><![CDATA[ select a.group_state CUSNUM from tb_csm_united_group a where a.group_id =@group_id ]]></sql>
+    </rule>
+    <rule id="R0318" name="是否录入担保物校验" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请录入业务担保信息" checkLevel="err">
+        <sql><![CDATA[select count(t.SECURITY_ID) A from TB_PUB_SECURITY t where t.APP_ID = @appId AND SECURITY_STATUS != '5']]></sql>
+    </rule>
+    <rule id="R0319" name="业务担保信息录入不完整" checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="R0319" errMsg="业务担保信息录入不完整" checkLevel="err">
+        <sql><![CDATA[select count(t.SECURITY_ID) A from TB_PUB_SECURITY t where t.APP_ID = @appId and t.security_status != '5']]></sql>
+        <sql><![CDATA[select count(t.SECURITY_ID) B from TB_PUB_SECURITY t where t.APP_ID = @appId and t.SECURITY_RATIO is not null and t.security_status != '5']]></sql>
+    </rule>
+    <rule id="R0320" name="担保信息上报校验-录入担保金额总和应大于等于申请金额" checktype="ge" checkedFieldName="$sumSecurityAmount" startValue="$appAmount" errCode="R0411" errMsg="担保金额总和不能小于申请金额" checkLevel="err">
+        <sql><![CDATA[select sum(t.security_amount) sumSecurityAmount from TB_PUB_SECURITY t where t.APP_ID =@appId and security_status != '5']]></sql>
+        <sql><![CDATA[select apply_amount appAmount from TB_PUB_RPT_SURVEY  t where t.APP_ID =@appId]]></sql>
+    </rule>
+
+    <rule id="R0321" name="请指派人" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请指派人" checkLevel="err">
+        <sql><![CDATA[ select count(ASP_ID) A from TB_ASP_LOAN_TRANSFER  where  NEW_USER_ID  is not null and ASP_ID=@bizId]]></sql>
+    </rule>
+
+    <rule id="R0322" name="基本资料是否齐全" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'基本资料是否齐全'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[select  count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId and IS_COMPLETE_BASE_DATA = '0']]></sql>
+    </rule>
+    <rule id="R0323" name="影像资料内容是否齐全" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'影像资料内容是否齐全'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[  select   count(loan_id)A  from tb_lon_review_opinion1 where loan_id=@appId  and IS_COMPLETE_IMAGE = '0']]></sql>
+    </rule>
+    <rule id="R0324" name="经营执照、租赁合同、征信报告等资料中客户基本信息是否一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'经营执照、租赁合同、征信报告等资料中客户基本信息是否一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select   count(loan_id)A  from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_BASE_DATA = '0' ]]></sql>
+    </rule>
+    <rule id="R0325" name="各项业务单式中客户及相关人员的签名字迹是否一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'各项业务单式中客户及相关人员的签名字迹是否一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select   count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_SIGN = '0' ]]></sql>
+    </rule>
+    <rule id="R0326" name="生产经营资料显示的经营主体是否与客户的经营主体一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'生产经营资料显示的经营主体是否与客户的经营主体一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[  select   count(loan_id)A  from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_CAPITAL_PART = '0']]></sql>
+    </rule>
+    <rule id="R0327" name="贷款用途是否明确" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'贷款用途是否明确'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_LOAN_PURPOSE = '0' ]]></sql>
+    </rule>
+    <rule id="R0328" name="财务信息是否合规" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'财务信息是否合规'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_COMPLIANCE_FINANCIAL = '0' ]]></sql>
+    </rule>
+    <rule id="R0329" name="非财务信息是否合规 " checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'非财务信息是否合规'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A  from tb_lon_review_opinion1 where loan_id=@appId  and IS_COMPLIANCE_OTHER = '0' ]]></sql>
+    </rule>
+    <rule id="R0330" name="贷款用途是否与调查报告基本一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="贷款用途是否与调查报告基本一致'基本资料是否齐全'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_PURPOSE_REPORT = '0' ]]></sql>
+    </rule>
+    <rule id="R0331" name="与联保人或保证人之间的关系与调查报告是否一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'与联保人或保证人之间的关系与调查报告是否一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_GUARANTEE_REPORT = '0' ]]></sql>
+    </rule>
+    <rule id="R0332" name="借款人主要经营项目与调查报告是否一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'借款人主要经营项目与调查报告是否一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[ select  count(loan_id)A  from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_BORROWER_MAIN_REPORT = '0' ]]></sql>
+    </rule>
+    <rule id="R0333" name="保证人主要经营项目与调查报告是否一致" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="审查意见中'保证人主要经营项目与调查报告是否一致'字段值为否，不能上报！" checkLevel="err">
+        <sql><![CDATA[  select   count(loan_id)A from tb_lon_review_opinion1 where loan_id=@appId  and IS_SAME_GUARANTEE_MAIN_REPORT = '0']]></sql>
+    </rule>
+    <rule id="R0334" name="押品预评估价值偏离下限" checktype="ge" checkedFieldName="$allResult" startValue="0" errCode="2101015-013" errMsg="押品预评估价值偏离下限" checkLevel="err">
+        <sql><![CDATA[
+        select (@originalValue/@paramValue-1-resl.diff_down_limit/100) allResult
+    from (select col.org_id orgid,col.org_name orgName,assets_kind,app_op_id,diff_up_limit,diff_down_limit,assets_rate_up
+     from TB_PUB_LOAN_COLLATERALRATIO col,TB_SYS_SECURITY_ORGANISATION org
+    where  col.diff_down_limit is not null
+      and to_char(col.EFFECT_DATE, 'yyyyMMdd') <= @evaluation_time
+      and col.app_op_id = @appOpId
+      and col.assets_kind = @assetClasiDetails
+      and org.org_id = col.org_id
+      and col.org_id in (
+      SELECT ORG_ID
+                 FROM TB_SYS_SECURITY_ORGANISATION
+                 START WITh
+                 ORG_ID = @orgId
+                 CONNECT BY ORG_CD = prior PARENT_CD
+      )
+      order by org.org_level desc) resl where rownum = '1'
+        ]]></sql>
+        <condition>C0132</condition>
+    </rule>
+    <rule id="R0335" name="押品预评估价值偏离上限" checktype="le" checkedFieldName="$allResult" endValue="0" errCode="2101015-013" errMsg="押品预评估价值偏离上限" checkLevel="err">
+        <sql><![CDATA[
+         select (@originalValue/@paramValue-1-resl.diff_up_limit/100) allResult
+    from (select col.org_id orgid,col.org_name orgName,assets_kind,app_op_id,diff_up_limit,diff_down_limit,assets_rate_up
+     from TB_PUB_LOAN_COLLATERALRATIO col,TB_SYS_SECURITY_ORGANISATION org
+    where  col.diff_up_limit is not null
+      and to_char(col.EFFECT_DATE, 'yyyyMMdd') <= @evaluation_time
+      and col.app_op_id = @appOpId
+      and col.assets_kind = @assetClasiDetails
+      and org.org_id = col.org_id
+      and col.org_id in (
+      SELECT ORG_ID
+                 FROM TB_SYS_SECURITY_ORGANISATION
+                 START WITh
+                 ORG_ID = @orgId
+                 CONNECT BY ORG_CD = prior PARENT_CD
+      )
+      order by org.org_level desc) resl where rownum = '1'
+        ]]></sql>
+        <condition>C0133</condition>
+    </rule>
+
+
+    <rule id="R0336" name="申请金额与还本金额不符" checktype="eqn" checkedFieldName="$A" targetDataList="$B"  errCode="2101015-013" errMsg="申请金额与还本金额不符" checkLevel="err">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@loanId]]></sql>
+        <sql><![CDATA[SELECT SUM(PRN_AMT) B FROM TB_LON_REPAY_CAPITAL_PLAN WHERE LOAN_ID=@loanId]]></sql>
+        <condition>C0139</condition>
+    </rule>
+    <rule id="R0337" name="终审金额与还本金额不符" checktype="eqn" checkedFieldName="$A" targetDataList="$B"  errCode="2101015-013" errMsg="终审金额与还本金额不符" checkLevel="err">
+        <sql><![CDATA[SELECT FINAL_LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@loanId]]></sql>
+        <sql><![CDATA[SELECT SUM(PRN_AMT) B FROM TB_LON_REPAY_CAPITAL_PLAN WHERE LOAN_ID=@loanId]]></sql>
+        <condition>C0140</condition>
+    </rule>
+    <rule id="R0338" name="催收登记主管负责人意见" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="催收登记主管负责人意见为空，不能上报！" checkLevel="err">
+        <sql><![CDATA[  select  count(u.loan_ac_id)A from tb_lac_loan_urge_payment u where u.loan_ac_id=@bizId and u.lead_opn is not null]]></sql>
+    </rule>
+    <rule id="R0339" name="保证之和>=授信建议金额" checktype="ge" checkedFieldName="$A" startValue="$LINE_AMOUNT"  errCode="2101015-013" errMsg="要求所有的保证之和大于等于授信建议金额" checkLevel="info">
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) A from TB_PUB_GUARANTEE where APP_ID = @lineId]]></sql>
+        <sql><![CDATA[select ADVISE_CREDIT_AMOUNT LINE_AMOUNT from TB_LIN_CREDIT_SURVEY_APPROVAL where LINE_ID = @lineId]]></sql>
+        <condition>C0135</condition>
+    </rule>
+    <rule id="R0340" name="抵押之和>=授信建议金额" checktype="ge" checkedFieldName="$A" startValue="$LINE_AMOUNT"  errCode="2101015-013" errMsg="要求所有的抵押之和大于等于授信建议金额" checkLevel="info">
+        <sql><![CDATA[SELECT NVL(SUM(SECURITY_AMOUNT),0) A FROM TB_AST_ASSETTYPE T,TB_PUB_SECURITY S
+        				WHERE T.ASSETTYPE_ID = S.ASSET_TYPE AND T.SECURITY_KIND = 'MOR' AND S.APP_ID = @lineId]]></sql>
+        <sql><![CDATA[select ADVISE_CREDIT_AMOUNT LINE_AMOUNT from TB_LIN_CREDIT_SURVEY_APPROVAL where LINE_ID = @lineId]]></sql>
+        <condition>C0136</condition>
+    </rule>
+    <rule id="R0341" name="质押之和>=授信建议金额" checktype="ge" checkedFieldName="$A" startValue="$LINE_AMOUNT"  errCode="2101015-013" errMsg="要求所有的质押之和大于等于授信建议金额" checkLevel="info">
+        <sql><![CDATA[SELECT NVL(SUM(SECURITY_AMOUNT),0) A FROM TB_AST_ASSETTYPE T,TB_PUB_SECURITY S
+        				WHERE T.ASSETTYPE_ID = S.ASSET_TYPE AND T.SECURITY_KIND = 'IMP' AND S.APP_ID = @lineId]]></sql>
+        <sql><![CDATA[select ADVISE_CREDIT_AMOUNT LINE_AMOUNT from TB_LIN_CREDIT_SURVEY_APPROVAL where LINE_ID = @lineId]]></sql>
+        <condition>C0137</condition>
+    </rule>
+    <rule id="R0342" name="第三方担保之和>=授信建议金额" checktype="ge" checkedFieldName="$A" startValue="$LINE_AMOUNT"  errCode="2101015-013" errMsg="要求所有的第三方担保之和大于等于授信建议金额" checkLevel="info">
+        <sql><![CDATA[SELECT NVL(SUM(ASSOCIATE_AMOUNT),0) A FROM TB_LIN_ASSOCIATE_LINE WHERE LINE_ID = @lineId]]></sql>
+        <sql><![CDATA[select ADVISE_CREDIT_AMOUNT LINE_AMOUNT from TB_LIN_CREDIT_SURVEY_APPROVAL where LINE_ID = @lineId]]></sql>
+        <condition>C0138</condition>
+    </rule>
+    <rule id="R0343" name="民间借款金额合计不能小于贷款申请金额" checktype="le" checkedFieldName="$A" endValue="$B"  errCode="2101015-013" errMsg="民间借款金额合计不能小于贷款申请金额" checkLevel="err">
+        <sql><![CDATA[SELECT LOAN_AMOUNT A FROM TB_LON_LOAN_APPLICATION WHERE LOAN_ID=@loanId]]></sql>
+        <sql><![CDATA[SELECT SUM(V.APPEND_FIELD_VALUE) B FROM TB_LON_APP_APPEND_INDEX_VALUE V ,TB_LON_APP_APPEND_INDEX I WHERE I.RECORD_ID = V.INDEX_RECORD_ID AND I.APPEND_INFO_TYPE = '7' AND V.APPEND_FIELD_NAME = 'FOLK_LOAN_AMOUNT' AND I.LOAN_ID = @loanId]]></sql>
+    </rule>
+    <rule id="R0344" name="请录入民间借款人信息" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="请录入民间借款人信息" checkLevel="err">
+        <sql><![CDATA[SELECT count(0) A FROM TB_LON_APP_APPEND_INDEX_VALUE V ,TB_LON_APP_APPEND_INDEX I WHERE I.RECORD_ID = V.INDEX_RECORD_ID AND I.APPEND_INFO_TYPE = '7' AND V.APPEND_FIELD_NAME = 'FOLK_LOAN_AMOUNT' AND I.LOAN_ID = @loanId]]></sql>
+    </rule>
+
+    <!-- 提交 修改 -->
+    <rule id="R0345" name="非额度下贷款请签署抵质押合同" checktype="eqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0345" errMsg="非额度下贷款请签署抵质押合同" checkLevel="err">
+        <sql><![CDATA[select COUNT(0) A from tb_pub_security WHERE app_id=@appId AND SECURITY_STATUS != '5' AND security_contract_no IS NULL ]]></sql>
+        <condition>C0142</condition>
+    </rule>
+
+    <rule id="R0346" name="非额度下贷款请签署保证人合同" checktype="eqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0346" errMsg="非额度下贷款请签署保证人合同"
+          checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(0) A FROM TB_PUB_GUARANTEE g WHERE app_id=@appId AND g.GUARANTEE_CONTRACT_NUM IS NULL]]></sql>
+        <condition>C0142</condition>
+    </rule>
+
+    <rule id="R0347" name="非额度下贷款担保物未进行价值评估" checktype="le" endValue="0"
+          checkedFieldName="$A" errCode="R0347" errMsg="非额度下贷款担保物未进行价值评估" checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(1) A FROM (SELECT ASSET_ID FROM TB_PUB_SECURITY WHERE APP_ID=@appId and SECURITY_STATUS != '5' MINUS SELECT ASSET_ID FROM TB_AST_VALUATION WHERE APP_ID=@appId AND VALUATION_TYPE='2')]]></sql>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0348" name="请对相关借款人进行人行征信查询" checktype="eqs" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请对相关借款人进行人行征信查询" checkLevel="err">
+        <sql><![CDATA[select count(0) A from tb_lon_indv_credit t where t.app_id=@appId and t.pbc_credit_url is null ]]></sql>
+        <condition>C0143</condition>
+    </rule>
+    <rule id="R0349" name="调查报告同意标识为否时不允许上报" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="调查报告同意标识为否时不允许上报"
+          checkLevel="err">
+        <sql><![CDATA[select count(1) A from dual
+         where exists (select uuid from TB_pub_RPT_analysis_advise t where app_id = @appId)
+         or exists (select uuid from TB_pub_RPT_verdict_advise where app_id = @appId)
+           or exists (select uuid from TB_pub_RPT_house_advise where app_id = @appId  and AGREE_FLAG = '1')
+           or exists (select uuid from TB_pub_RPT_change_info where app_id = @appId)
+    ]]></sql>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0350" name="担保价值比正式评估价值高于参数设置的最高抵押率" checktype="ge" checkedFieldName="$firRate" startValue="$secRate"  errCode="2101015-013" errMsg="担保价值比正式评估价值高于参数设置的最高抵押率" checkLevel="err">
+        <sql><![CDATA[
+         SELECT ROUND(ASSETS_RATE_UP*@paramValue/100) firRate
+          FROM (SELECT ASSETS_RATE_UP
+                  FROM TB_PUB_LOAN_COLLATERALRATIO TPE
+                  LEFT JOIN TB_SYS_SECURITY_ORGANISATION TSS
+                    ON TPE.ORG_ID = TSS.ORG_ID
+                 WHERE TPE.APP_OP_ID = @appOpId
+                   AND ASSETS_KIND = @assetClasiDetails
+                   AND to_char(EFFECT_DATE,'yyyyMMdd')<= @evaluation_time
+                   AND TPE.ORG_ID IN
+                       (SELECT ORG_ID
+                          FROM TB_SYS_SECURITY_ORGANISATION
+                         START WITH ORG_ID = @orgId
+                        CONNECT BY ORG_CD = prior PARENT_CD)
+                 ORDER BY TSS.ORG_LEVEL DESC)
+         WHERE ROWNUM = '1'
+        ]]></sql>
+        <sql><![CDATA[
+         select nvl(t.security_amount, 0) secRate
+      from tb_pub_security t
+    where t.app_id = @appId and t.asset_id = @assetId
+        ]]></sql>
+    </rule>
+    <rule id="R0351" name="调查报告是否录入担保物校验" checktype="ineqn" checkedFieldName="#sum($A,$B)" targetDataList="0" errCode="2101015-013" errMsg="请录入业务担保信息" checkLevel="err">
+        <sql><![CDATA[select count(t.SECURITY_ID) A from TB_PUB_SECURITY t where t.APP_ID = @appId AND SECURITY_STATUS != '5']]></sql>
+        <sql><![CDATA[select count(t.LOAN_ID) B from TB_LON_LINE_USE_INFO t where t.LOAN_ID = @appId and t.LINE_KIND <> '1']]></sql>
+    </rule>
+    <rule id="R0352" name="请先录入账户信息，再进行业务上报操作！" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入账户信息，再进行业务上报操作！" checkLevel="err">
+        <sql><![CDATA[select count(0) A from tb_lin_corpaccess_account where line_id=@lineId]]></sql>
+    </rule>
+    <rule id="R0353" name="此贷款存在在途未处理的贷后业务，不允许再办理其他贷后业务" checktype="eqn" checkedFieldName="$a" targetDataList="0" errCode="2101015-013" errMsg="此贷款存在在途未处理的贷后业务，不允许再办理其他贷后业务" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) a FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.LOAN_ID = @loanId AND LAP.APPROVE_STATUS IN ('1', '10','11') UNION ALL SELECT AAP.ASP_ID AS ID FROM TB_ASP_APPLICATION AAP WHERE AAP.LOAN_ID = @loanId AND AAP.APPROVE_STATUS IN ('1', '10','11'))]]></sql>
+
+    </rule>
+    <rule id="R0354" name="此借据存在在途未处理的贷后业务，不允许再办理其他贷后业务" checktype="eqn" checkedFieldName="$a" targetDataList="0" errCode="2101015-013" errMsg="此借据存在在途未处理的贷后业务，不允许再办理其他贷后业务" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) a FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.DUEBILL_ID = @duebillId AND LAP.APPROVE_STATUS IN ('1', '10','11') UNION ALL SELECT AAP.ASP_ID AS ID FROM TB_ASP_APPLICATION AAP WHERE AAP.DUEBILL_ID = @duebillId AND AAP.APPROVE_STATUS IN ('1', '10','11'))]]></sql>
+    </rule>
+    <rule id="R0355" name="请填写完整业务附属信息" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="请填写业务附属信息" checkLevel="err">
+        <sql><![CDATA[SELECT count(0) A from TB_LON_APP_APPEND_INDEX where LOAN_ID = @loanId]]></sql>
+        <condition>C0145</condition>
+    </rule>
+
+    <rule id="R0356" name="请填写购房业务附属信息" checktype="greater" checkedFieldName="$A" startValue="0" errCode="2101015-013" errMsg="请填写购房业务附属信息" checkLevel="err">
+        <sql><![CDATA[SELECT count(0) A FROM TB_LON_APP_APPEND_INDEX WHERE APPEND_INFO_TYPE = '2' and LOAN_ID = @loanId]]></sql>
+    </rule>
+
+    <rule id="R0357" name="超出单户担保限额" checktype="greater" checkedFieldName="$A" startValue="$B" errCode="2101015-013" errMsg="超出单户担保限额$[A]" checkLevel="err">
+        <sql><![CDATA[SELECT SINGLE_INSU_LIMIT A FROM TB_PUB_CUS_SINGLE_INSU_LIMIT WHERE ORG_ID =@orgId]]></sql>
+        <sql><![CDATA[SELECT (NVL(SUM(G.GUARANTEE_AMOUNT),0)+@guaranteeAmount) B FROM TB_PUB_GUARANTEE G,TB_LON_LOAN L WHERE G.APP_ID = L.LOAN_ID AND L.CLOSE_FLAG = '0' AND G.GUARANTEE_ID = @cusId AND NVL(G.GUARANTEE_STATE,'1') = '1' AND NVL(G.GUARANTEE_ALERT_STATE,'1') = '1' ]]></sql>
+        <condition>C0146</condition>
+    </rule>
+    <rule id="R0358" name="组织机构代码重复，请重新输入!" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="组织机构代码重复，请重新输入!" checkLevel="err">
+        <sql><![CDATA[select count(0) A from tb_csm_customer where corp_code=@corpCode]]></sql>
+    </rule>
+
+    <!-- 2013.2.6 by wujiaxu 新增贷款利率的规则校验 开始 -->
+
+    <!-- 当不涉及老客户但在额度下时要求大于额度下限，小于\小于等于参数上限 -->
+    <rule id="R0359" name="不涉及老客户 并且 是额度下 并且 必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0359" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0151</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0057</condition>
+    </rule>
+    <rule id="R0360" name="不涉及老客户 并且 是额度下 并且 必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0360" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0151</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+        <condition>C0059</condition>
+    </rule>
+    <rule id="R0361" name="不涉及老客户 并且 是额度下 并且 必须大于额度下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0361" errMsg="@[cnName]超出额度下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[ select case when 1=@rateKindValue then lineMoneyRate.FLOATING_RATIO when 2=@rateKindValue then lineMoneyRate.FLOATING_VALUE end limitValue from TB_LIN_LINE_MONEY_RATE lineMoneyRate where lineMoneyRate.LINE_ID in (select line.GROUP_LINE_ID from TB_LON_LINE_USE_INFO userInfo,TB_LIN_LINE line where userInfo.LINE_ID = line.line_id and userInfo.LINE_KIND = '3' and userInfo.LOAN_ID = @loanId) union all select case when 1=@rateKindValue then lineMoneyRate.FLOATING_RATIO when 2=@rateKindValue then lineMoneyRate.FLOATING_VALUE end limitValue from TB_LON_LINE_USE_INFO userInfo,TB_LIN_LINE_MONEY_RATE lineMoneyRate where userInfo.LINE_ID = lineMoneyRate.line_id and userInfo.LINE_KIND = '3' and userInfo.LOAN_ID = @loanId ]]></sql>
+        <condition>C0151</condition>
+        <condition>C0154</condition>
+        <condition>C0108</condition>
+    </rule>
+    <!-- 当涉及老客户、并且参数老客户利率优惠为是时，要求在参数配置的老客户利率优惠参数上下限之内 -->
+    <rule id="R0362" name="涉及老客户 并且 是老客户 并且 老客户利率优惠标志为是 并且 必须小于老客户上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0362" errMsg="@[cnName]超出老客户参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@oldCusEnName) limitValue from dual]]></sql>
+        <condition>C0149</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0155</condition>
+        <condition>C0147</condition>
+    </rule>
+    <rule id="R0363" name="涉及老客户 并且 是老客户 并且 老客户利率优惠标志为是 并且 必须大于老客户下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0363" errMsg="@[cnName]超出老客户参数下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER',@oldCusEnName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0156</condition>
+        <condition>C0149</condition>
+        <condition>C0147</condition>
+    </rule>
+    <rule id="R0364" name="涉及老客户 并且 是老客户 并且 老客户利率优惠标志为是 并且 必须小于等于老客户上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0364" errMsg="@[cnName]超出老客户参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@oldCusEnName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0157</condition>
+        <condition>C0149</condition>
+        <condition>C0147</condition>
+    </rule>
+    <rule id="R0365" name="涉及老客户 并且 是老客户 并且 老客户利率优惠标志为是 并且 必须大于等于老客户下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0365" errMsg="@[cnName]超出老客户参数下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL',@oldCusEnName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0158</condition>
+        <condition>C0149</condition>
+        <condition>C0147</condition>
+    </rule>
+    <rule id="R0366" name="涉及老客户 并且 是老客户 并且 老客户利率优惠标志为是 并且 必须等于老客户限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="R0366" errMsg="@[cnName]不等于老客户参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL',@oldCusEnName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0159</condition>
+        <condition>C0149</condition>
+        <condition>C0147</condition>
+    </rule>
+
+
+    <!-- 当涉及老客户、并且参数老客户利率优惠为否时，并且是额度下时，要求大于额度下限，小于\小于等于参数上限 -->
+    <rule id="R0367" name="涉及老客户 并且 不是老客户 并且 是额度下 并且 必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0367" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0151</condition>
+        <condition>C0108</condition>
+        <condition>C0057</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0368" name="涉及老客户 并且 不是老客户 并且 是额度下 并且 必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0368" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0153</condition>
+        <condition>C0151</condition>
+        <condition>C0108</condition>
+        <condition>C0059</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0369" name="涉及老客户 并且 不是老客户 并且 是额度下 并且 必须大于额度下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0369" errMsg="@[cnName]超出额度下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[ select case when '1'=@rateKindValue then nvl(lineMoneyRate.FLOATING_RATIO,0) when '2'=@rateKindValue then nvl(lineMoneyRate.FLOATING_VALUE,0) end limitValue from TB_LIN_LINE_MONEY_RATE lineMoneyRate where lineMoneyRate.LINE_ID in(select line.GROUP_LINE_ID from TB_LON_LINE_USE_INFO userInfo,TB_LIN_LINE line where userInfo.LINE_ID = line.line_id and userInfo.LINE_KIND = '3' and userInfo.LOAN_ID = @loanId) union all select case when '1'=@rateKindValue then nvl(lineMoneyRate.FLOATING_RATIO,0) when '2'=@rateKindValue then nvl(lineMoneyRate.FLOATING_VALUE,0) end limitValue from TB_LON_LINE_USE_INFO userInfo,TB_LIN_LINE_MONEY_RATE lineMoneyRate where userInfo.LINE_ID = lineMoneyRate.line_id and userInfo.LINE_KIND = '3' and userInfo.LOAN_ID = @loanId ]]></sql>
+        <condition>C0153</condition>
+        <condition>C0151</condition>
+        <condition>C0108</condition>
+        <condition>C0150</condition>
+    </rule>
+
+    <!-- 当涉及老客户、并且参数老客户利率优惠为否时，并且非额度下时，要求在参数配置的限制内 -->
+    <rule id="R0370" name="涉及老客户 并且 不是老客户 并且 不是额度下 并且 必须小于上限值" checktype="greater" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0370" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0057</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0371" name="涉及老客户 并且 不是老客户 并且 不是额度下 并且 必须大于下限值" checktype="less" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0371" errMsg="@[cnName]超出参数下限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0058</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0372" name="涉及老客户 并且 不是老客户 并且 不是额度下 并且 必须小于等于上限值" checktype="ge" checkedFieldName="$limitValue" startValue="@paramValue" errCode="R0372" errMsg="@[cnName]超出参数上限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0059</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0373" name="涉及老客户 并且 不是老客户 并且 不是额度下 并且 必须大于等于下限值" checktype="le" checkedFieldName="$limitValue" endValue="@paramValue" errCode="R0373" errMsg="@[cnName]超出参数限值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0060</condition>
+        <condition>C0150</condition>
+    </rule>
+    <rule id="R0374" name="涉及老客户 并且 不是老客户 并且 不是额度下 并且 必须等于限制值" checktype="eqn" checkedFieldName="$limitValue" targetDataList="@paramValue" errCode="R0374" errMsg="@[cnName]不等于参数值$[limitValue]" checkLevel="err">
+        <sql><![CDATA[select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL',@enName) limitValue from dual]]></sql>
+        <condition>C0152</condition>
+        <condition>C0153</condition>
+        <condition>C0108</condition>
+        <condition>C0061</condition>
+        <condition>C0150</condition>
+    </rule>
+    <!-- 2013.2.6 by wujiaxu 新增贷款利率的规则校验 结束 -->
+
+    <!-- 2013.2.15 by wujiaxu 新增额度余额不足校验规则 开始 -->
+    <rule id="R0375" name="额度余额为0" checktype="greater" checkedFieldName="$lineBalance" startValue="0" errCode="R0375" errMsg="不允许选择，所选额度的可用余额为0，请确认" checkLevel="err">
+        <sql><![CDATA[select nvl(LINE_BALANCE,0) lineBalance from TB_LIN_LINE where LINE_ID = @lineId ]]></sql>
+    </rule>
+    <!-- 2013.2.15 by wujiaxu 新增额度余额不足校验规则 结束 -->
+
+    <!-- 2013.2.16 by wujiaxu 新增：额度下贷款期限是否超出额度支用止期的判断 开始 -->
+    <rule id="R0376" name="额度下业务超出额度存续止期" checktype="eqn" checkedFieldName="$isOutOfRange" targetDataList="0" errCode="R0376" errMsg="期限错误，超出额度存续止期，请确认" checkLevel="err">
+        <sql><![CDATA[select case when ADD_MONTHS(to_date(@businessDate,'YYYY-MM-DD'),@paramValue) > (select tb_lin_line.LINE_MATURE_DATE from TB_LON_LINE_USE_INFO,tb_lin_line  where TB_LON_LINE_USE_INFO.line_id = tb_lin_line.line_id  and tb_lon_line_use_info.loan_id = @loanId and TB_LON_LINE_USE_INFO.LINE_KIND = '3') then 1 else 0 end isOutOfRange from dual]]></sql>
+        <condition>C0151</condition>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：额度下贷款期限是否超出额度支用止期的判断 结束 -->
+
+    <!-- 2013.2.21 by zhanghaiyuan 新增：该客户有未结清业务不允许修改姓名! -->
+    <rule id="R0377" name="该客户有未结清业务不允许修改姓名!" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="该客户有未结清业务不允许修改姓名!" checkLevel="err">
+        <sql><![CDATA[select count(0) A from tb_lon_loan where cus_id=@cusId and close_flag ='0']]></sql>
+    </rule>
+    <!-- 2013.2.21 by zhanghaiyuan 新增：该客户有未结清业务不允许修改姓名! -->
+
+    <!-- 2013.2.16 by wujiaxu 新增：机构开办和人员开办的规则 开始 -->
+    <rule id="R0378" name="机构开办权限已关闭，不允许开办业务" checktype="greater" checkedFieldName="$isOrgBusiness" startValue="0" errCode="R0378" errMsg="机构开办权限已关闭，不允许开办业务" checkLevel="err">
+        <sql><![CDATA[select count(org_id) isOrgBusiness from tb_sys_security_organisation where ORG_ID = @orgId and is_business = '1']]></sql>
+    </rule>
+    <rule id="R0379" name="人员开办权限已关闭，不允许开办业务" checktype="greater" checkedFieldName="$isUserBusiness" startValue="0" errCode="R0379" errMsg="人员开办权限已关闭，不允许开办业务" checkLevel="err">
+        <sql><![CDATA[select count(user_id) isUserBusiness from tb_sys_security_detailusers where USER_ID = @userId and is_business = '1']]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：机构开办和人员开办的规则 结束 -->
+
+    <!-- 2013.2.16 by wujiaxu 新增：新增就业类别不在被允许的就业类别参数范围内 开始 -->
+    <rule id="R0380" name="就业类别不在被允许的就业类别参数范围内" checktype="greater" checkedFieldName="$isIncludeFlag" startValue="0" errCode="R0380" errMsg="此客户就业类别不在被允许的就业类别参数范围内，不允许办理业务" checkLevel="err">
+        <sql><![CDATA[ select instr( (select fn_pub_getlimitvalue(@orgId,@appOpId,'IN','STAFF_CATEGORY') from dual),(select nvl(employment_type,'1') from tb_csm_indv_customer where cus_id = @cusId)) isIncludeFlag from dual ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：新增就业类别不在被允许的就业类别参数范围内 结束 -->
+
+    <!-- 2013.2.16 by wujiaxu 新增：新增贷款金额最小变动单位必须是参数设置的整数倍校验 开始 -->
+    <rule id="R0381" name="贷款金额必须是【参数:最小变动单位】的整数倍" checktype="eqn" checkedFieldName="$limitValue" targetDataList="0" errCode="R0381" errMsg="贷款金额必须是【参数:最小变动单位(当前值$[pLimitValue])】的整数倍" checkLevel="err">
+        <sql><![CDATA[select mod(@paramValue,FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','SMALLEST_CHANGE_UNIT')) limitValue,FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','SMALLEST_CHANGE_UNIT') pLimitValue from dual]]></sql>
+        <condition>C0092</condition>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：新增贷款金额最小变动单位必须是参数设置的整数倍校验 结束 -->
+    <rule id="R0382" name="抵质押物未登记,不允许上报" checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="R0378" errMsg="抵质押物未登记,不允许上报" checkLevel="err">
+        <sql><![CDATA[select count(1) A from tb_lac_register_security where loan_ac_id= @bizId]]></sql>
+        <sql><![CDATA[select count(1) B from tb_pub_security t where  t.security_status='2' and t.app_id=(select loan_id from tb_lac_security_record where loan_ac_id= @bizId)]]></sql>
+    </rule>
+    <rule id="R0383" name="调查客户信息快照" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="R0378" errMsg="客户信息快照未保存,不允许上报" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(UUID) A FROM TB_CSM_CUSTOMER_SNAPSHOT WHERE CUS_ID= @cusId AND APP_ID = @appId AND STATUS = @snapshotStatus ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：新增产品单户金额、产品单笔金额 开始 -->
+    <rule id="R0384" name="未配置限制值参数【产品单户金额】，请先在产品限制值参数中配置" checktype="eqn" checkedFieldName="$isHaveParam" targetDataList="1" errCode="R0382" errMsg="未配置限制值参数【产品单户金额】，请先在产品限制值参数中配置" checkLevel="err">
+        <sql><![CDATA[
+            select case when
+             (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','APP_OP_ACCOUNT_AMOUNT')  from dual) is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','APP_OP_ACCOUNT_AMOUNT')  from dual) is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','APP_OP_ACCOUNT_AMOUNT')  from dual)  is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','APP_OP_ACCOUNT_AMOUNT')  from dual)  is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','APP_OP_ACCOUNT_AMOUNT')  from dual)  is not null
+            then 1 else 0 end isHaveParam from dual
+        ]]></sql>
+    </rule>
+    <rule id="R0385" name="未配置限制值参数【产品单笔金额】，请先在产品限制值参数中配置" checktype="eqn" checkedFieldName="$isHaveParam" targetDataList="1" errCode="R0383" errMsg="未配置限制值参数【产品单笔金额】，请先在产品限制值参数中配置" checkLevel="err">
+        <sql><![CDATA[
+            select case when
+             (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESS','APP_OP_SINGLE_AMOUNT')  from dual) is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATER','APP_OP_SINGLE_AMOUNT')  from dual) is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'LESSEQUAL','APP_OP_SINGLE_AMOUNT')  from dual)  is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'GREATEREQUAL','APP_OP_SINGLE_AMOUNT')  from dual)  is not null
+            or (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','APP_OP_SINGLE_AMOUNT')  from dual)  is not null
+            then 1 else 0 end isHaveParam from dual
+        ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：新增产品单户金额、产品单笔金额 结束 -->
+
+    <!-- 2013.2.16 by wujiaxu 新增：借款人性别控制 开始 -->
+    <rule id="R0386" name="性别参数未配置，请在单一借款人条件中配置参数【性别】" checktype="greater" checkedFieldName="$paramValue" startValue="-1" errCode="R0384" errMsg="性别参数未配置，请在单一借款人条件中配置参数【性别】" checkLevel="err">
+        <sql><![CDATA[
+            select nvl(FN_PUB_GET_GENDER_LIMIT(@orgId,@appOpId),'-1') paramValue from dual
+        ]]></sql>
+    </rule>
+
+    <rule id="R0387" name="客户性别超出参数配置的要求值" checktype="greater" checkedFieldName="$isIncludeFlag" startValue="0" errCode="R0385" errMsg="客户性别超出参数配置的要求值" checkLevel="err">
+        <sql><![CDATA[
+            select
+                nvl(instr(
+                (select FN_PUB_GET_GENDER_LIMIT(@orgId,@appOpId) requireGender from dual),
+                (select nvl(case GENDER when '0' then '9' when '1' then '0' when '2' then '1' end,'0') cusGender
+                 from TB_CSM_INDV_CUSTOMER where cus_id = @cusId )
+                ),0) isIncludeFlag
+            from dual
+        ]]></sql>
+        <condition>C0161</condition>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：借款人性别控制 结束 -->
+    <rule id="R0388" name="客户快照保存限制!" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="该客户快照已保存!" checkLevel="err">
+        <sql><![CDATA[select count(0) A from tb_csm_indv_snapshot where cus_id=@cusId and app_id=@appId and status=@status]]></sql>
+    </rule>
+
+    <rule id="R0390" name="该关系的主客体已关联业务，不能删除！" checktype="eqn" checkedFieldName="#sum($A,$B)" targetDataList="0" errCode="2101015-013" errMsg="该关系的主客体已关联业务，不能删除！" checkLevel="err">
+        <sql><![CDATA[select count(app.line_id) A
+            from tb_lin_application lin, tb_lin_line_application app
+           where app.line_id = lin.line_id
+             and (lin.approve_status NOT IN ('6','9') AND  lin.act_flag NOT IN ('2','3','6'))
+             and app.cus_id in (@cusId)]]></sql>
+        <sql><![CDATA[select count(lon.loan_id) B
+            from tb_lon_application lon, tb_lon_loan_application app
+           where lon.loan_id = app.loan_id
+             and lon.approve_status in ('1','2','3','4','5','8','9','11')
+             and (lon.act_flag = '1' or lon.act_flag is null)
+             and app.cus_id in (@cusId)]]></sql>
+    </rule>
+
+    <!-- 2013.2.16 by wujiaxu 新增：参数【就业类别】未配置规则 开始 -->
+    <rule id="R0391" name="【就业类别】参数未配置，请在产品限制值中配置参数【就业类别】" checktype="greater" checkedFieldName="$isHaveParamValue" startValue="0" errCode="R0391" errMsg="【就业类别】参数未配置，请在产品限制值中配置参数【就业类别】" checkLevel="err">
+        <sql><![CDATA[
+                select
+                    case when fn_pub_getlimitvalue(@orgId,@appOpId,'IN','STAFF_CATEGORY') is not null then 1 else 0 end isHaveParamValue
+                from dual
+        ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：参数【就业类别】未配置规则 结束 -->
+    <rule id="R0392" name="没有完成客户信用评级,不能上报该流程" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="R0381" errMsg="没有完成客户信用评级,不能上报该流程" checkLevel="err">
+        <sql><![CDATA[select count(record_id) A from tb_pub_bm_business  where APP_ID =  @appId and CUS_ID  = @cusId]]></sql>
+    </rule>
+    <!-- 2013.02.25 zhangwei  开始-->
+    <rule id="R0393" name="请先进行国债质押" checktype="eqn" checkedFieldName="$isIncludeFlag" targetDataList="1" errCode="R0378" errMsg="请先进行国债质押" checkLevel="err">
+        <sql><![CDATA[select nvl(a.STATUS,0) isIncludeFlag  from tb_Ast_Natdeb a,TB_PUB_SECURITY b where a.ASSET_ID =b.ASSET_ID and b.app_id = @bizId ]]></sql>
+
+    </rule>
+    <!-- 2013.02.25 by zhangwei 结束 -->
+    <!-- 提交   首先校验-->
+    <rule id="R0394" name="首先校验是否保存了权利登记信息" checktype="ineqn"
+          checkedFieldName="$rowCount" targetDataList="0" errCode="R0394" errMsg="未录入权利登记信息"
+          checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(0) rowCount FROM TB_PUB_SECURITY WHERE APP_ID=@appId AND SECURITY_STATUS !='5' AND is_register_other_owner_ship IS NOT NULL]]></sql>
+        <condition>C0127</condition>
+        <condition>C0142</condition>
+    </rule>
+    <!-- 2013.02.26 wujiaxu  开始-->
+
+    <!-- 2013.2.16 by wujiaxu 新增：新增免息标志、免息周期参数未配置的校验 开始 -->
+
+    <rule id="R0395" name="未配置限制值参数【是否免息】，请先在产品限制值参数中配置" checktype="eqn" checkedFieldName="$isHaveParam" targetDataList="1" errCode="R0395" errMsg="未配置限制值参数【是否免息】，请先在产品限制值参数中配置" checkLevel="err">
+        <sql><![CDATA[
+            select case when (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'IN','FREEINTERESTFLAG')  from dual) is not null then 1 else 0 end isHaveParam from dual
+        ]]></sql>
+    </rule>
+    <rule id="R0396" name="参数【是否免息】为是，但未配置限制值参数【免息周期】，请先在产品限制值参数中配置" checktype="eqn" checkedFieldName="$isHaveParam" targetDataList="1" errCode="R0396" errMsg="参数【是否免息】为是，但未配置限制值参数【免息周期】，请先在产品限制值参数中配置" checkLevel="err">
+        <sql><![CDATA[
+            select case when (select FN_PUB_GETLIMITVALUE(@orgId,@appOpId,'EQUAL','FREEINTERESTCYCLE')  from dual) is not null then 1 else 0 end isHaveParam from dual
+        ]]></sql>
+        <condition>C0164</condition>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：新增免息标志、免息周期参数未配置的校验 结束 -->
+    <rule id="R0397" name="国债到期日应大于贷款期限" checktype="eqn" checkedFieldName="$isOutOfRange" targetDataList="0" errCode="R0376" errMsg="国债到期日不能小于贷款期限" checkLevel="err">
+        <sql><![CDATA[select to_char(work_date,'yyyy-mm-dd') businessDate from tb_sys_business_date where org_cd = 99]]></sql>
+        <sql><![CDATA[select FINAL_LOAN_LENGTH finalLoanLength from tb_lon_loan_application where loan_id= @loanId]]></sql>
+        <sql><![CDATA[select case when ADD_MONTHS(to_date (@businessDate,'YYYY-MM-DD'),@finalLoanLength) > (SELECT ENDING_DATE FROM TB_AST_NATDEB WHERE ASSET_ID = @assetId) then 1 else 0 end isOutOfRange from dual]]></sql>
+    </rule>
+    <rule id="R0398" name="存单质押贷款终审时,贷款到期日小于或等于单个或多个存单最早到期日" checktype="eqn" checkedFieldName="$isOutOfRange" targetDataList="0" errCode="R0398" errMsg="贷款到期日应小于或等于单个或多个存单最早到期日" checkLevel="err">
+        <sql><![CDATA[select to_char(work_date,'yyyy-mm-dd') businessDate from tb_sys_business_date where org_cd = 99]]></sql>
+        <sql><![CDATA[select FINAL_LOAN_LENGTH finalLoanLength from tb_lon_loan_application where loan_id= @loanId]]></sql>
+        <sql><![CDATA[select case when ADD_MONTHS(to_date (@BUSINESSDATE,'YYYY-MM-DD'),@FINALLOANLENGTH) > (select min(b.TERMINATON_DATE) from tb_pub_security a ,tb_ast_depositcer b where a.asset_id= b.asset_id and app_id=@loanId AND a.SECURITY_STATUS != '5') then 1 else 0 end isOutOfRange from dual]]></sql>
+    </rule>
+
+    <rule id="R0399" name="填写授信调查审批表" checktype="ineqn" checkedFieldName="$num" targetDataList="0" errCode="R0399" errMsg="请填写授信调查审批表！" checkLevel="err">
+        <sql><![CDATA[
+            select count(line_id) num from tb_lin_credit_survey_approval where line_id = @lineId
+        ]]></sql>
+    </rule>
+
+    <!-- 2013.2.16 by wujiaxu 新增：业务办理授权 开始 -->
+    <rule id="R0400" name="业务办理授权为【不授权】状态，不允许开办业务" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="R0397" errMsg="业务办理授权为【不授权】状态，不允许开办业务" checkLevel="err">
+        <sql><![CDATA[
+                SELECT count(l.accredit_status) rowCount FROM TB_SYS_SECURITY_ORGANISATION O,TB_PUB_LOAN_LOANAPPLICATION  L WHERE o.Org_id = l.Org_Id
+                AND l.DELFLAG = '0' AND l.accredit_status = '1' AND ROWNUM = '1' AND l.app_op_id = @appOpId AND l.Org_Id IN (SELECT ORG_ID FROM TB_SYS_SECURITY_ORGANISATION START WITH ORG_ID =   @orgId CONNECT BY ORG_CD = prior PARENT_CD)
+        ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：业务办理授权 结束 -->
+    <!-- 2013.2.16 by wujiaxu 新增：业务合同签署授权 开始 -->
+    <rule id="R0401" name="业务合同签署授权为【不授权】状态，不允许签署合同" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="R0398" errMsg="业务合同签署授权为【不授权】状态，不允许签署合同" checkLevel="err">
+        <sql><![CDATA[
+                SELECT
+                    count(l.csa_status) rowCount
+                FROM
+                    TB_SYS_SECURITY_ORGANISATION O,TB_PUB_LOAN_LOANAPPLICATION  L
+                WHERE
+                    o.Org_id = l.Org_Id
+                    AND l.DELFLAG = '0'
+                    AND l.csa_status = '1'
+                    AND ROWNUM = '1'
+                    AND l.app_op_id = @appOpId
+                    AND l.Org_Id IN
+                       (SELECT ORG_ID
+                          FROM TB_SYS_SECURITY_ORGANISATION
+                         START WITH ORG_ID =   @orgId
+                        CONNECT BY ORG_CD = prior PARENT_CD)
+        ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：业务合同签署授权 结束 -->
+    <!-- 2013.2.16 by wujiaxu 新增：业务出账授权 开始 -->
+    <rule id="R0402" name="业务出账授权为【不授权】状态，不允许出账" checktype="greater" checkedFieldName="$rowCount" startValue="0" errCode="R0399" errMsg="业务出账授权为【不授权】状态，不允许出账" checkLevel="err">
+        <sql><![CDATA[
+                SELECT
+                    count(l.boa_status) rowCount
+                FROM
+                    TB_SYS_SECURITY_ORGANISATION O,TB_PUB_LOAN_LOANAPPLICATION  L
+                WHERE
+                    o.Org_id = l.Org_Id
+                    AND l.DELFLAG = '0'
+                    AND l.boa_status = '1'
+                    AND ROWNUM = '1'
+                    AND l.app_op_id = @appOpId
+                    AND l.Org_Id IN
+                       (SELECT ORG_ID
+                          FROM TB_SYS_SECURITY_ORGANISATION
+                         START WITH ORG_ID =   @orgId
+                        CONNECT BY ORG_CD = prior PARENT_CD)
+        ]]></sql>
+    </rule>
+    <!-- 2013.2.16 by wujiaxu 新增：业务出账授权 结束 -->
+    <!-- 名单准入、担保额度、营销额度对同一公司客户的校验        开始 -->
+    <!-- 名单内是否有该客户校验 -->
+    <rule id="R0403" name="该客户已经作为名单准入客户！" checktype="eqn" checkedFieldName="$num" targetDataList="0" errCode="R0403" errMsg="该客户已经作为名单准入客户！" checkLevel="err">
+        <sql><![CDATA[
+            select count(li.admittance_id) num
+      			from tb_lin_corplist_application li
+     			where li.cus_id = @cusId and li.admittance_state != '9' and li.admittance_kind != '2'
+        ]]></sql>
+    </rule>
+    <!-- 营销额度、担保额度校验 -->
+    <rule id="R0404" name="该客户已经作为营销额度或担保额度客户！" checktype="eqn" checkedFieldName="$amou" targetDataList="0" errCode="R0404" errMsg="该客户已经作为营销额度或担保额度客户！" checkLevel="err">
+        <sql><![CDATA[
+            select count(lin.line_id) amou from tb_lin_line_application lin, tb_lin_application app
+     		where lin.line_id = app.line_id and lin.cus_id = @cusId AND (app.APPROVE_STATUS NOT IN ('6', '9') AND app.ACT_FLAG NOT IN ('2', '3', '6'))
+        ]]></sql>
+    </rule>
+    <!-- 同类型名单是否已准入校验 (同一竖线上的机构)-->
+    <rule id="R0405" name="该客户已经作为名单准入客户！" checktype="eqn" checkedFieldName="$acc" targetDataList="0" errCode="R0405" errMsg="该客户已经作为名单准入客户！" checkLevel="err">
+        <sql><![CDATA[
+            select count(li.admittance_id) acc
+      		from tb_lin_corplist_application li
+     		where li.cus_id = @cusId and li.cooperation_kind = @paramValue and li.admittance_state != '9' and li.admittance_kind != '2' and (li.cur_org_id in (
+             SELECT ORG_ID
+                FROM TB_SYS_SECURITY_ORGANISATION
+                where org_type = '01'
+                START WITH
+                ORG_ID = @orgId
+                CONNECT BY PARENT_CD  = prior ORG_CD)
+             or li.cur_org_id in (
+             SELECT ORG_ID
+                FROM TB_SYS_SECURITY_ORGANISATION
+                where org_type = '01'
+                START WITH
+                ORG_ID = @orgId
+                CONNECT BY ORG_CD  = prior PARENT_CD))
+        ]]></sql>
+    </rule>
+    <!-- 名单准入、担保额度、营销额度对同一公司客户的校验        结束 -->
+    <rule id="R0406" name="由我行调查，请先录入完整调查报告" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请先录入完整调查报告"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select * from TB_pub_RPT_analysis_advise t where app_id = @appId and FINANCE_ANALYSE_DEGREE is not null)
+		  or exists (select * from TB_pub_RPT_verdict_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_house_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_change_info where app_id = @appId)
+		  ]]></sql>
+        <condition>C0165</condition>
+    </rule>
+    <rule id="R0407" name="额度项下业务设定天数外需要先录入完整调查报告" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0403" errMsg="额度项下业务设定天数外需要先录入完整调查报告"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select * from TB_pub_RPT_analysis_advise t where app_id = @appId  and FINANCE_ANALYSE_DEGREE is not null)
+		  or exists (select * from TB_pub_RPT_verdict_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_house_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_change_info where app_id = @appId)
+		  ]]></sql>
+        <condition>C0141</condition>
+        <condition>C0187</condition>
+    </rule>
+    <rule id="R0408" name="该资产已经关联业务！" checktype="eqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0408" errMsg="该资产已经关联业务，不能解除共有人关系！"
+          checkLevel="err">
+        <sql><![CDATA[ select count(1) A from tb_pub_security where asset_id = @assetId and SECURITY_STATUS != '5' ]]></sql>
+    </rule>
+    <!-- 2013-03-01 yangjinlong 贷款授信调查意见校验 -->
+    <rule id="R0409" name="贷款授信调查意见校验" checktype="ineqn"
+          checkedFieldName="$countNum" targetDataList="0" errCode="R0408" errMsg="请录入贷款授信调查意见"
+          checkLevel="err">
+        <sql><![CDATA[ SELECT COUNT(1) countNum FROM TB_LON_SURVEY_OPINION WHERE LOAN_ID=@loanId]]></sql>
+    </rule>
+    <rule id="R0410" name="担保信息上报校验-业务担保信息录入不完整" checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="R0410" errMsg="业务担保信息录入不完整" checkLevel="err">
+        <sql><![CDATA[select count(t.SECURITY_ID) A from TB_PUB_SECURITY t where t.APP_ID = @appId and t.security_status != '5']]></sql>
+        <sql><![CDATA[select count(t.SECURITY_ID) B from TB_PUB_SECURITY t where t.APP_ID = @appId and t.SECURITY_RATIO is not null and t.security_status != '5']]></sql>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0411" name="担保信息上报校验-录入担保金额总和应大于等于申请金额" checktype="ge" checkedFieldName="$sumSecurityAmount" startValue="$appAmount" errCode="R0411" errMsg="担保金额总和不能小于申请金额" checkLevel="err">
+        <sql><![CDATA[select sum(t.security_amount) sumSecurityAmount from TB_PUB_SECURITY t where t.APP_ID =@appId and security_status != '5']]></sql>
+        <sql><![CDATA[select loan_amount appAmount from tb_lon_loan_application where loan_id=@appId]]></sql>
+        <condition>C0167</condition>
+        <condition>C0142</condition>
+    </rule>
+
+    <!-- 留学贷款额度  -->
+    <rule id="R0412" name="留学贷款额度,额度金额必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="2000000" errCode="2101015-013" errMsg="额度金额必须小于等于上限值200万" checkLevel="err">
+        <condition>C0168</condition>
+    </rule>
+    <rule id="R0413" name="留学贷款额度,额度金额必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="1000000" errCode="2101015-013" errMsg="额度金额必须小于等于上限值100万" checkLevel="err">
+        <condition>C0169</condition>
+    </rule>
+    <rule id="R0414" name="留学贷款额度,额度金额必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="1000000" errCode="2101015-013" errMsg="额度金额必须小于等于上限值100万" checkLevel="err">
+        <condition>C0170</condition>
+    </rule>
+    <rule id="R0415" name="留学贷款额度,额度金额必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="1000000" errCode="2101015-013" errMsg="额度金额必须小于等于上限值100万" checkLevel="err">
+        <condition>C0171</condition>
+    </rule>
+    <rule id="R0416" name="留学贷款额度,额度金额必须小于等于上限值" checktype="le" checkedFieldName="@paramValue" endValue="500000" errCode="2101015-013" errMsg="额度金额必须小于等于上限值50万" checkLevel="err">
+        <condition>C0172</condition>
+    </rule>
+    <rule id="R0417" name="该押品的本次评估价值低于该押品已担保金额！" checktype="ge" checkedFieldName="$celresl" startValue="0" errCode="R0417" errMsg="该押品的本次评估价值低于该押品已担保金额！" checkLevel="err">
+        <sql><![CDATA[select @paramValue-nvl(sum(security_amount),0) celresl from tb_pub_security where asset_id = @assetId and SECURITY_STATUS != '5']]></sql>
+    </rule>
+
+    <!-- 2013.3.5 by wujiaxu 新增提前还本违约金止期校验(当存在提前还款违约金时，要求违约金周期覆盖整个贷款期限) -->
+    <rule id="R0418" name="提前还款是否收取违约金为【是】时，提前还款违约金明细未覆盖贷款期限，请确认" checktype="eqn" checkedFieldName="$maxEndTerm" targetDataList="$loanLength" errCode="R0418" errMsg="提前还款是否收取违约金为【是】，提前还款违约金明细未覆盖贷款期限，请确认" checkLevel="err">
+        <sql><![CDATA[select max(to_number(END_TERM)) maxEndTerm from TB_LON_PREPAYMENT_FORFEIT_INFO where loan_id = @appId]]></sql>
+        <sql><![CDATA[select LOAN_LENGTH loanLength from TB_LON_LOAN_APPLICATION where loan_id = @appId]]></sql>
+        <condition>C0173</condition>
+    </rule>
+
+    <!-- 2013.3.5 by wujiaxu 新增 参数【单一借款人授信笔数】的相关校验 -->
+    <rule id="R0419" name="未配置参数【单一借款人笔数限制】，请先配置此参数" checktype="greater" checkedFieldName="$rowCount" startValue="0"  errCode="R0419" errMsg="未配置参数【单一借款人笔数限制】，请先配置此参数" checkLevel="err">
+        <sql><![CDATA[
+                SELECT
+                        COUNT(L.LOAN_NUM_UPLIMIT) rowCount
+                    FROM
+                        TB_SYS_SECURITY_ORGANISATION O,
+                        TB_PUB_CUS_ONEBORROWERITEMS L
+                    WHERE
+                        o.Org_id = l.Org_Id
+                        AND l.app_op_id = @appOpId
+                        AND EXISTS(	SELECT
+                                        ORG_ID
+					                FROM
+						                TB_SYS_SECURITY_ORGANISATION
+                                    WHERE TB_SYS_SECURITY_ORGANISATION.ORG_ID = L.ORG_ID
+                                    START WITH TB_SYS_SECURITY_ORGANISATION.ORG_ID = @orgId
+					                CONNECT BY TB_SYS_SECURITY_ORGANISATION.ORG_CD = PRIOR TB_SYS_SECURITY_ORGANISATION.PARENT_CD)
+        ]]></sql>
+    </rule>
+
+    <rule id="R0420" name="超出参数【单一借款人授信笔数】限制值" checktype="greater" checkedFieldName="$loanNumUplimit" startValue="$curLoanNum" errCode="R0420" errMsg="当前在途业务笔数超出参数【单一借款人授信笔数】配置的限制值，参数值为$[loanNumUplimit]，请确认" checkLevel="err">
+        <sql><![CDATA[
+                 SELECT LOAN_NUM_UPLIMIT loanNumUplimit
+                      FROM (SELECT L.LOAN_NUM_UPLIMIT
+                              FROM
+                                    TB_SYS_SECURITY_ORGANISATION O,
+                                    TB_PUB_CUS_ONEBORROWERITEMS L
+                             WHERE
+                                O.Org_id = l.Org_Id
+                                AND l.app_op_id = @appOpId
+                                AND EXISTS(SELECT
+                                            ORG_ID
+                                        FROM
+                                            TB_SYS_SECURITY_ORGANISATION
+                                        WHERE TB_SYS_SECURITY_ORGANISATION.ORG_ID = L.ORG_ID
+                                            START WITH TB_SYS_SECURITY_ORGANISATION.ORG_ID = @orgId
+                                            CONNECT BY TB_SYS_SECURITY_ORGANISATION.ORG_CD = PRIOR TB_SYS_SECURITY_ORGANISATION.PARENT_CD)
+                             ORDER BY O.ORG_LEVEL DESC)
+                     WHERE ROWNUM = '1'
+        ]]></sql>
+
+        <sql><![CDATA[
+                select count(a.LOAN_ID) curLoanNum
+                from tb_lon_application a,tb_lon_loan_application b
+                where a.loan_id = b.loan_id
+                and b.CUS_ID = @cusId
+                and approve_status in('1','2','3','4','5','8','9','11')
+                and (ACT_FLAG = '1' or ACT_FLAG is null)
+                and app_op_id = @appOpId
+        ]]></sql>
+    </rule>
+    <!-- 2013.3.5 by wujiaxu 新增：额度下贷款受理日期应小于等于【额度支用截止日】 -->
+    <rule id="R0421" name="额度下贷款业务受理日期超出【额度支用截止日】，请确认" checktype="eqn" checkedFieldName="$isOutOfRange" targetDataList="0" errCode="R0421" errMsg="额度下贷款业务受理日期超出【额度支用截止日】，请确认" checkLevel="err">
+        <sql><![CDATA[
+              select
+                case when to_date(@businessDate,'YYYY-MM-DD') >
+                    (select nvl(tb_lin_line.LINE_AJUSTEND_DATE,to_date('1899-01-01','YYYY-MM-DD') ) from TB_LON_LINE_USE_INFO,tb_lin_line
+                    where TB_LON_LINE_USE_INFO.line_id = tb_lin_line.line_id
+                    and tb_lon_line_use_info.loan_id = @loanId
+                    and TB_LON_LINE_USE_INFO.LINE_KIND = '3')
+                then 1 else 0 end isOutOfRange from dual
+        ]]></sql>
+        <condition>C0151</condition>
+    </rule>
+
+    <!-- 2013.3.5 by wujiaxu 新增：额度下贷款业务的贷款期限应该小于等于额度的【额度内贷款最长到期日】 -->
+    <rule id="R0422" name="额度下贷款业务的贷款期限超出额度业务的【额度内贷款最长支用期限】，请确认" checktype="le" checkedFieldName="@paramValue" endValue="$loanMaxPeriod" errCode="R0422" errMsg="额度下贷款业务的贷款期限超出额度业务的【额度内贷款最长支用期限】，请确认" checkLevel="err">
+        <sql><![CDATA[
+                select nvl(tb_lin_line.LOAN_MAX_PERIOD,0) loanMaxPeriod
+                from TB_LON_LINE_USE_INFO,tb_lin_line
+                where TB_LON_LINE_USE_INFO.line_id = tb_lin_line.line_id
+                and tb_lon_line_use_info.loan_id = @loanId
+                and TB_LON_LINE_USE_INFO.LINE_KIND = '3'
+        ]]></sql>
+        <condition>C0151</condition>
+    </rule>
+    <!-- 2013.3.6 by wujiaxu 新增额度余额不足的校验 -->
+    <rule id="R0423" name="当业务是个人额度下业务时 并且 贷款金额超出个人授信额度余额" checktype="le" checkedFieldName="@paramValue" endValue="$lineBalance" errCode="R0423" errMsg="贷款金额超出个人额度余额，当前个人额度余额$[lineBalance]" checkLevel="err">
+        <sql><![CDATA[
+                select nvl(tb_lin_line.line_balance,0) lineBalance
+                from TB_LON_LINE_USE_INFO,tb_lin_line
+                where TB_LON_LINE_USE_INFO.line_id = tb_lin_line.line_id
+                and tb_lon_line_use_info.loan_id = @loanId
+                and TB_LON_LINE_USE_INFO.LINE_KIND = '3'
+        ]]></sql>
+        <condition>C0151</condition>
+    </rule>
+    <rule id="R0424" name="当业务关联合作方额度时(非担保公司担保额度) 并且 贷款金额超出合作方额度余额" checktype="le" checkedFieldName="@paramValue" endValue="$minLineBalance" errCode="R0424" errMsg="贷款金额超出合作方额度余额" checkLevel="err">
+        <sql><![CDATA[
+                select nvl(min(allLine.LINE_BALANCE),0) minLineBalance
+                from
+                (
+                    SELECT
+                        line.line_balance
+                    FROM TB_LON_LINE_USE_INFO useinfo,
+                        TB_LIN_LINE line
+                    WHERE LOAN_ID = @loanId
+                    AND USEINFO.LINE_ID = LINE.LINE_ID
+                    AND LINE.APP_OP_ID <> '301801'
+                    UNION ALL
+                    select
+                        LINE_BALANCE
+                    FROM
+                        TB_LON_LINE_USE_INFO USELINE,
+                        (SELECT A.ASSOCIATE_LINE_ID,A.LINE_ID,A.LINE_BALANCE
+                        FROM TB_LIN_ASSOCIATE_LINE A,TB_LIN_LINE B
+                        WHERE A.ASSOCIATE_LINE_ID = B.LINE_ID
+                        AND B.APP_OP_ID = '301804') LINE
+                    WHERE USELINE.LINE_ID = LINE.LINE_ID
+                    AND USELINE.LINE_KIND = '1'
+                    AND USELINE.LOAN_ID = @loanId
+                ) allLine
+        ]]></sql>
+        <condition>C0174</condition>
+
+
+    </rule>
+    <rule id="R0425" name="是留学额度下贷款 并且 贷款用途是提款型 并且 贷款金额超出留学额度提款型限额余额"  checktype="le" checkedFieldName="@paramValue" endValue="$atmLineLimit" errCode="R0425" errMsg="贷款金额超出留学额度提款型限额余额，当前留学额度提款型限额余额为$[atmLineLimit]" checkLevel="err">
+        <sql><![CDATA[
+            SELECT
+                nvl(a.ATM_LINE_LIMIT,0) atmLineLimit
+            FROM
+                TB_LIN_LINE_MONEY_RATE a,
+                TB_LIN_LINE b,
+                TB_LON_LINE_USE_INFO C
+            WHERE
+                a.LINE_ID = b.line_id AND
+                b.LINE_ID = C.LINE_ID AND
+                C.LINE_KIND = '3' AND
+                b.APP_OP_ID = '300103' AND
+                c.LOAN_ID = @loanId
+        ]]></sql>
+        <condition>C0176</condition>
+        <condition>C0175</condition>
+    </rule>
+
+    <rule id="R0426" name="本笔业务含保证人担保信息，但业务主担保方式及组合担保方式中均未选择【保证】，请确认"  checktype="eqn" checkedFieldName="$isHaveSecurity" targetDataList="1" errCode="R0426" errMsg="本笔业务含保证人担保信息，但业务担保方式及组合担保方式中均未选择【保证】，请确认" checkLevel="err">
+        <sql><![CDATA[
+            select case when security_kind = '2'
+                    or instr(COM_SECURITY_KIND,'2')>0
+                        or instr(COM_SECURITY_KIND,'5')>0
+                            or instr(COM_SECURITY_KIND,'6')>0 then 1
+                   else 0 end isHaveSecurity
+            from tb_lon_loan_application
+            where LOAN_ID = @appId
+        ]]></sql>
+        <condition>C0177</condition>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0427" name="本笔业务含抵质押担保信息，但业务主担保方式及组合担保方式中均未选择【抵押】或【质押】，请确认"  checktype="eqn" checkedFieldName="$isHaveSecurity" targetDataList="1" errCode="R0427" errMsg="本笔业务含抵质押担保信息，但业务担保方式及组合担保方式中均未选择【抵押】或【质押】，请确认" checkLevel="err">
+        <sql><![CDATA[
+            select case when security_kind in('3','4')
+                      or instr(COM_SECURITY_KIND,'3')>0
+                         or instr(COM_SECURITY_KIND,'4')>0 then 1
+                   else 0 end isHaveSecurity
+            from tb_lon_loan_application
+            where LOAN_ID = @appId
+        ]]></sql>
+        <condition>C0178</condition>
+        <condition>C0142</condition>
+    </rule>
+    <rule id="R0428" name="本笔业务含保证金担保信息，但业务组合担保方式中均未选择【保证金】，请确认"  checktype="eqn" checkedFieldName="$isHaveSecurity" targetDataList="1" errCode="R0428" errMsg="本笔业务含保证金担保信息，但业务组合担保方式中均未选择【保证金】，请确认" checkLevel="err">
+        <sql><![CDATA[
+            select case when instr(COM_SECURITY_KIND,'8')>0 then 1
+                    else 0 end isHaveSecurity
+            from tb_lon_loan_application
+            where LOAN_ID = @appId
+        ]]></sql>
+        <condition>C0179</condition>
+        <condition>C0142</condition>
+    </rule>
+
+    <rule id="R0429" name="规则:非额度下 并且 如果组合担保类型为【并列】 并且 保证担保金额总和超度授信金额" checktype="ge" checkedFieldName="$sumGuaranteeAmount" startValue="$suggestAmount"  errCode="R0429" errMsg="所有的保证之和必须大于等于授信建议金额，请确认" checkLevel="err">
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) sumGuaranteeAmount from TB_PUB_GUARANTEE where APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(SUGGEST_AMOUNT),0) suggestAmount from TB_LON_SURVEY_OPINION where LOAN_ID = @appId]]></sql>
+        <condition>C0152</condition>
+        <condition>C0180</condition>
+    </rule>
+    <rule id="R0430" name="规则:非额度下 并且 如果组合担保类型为【并列】 并且 抵押担保金额总和超度授信金额" checktype="ge" checkedFieldName="$sumSecurityAmount" startValue="$suggestAmount"  errCode="R0430" errMsg="所有的抵押之和必须大于等于授信建议金额，请确认" checkLevel="err">
+        <sql><![CDATA[SELECT NVL(SUM(SECURITY_AMOUNT),0) sumSecurityAmount FROM TB_AST_ASSETTYPE T,TB_PUB_SECURITY S
+        				WHERE T.ASSETTYPE_ID = S.ASSET_TYPE AND T.SECURITY_KIND = 'MOR' AND S.APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(SUGGEST_AMOUNT),0) suggestAmount from TB_LON_SURVEY_OPINION where LOAN_ID = @appId]]></sql>
+        <condition>C0152</condition>
+        <condition>C0181</condition>
+    </rule>
+    <rule id="R0431" name="规则:非额度下 并且 如果组合担保类型为【并列】 并且 质押担保金额总和超度授信金额" checktype="ge" checkedFieldName="$sumSecurityAmount" startValue="$suggestAmount"  errCode="R0431" errMsg="所有的质押之和必须大于等于授信建议金额，请确认" checkLevel="err">
+        <sql><![CDATA[SELECT NVL(SUM(SECURITY_AMOUNT),0) sumSecurityAmount FROM TB_AST_ASSETTYPE T,TB_PUB_SECURITY S
+        				WHERE T.ASSETTYPE_ID = S.ASSET_TYPE AND T.SECURITY_KIND = 'IMP' AND S.APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(SUGGEST_AMOUNT),0) suggestAmount from TB_LON_SURVEY_OPINION where LOAN_ID = @appId]]></sql>
+        <condition>C0152</condition>
+        <condition>C0182</condition>
+    </rule>
+    <rule id="R0432" name="规则:非额度下 并且 如果组合担保类型为【加总】 并且 第三方担保金额总和超度授信金额" checktype="ge" checkedFieldName="#sum($sumSecurityAmount,$sumGuaranteeAmount,$sumGuaranteeAccAmount)" startValue="$suggestAmount"  errCode="R0432" errMsg="当前所有担保情况的担保金额之和必须大于等于授信建议金额，请确认" checkLevel="err">
+        <sql><![CDATA[select NVL(SUM(SECURITY_AMOUNT),0) sumSecurityAmount from TB_PUB_SECURITY where APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) sumGuaranteeAmount from TB_PUB_GUARANTEE where APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(GUARANTEE_AMOUNT),0) sumGuaranteeAccAmount from TB_PUB_GUARANTEE_ACCOUNT_INFO where APP_ID = @appId]]></sql>
+        <sql><![CDATA[select NVL(SUM(SUGGEST_AMOUNT),0) suggestAmount from TB_LON_SURVEY_OPINION where LOAN_ID = @appId]]></sql>
+        <condition>C0152</condition>
+        <condition>C0183</condition>
+    </rule>
+    <rule id="R0433" name="担保信息上报校验-业务担保信息录入不完整" checktype="eqn" checkedFieldName="$A" targetDataList="$B" errCode="R0410" errMsg="业务担保信息录入不完整" checkLevel="err">
+        <sql><![CDATA[select count(t.SECURITY_ID) A from TB_PUB_SECURITY t where t.APP_ID = @appId AND SECURITY_STATUS != '5']]></sql>
+        <sql><![CDATA[select count(t.SECURITY_ID) B from TB_PUB_SECURITY t where t.APP_ID = @appId and t.SECURITY_RATIO is not null AND SECURITY_STATUS != '5']]></sql>
+    </rule>
+    <rule id="R0434" name="受托支付发起校验" checktype="eqn" checkedFieldName="#sum($A,$B)" targetDataList="0" errCode="R0434" errMsg="该笔借据已发起受托支付" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.DUEBILL_ID = @duebillId AND LAP.APPROVE_STATUS IN ('1', '10','11'))]]></sql>
+        <sql><![CDATA[SELECT COUNT(ID) B FROM (SELECT TRA.RECORD_ID AS ID FROM TB_LAC_LOAN_TRANS_ACC_TRADE TRA WHERE TRA.DUEBILL_ID = @duebillId AND TRA.PAYMENT_FLAG in ('0','2') AND TRA.BUSI_TYPE='1')]]></sql>
+    </rule>
+    <rule id="R0435" name="额度项下业务设定天数外需要先录入完整调查报告" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="R0435" errMsg="额度项下业务设定天数外需要先录入完整调查报告"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select * from TB_pub_RPT_analysis_advise t where app_id = @appId and FINANCE_ANALYSE_DEGREE is not null)
+		  or exists (select * from TB_pub_RPT_verdict_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_house_advise where app_id = @appId)
+		  or exists (select * from TB_pub_RPT_change_info where app_id = @appId)
+		  ]]></sql>
+        <condition>C0141</condition>
+        <condition>C0185</condition>
+        <condition>C0186</condition>
+    </rule>
+    <rule id="R0436" name="提前还款发起校验" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0436" errMsg="该笔借据有在途的业务，不能重复进行申请" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.DUEBILL_ID = @duebillId AND LAP.APPROVE_STATUS IN ('1', '10','11','8'))]]></sql>
+    </rule>
+    <rule id="R0437" name="不良资产移交发起校验" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0437" errMsg="该笔不良业务移交有在途的业务，不能重复进行申请" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.ASP_ID AS ID FROM TB_ASP_APPLICATION LAP WHERE LAP.LOAN_ID = @loanId AND LAP.APPROVE_STATUS IN ('1', '10','11','8'))]]></sql>
+    </rule>
+    <rule id="R0438" name="诉讼停息发起校验" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0438" errMsg="该笔诉讼停息有在途的业务，不能重复进行申请" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.LOAN_AC_ID AS ID FROM TB_LAC_LOAN_APPLICATION LAP WHERE LAP.DUEBILL_ID = @duebillId AND LAP.APPROVE_STATUS IN ('1', '10','11','8'))]]></sql>
+    </rule>
+    <rule id="R0439" name="不良资产核销收回发起校验" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0439" errMsg="该笔不良资产核销收回有在途的业务，不能重复进行申请" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.ASP_ID AS ID FROM TB_ASP_APPLICATION LAP WHERE LAP.DUEBILL_ID = @duebillId AND LAP.APPROVE_STATUS IN ('1', '10','11','8'))]]></sql>
+    </rule>
+    <rule id="R0440" name="请签署审批意见" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="R0440" errMsg="请签署审批意见" checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+    where exists (select record_id from tb_lon_approve_opinion1 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+    or exists (select record_id record_id from tb_lon_approve_opinion2 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+    or exists (select record_id from tb_lon_approve_opinion3 where loan_Id=@appId and CHECK_USER_ID=@curUserId)]]>
+        </sql>
+    </rule>
+    <rule id="R0441" name="分管保全岗变更发起校验" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0441" errMsg="该笔分管保全岗变更有在途的业务，不能重复进行申请" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ID) A FROM (SELECT LAP.ASP_ID AS ID FROM TB_ASP_APPLICATION LAP WHERE LAP.LOAN_ID = @loanId AND LAP.APPROVE_STATUS IN ('1', '10','11','8'))]]></sql>
+    </rule>
+    <!-- 2013.3.01 by wujiaxu 新增：应李晓波2013年3月29日需求新增客户就业类别为空的校验-->
+    <rule id="R0442" name="此客户就业类别为空，请在客户基本信息中补充完整" checktype="greater" checkedFieldName="$employmentType" startValue="-1" errCode="R0442" errMsg="此客户就业类别为空，请在客户基本信息中补充完整" checkLevel="err">
+        <sql><![CDATA[ select nvl(employment_type,'-1') employmentType from tb_csm_indv_customer where cus_id = @cusId ]]></sql>
+    </rule>
+    <!--20130415 by lfm 校验该存单的状态是否为新增-->
+    <rule id="R0443" name="该存单状态不合法！" checktype="eqn" checkedFieldName="$illigalNum" targetDataList="1" errCode="R0443" errMsg="该存单状态不合法！" checkLevel="err">
+        <sql><![CDATA[ select count(1) illigalNum from tb_ast_depositcer dep where dep.depositstate is null and dep.asset_id = @assetId ]]></sql>
+    </rule>
+    <rule id="R0444" name="没有完成客户信用评级,不能上报该流程" checktype="ineqn" checkedFieldName="$A" targetDataList="0" errCode="R0444" errMsg="没有完成客户信用评级,不能上报该流程" checkLevel="err">
+        <sql><![CDATA[select count(record_id) A from tb_pub_bm_business  where APP_ID =  @appId and CUS_ID  = @cusId and model_stage='2' and model_scope='2']]></sql>
+    </rule>
+    <!-- 20130424 by hhj 校验贷款停息或者诉讼停息 -->
+    <rule id="R0445" name="该笔业务处于贷款停息或诉讼停息状态，不允许做此类业务" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0445" errMsg="该笔业务处于贷款停息或诉讼停息状态，不允许做此类业务" checkLevel="err">
+        <sql><![CDATA[select count(d.duebill_id) A from tb_lon_loan_duebill d where (d.is_stop_interest_flag='1' or d.is_law_stop_interest_flag='1') and d.duebill_id=@duebillId ]]></sql>
+    </rule>
+    <rule id="R0446" name="请签署审批意见" checktype="ineqn"
+          checkedFieldName="$A" targetDataList="0" errCode="2101015-013" errMsg="请签署审批意见"
+          checkLevel="err">
+        <sql><![CDATA[select count(1)A from dual
+		  where exists (select record_id from tb_lon_approve_opinion1 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id record_id from tb_lon_approve_opinion2 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  or exists (select record_id from tb_lon_approve_opinion3 where loan_Id=@appId and CHECK_USER_ID=@curUserId)
+		  ]]>
+        </sql>
+    </rule>
+    <rule id="R0447" name="厦门公积金贷款只允许选择等额本息或等额本金还款方式，请确认" checktype="ineqn" checkedFieldName="$rowCount" targetDataList="0" errCode="R0447" errMsg="厦门公积金贷款只允许选择等额本息或等额本金还款方式，请确认" checkLevel="err">
+        <sql><![CDATA[select count(a.loan_id) rowCount from tb_lon_loan_application a where a.loan_id = @appId and a.repay_kind in('0100','0200')  ]]></sql>
+        <condition>C0188</condition>
+    </rule>
+    <rule id="R0448" name="该笔业务未上传移交档案清单" checktype="eqn" checkedFieldName="$A" targetDataList="0" errCode="R0448" errMsg="该笔业务未上传移交档案清单" checkLevel="err">
+        <sql><![CDATA[SELECT COUNT(ST.CONTENT_NO) A FROM TB_IMA_SCAN_TEMPLATE ST, TB_IMA_CLASSIFY_CONFIG CC, (SELECT FILE_TYPE, UPDATE_NUMBER FROM (SELECT
+            EFB.FILE_TYPE,UPDATE_NUMBER,DENSE_RANK() OVER(PARTITION BY EFB.FILE_TYPE ORDER BY EFB.CREATE_TIME DESC) ROWNUMBER FROM TB_IMA_ECM_FILE_BASE EFB
+            WHERE EFB.INDEX_ID IS NOT NULL AND EFB.LIFE_STUS = '1' AND EFB.APP_ID = @appId) WHERE ROWNUMBER = 1) EF WHERE NVL(EF.UPDATE_NUMBER,0) =0
+            AND EF.FILE_TYPE(+) = ST.CONTENT_NO AND ST.UPLOAD_FLAG = '1' AND ST.SUB_CLASS_NO = CC.SUB_CLASS_NO
+            AND CC.APP_OP_ID = @appOpId]]></sql>
+    </rule>
+
+    <!-- 2013.05.13 by wujiaxu 当客户存在不良贷款或此客户为黑名单客户时，应小贷处张旆旆需求，办理“其他小额贷款”时，只提示，不强制校验   -->
+    <rule id="R0449" name="当为【其他小额贷款新产品】时 请注意：该客户存在不良贷款业务，请确认是否继续办理业务" checktype="eqn" checkedFieldName="$recount" targetDataList="0" errCode="R0449" errMsg="请注意：该客户存在不良贷款业务，请确认是否继续办理业务" checkLevel="warn">
+        <sql><![CDATA[select (SELECT COUNT(LOAN_ID) cFour FROM TB_LON_LOAN WHERE LOAN_LEVEL_FOUR_CLASS='2' AND LOAN_LEVEL_FIVE_CLASS IS NULL  AND CUS_ID = @cusId )+(select COUNT(LOAN_ID) cFive FROM TB_LON_LOAN WHERE LOAN_LEVEL_FIVE_CLASS in ('3','4','5') AND CLOSE_FLAG = '0' AND CUS_ID = @cusId ) recount from dual]]></sql>
+        <condition>C0189</condition>
+    </rule>
+    <!-- 2013.05.13 by wujiaxu 当客户存在不良贷款或此客户为黑名单客户时，应小贷处张旆旆需求，办理非“其他小额贷款”时，强制校验   -->
+    <rule id="R0450" name="当不是【其他小额贷款新产品】时 该客户存在不良贷款业务，不允许办理业务，请确认" checktype="eqn" checkedFieldName="$recount" targetDataList="0" errCode="R0450" errMsg="该客户存在不良贷款业务，不允许办理业务，请确认" checkLevel="err">
+        <sql><![CDATA[select (SELECT COUNT(LOAN_ID) cFour FROM TB_LON_LOAN WHERE LOAN_LEVEL_FOUR_CLASS='2' AND LOAN_LEVEL_FIVE_CLASS IS NULL  AND CUS_ID = @cusId )+(select COUNT(LOAN_ID) cFive FROM TB_LON_LOAN WHERE LOAN_LEVEL_FIVE_CLASS in ('3','4','5') AND CLOSE_FLAG = '0' AND CUS_ID = @cusId ) recount from dual]]></sql>
+        <condition>C0190</condition>
+    </rule>
+
+</checkrules>

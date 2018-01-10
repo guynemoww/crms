@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+   
+	<!-- 客户额度 -->
+	<rule id="RCRD_0001" name="额度基本信息保存校验" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="额度基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.limit_id = @limitId and r.item_amt is not null  ]]></sql>
+	</rule>
+	<rule id="RCRD_0002" name="额度基本信息保存校验" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="额度基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.limit_id = @limitId and r.AMPLIFY_IND is not null  ]]></sql>
+	</rule>
+	<rule id="RCRD_0003" name="额度基本信息保存校验" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="额度基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.limit_id = @limitId and r.item_amt is not null  ]]></sql>
+	</rule>
+	<rule id="RCRD_0004" name="客户有在途额度申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户有在途第三方额度申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.party_id=@partyId and r.status_cd in ('01','02') ]]></sql>
+	</rule>
+	<rule id="RCRD_0005" name="客户有在途额度申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户有在途额度申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where  r.party_id=@partyId and r.status_cd in ('01','02')  ]]></sql>
+	</rule>
+	<rule id="RCRD_0006" name="客户有已生效合作协议" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户有已生效合作协议" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_con_guarant_org_info r where  r.party_id=@partyId and r.status_cd ='03'  ]]></sql>
+	</rule>
+	<rule id="RCRD_0007" name="客户无生效担保额度" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="客户无生效担保额度" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where  r.party_id=@partyId and r.status_cd ='03'  ]]></sql>
+	</rule>
+	<rule id="RCRD_0008" name="已存在相同的第三方额度" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="已存在类型相同的第三方额度，不能重复申请！" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.party_id=@partyId and r.item_type = @itemType and r.status_cd ='03'  ]]></sql>
+	</rule>
+	<rule id="RCRD_0009" name="调整额度不能小于已用额度" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="调整额度不能小于已用额度" checkLevel="err">
+		<sql><![CDATA[select count(*) c from v_crd_third_party_limit r where r.party_id=@partyId and r.item_type = @itemType and r.status_cd ='03' and r.used_amt > @itemAmt  ]]></sql>
+	</rule>
+	<rule id="RCRD_0010" name="已存在相同的第三方额度" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="已存在类型相同的第三方额度，不能重复申请！" checkLevel="err">
+		<sql><![CDATA[select count(*) c from tb_crd_third_party_limit r where r.party_id=@partyId and r.limit_type = @itemType and r.status_cd ='03'  ]]></sql>
+	</rule>
+</checkrules>

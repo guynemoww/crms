@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:曾芳   AND L.GRANT_ORG_CODE in('BS001','BS01','BS00')  授权机构  
+tb_Sys_Agreement_List  	抵消协议名单  
+tb_Sys_Cust_Grant_List 	存量客户授权名单  AND l.CURRCY_CD =## 币种
+tb_Sys_Threetype_Grant_List	后三类重组特别授权名单
+tb_Sys_State_Control_Org_List	 优质国有控股担保机构名单
+tb_Sys_Big_Company_List 	大优质企业名单制管理名单 
+tb_Sys_Risk_Regroup_List  	前两类潜在重组化解名单
+ -->
+<sqlMap>
+    <select id="selectList" parameterClass="java.util.Map" resultClass="java.util.Map"><![CDATA[
+		SELECT (case when(count(*)>0) then (select LOAN_TYPE FROM tb_Sys_Agreement_List l WHERE L.ORG_CODE = #certificate_code#
+		                  AND L.GRANT_COUNT >= #cust_amt2#) else '1' end) 
+		                  FROM tb_Sys_Agreement_List l WHERE L.ORG_CODE = #certificate_code#
+		                  AND L.GRANT_COUNT >= #cust_amt2#
+		UNION 
+		SELECT  (case when(count(*)>0) then (select LOAN_TYPE FROM TB_SYS_CUST_GRANT_LIST l WHERE l.ORG_CODE = #certificate_code#
+		                  AND l.GRANT_COUNT >=#cust_amt2# AND l.PRODUCT_TYPE =#biz_product_cd#
+		                  AND l.TIME_LIMIT=#biz_term# AND l.APPLY_TYPE = #biz_happen_cd# ) else '2' end)  
+		                  FROM TB_SYS_CUST_GRANT_LIST l WHERE l.ORG_CODE = #certificate_code#
+		                  AND l.GRANT_COUNT >=#cust_amt2# AND l.PRODUCT_TYPE =#biz_product_cd#
+		                  AND l.TIME_LIMIT=#biz_term# AND l.APPLY_TYPE = #biz_happen_cd#      
+		UNION 
+		SELECT  (case when(count(*)>0) then (select LOAN_TYPE FROM TB_SYS_THREETYPE_GRANT_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                  AND l.GRANT_COUNT>=#cust_amt2#  ) else '3' end)    
+		                  FROM TB_SYS_THREETYPE_GRANT_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                  AND l.GRANT_COUNT>=#cust_amt2#                 
+		UNION 
+		SELECT  (case when(count(*)>0) then (select LOAN_TYPE    FROM TB_SYS_STATE_CONTROL_ORG_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                  AND l.GRANT_COUNT>=#cust_amt2# ) else '4' end)
+		                  FROM TB_SYS_STATE_CONTROL_ORG_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                  AND l.GRANT_COUNT>=#cust_amt2#      
+		UNION 
+		SELECT  (case when(count(*)>0) then (select LOAN_TYPE   FROM TB_SYS_BIG_COMPANY_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                          AND l.GRANT_COUNT>=#cust_amt2# ) else '5' end)
+		                          FROM TB_SYS_BIG_COMPANY_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                          AND l.GRANT_COUNT>=#cust_amt2#    
+		UNION 
+		SELECT  (case when(count(*)>0) then (select LOAN_TYPE FROM TB_SYS_RISK_REGROUP_LIST l WHERE l.ORG_CODE =  #certificate_code#
+		                  AND l.GRANT_COUNT>=#cust_amt2#) else '6' end)
+		                  FROM TB_SYS_RISK_REGROUP_LIST l WHERE l.ORG_CODE = #certificate_code# 
+		                  AND l.GRANT_COUNT>=#cust_amt2#
+		UNION
+		SELECT (case when(count(*)>0) then '8' else '7' end)FROM  TB_CSM_PARTY t1 JOIN TB_CSM_MYSELF_STOCKHOLDER_LIST t2 on t1.PARTY_ID = t2.PARTY_ID
+		where t1.PARTY_NUM = #cust_num#
+    	
+    ]]></select>
+    <select id="selectCol" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject"><![CDATA[
+    	SELECT  c.*,r.RNO,rule.rid FROM 
+    	          TB_PUB_GRANT_TABLE t
+		,TB_PUB_GRANT_TABLE_RULE r
+		, TB_PUB_GRANT_TABLE_COL c 
+		,tb_pub_grant_rule rule
+    	where t.tid=rule.pid and  t.pid=c.pid and t.pid=r.pid and c.pid=r.pid and c.torg = #orgid# and c.rind=r.rind and  c.rind=rule.rind order BY r.RNO
+    ]]></select>
+</sqlMap>
+    

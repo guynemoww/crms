@@ -1,0 +1,1145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:xiaoxia -->
+<sqlMap>
+	<!--查询可以发起合同变更的合同信息-->
+    <select id="findConList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select ci.contract_num,
+		       p.party_name,
+		       ci.product_type,
+		       ci.contract_amt,
+		       ci.con_balance,
+		       ci.begin_date,
+		       ci.end_date,
+		       ci.contract_term,
+		       ci.con_status,
+		       ci.contract_id,
+		       ci.repayment_type,
+		       p.party_id
+		  from tb_con_contract_info ci, tb_csm_party p
+		  left join tb_csm_corporation co on co.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id
+		 where 1 = 1
+		   and ci.party_id = p.party_id
+		   and exists (select 1
+		          from tb_loan_info li, tb_loan_summary ls
+		         where li.loan_id = ls.loan_id
+		           and li.contract_id = ci.contract_id)
+		   and ci.con_status = '03'<!--合同状态01-未提交03-已生效-->
+		   and ci.end_date > sysdate
+		   and ci.user_num = '$userNum$'
+   		   and ci.org_num = '$orgNum$'
+         <isNotNull property="contractNum">  and ci.contract_num = '$contractNum$' </isNotNull>
+ 		 <isNotNull property="partyName">  and p.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="registrCd">  and co.registr_cd = '$registrCd$' </isNotNull>
+ 		 <isNotNull property="orgRegisterCd">  and co.org_register_cd = '$orgRegisterCd$' </isNotNull>
+ 		 <isNotNull property="certType">  and np.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and np.cert_num = '$certNum$' </isNotNull>
+ 		 <isNotNull property="middelCode">  and co.middel_code = '$middelCode$' </isNotNull>
+	</select>
+	
+	<!--查询可以发起借据变更的借据信息-->
+	<select id="findLoanList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from (
+    	select p.party_id,
+    		   p.party_num,
+    		   cc.corp_customer_type_cd,
+		       p.party_type_cd,
+		       (case
+		         when p.party_type_cd = '02' then
+		          '1'
+		         when p.party_type_cd = '01' then
+		          '0'
+		         else
+		          '0'
+		       end) as is_small,
+		       p.party_name,
+       		   cc.english_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       li.loan_id,
+		       li.product_type,
+		       substr(li.product_type,1,5) PTYPE,
+		       li.repay_type,
+		       li.currency_cd,
+		       ls.summary_id,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.jjye,
+		       ls.begin_date,
+		       ls.end_date,
+		       ls.tiexi_status,
+		       ls.tingxi_status,
+		       ls.summary_status_cd,
+		       ls.jjyqbj,
+		       a.biz_type,
+		       aa.credit_amount,
+       		   da.detail_amt,
+       		   sp.product_type PRODUCT,
+		       ci.contract_id,
+		       ci.contract_num
+		  from tb_loan_info         li,
+		       tb_loan_summary      ls,
+		       tb_con_contract_info ci,
+		       tb_csm_party         p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id,
+			  tb_biz_amount_detail_approve da,
+		      tb_biz_amount_approve aa,
+		      tb_biz_approve a,
+		      tb_sys_product sp
+		 where 1 = 1
+		   and li.loan_id = ls.loan_id
+		   and li.contract_id = ci.contract_id
+		   and li.party_id = p.party_id
+		   and ci.amount_detail_id = da.amount_detail_id
+		   and da.amount_id = aa.amount_id
+		   and aa.approve_id = a.approve_id
+		   and li.product_type = sp.product_cd
+		  <!-- and li.loan_status = '03'出账状态01-未提交03-已生效-->
+		   and ls.summary_status_cd in ('02','03')<!--借据状态01-未放款02-已放款03-逾期/垫款04-结清-->
+		   and li.user_num = '$userNum$'
+		   and li.org_num = '$orgNum$'
+		   ) a where 1=1 
+         <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+         <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+	</select>
+	<!--资产转让-->
+	<select id="findLoanListTranfer" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+      select p.party_id,
+           p.party_num,
+           cc.corp_customer_type_cd,
+           p.party_type_cd,
+           (case
+             when p.party_type_cd = '02' then
+              '1'
+             when p.party_type_cd = '01' then
+              '0'
+             else
+              '0'
+           end) as is_small,
+           p.party_name,
+              cc.english_name,
+           (case
+             when p.party_type_cd = '01' then
+              '202'
+             when p.party_type_cd = '02' then
+              np.cert_type
+             else
+              ''
+           end) as cert_type,
+           (case
+             when p.party_type_cd = '01' then
+              cc.org_register_cd
+             when p.party_type_cd = '02' then
+              np.cert_num
+             else
+              ''
+           end) as cert_num,
+           li.loan_id,
+           li.product_type,
+           substr(li.product_type,1,5) PTYPE,
+           li.repay_type,
+           li.currency_cd,
+           ls.summary_id,
+           ls.summary_num,
+           ls.summary_amt,
+           ls.jjye,
+           ls.begin_date,
+           ls.end_date,
+           ls.tiexi_status,
+           ls.tingxi_status,
+           ls.summary_status_cd,
+           ls.jjyqbj,
+           a.biz_type,
+           aa.credit_amount,
+              da.detail_amt,
+              sp.product_type PRODUCT,
+           ci.contract_id,
+           ci.contract_num
+      from tb_asset_transfer t,
+           tb_loan_info         li,
+           tb_loan_summary      ls,
+           tb_con_contract_info ci,
+           tb_csm_party         p
+      left join tb_csm_corporation cc on cc.party_id = p.party_id
+      left join tb_csm_natural_person np on np.party_id = p.party_id,
+        tb_biz_amount_detail_approve da,
+          tb_biz_amount_approve aa,
+          tb_biz_approve a,
+          tb_sys_product sp
+     where 1 = 1
+       and ci.cls_result in ('0301','0302','0401')
+       and li.loan_id = ls.loan_id
+       and li.contract_id = ci.contract_id
+       and t.contract_id=ci.contract_id
+       and li.party_id = p.party_id
+       and ci.amount_detail_id = da.amount_detail_id
+       and da.amount_id = aa.amount_id
+       and aa.approve_id = a.approve_id
+       and li.product_type = sp.product_cd
+       and t.status='30'
+
+	</select>
+	<!--查询可以发起借据变更的借据信息：指定账号还款-->
+	<select id="findLoanListAcc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from (
+    	select p.party_id,
+    		   p.party_num,
+    		   cc.corp_customer_type_cd,
+		       p.party_type_cd,
+		       (case
+		         when p.party_type_cd = '02' then
+		          '1'
+		         when p.party_type_cd = '01' then
+		          '0'
+		         else
+		          '0'
+		       end) as is_small,
+		       p.party_name,
+       		   cc.english_name,
+		       (case
+		         when p.party_type_cd = '01' then
+		          '202'
+		         when p.party_type_cd = '02' then
+		          np.cert_type
+		         else
+		          ''
+		       end) as cert_type,
+		       (case
+		         when p.party_type_cd = '01' then
+		          cc.org_register_cd
+		         when p.party_type_cd = '02' then
+		          np.cert_num
+		         else
+		          ''
+		       end) as cert_num,
+		       li.loan_id,
+		       li.product_type,
+		       substr(li.product_type,1,5) PTYPE,
+		       li.repay_type,
+		       li.currency_cd,
+		       ls.summary_id,
+		       ls.summary_num,
+		       ls.summary_amt,
+		       ls.jjye,
+		       ls.begin_date,
+		       ls.end_date,
+		       ls.tiexi_status,
+		       ls.tingxi_status,
+		       ls.summary_status_cd,
+		       a.biz_type,
+		       aa.credit_amount,
+       		   da.detail_amt,
+       		   sp.product_type PRODUCT,
+		       ci.contract_id,
+		       ci.contract_num
+		  from tb_loan_info         li,
+		       tb_loan_summary      ls,
+		       tb_con_contract_info ci,
+		       tb_csm_party         p
+		  left join tb_csm_corporation cc on cc.party_id = p.party_id
+		  left join tb_csm_natural_person np on np.party_id = p.party_id,
+			  tb_biz_amount_detail_approve da,
+		      tb_biz_amount_approve aa,
+		      tb_biz_approve a,
+		      tb_sys_product sp
+		 where 1 = 1
+		   and li.loan_id = ls.loan_id
+		   and li.contract_id = ci.contract_id
+		   and li.party_id = p.party_id
+		   and ci.amount_detail_id = da.amount_detail_id
+		   and da.amount_id = aa.amount_id
+		   and aa.approve_id = a.approve_id
+		   and li.product_type = sp.product_cd
+		   and ls.summary_status_cd in ('02','03')
+		   ) a where 1=1 
+         <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+         <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+	</select>
+	
+	<!--每次插入新还款计划前先删除-->
+    <select id="deleteNewRepayplan" parameterClass="java.util.HashMap">
+            delete from tb_con_repayplan_change rpc 
+			 where rpc.change_id = #changeId#
+			   and rpc.new_or_old = '2'
+    </select>
+    
+    <!--查询是否有在途业务-->
+    <select id="findFlowOnWay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_con_loan_change lc
+			 where lc.change_status in ('01', '02')
+			   and lc.loan_change_type = #loanChangeType#
+			   and lc.summary_id = #summaryId#
+    </select>
+    
+     <!--查询指定还款账号-->
+    <select id="findinaccount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+          select * from TB_PUB_REPAY_ACCOUNT where  REPAY_ACCOUNT_ORG_NUM=#orgcode#
+		   <isEqual property="currencyCd" compareValue="CNY" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '01'  
+		   </isEqual>
+		    <isEqual property="currencyCd" compareValue="GBP" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '12'  
+		   </isEqual>
+		    <isEqual property="currencyCd" compareValue="HKD" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '13'  
+		   </isEqual>
+		    <isEqual property="currencyCd" compareValue="USD" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '14'  
+		   </isEqual>
+		    <isEqual property="currencyCd" compareValue="JPY" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '27'  
+		   </isEqual>
+		    <isEqual property="currencyCd" compareValue="EUR" >
+		   		AND substr(REPAY_ACCOUNT,6,2) = '38'  
+		   </isEqual>
+    </select>
+    
+    
+        <!--查询合作商还款账号-->
+    <select id="findhzsinaccount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+ 	 select r.DEPOSIT_ACCNO_ONE,r.DEPOSIT_ACCNAME_ONE from tb_crd_third_party_limit r , tb_biz_xmxx_apply t 
+      ,TB_BIZ_AMOUNT_APPLY t1,TB_BIZ_AMOUNT_DETAIL_APPLY t2,TB_LOAN_SUMMARY t4
+               ,TB_CON_CONTRACT_INFO t3
+      where r.limit_id = t.project_id  
+        and t.amount_detail_id = t1.apply_id
+       and t1.AMOUNT_ID=t2.AMOUNT_ID 
+and t2.AMOUNT_DETAIL_ID=t3.AMOUNT_DETAIL_ID
+and r.STATUS_CD='03'
+and t3.CONTRACT_ID=t4.CONTRACT_ID and t4.SUMMARY_NUM=#summaryNum#
+    </select>
+    
+    <!--撤销删除还款计划-->
+    <select id="deleteRepayplanCancel" parameterClass="java.util.HashMap">
+            delete from tb_con_repayplan_change rpc 
+			 where rpc.change_id = #applyId#
+    </select>
+    
+    <!--信用证-->
+    <resultMap class="commonj.sdo.DataObject" id="queryForXyzLoanResult">
+        <result column="contract_num" javaType="string" property="ctrNo"/>
+        <result column="loan_num" javaType="string" property="dbtNo"/>
+        <result column="ecif_party_num" javaType="string" property="cstNo"/>
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="loan_amt" javaType="double" property="aplyAmt"/>
+        <result column="begin_date" javaType="string" property="ittDt"/>
+        <result column="end_date" javaType="string" property="expDt"/>
+        <result column="main_guaranty_type" javaType="string" property="mainGryTy"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="jyq" javaType="string" property="newSpotFwdInd"/>
+        <result column="kzsfbl" javaType="string" property="upPct"/>
+        <result column="kzxfbl" javaType="string" property="dwPct"/>
+        <result column="syrmc" javaType="string" property="benfNm"/>
+        <result column="xyzyxq" javaType="string" property="lCEfftDt"/>
+        <result column="htbh" javaType="string" property="trdCtrNo"/>
+        <result column="htzje" javaType="double" property="trdCtrTotAmt"/>
+        <result column="new_summaryamt" javaType="double" property="afAmdtAmt"/>
+        <result column="new_rate_up" javaType="string" property="newUpPct"/>
+        <result column="new_rate_down" javaType="string" property="newDwPct"/>
+        <result column="new_end_date" javaType="string" property="newEfftDt"/>
+    </resultMap>
+    <select id="queryForXyzLoan" parameterClass="java.util.HashMap" resultMap="queryForXyzLoanResult">
+    	select r.contract_num,
+		       t.loan_num,
+		       p.ecif_party_num,
+		       r.currency_cd,
+		       t.loan_amt,
+		       to_char(t.begin_date, 'yyyymmdd') begin_date,
+		       to_char(t.end_date, 'yyyymmdd') end_date,
+		       r.main_guaranty_type,
+		       t.loan_org,
+		       c.jyq,
+		       c.kzsfbl,
+		       c.kzxfbl,
+		       c.syrmc,
+		       to_char(c.xyzyxq, 'yyyymmdd') xyzyxq,
+		       m.htzje,
+		       m.htbh,
+		       lc.new_summaryamt,
+		       to_char(lc.new_rate_up) new_rate_up,
+       		   to_char(lc.new_rate_down) new_rate_down,
+		       to_char(lc.new_end_date, 'yyyymmdd') new_end_date
+		  from tb_con_contract_info r,
+		       tb_loan_info         t,
+		       tb_csm_party         p,
+		       tb_con_jkxyz         c,
+		       tb_biz_myhtxx_apply  m,
+		       tb_loan_summary      ls,
+		       tb_con_loan_change   lc
+		 where r.contract_id = t.contract_id
+		   and r.party_id = p.party_id
+		   and r.contract_id = c.contract_id
+		   and r.contract_id = m.amount_detail_id
+		   and t.loan_id = ls.loan_id
+		   and ls.summary_id = lc.summary_id
+		   and lc.change_id = #changeId#
+    </select>
+    
+    <!--保函-->
+    <resultMap class="commonj.sdo.DataObject" id="queryForBhLoanResult">
+        <result column="contract_num" javaType="string" property="ctrNo"/>
+        <result column="loan_num" javaType="string" property="dbtNo"/>
+        <result column="ecif_party_num" javaType="string" property="cstNo"/>
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="loan_amt" javaType="double" property="aplyAmt"/>
+        <result column="begin_date" javaType="string" property="ittDt"/>
+        <result column="end_date" javaType="string" property="expDt"/>
+        <result column="main_guaranty_type" javaType="string" property="mainGryTy"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="syrmc" javaType="string" property="benfNm"/>
+        <result column="bhlx" javaType="string" property="gntTp"/>
+        <result column="htbh" javaType="string" property="trdCtrNo"/>
+        <result column="htzje" javaType="double" property="trdCtrTotAmt"/>
+        <result column="new_summaryamt" javaType="double" property="afAmdtAmt"/>
+        <result column="new_end_date" javaType="string" property="newEfftDt"/>
+    </resultMap>
+    <select id="queryForBhLoan" parameterClass="java.util.HashMap" resultMap="queryForBhLoanResult">
+    	select r.contract_num,
+		       t.loan_num,
+		       p.ecif_party_num,
+		       r.currency_cd,
+		       t.loan_amt,
+		       to_char(t.begin_date, 'yyyymmdd') begin_date,
+		       to_char(t.end_date, 'yyyymmdd') end_date,
+		       r.main_guaranty_type,
+		       t.loan_org,
+		       c.syrmc,
+		       c.bhlx,
+		       m.htzje,
+		       m.htbh,
+		       lc.new_summaryamt,
+		       to_char(lc.new_end_date, 'yyyymmdd') new_end_date
+		  from tb_con_contract_info r,
+		       tb_loan_info         t,
+		       tb_csm_party         p,
+		       tb_con_jkbh          c,
+		       tb_biz_myhtxx_apply  m,
+		       tb_loan_summary      ls,
+		       tb_con_loan_change   lc
+		 where r.contract_id = t.contract_id
+		   and r.party_id = p.party_id
+		   and r.contract_id = c.contract_id
+		   and r.contract_id = m.amount_detail_id
+		   and t.loan_id = ls.loan_id
+		   and ls.summary_id = lc.summary_id
+		   and lc.change_id = #changeId#
+    </select>
+    
+    <!--查询保证金数组-->
+    <resultMap class="com.bos.pub.socket.service.request.EsbBodyGjRqMrgnArray" id="queryMrgn">
+        <result column="MARGIN_ACCOUNT" javaType="string" property="mrgnAcctNo"/>
+        <result column="CURRENCY_CD" javaType="string" property="mrgnCcy"/>
+        <result column="ACC_BALANCE" javaType="double" property="mrgnAmt"/>
+    </resultMap>
+    
+    <select id="findMrgnArray" parameterClass="java.util.HashMap" resultMap="queryMrgn">
+           select ta.BZJJE as ACC_BALANCE,'CNY' as CURRENCY_CD,td.MARGIN_ACCOUNT as MARGIN_ACCOUNT
+           from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,
+           TB_CON_SUB_GRT_REL tb,TB_GRT_MORTGAGE_BASIC tc,TB_GRT_MARGIN td
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SUBCONTRACT_TYPE = '03'
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SURETY_ID=tc.SURETY_ID
+			and tc.SURETY_ID=td.SURETY_ID
+			and t.CONTRACT_ID= #contractId#
+    </select>
+    
+    <!-- 展期 -->
+    <resultMap class="commonj.sdo.DataObject" id="queryForYhlLoanResult">
+        <result column="change_num" javaType="string" property="ctrNo"/>
+        <result column="change_num" javaType="string" property="dbtNo"/>
+        <result column="loan_org" javaType="string" property="aplyInstID"/>
+        <result column="loan_org" javaType="string" property="rmtInstNo"/>
+        <result column="ecif_party_num" javaType="string" property="cstNo"/>
+        <!--<result column="ywhm" javaType="string" property="bsnNo"/>-->
+        <result column="currency_cd" javaType="string" property="ccyTp"/>
+        <result column="contract_amt" javaType="double" property="ctrAmt"/>
+        <result column="begin_date" javaType="string" property="ctrIttDt"/>
+        <result column="new_end_date" javaType="string" property="ctrExpDt"/>
+        <result column="contract_num" javaType="string" property="relCtrNo"/>
+        <result column="loan_num" javaType="string" property="relDbtNo"/>
+        <result column="new_year_rate" javaType="double" property="newIntRate"/>
+        <result column="fxl" javaType="double" property="NewOdueIntRate"/>
+    </resultMap>
+    <select id="queryForZqLoan" parameterClass="java.util.HashMap" resultMap="queryForYhlLoanResult">
+    	select r.contract_num,
+	           t.loan_num,
+	           t.loan_org,
+	           p.ecif_party_num,
+	           <!--c.ywhm,-->
+	           r.currency_cd,
+	           r.contract_amt,
+	           to_char(r.begin_date,'yyyymmdd') begin_date,
+	           to_char(lc.new_end_date, 'yyyymmdd') new_end_date,
+	           lc.new_year_rate,
+	           l.year_rate*(1+l.overdue_rate_up_proportion)/100 fxl,
+	           lc.change_num
+	      from tb_con_contract_info r,
+	           tb_loan_info         t,
+	           tb_csm_party         p,
+	           <!--tb_con_ckxyzyh       c,-->
+	           tb_con_loanrate      l,
+	           tb_biz_myhtxx_apply  m,
+		       tb_loan_summary      ls,
+		       tb_con_loan_change   lc
+	     where r.contract_id = t.contract_id
+	       and r.party_id = p.party_id
+	       <!--and r.contract_id = c.contract_id-->
+	       and r.contract_id = m.amount_detail_id
+	       and r.contract_id = l.contract_id
+	       and t.loan_id = ls.loan_id 
+   		   and ls.summary_id = lc.summary_id
+		   and lc.change_id = #changeId#
+    </select>
+    
+    <!--查询提前还款通知书信息-->
+    <select id="findReportEarly" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select lc.change_num,
+			       p.party_name,
+			       ls.summary_num,
+			       li.product_type,
+			       sp.product_name,
+			       lc.change_status,
+			       lc.repay_amt,
+			       lc.repay_capital,
+			       decode(lc.is_settle, '1', '是', '0', '否', '') is_settle,
+			       (case
+			         when lc.repay_type = '01' then '指定还款金额'
+			         when lc.repay_type = '02' then '指定还本金额'
+			         when lc.repay_type = '03' then '结清当前期'
+			         else ''
+			       end) repay_type,
+			       (case
+			         when lc.repay_order = '00' then '默认序'
+			         when lc.repay_order = '01' then '大本大息还款序'
+			         when lc.repay_order = '02' then '小本小息还款序'
+			         else ''
+			       end) repay_order,
+			       lc.yhfx,
+			       lc.yhzclx,
+			       lc.yhtqlx,
+			       lc.yhbj,
+       			   lc.yhze,
+			       z.zh,
+			       lc.user_num,
+			       lc.org_num,
+			       o.orgname,
+			       e.empname,
+			       lc.change_date,
+			       substr(to_char(lc.change_date, 'yyyy-MM-dd'), 1, 4) || '年' ||
+			       substr(to_char(lc.change_date, 'yyyy-MM-dd'), 6, 2) || '月' ||
+			       substr(to_char(lc.change_date, 'yyyy-MM-dd'), 9, 2) || '日' cha_date
+			  from tb_con_loan_change lc,
+			       tb_csm_party       p,
+			       tb_loan_summary    ls,
+			       tb_loan_info       li,
+			       tb_loan_zh         z,
+			       tb_sys_product     sp,
+			       om_organization    o,
+			       om_employee        e
+			 where lc.party_id = p.party_id
+			   and lc.summary_id = ls.summary_id
+			   and ls.loan_id = li.loan_id
+			   and li.loan_id = z.loan_id
+			   and li.product_type = sp.product_cd
+			   and lc.org_num = o.orgcode
+			   and lc.user_num = e.empcode
+			   and z.zhlx = '1'
+			   and lc.loan_change_type = '11'
+			   and lc.change_id = #changeId#
+    </select>
+    
+    <!--查询提前还款列表-->
+    <select id="findEarlyRepayList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select * from (
+            select p.party_id,
+			       p.party_type_cd,
+			       p.party_num,
+			       p.party_name,
+			       (case
+			         when p.party_type_cd = '01' then
+			          '202'
+			         when p.party_type_cd = '02' then
+			          np.cert_type
+			         else
+			          ''
+			       end) as cert_type,
+			       (case
+			         when p.party_type_cd = '01' then
+			          cc.org_register_cd
+			         when p.party_type_cd = '02' then
+			          np.cert_num
+			         else
+			          ''
+			       end) as cert_num,
+			       ci.contract_num,
+			       ls.summary_num,
+			       li.product_type,
+			       z.zh,
+			       lc.change_id,
+			       lc.change_num,
+			       lc.repay_amt,
+			       lc.repay_capital,
+			       lc.yhzclx,
+			       lc.yhtqlx,
+			       lc.yhfx,
+			       lc.user_num,
+			       lc.org_num,
+			       to_char(lc.change_date,'yyyy-MM-dd') change_date
+			  from tb_con_loan_change   lc,
+			       tb_loan_summary      ls,
+			       tb_loan_info         li,
+			       tb_con_contract_info ci,
+			       tb_loan_zh           z,
+			       tb_csm_party         p
+			  left join tb_csm_corporation cc on p.party_id = cc.party_id
+			  left join tb_csm_natural_person np on p.party_id = np.party_id
+			 where lc.summary_id = ls.summary_id
+			   and ls.loan_id = li.loan_id
+			   and lc.contract_id = ci.contract_id
+			   and lc.party_id = p.party_id
+			   and li.loan_id = z.loan_id
+			   and z.zhlx = '1'
+			   and lc.loan_change_type = '11'
+			   and lc.change_status = '03'
+			   and lc.user_num = '$userNum$'
+		   	   and lc.org_num = '$orgNum$'
+		   	   ) a where 1=1 
+         <isNotNull property="contractNum">  and a.contract_num = '$contractNum$' </isNotNull>
+         <isNotNull property="summaryNum">  and a.summary_num = '$summaryNum$' </isNotNull>
+ 		 <isNotNull property="partyName">  and a.party_name like '%$partyName$%' </isNotNull>
+ 		 <isNotNull property="certType">  and a.cert_type = '$certType$' </isNotNull>
+ 		 <isNotNull property="certNum">  and a.cert_num = '$certNum$' </isNotNull>
+    </select>
+
+	<!-- 算期限-->
+    <select id="getTerm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select (case
+			         when months_between(to_date('$oldEndDate$', 'yyyy-MM-dd'),
+			                             to_date('$beginDate$', 'yyyy-MM-dd')) > 60 then
+			          '长'
+			         when months_between(to_date('$oldEndDate$', 'yyyy-MM-dd'),
+			                             to_date('$beginDate$', 'yyyy-MM-dd')) > 12 then
+			          '中'
+			         else
+			          '短'
+			       end) oldType,
+			       months_between(to_date('$oldEndDate$', 'yyyy-MM-dd'),
+                      to_date('$beginDate$', 'yyyy-MM-dd')) oldTerm,
+			       months_between(to_date('$newEndDate$', 'yyyy-MM-dd'),
+			          to_date('$oldEndDate$', 'yyyy-MM-dd')) newTerm
+			  from dual
+    </select> 
+    
+    <!-- 算期数-->
+    <select id="getPeriods" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select count(*) PERI
+			  from tb_con_repayplan_change rc
+			 where rc.new_or_old = '2'
+			   and rc.change_id = #changeId#
+    </select> 
+    
+    <!-- 查询小贷变更前还款计划 -->
+    <select id="findOldPlan" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select * from tb_biz_xw_hkjh h where h.amount_detail_id = #amountDetailId#
+			 order by h.qc
+    </select>
+    
+    <!-- 查询未还还款计划 -->
+    <select id="findOldNotRepay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select * from tb_biz_xw_hkjh h where h.amount_detail_id = #amountDetailId#
+			 and h.end_date > #busDate#
+			 order by h.qc
+    </select>
+    
+    <!-- 查询小贷变更后还款计划 -->
+    <select id="findNewPlan" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select r.repayplan_change_id,
+				   r.change_id,
+				   r.new_periods_num,
+			       to_char(r.new_repay_date,'yyyy-MM-dd') new_repay_date,
+			       r.new_repay_amt,
+			       r.new_bj,
+			       r.new_lx,
+			       r.new_days,
+			       r.new_sybj,
+			       lead(r.new_sybj, 1, 0) over(order by r.new_sybj) as last_sybj
+			  from tb_con_repayplan_change r
+			 where r.change_id = #changeId#
+			   and r.new_or_old = '2'
+			 order by r.new_periods_num
+    </select>  
+    
+    <!-- 查询小贷相关信息 -->
+    <select id="findSomeInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select li.loan_id,
+			       da.amount_detail_id,
+			       a.apply_id,
+			       ls.begin_date,
+			       ls.end_date,
+			       li.repay_type,
+			       to_date(to_char(da.create_time,'yyyy-MM-dd'),'yyyy-MM-dd') create_time,
+			       lc.loan_change_type,
+			       lc.is_modify_plan,
+			       lc.new_repay_way
+			  from tb_con_loan_change           lc,
+			       tb_loan_summary              ls,
+			       tb_loan_info                 li,
+			       tb_con_contract_info         ci,
+			       tb_biz_amount_detail_approve da,
+			       tb_biz_amount_approve        aa,
+			       tb_biz_approve               a
+			 where lc.summary_id = ls.summary_id
+			   and ls.loan_id = li.loan_id
+			   and li.contract_id = ci.contract_id
+			   and ci.amount_detail_id = da.amount_detail_id
+			   and da.amount_id = aa.amount_id
+			   and aa.approve_id = a.approve_id
+			   and lc.change_id = #changeId#
+    </select>  
+    
+    <!-- 小贷原还款计划相统计查询 -->
+    <select id="findOldRepayTotal" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			<!--select sum(h.amt) AMT, sum(h.lx) LX, count(h.qc) QC, sum(h.bj) BJ
+			  from tb_biz_xw_hkjh h
+			 where h.amount_detail_id = #amountDetailId#-->
+			 select sum(r.old_repay_amt) AMT, sum(r.old_lx) LX, count(r.old_periods_num) QC, sum(r.old_bj) BJ
+			  from tb_con_repayplan_change r
+			 where r.change_id = #changeId#
+			   and r.new_or_old = '1'
+    </select> 
+    
+    <select id="findNewRepayTotal" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select sum(rc.new_repay_amt) NEW_AMT,
+			       sum(rc.new_bj) NEW_BJ,
+			       sum(rc.new_lx) NEW_LX,
+			       count(*) NEW_QC
+			  from tb_con_repayplan_change rc
+			 where rc.change_id = #changeId#
+			   and rc.new_or_old = '2'
+    </select>  
+    
+     <!-- 插入小贷还款计划 -->
+    <insert id="insertRepayXWOld" parameterClass="java.util.HashMap">
+			insert into tb_con_repayplan_change
+					  (repayplan_change_id,
+					   change_id,
+					   old_periods_num,
+					   old_repay_date,
+					   old_repay_amt,
+					   old_bj,
+					   old_lx,
+					   old_days,
+					   old_sybj,
+					   new_or_old)
+					values
+					  (sys_guid(),
+					   #changeId#,
+					   #repayQc#,
+					   #repayDate#,
+					   #repayAmt#,
+					   #bj#,
+					   #lx#,
+					   #days#,
+					   #sybj#,
+					   '1')
+    </insert>  
+    
+    <!-- 插入小贷还款计划 -->
+    <insert id="insertRepayXWNew" parameterClass="java.util.HashMap">
+			insert into tb_con_repayplan_change
+				  (repayplan_change_id,
+				   change_id,
+				   new_periods_num,
+				   new_repay_date,
+				   new_repay_amt,
+				   new_bj,
+				   new_lx,
+				   new_days,
+				   new_sybj,
+				   new_or_old)
+				values
+				  (sys_guid(),
+				   #changeId#,
+				   #repayQc#,
+				   #repayDate#,
+				   #repayAmt#,
+				   #bj#,
+				   #lx#,
+				   #days#,
+				   #sybj#,
+				   '2')
+    </insert>  
+    
+    <!-- 更新小贷还款计划 -->
+    <select id="updateRepayXW" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			update tb_con_repayplan_change rc
+			   set rc.new_repay_date = #newRepayDate#, rc.new_repay_amt = #newRepayAmt#, rc.new_bj = #newBj#, rc.new_lx = #newLx# 
+			 where rc.repayplan_change_id = #repayplanChangeId#
+    </select> 
+    
+    <select id="updateRepaySYBJ" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			update tb_con_repayplan_change rc
+			   set rc.new_sybj = #newSybj#
+			 where rc.repayplan_change_id = #repayplanChangeId#
+    </select>
+    
+    <!-- 查询剩余本金和期次 -->
+    <select id="findRestAmt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    		select (case
+					   when a.loan_change_type = '11' and a.repay_type is not null and a.repay_type = '02' then
+					    <!--a.new_amt - a.yhbj - a.repay_capital - nvl(x.total, 0)-->
+					    a.new_amt - a.yhbj - a.repay_capital 
+					   when a.loan_change_type = '11' and a.repay_type is not null and a.repay_type != '02' then
+					    <!--a.new_amt - a.yhbj - nvl(x.total, 0)-->
+					    a.new_amt - a.yhbj 
+					   when a.loan_change_type = '11' and (a.repay_type is null or a.repay_type = '') then
+					    <!--a.new_amt - a.yhbj - nvl(x.total, 0)-->
+					    a.new_amt - a.yhbj 
+					   else
+					    <!--a.new_amt - nvl(x.total, 0)-->
+					    a.new_amt 
+					 end) new_amt,
+			       a.new_qc new_qc,
+			       a.s_date s_date
+			  from (select max(ls.jjye) new_amt,
+			  			   <!--max(h.bj + h.sybj) new_amt,-->
+			               count(*) new_qc,
+			               add_months(min(h.end_date), -1) s_date,
+			               max(lc.summary_id) summary_id,
+			               max(lc.loan_change_type) loan_change_type,
+			               max(lc.repay_type) repay_type,
+			               max(nvl(lc.yhbj, 0)) yhbj,
+			               max(nvl(lc.repay_capital, 0)) repay_capital
+			          from tb_biz_xw_hkjh       h,
+			               tb_con_contract_info ci,
+			               tb_con_loan_change   lc,
+			               tb_loan_summary ls
+			         where h.amount_detail_id = ci.amount_detail_id
+			           and ci.contract_id = lc.contract_id
+			           and ls.summary_id = lc.summary_id
+			           and lc.change_id = #changeId#
+			           and h.amount_detail_id = #amountDetailId#
+			           and h.end_date > #busDate#) a
+			  <!--left join (select m.summary_id, sum(m.total) total
+			               from (select l.summary_id,
+			                            l.repay_type,
+			                            l.repay_capital,
+			                            l.yhbj,
+			                            (case
+			                              when l.repay_type = '02' then
+			                               nvl(l.yhbj, 0) + nvl(l.repay_capital, 0)
+			                              when l.repay_type != '02' then
+			                               nvl(l.yhbj, 0)
+			                              when l.repay_type is null then
+			                               nvl(l.yhbj, 0)
+			                              else
+			                               0
+			                            end) total
+			                       from tb_con_loan_change l
+			                      where l.loan_change_type = '11'
+			                        and l.change_status = '03'
+			                        and l.summary_id = #summaryId#) m
+			              group by m.summary_id) x on a.summary_id = x.summary_id-->
+    </select> 
+    
+    <!-- 查询剩余贷款起期 -->
+    <select id="findStartDate" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    		<!--select add_months(a.start_date, -1) start_date
+			  from (select (case
+			                 when li.spec_payment_date >
+			                      to_number(substr(to_char(#busDate#, 'yyyyMMdd'), 7, 8)) then
+			                  to_date((to_char(#busDate#, 'yyyyMM') ||
+			                          decode(li.spec_payment_date,1,'01',2,'02',3,'03',4,'04',5,'05',6,'06',7,'07',8,'08',9,'09',li.spec_payment_date)),
+			                          'yyyy-MM-dd')
+			                 else
+			                  add_months(to_date((to_char(#busDate#, 'yyyyMM') ||
+			                                     decode(li.spec_payment_date,1,'01',2,'02',3,'03',4,'04',5,'05',6,'06',7,'07',8,'08',9,'09',li.spec_payment_date)),
+			                                     'yyyy-MM-dd'),
+			                             1)
+			               end) start_date
+			          from tb_biz_xw_hkjh hh, tb_con_contract_info ci, tb_loan_info li
+			         where hh.amount_detail_id = ci.amount_detail_id
+			           and ci.contract_id = li.contract_id
+			           and hh.amount_detail_id = #amountDetailId#
+			           and hh.qc =
+			               (select min(h2.qc)
+			                  from tb_biz_xw_hkjh h2
+			                 where h2.amount_detail_id = #amountDetailId#
+			                   and h2.end_date > #busDate#)) a-->
+			select hh.end_date start_date 
+			  from tb_biz_xw_hkjh hh
+			 where hh.amount_detail_id = #amountDetailId#
+			   and hh.qc =
+			       (select (select count(*)
+			                  from tb_biz_xw_hkjh h1
+			                 where h1.amount_detail_id =
+			                       #amountDetailId#) -
+			               (select count(*)
+			                  from tb_biz_xw_hkjh h2
+			                 where h2.amount_detail_id =
+			                       #amountDetailId#
+			                   and h2.end_date > #busDate#)
+			          from dual)
+    </select>
+    
+    <resultMap class="com.bos.dataset.con_cha.TbConRepayplanChange" id="getHkjhsByAdid.xwhkjh">
+        <result column="REPAYPLAN_CHANGE_ID" javaType="string" property="repayplanChangeId"/>
+        <result column="NEW_PERIODS_NUM" javaType="double" property="newPeriodsNum"/>
+        <result column="NEW_REPAY_DATE" javaType="date" property="newRepayDate"/>
+        <result column="NEW_REPAY_AMT" javaType="double" property="newRepayAmt"/>
+        <result column="NEW_BJ" javaType="double" property="newBj"/>
+        <result column="NEW_LX" javaType="double" property="newLx"/>
+        <result column="NEW_DAYS" javaType="double" property="newDays"/>
+        <result column="NEW_SYBJ" javaType="double" property="newSybj"/>
+        <result column="CHANGE_ID" javaType="string" property="changeId"/>
+        <result column="NEW_OR_OLD" javaType="string" property="newOrOld"/>
+        <result column="XGBZ1" javaType="string" property="xgbz1"/>
+        <result column="XGBZ2" javaType="string" property="xgbz2"/>
+        <result column="XGBZ3" javaType="string" property="xgbz3"/>
+    </resultMap>
+    
+    <select id="getHkjhsByAdid" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.con_cha.TbConRepayplanChange">
+		select REPAYPLAN_CHANGE_ID repayplanChangeId,
+		       NEW_PERIODS_NUM newPeriodsNum,
+		       to_date(to_char(NEW_REPAY_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') as newRepayDate,
+		       NEW_REPAY_AMT newRepayAmt,
+		       NEW_BJ newBj,
+		       NEW_LX newLx,
+		       NEW_DAYS newDays,
+		       NEW_SYBJ newSybj,
+		       CHANGE_ID changeId,
+		       NEW_OR_OLD newOrOld,
+		       XGBZ1,
+		       XGBZ2,
+		       XGBZ3
+		  from tb_con_repayplan_change r
+		 where CHANGE_ID = #changeId#
+		   and NEW_OR_OLD = '2'
+		 order by NEW_PERIODS_NUM
+    </select>  
+    
+    <!-- 小微不规则还款计划表获取最大期次-->
+    <select id="getHkjhMaxQc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select nvl(max(new_periods_num),0) term from tb_con_repayplan_change where change_id = '$changeId$' and new_or_old = '2'
+    </select>  
+    
+    <!-- 减额度 -->
+    <select id="updateCreditSub" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			update tb_biz_amount_approve l
+			   set l.CREDIT_AVI = l.CREDIT_AVI - #ce# 
+			 where l.AMOUNT_ID = (select aa.AMOUNT_ID
+			                       from tb_biz_amount_detail_approve da,
+			                            tb_biz_amount_approve        aa,
+			                            tb_biz_approve               a
+			                      where da.amount_id = aa.amount_id
+			                        and aa.approve_id = a.approve_id
+			                        and da.amount_detail_id = #amountDetailId#)
+    </select> 
+    
+    <!-- 加额度 -->
+    <select id="updateCreditAdd" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			update tb_biz_amount_approve l
+			   set l.CREDIT_AVI = l.CREDIT_AVI + #ce# 
+			 where l.AMOUNT_ID = (select aa.AMOUNT_ID
+			                       from tb_biz_amount_detail_approve da,
+			                            tb_biz_amount_approve        aa,
+			                            tb_biz_approve               a
+			                      where da.amount_id = aa.amount_id
+			                        and aa.approve_id = a.approve_id
+			                        and da.amount_detail_id = #amountDetailId#)
+    </select> 
+    
+    <!-- 查询公贷变更前还款计划 -->
+    <select id="findOldPlanCor" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    		select * from tb_loan_repay_plan lrp where lrp.loan_id = #loanId# order by lrp.periods_number
+    </select>
+    
+     <!-- 插入公贷原还款计划 -->
+    <insert id="insertRepayCorOld" parameterClass="java.util.HashMap">
+			insert into tb_con_repayplan_change
+					  (repayplan_change_id,
+					   change_id,
+					   old_periods_num,
+					   old_repay_date,
+					   old_repay_amt,
+					   new_or_old)
+					values
+					  (sys_guid(),
+					   #changeId#,
+					   #repayQc#,
+					   #repayDate#,
+					   #repayAmt#,
+					   '1')
+    </insert> 
+    
+    <!--查询期次是否相同-->
+    <select id="findIfSame" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select count(*) PLAN_NUM
+			  from tb_con_repayplan_change rc
+			 where rc.change_id = #changeId#
+			   and rc.new_or_old = '2'
+    </select> 
+    
+    <!--查询原小贷还款计划-->
+    <select id="findRPOld" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select rc.old_periods_num,
+			       to_char(rc.old_repay_date,'yyyy-MM-dd') old_repay_date,
+			       rc.old_repay_amt,
+			       rc.old_bj,
+			       rc.old_lx,
+			       rc.old_days,
+			       rc.old_sybj 
+			  from tb_con_repayplan_change rc 
+			 where rc.change_id = #changeId#
+			   and rc.new_or_old = '1' order by rc.old_periods_num
+    </select> 
+    <!--查询已还款计划-->
+    <select id="findYHReplan" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select 
+            	to_char(to_date(n.beg_date,'yyyy-MM-dd'),'yyyy-MM-dd') beg_date,
+	            to_char(to_date(n.end_date,'yyyy-MM-dd'),'yyyy-MM-dd') end_date,
+	            n.rcv_prn
+			from tb_sup_debt_info_n n where n.due_num=#dueNum# 
+			order by n.curr_peri asc
+    </select> 
+    <select id="getLoanSummary" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select months_between(lc.new_end_date, ls.begin_date) as m
+		  from tb_con_loan_change lc, tb_loan_summary ls
+		 where lc.summary_id = ls.summary_id
+		   and lc.change_id = #changeId#
+    </select>
+	
+	<select id="findPro" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select p.product_id from TB_WFM_PROCESSINSTANCE p where p.process_id = #processInstId#
+    </select> 
+    <select id="findLoaninfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+ 		 	 select a.loan_org,b.summary_num,b.nft_no,c.orgname,d.party_name,a.product_type,e.contract_num,b.user_num 
+	             from tb_con_contract_info e,tb_loan_info a,tb_loan_summary b,om_organization c,tb_csm_party d
+	    		where e.contract_id = a.contract_id 
+	    		and a.loan_id=b.loan_id and b.org_num=c.orgcode
+	    		and b.party_id=d.party_id
+	    		and b.summary_status_cd ='07'<!--借据状态07-已核销-->
+		        and b.user_num='$userNum$'
+		        and b.org_num='$orgNum$'
+		     <isNotNull property="contractNum">  and e.contract_num = '$contractNum$' </isNotNull>
+ 		 	<isNotNull property="partyName">  and d.party_name like '%$partyName$%' </isNotNull>
+ 		 	 <isNotNull property="summaryNum">  and b.summary_num = '$summaryNum$' </isNotNull>
+    </select>
+     <select id="findLoaninfo_zb" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+ 		 	 select a.loan_org,b.summary_num,b.nft_no,c.orgname,d.party_name,a.product_type,e.contract_num,b.user_num 
+			        from tb_con_contract_info e,tb_loan_info a,tb_loan_summary b,om_organization c,tb_csm_party d,tb_asset_transfer f
+			    		where e.contract_id = a.contract_id 
+			    		and a.loan_id=b.loan_id and b.org_num=c.orgcode
+			    		and b.party_id=d.party_id
+			    		and b.summary_status_cd ='07'<!--借据状态07-已核销-->
+			        and b.summary_num like 'JJ%'
+		     <isNotNull property="contractNum">  and e.contract_num = '$contractNum$' </isNotNull>
+ 		 	<isNotNull property="partyName">  and d.party_name like '%$partyName$%' </isNotNull>
+ 		 	 <isNotNull property="summaryNum">  and b.summary_num = '$summaryNum$' </isNotNull>
+    </select>
+    <select id="queryLoanInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	select a.loan_org,b.summary_id from tb_loan_info a,tb_loan_summary b where a.loan_id = b.loan_id and a.summary_num=#summaryNum#
+    </select>
+    <!--查询国际业务变更中的列表-->
+	<select id="findGjLoanList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select a.*,tl.change_id,tl.loan_change_type from (
+      select p.party_id,
+           p.party_num,
+           cc.corp_customer_type_cd,
+           p.party_type_cd,
+           (case
+             when p.party_type_cd = '02' then
+              '1'
+             when p.party_type_cd = '01' then
+              '0'
+             else
+              '0'
+           end) as is_small,
+           p.party_name,
+              cc.english_name,
+           (case
+             when p.party_type_cd = '01' then
+              '202'
+             when p.party_type_cd = '02' then
+              np.cert_type
+             else
+              ''
+           end) as cert_type,
+           (case
+             when p.party_type_cd = '01' then
+              cc.org_register_cd
+             when p.party_type_cd = '02' then
+              np.cert_num
+             else
+              ''
+           end) as cert_num,
+           li.loan_id,
+           li.product_type,
+           substr(li.product_type,1,5) PTYPE,
+           li.repay_type,
+           li.currency_cd,
+           ls.summary_id,
+           ls.summary_num,
+           ls.summary_amt,
+           ls.jjye,
+           ls.begin_date,
+           ls.end_date,
+           ls.tiexi_status,
+           ls.tingxi_status,
+           ls.summary_status_cd,
+           ls.jjyqbj,
+           a.biz_type,
+           aa.credit_amount,
+              da.detail_amt,
+              sp.product_type PRODUCT,
+           ci.contract_id,
+           ci.contract_num
+      from tb_loan_info         li,
+           tb_loan_summary      ls,
+           tb_con_contract_info ci,
+           tb_csm_party         p
+      left join tb_csm_corporation cc on cc.party_id = p.party_id
+      left join tb_csm_natural_person np on np.party_id = p.party_id,
+        tb_biz_amount_detail_approve da,
+          tb_biz_amount_approve aa,
+          tb_biz_approve a,
+          tb_sys_product sp
+     where 1 = 1
+       and li.loan_id = ls.loan_id
+       and li.contract_id = ci.contract_id
+       and li.party_id = p.party_id
+       and ci.amount_detail_id = da.amount_detail_id
+       and da.amount_id = aa.amount_id
+       and aa.approve_id = a.approve_id
+       and li.product_type = sp.product_cd
+       and ls.summary_status_cd in ('02','03')
+       and li.user_num = '$userNum$'
+       and li.org_num = '$orgNum$'
+       ) a,tb_con_loan_change tl where 1=1
+       and a.summary_id = tl.summary_id
+       and tl.change_status = '10' 
+       and tl.loan_change_type in ('12','13')
+    </select>
+</sqlMap>

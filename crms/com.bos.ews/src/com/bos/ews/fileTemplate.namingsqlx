@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="planOpinion">
+        <result column="OPINION"  property="opinion"/>
+        <result column="POST_CD"  property="postCd"/>
+    </resultMap>
+    <select id="planOpinion" parameterClass="java.util.HashMap"  resultMap="planOpinion">
+     select w.POST_CD,
+            w.OPINION
+                  from 
+                       TB_WFM_PROCESSINSTANCE p  
+                  left join
+                       TB_WFM_WORKITEMINSTANCE w
+                  on
+                       p.process_id=w.process_id
+                  where 1=1
+      <isNotNull property="csmSignalId">
+	    	  and p.product_id = #csmSignalId#
+	    	  and p.process_id in
+                 (
+                       select process_id 
+                               from  TB_WFM_PROCESSINSTANCE p 
+                               where p.product_id = #csmSignalId#
+                               and   p.finish_time is not null
+                               order by p.finish_time desc
+                               FETCH FIRST 1 ROWS ONLY
+                  )
+	  </isNotNull>
+	 
+	  <isNotNull property="userNum">
+	    	 and  w.USER_NUM = #userNum# 
+	  </isNotNull>
+    </select>
+</sqlMap>

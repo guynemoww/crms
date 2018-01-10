@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi -->
+<sqlMap>
+<!--查询参数表-->
+<select id="queryPubConfig" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+<![CDATA[
+	SELECT 
+		*
+	FROM 
+		tb_pub_config 
+	WHERE 
+		cfg_status = '1'
+		AND cfg_group = #cfgGroup# 
+		AND cfg_key = #cfgKey#
+]]>
+</select>
+
+<!--设置登录权限(1允许登录)-->
+<update id="setRptBatchTemp2" parameterClass="java.util.Map">
+<![CDATA[
+	update TB_BATCH_TASK_DATE set BATCH_TEMP2='1'
+]]>
+</update>
+<!--设置登录权限(0不能登录)-->
+<update id="setMainBatchTemp2" parameterClass="java.util.Map">
+<![CDATA[
+	update TB_BATCH_TASK_DATE set BATCH_TEMP2='0'
+]]>
+ </update>
+<!--判断用户是否属于有登录权限的角色 ao.ROLEID:能登录的角色（系统管理员）  -->
+<resultMap class="commonj.sdo.DataObject" id="judgeRole">
+	<result column="count" property="count"/>
+</resultMap>
+<select id="judgeRole" parameterClass="java.util.Map" resultMap="judgeRole">
+<![CDATA[
+	select count(ao.ROLEID) count from AC_OPERATORROLE ao, OM_EMPLOYEE oe
+	where ao.OPERATORID=oe.OPERATORID
+	and ao.ROLEID in ('eosadmin','R1054')
+	and oe.USERID=#userid#
+]]>
+</select>
+</sqlMap>

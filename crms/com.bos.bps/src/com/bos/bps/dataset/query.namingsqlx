@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:tanjun -->
+<sqlMap>
+     <select id="queryTracking" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		   SELECT
+		    w.PROCESS_ID processid,
+		    p.CUS_NAME            cusName,
+		    p.PROCESSINSTANCENAME processinstancename,
+		    p.CREATE_USER_NAME    createUserName,
+		    p.CREATE_ORG_NAME     createOrgName,
+		    p.CREATE_POST_NAME    createPostName,
+		    p.APPOINT_USER_NAME   appointUserName,
+		    p.APPOINT_ORG_NAME    appointOrgName,
+		    p.ACTIVITY_NAME       activityName,
+		    p.LASTUPDATETIME      lastupdatetime,
+		    p.PROCESSDEFNAME      processdefname
+		FROM
+		    tb_wfm_processinstance p,TB_WFM_WORKITEMINSTANCE w
+		where p.PROCESS_ID=w.PROCESS_ID 
+		and w.ORG_NUM=#orgNum# and w.user_num=#userNum#
+	</select> 
+	
+	<select id="getSaleTeamerByUserId" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+			SELECT
+			    oe.userid,
+			    oe.empname,
+			    o.orgcode
+			FROM
+			    om_employee oe,
+			    om_organization o
+			WHERE
+			    oe.orgid=o.orgid
+			AND oe.userid=
+			    (
+			        SELECT
+			            department_id
+			        FROM
+			            om_employee
+			        WHERE
+			            userid =#userid#)
+	
+	</select>
+     <select id="getUserIdName" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     	WITH
+		    orgtmp
+		    (
+		        orgid,
+		        orgname,
+		        parentorgid,
+		        orglevel,
+		        orgcode,
+		        buno
+		    ) AS
+		    (
+		        SELECT
+		            omorg.orgid,
+		            omorg.orgname,
+		            omorg.parentorgid,
+		            omorg.orglevel,
+		            omorg.orgcode,
+		            omorg.buno
+		        FROM
+		            OM_ORGANIZATION omorg
+		        WHERE
+		            omorg.orgcode =#orgcode#
+		        UNION ALL
+		        SELECT
+		            ch.orgid,
+		            ch.orgname,
+		            ch.parentorgid,
+		            ch.orglevel,
+		            ch.orgcode,
+		            ch.buno
+		        FROM
+		            orgtmp par,
+		            OM_ORGANIZATION ch
+		        WHERE
+		            par.parentorgid = ch.orgid
+		    )
+		SELECT
+		    t.orgid,
+		    t.parentorgid,
+		    t.buno,
+		    (SELECT  orgcode  FROM  orgtmp WHERE buno='0' AND orglevel=#orglevel#) as orgcode,
+		    (SELECT  orgname  FROM  orgtmp WHERE buno='0' AND orglevel=#orglevel#) as orgname,
+		    t.orgcode as departcode,
+		    t.orgname as departname,
+		    t.orglevel,
+		    p.posicode,
+		    p.posiname,
+		    oe.empname operatorname,
+		    oe.userid
+		FROM
+		    OM_ORGANIZATION t,
+		    om_empposition ep,
+		    om_position p,
+		    om_employee oe
+		WHERE
+		    t.orgseq LIKE
+		                   (
+		                   SELECT
+		                       '%'||orgid||'%'
+		                   FROM
+		                       orgtmp
+		                   WHERE
+		                       buno='0'
+		                   AND orglevel=#orglevel#)
+		AND t.orglevel=#orglevel#
+		AND t.orgid=ep.orgid
+		AND oe.operatorid=ep.empid
+		AND ep.positionid=p.positionid
+		AND p.posicode IN(#posicode#)
+		ORDER BY
+		    t.buno DESC,
+		    oe.empname
+	 </select>
+	 
+		<!--根据当前登录人查询代理-->	 
+	 <select id="queryTbWfmAgent" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmAgent">
+		SELECT
+		    TB_WFM_AGENT.AGENTID agentid,
+		    TB_WFM_AGENT.AGENTTYPE agenttype,
+		    TB_WFM_AGENT.AGENTFROM agentfrom,
+		    TB_WFM_AGENT.AGENTTO agentto,
+		    TB_WFM_AGENT.AGENTTOTYPE agenttotype,
+		    TB_WFM_AGENT.STARTTIME starttime,
+		    TB_WFM_AGENT.ENDTIME endtime,
+		    TB_WFM_AGENT.AGENTREASON agentreason,
+		    TB_WFM_AGENT.STATUS status,
+		    TB_WFM_AGENT.OPERATOR operator,
+		    TB_WFM_AGENT.AGENTITEM agentitem
+			FROM
+	    TB_WFM_AGENT where AGENTFROM=#loginPeople# or  AGENTFROM!=#loginPeople# and OPERATOR=#loginPeople#
+	 </select>   
+	 
+	 <select id="queryFlowModel" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmProcessmapping">
+		select t.PROCESS_MAPPING_ID processMappingId,t.TEMPLATE_NAME templateName,t.TEMPLAGE_VERSION templageVersion,t.PRODUCT_TYPE productType,t.BIZ_TYPE bizType,t.BIZ_VIEW_URL bizViewUrl from tb_wfm_processmapping t where 1=1 
+		<isNotNull property="productType">and t.PRODUCT_TYPE like '%$productType$%'</isNotNull>
+		<isNotNull property="templageVersion">and t.TEMPLAGE_VERSION like '%$templageVersion$%'</isNotNull>  
+		<isNotNull property="templateName">and t.TEMPLATE_NAME like '%$templateName$%'</isNotNull>  
+		ORDER BY t.BIZ_TYPE
+		 </select>   
+	 <select id="getTbWfmProcessmappingWhereOrgUserid" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmProcessmapping">
+		select T.PROCESS_MAPPING_ID processMappingId,
+		T.TEMPLATE_NAME templateName,
+		T.TEMPLAGE_VERSION templageVersion,
+		T.PRODUCT_TYPE productType,
+		T.BIZ_TYPE bizType,
+		T.BIZ_VIEW_URL bizViewUrl 
+		FROM 
+		TB_WFM_PROCESSMAPPING T 
+		where process_mapping_id in (SELECT PROCESS_MAPPING_ID FROM TB_WFM_WORKITEMMAPPING where post_num IN (SELECT POSICODE FROM OM_POSITION WHERE POSITIONID IN(SELECT POSITIONID FROM OM_EMPPOSITION WHERE EMPID IN(SELECT EMPID FROM OM_EMPLOYEE WHERE USERID=#agentfromid#) AND ORGID IN(SELECT ORGID FROM OM_ORGANIZATION WHERE ORGCODE=#orgcode#)))) ORDER BY T.BIZ_TYPE
+	 </select>   
+	<select id="getTbWfmWorkitemmappingList" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmWorkitemmapping">
+		select t.activity_name activityName,t.activity_def_id activityDefId,t.rule_id ruleId,t.do_url doUrl,t.view_url viewUrl,t.workitem_mapping_id workitemMappingId,t.process_mapping_id processMappingId from TB_WFM_WORKITEMMAPPING t where t.process_mapping_id=#processMappingId#
+		<isNotNull property="activityName">and t.activity_name like '%$activityName$%'</isNotNull>
+		<isNotNull property="activityDefId">and t.activity_def_id like '%$activityDefId$%'</isNotNull>  
+		 </select> 
+		<select id="chackProcessStatus" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+			select  opinion opinion  from TB_WFM_WORKITEM_OPINION  where process_id=#processid# and opinion_type='2' order by create_time desc
+		 </select>     
+		 
+	<select id="queryTbWfmParticipantlog" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.vo_dataset.VParticipantlog">
+		SELECT
+			    pi.process_id as processId,
+			    pi.cus_name as cusName,
+			    SUBSTR(SUBSTR(pi.processDefName,13),1,instr(SUBSTR(pi.processDefName,13),'.',1,1)-1) as bizType,
+			    pg.src_user_num as srcUserNum,
+			    pg.src_user_name as srcUserName,
+			    pg.targer_user_num as targerUserNum,
+			    pg.targer_user_name as targerUserName,
+			    pg.oper_time as operTime,
+			    pg.status,
+			    pg.id,
+			    pg.work_instance_id as workInstanceId,
+			    pg.operator
+			FROM
+			    TB_WFM_PROCESSINSTANCE pi,
+			    TB_WFM_PARTICIPANTLOG pg
+			WHERE
+			    pi.process_id=pg.product_type
+			    and (pg.src_user_num=#userid# or pg.targer_user_num=#userid# or pg.operator=#userid#) 
+		<isNotNull property="srcUserName">and pg.SRC_USER_NAME like '%$srcUserName$%'</isNotNull>
+		<isNotNull property="targerUserName">and pg.TARGER_USER_NAME like '%$targerUserName$%'</isNotNull>  
+		 </select>   
+	
+	<!--审批历史查询-->	 
+	<select id="queryWorkItemsByProcessId" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmWorkiteminstance">
+
+			SELECT w.WORK_INSTANCE_ID as workInstanceId,
+			       w.ACTIVITY_NAME    as activityName,
+			       w.USER_NAME        as userName,
+			       w.USER_NUM         as userNum,
+			       w.ORG_NAME         as orgName,
+			       w.ORG_NUM          as orgNum,
+			       w.POST_NAME        as postName,
+			       w.POST_CD          as postCd,
+			       w.RECEIVE_TIME     as receiveTime,
+			       w.FINISH_TIME      as finishTime,
+			       pp.userid	      as nextUsersNum,
+			       pp.operatorname    as nextUsersName,
+			       w.NEXT_ORG_NAME    as nextOrgName,
+			       w.NEXT_ORG_NUM     as nextOrgNum,
+			       w.NEXT_POST_NAME   as nextPostName,
+			       w.NEXT_POST_NUM    as nextPostNum,
+			       w.OPINION          as opinion,
+			       w.CONCLUSION       as conclusion,
+			       w.WORKITEM_NUM     as workitemNum,
+			       w.IS_SIGN          as isSign,
+			       w.TAG              as tag,
+			       w.STATUS           as status,
+			       w.SUBMIT_TYPE      as submitType,
+			       w.ACTIVITY_ID      as activityId,
+			       w.PROCESS_ID       as processId,
+			       w.PERFORMTIME      as performtime
+			  FROM TB_WFM_WORKITEMINSTANCE w left join 
+			       (select listagg(ao.operatorname, ',') within group(order by pt.id, ao.userid) as operatorname,
+			               listagg(ao.userid, ',') within group(order by pt.id, ao.userid) as userid,
+			               pt.id as wid
+			          from tb_wfm_participant pt, ac_operator ao
+			         where pt.user_num = ao.userid
+			         group by pt.id) pp
+			    on w.id = pp.wid
+			  where  w.PROCESS_ID = #processInstId#
+			   and w.STATUS = 'finish'
+			 ORDER BY w.PERFORMTIME DESC
+	</select>   
+	
+	<!--审批参与意见查询-->	 
+	<select id="queryWIOpinionByProcessId" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmWorkitemOpinion">
+		 SELECT
+			    ID as id,
+			    PROCESS_ID as processId,
+			    ACTIVITYDEFID as activitydefid,
+			    ACTIVITYINSTNAME as activityinstname,
+			    OPERATOR_NUM as operatorNum,
+			    OPERATOR_NAME as operatorName,
+			    CREATE_TIME as createTime,
+			    OPINION as opinion,
+			    WORKITEM_ID as workitemId,
+			    OPINION_TYPE as opinionType,
+			    EXTEND1,
+			    EXTEND2,
+			    EXTEND3
+			FROM
+			    TB_WFM_WORKITEM_OPINION
+			WHERE PROCESS_ID=#processInstId#    
+			order by  CREATE_TIME desc   
+	</select>   	 
+	
+	<!--查询当前机构及其下属机构的在途流程实例-->	 
+	<select id="queryProcessScopByOrg" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmProcessinstance">
+		SELECT
+			    p.PROCESS_ID as processId,
+			    p.PRODUCT_CD as productCd,
+			    p.PRODUCT_ID as productId,
+			    p.CREATE_POST_NAME as createPostName,
+			    p.CREATE_POST_CD as createPostCd,
+			    p.CREATE_USER_NAME as createUserName,
+			    p.CREATE_USER_NUM as createUserNum,
+			    p.CREATE_ORG_NAME as createOrgName,
+			    p.CREATE_ORG_NUM as createOrgNum,
+			    p.CREATE_TIME as createTime,
+			    p.FINISH_TIME as finishTime,
+			    p.ACTIVITY_NAME as activityName,
+			    p.POST_CD as postCd,
+			    p.APPOINT_USER_NAME as appointUserName,
+			    p.APPOINT_USER_NUM as appointUserNum,
+			    p.APPOINT_ORG_CD as appointOrgCd,
+			    p.APPOINT_ORG_NAME as appointOrgName,
+			    p.TEMPLATE_VERSION as templateVersion,
+			    p.PROCESS_STATUS as processStatus,
+			    p.APP_TYPE as appType,
+			    p.CUS_NAME as cusName,
+			    p.BIZ_STATUS as bizStatus,
+			    p.PRODUCT_NAME as productName,
+			    pm.BIZ_VIEW_URL as bizViewUrl,
+			    p.PROCESSDEFNAME as processdefname,
+			    p.LASTUPDATETIME as lastupdatetime,
+			    p.PROCESSINSTANCENAME as processinstancename
+			FROM
+			    TB_WFM_PROCESSINSTANCE p,TB_WFM_PROCESSMAPPING pm
+			WHERE
+				p.processdefname = pm.template_name and pm.version_status='1'
+			and p.create_org_num IN
+			    (
+			        SELECT
+					    o.orgcode
+					FROM
+					    om_organization o
+					WHERE
+					    o.orgseq LIKE '%'||
+					                  (
+					                  SELECT
+					                      CASE
+					                          WHEN buno=0
+					                          THEN orgid
+					                          ELSE parentorgid
+					                      END
+					                  FROM
+					                      om_organization
+					                  WHERE
+					                      orgid=#orgid#)||'%')
+			AND p.process_status='run'
+			<isNotNull property="cusName">
+				and p.CUS_NAME like '%$cusName$%' 
+			</isNotNull>  
+			<isNotNull property="processDefName">
+				and p.PROCESSDEFNAME like '%$processDefName$%' 
+			</isNotNull>  
+			<isNotNull property="createUserName">
+				and p.CREATE_USER_NAME like '%$createUserName$%' 
+			</isNotNull>
+			<isNotNull property="processId">
+				and p.PROCESS_ID=#processId#
+			</isNotNull>
+			<isNotNull property="startDate">
+				and p.CREATE_TIME>=#startDate#
+			</isNotNull>
+			<isNotNull property="endDate">
+			<![CDATA[
+				and p.CREATE_TIME<=#endDate#
+			]]>
+			</isNotNull>
+			<isNotNull property="createOrgId">
+				and p.CREATE_ORG_NUM in(select orgcode from om_organization where orgseq like '%$createOrgId$%')
+			</isNotNull>
+			order by LASTUPDATETIME desc
+	</select>   	 
+	
+	<select id="userOrPosi" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		 		SELECT
+		    empposi.positionid isCustGrantList
+		FROM
+		    OM_EMPPOSITION empposi,
+		    OM_POSITION posi,
+		    OM_EMPLOYEE emp,
+		    OM_ORGANIZATION org
+		WHERE
+		    empposi.positionid=posi.positionid
+		AND empposi.empid=emp.empid
+		AND empposi.orgid=org.orgid
+		AND org.orgcode=#orgcode#
+		AND emp.userid=#userid#
+		AND posi.posicode=#posicode#
+
+	</select> 
+	
+	<resultMap class="java.util.HashMap" id="resultMap">
+        <result column="POST_NUM" javaType="string" property="activityDefId"/>
+        <result column="posiname" javaType="string" property="activityName"/>
+    </resultMap>
+	<select id="queryStartPsotion" parameterClass="java.lang.String" resultMap="resultMap">
+		select op.posiname, w.post_num
+		  from tb_wfm_processmapping p, tb_wfm_workitemmapping w, om_position op
+		 where p.process_mapping_id = w.process_mapping_id
+		   and w.post_num = op.posicode
+		   and p.template_name = #processDefName#
+		   and p.version_status = '1'
+		   and w.re_target = 'S'
+		   
+	</select> 
+
+ </sqlMap>

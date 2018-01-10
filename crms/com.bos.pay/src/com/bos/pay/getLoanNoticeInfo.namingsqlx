@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<!--打印出账通知书所需信息-->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--出账机构-->
+    <select id="getCzjg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.ORGNAME as czjg from tb_loan_info t,OM_ORGANIZATION ta 
+		where t.LOAN_ORG =ta.ORGCODE and t.LOAN_ID=#loanId#
+    </select>
+    <select id="getPartyInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tb.PARTY_NAME,tc.PRODUCT_NAME,to_char(t.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE from tb_loan_info t,tb_loan_summary ta,TB_CSM_PARTY tb,tb_sys_product tc 
+		where t.LOAN_ID=ta.LOAN_ID
+		and t.PARTY_ID = tb.PARTY_ID
+		and t.PRODUCT_TYPE=tc.PRODUCT_CD
+		and t.LOAN_ID=#loanId#
+    </select>
+    <!--出账审核结果-->
+    <select id="getCzshjg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(CONCLUSION,'1','同意','2','不同意','3','有条件同意','无') as CONCLUSION,ORG_NAME,USER_name from (
+		select * from TB_WFM_WORKITEMINSTANCE ta where ta.PROCESS_ID in 
+		(select t.PROCESS_ID from tb_wfm_processinstance t where t.PRODUCT_id=#loanId#)
+		order by ta.WORK_INSTANCE_ID desc
+		) where rownum = 1
+    </select>
+    <!--合同信息-->
+    <select id="getConInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tz.*,tc.CERT_TYPE as CERTIFICATE_TYPE_CD,tc.CERT_NUM as CERTIFICATE_CODE from (
+				select ta.CONTRACT_NUM,t.LOAN_SUBJECT1,tb.PARTY_NUM,tb.PARTY_NAME,to_char(ta.CONTRACT_AMT,'FM999,999,999,999,999,990.00') CONTRACT_AMT,ta.CURRENCY_CD,to_char(ta.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(ta.END_DATE,'yyyy-MM-dd') END_DATE,ta.LOAN_USE,ta.MAIN_GUARANTY_TYPE,t.PARTY_ID
+				from tb_loan_info t,TB_CON_CONTRACT_INFO ta,tb_csm_party tb
+				where t.CONTRACT_ID=ta.CONTRACT_ID
+				and t.PARTY_ID=tb.PARTY_ID
+				and t.LOAN_ID=#loanId#
+		) tz
+                left join V_CSM_PARTY tc
+		        on tc.party_id=tz.PARTY_ID
+    </select>
+    <!--借据信息-->
+    <select id="getSummarys" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (
+		select to_char(rownum,'FM999,999,999,999,999,990') as RNUM,ta.SUMMARY_NUM,to_char(t.LOAN_AMT,'FM999,999,999,999,999,990.00') LOAN_AMT,to_char(ta.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE ,to_char(ta.END_DATE,'yyyy-MM-dd') END_DATE,t.LOAN_ID,
+		to_char(ta.SUMMARY_AMT,'FM999,999,999,999,999,990.00') SUMMARY_AMT from tb_loan_info t,tb_loan_summary ta 
+		where t.LOAN_ID=ta.LOAN_ID
+        and t.loan_id=#loanId#
+         order by rownum desc
+        ) tz
+		left join (select loan_id,zh from tb_loan_zh  where ZHLX ='2') ty
+		on tz.loan_id=ty.loan_id
+		and tz.loan_id=#loanId#
+    </select>
+     <!--借据汇总信息-->
+    <select id="getSummaryCount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select to_char(sum(ta.summary_amt),'FM999,999,999,999,999,990.00') SUMAMT,
+		to_char(count(*),'FM999,999,999,999,999,990') SUMCONT from tb_loan_info t,tb_loan_summary ta 
+		where t.LOAN_ID=ta.LOAN_ID
+        and t.loan_id=#loanId#
+    </select>
+      <!--查询收款人账户信息-->
+    <select id="getSummaryAcount" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	  select n.pye_acct_nm ZHMC,n.pye_acct_no ZH,n.pye_open_acct_bnk_nm ORGNAME from tb_loan_hp_amt n where n.loan_id=#loanId#
+    </select>
+    <!--小贷借据信息-->
+    <select id="getXDSummarys" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (
+		select rownum,ta.SUMMARY_NUM,t.LOAN_AMT,to_char(ta.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE ,to_char(ta.END_DATE,'yyyy-MM-dd') END_DATE,t.LOAN_ID,ta.SUMMARY_AMT from tb_loan_info t,tb_loan_summary ta 
+		where t.LOAN_ID=ta.LOAN_ID
+        and t.loan_id=#loanId#
+         order by rownum desc
+        ) tz
+		left join (select loan_id,zh from tb_loan_zh  where ZHLX ='1') ty
+		on tz.loan_id=ty.loan_id
+		and tz.loan_id=#loanId#
+    </select>
+    
+    <!--抵押金额-->
+    <select id="getDy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select to_char(nvl(sum(decode(tc.IF_TOP_SUBCON,'1',tb.SURETY_AMT,tc.SUBCONTRACT_AMT)),0),'FM999,999,999,999,999,990.00') as  SURETY_AMT
+		from tb_loan_info t,tb_con_contract_info ta,TB_CON_SUBCONTRACT_REL tb,TB_CON_SUBCONTRACT tc 
+		where t.CONTRACT_ID=ta.CONTRACT_ID and ta.CONTRACT_ID=tb.CONTRACT_ID and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID and tc.SUBCONTRACT_TYPE = '01' 
+		and t.LOAN_ID=#loanId#
+    </select>
+    <!--质押金额-->
+    <select id="getZy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select to_char(nvl(sum(decode(tc.IF_TOP_SUBCON,'1',tb.SURETY_AMT,tc.SUBCONTRACT_AMT)),0),'FM999,999,999,999,999,990.00') as  SURETY_AMT
+		from tb_loan_info t,tb_con_contract_info ta,TB_CON_SUBCONTRACT_REL tb,TB_CON_SUBCONTRACT tc 
+		where t.CONTRACT_ID=ta.CONTRACT_ID and ta.CONTRACT_ID=tb.CONTRACT_ID and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID and tc.SUBCONTRACT_TYPE = '02' 
+		and t.LOAN_ID=#loanId#
+    </select>
+    <!--保证人金额-->
+    <select id="getBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select to_char(nvl(sum(decode(tc.IF_TOP_SUBCON,'1',tb.SURETY_AMT,ta.CONTRACT_AMT)),0),'FM999,999,999,999,999,990.00') as  SURETY_AMT
+		from tb_loan_info t,tb_con_contract_info ta,TB_CON_SUBCONTRACT_REL tb,TB_CON_SUBCONTRACT tc 
+		where t.CONTRACT_ID=ta.CONTRACT_ID and ta.CONTRACT_ID=tb.CONTRACT_ID and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID and tc.SUBCONTRACT_TYPE = '04' 
+		and t.LOAN_ID=#loanId#
+    </select>
+    <!--保证金-->
+    <select id="getBzj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select to_char(nvl(sum(tc.BZJJE),0),'FM999,999,999,999,999,990.00') as  SURETY_AMT,to_char(tc.BZJBL,'FM999,999,999,999,999,990.00') BZJBL
+		from tb_loan_info t,tb_con_contract_info ta,TB_CON_SUBCONTRACT_REL tb,TB_CON_SUBCONTRACT tc 
+		where t.CONTRACT_ID=ta.CONTRACT_ID and ta.CONTRACT_ID=tb.CONTRACT_ID and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID and tc.SUBCONTRACT_TYPE = '03' 
+		and t.LOAN_ID=#loanId# group by tc.BZJBL
+    </select>
+    <!--获取保证金账号-->
+    <select id="getBzjZh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+     select td.MARGIN_ACCOUNT as MARGIN_ACCOUNT
+           from TB_CON_SUBCONTRACT_REL t,TB_CON_SUBCONTRACT ta,
+           TB_CON_SUB_GRT_REL tb,TB_GRT_MORTGAGE_BASIC tc,TB_GRT_MARGIN td,
+           tb_loan_info te,tb_con_contract_info tf
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SUBCONTRACT_TYPE = '03'
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SURETY_ID=tc.SURETY_ID
+			and tc.SURETY_ID=td.SURETY_ID
+			and te.CONTRACT_ID=tf.CONTRACT_ID and tf.CONTRACT_ID=t.CONTRACT_ID
+			and te.LOAN_ID=#loanId#
+    </select>
+   
+    <!--保函-->
+    <select id="getBh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.SYR,ta.SYRFDDZ,ROUND((ta.DKLL*3.6),4)  DKLL from tb_loan_info t,tb_con_bh ta where t.CONTRACT_ID=ta.CONTRACT_ID and t.LOAN_ID = #loanId#
+    </select>
+    <!--承兑汇票-->
+    <select id="getCD" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ROUND((p.DKLL*3.6),4)  DKLL from tb_loan_info t,TB_CON_KLYHCDHP p  where t.CONTRACT_ID=p.CONTRACT_ID and t.LOAN_ID = #loanId#
+    </select>
+    
+    <!--贴现-->
+    <select id="getTX" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ROUND((p.DKLL*3.6),4)  DKLL from tb_loan_info t,TB_CON_HPTX p  where t.CONTRACT_ID=p.CONTRACT_ID and t.LOAN_ID = #loanId#
+    </select>
+    
+    <!--项目贷款承诺函-->
+    <select id="getXmdkcnh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(ta.SFKWTJCX,'1','是','0','否','无') as SFKWTJCX from tb_loan_info t,tb_con_xmdkcnh ta where t.CONTRACT_ID=ta.CONTRACT_ID and t.LOAN_ID = #loanId#
+    </select>
+    <!--信贷证明-->
+    <select id="getXdzm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(ta.SFKWTJCX,'1','是','0','否','无') as SFKWTJCX from tb_loan_info t,tb_con_xdzm ta where t.CONTRACT_ID=ta.CONTRACT_ID and t.LOAN_ID = #loanId#
+    </select>
+    
+    <select id="getOrg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from OM_ORGANIZATION where ORGCODE=#orgCode#
+    </select>
+    
+    <!--借款凭证主合同信息-->
+    <select id="getJKZHT" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.LOAN_NUM,tc.PARTY_NAME as jkdw,td.PRODUCT_NAME as jkzl,tb.LOAN_USE,ta.RMB_AMT,ROUND（(te.YEAR_RATE/1.2),4） as ll,tb.CONTRACT_NUM as htbh,tb.PAPER_CON_NUM as CONTRACT_NUM,to_char(tb.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,
+			to_char(tb.END_DATE,'yyyy-MM-dd') END_DATE,to_char(ta.BEGIN_DATE,'yyyy-MM-dd') as jkrq,to_char(ta.END_DATE,'yyyy-MM-dd') as dqrq,zh1.ZH DKZH,zh2.ZH HKZH
+			from tb_loan_info ta,tb_con_contract_info tb,TB_CSM_PARTY tc,tb_sys_product td,tb_loan_loanrate te,tb_loan_zh zh1,tb_loan_zh zh2
+			where zh1.LOAN_ID=ta.LOAN_ID
+			and zh2.LOAN_ID=ta.LOAN_ID
+			 <!--and zh1.zhlx ='0'-->
+			and zh2.zhlx ='1'
+			and ta.CONTRACT_ID=tb.CONTRACT_ID
+			and ta.PARTY_ID=tc.PARTY_ID
+			and ta.PRODUCT_TYPE=td.PRODUCT_CD
+			and ta.LOAN_ID=te.LOAN_ID
+			and ta.LOAN_ID=#loanId#
+    </select>
+    
+    <!--借款凭证担保合同信息-->
+    <select id="getJKCHT" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select th.CONTRACT_ID,listagg(ti.paper_con_num,',') within group(order by ti.paper_con_num) as dbhtbh from TB_CON_SUBCONTRACT_REL th,TB_CON_SUBCONTRACT ti
+			where th.SUBCONTRACT_ID=ti.SUBCONTRACT_ID
+			and CONTRACT_ID=#contractId#
+			group by th.CONTRACT_ID
+    </select>
+    
+    <!--回单信息-->
+    <select id="getJKHD" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tb.PARTY_NAME,hk.zhmc,hk.ZH HKZH,jk.ZH DKZH,tc.YEAR_RATE as ll,(t.SUMMARY_AMT-t.JJYE) as chbj,t.JJYE as sybj from tb_loan_summary t,tb_loan_info ta,tb_loan_zh jk,tb_loan_zh hk,tb_csm_party tb,TB_LOAN_LOANRATE tc
+			where t.LOAN_ID=ta.LOAN_ID
+			and ta.LOAN_ID=jk.LOAN_ID
+			and ta.LOAN_ID=hk.LOAN_ID
+			and jk.zhlx ='0'
+			and hk.zhlx ='1'
+			and t.PARTY_ID=tb.PARTY_ID
+			and t.LOAN_ID=tc.LOAN_ID
+			and t.LOAN_ID=#loanId#
+    </select>
+</sqlMap>

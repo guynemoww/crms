@@ -1,0 +1,977 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+<!-- 上年度销售收入(B059)-->
+    <select id="getFlowSalleIncome" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+      SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(select FINANCE_ID from (	SELECT
+											C.FINANCE_ID 
+										FROM
+											TB_ACC_CUSTOMER_FINANCE C 
+										WHERE
+											C.FINANCE_TYPE_CD = '1' 
+											AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+											AND C.PARTY_ID= #csPartyId#
+											AND C.FINANCE_STATUS_CD = '02' 
+										ORDER BY
+											FINANCE_DEADLINE DESC 
+						) where rownum = 1)
+						AND D.INDEX_CD='b059' ),0) AS INDEX_VALUE_DATA_TYPE 
+		FROM dual
+    </select>
+    <!--上年度销售利润率(B016/B059) -->
+     <select id="getFlowSaleProfitRate" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(select FINANCE_ID from (	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId#
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+								) where rownum = 1
+						)
+						AND D.INDEX_CD='b016' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+	</select>
+	<!--上年度销售利润率00202015 -->
+    <select id="get00202015" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		select nvl(ta.PROJECT_VALUE,0)*100 as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and t.FINANCE_TYPE_CD='1'
+			and t.FINANCE_STATUS_CD ='02'
+			and ta.PROJECT_CD ='00202015'
+            AND t.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+			and t.PARTY_ID=#csPartyId#
+	</select>
+    <!--上年度销售成本(B178) -->
+    <select id="getFlowSeleCost" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId#
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='b178' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+    </select>
+    <!--减：营业成本 -->
+    <select id="get00202002" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		select nvl(ta.PROJECT_VALUE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and t.FINANCE_TYPE_CD='1'
+			and t.FINANCE_STATUS_CD ='02'
+			and ta.PROJECT_CD ='00202002'
+            AND t.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+			and t.PARTY_ID=#csPartyId#
+    </select>
+    <!--上年度平均存货余额(B005)-->
+    <select id="getFlowAverageStockBal" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+    	<!--
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId# 
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='b005' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+		-->
+		select 
+		((
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+															AND C.PARTY_ID= #csPartyId# 
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b005' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		)+(
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+															AND C.PARTY_ID= #csPartyId#  
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b005' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		))/((
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+		                                        AND C.PARTY_ID= #csPartyId# 
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b005' 
+		)+(
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+		                                        AND C.PARTY_ID= #csPartyId#  
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b005' 
+		)) AS INDEX_VALUE_DATA_TYPE
+		from dual
+    </select>
+    <!--上年度平均应收账款余额(B049)-->
+    <select id="getFlowAverateAccountBal" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		<!--
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId#
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='b049' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+		-->
+		select 
+		((
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+															AND C.PARTY_ID= #csPartyId# 
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b049' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		)+(
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+															AND C.PARTY_ID= #csPartyId#  
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b049' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		))/((
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+		                                        AND C.PARTY_ID= #csPartyId# 
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b049' 
+		)+(
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+		                                        AND C.PARTY_ID= #csPartyId#  
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b049' 
+		)) AS INDEX_VALUE_DATA_TYPE
+		from dual
+    </select>
+    <!--上年度平均应付账款余额(B039)-->
+      <select id="getFlowAveratPayAcountBal" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+      <!--
+       SELECT
+		nvl((	SELECT
+					nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+				FROM
+					TB_ACC_FINANCE_INDEX_DATA D 
+				WHERE
+					D.FINANCE_ID=(	SELECT
+										FINANCE_ID 
+									FROM
+										(	SELECT
+												C.FINANCE_ID 
+											FROM
+												TB_ACC_CUSTOMER_FINANCE C 
+											WHERE
+												C.FINANCE_TYPE_CD = '1' 
+												AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+												AND C.PARTY_ID= #csPartyId# 
+												AND C.FINANCE_STATUS_CD = '02' 
+											ORDER BY
+												FINANCE_DEADLINE DESC 
+										)
+									WHERE
+										rownum = 1 
+					)
+					AND D.INDEX_CD='b039' ),0)AS INDEX_VALUE_DATA_TYPE 
+	FROM
+		dual
+	-->
+	select 
+		((
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+															AND C.PARTY_ID= #csPartyId# 
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b039' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		)+(
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+															AND C.PARTY_ID= #csPartyId#  
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b039' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		))/((
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+		                                        AND C.PARTY_ID= #csPartyId# 
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b039' 
+		)+(
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+		                                        AND C.PARTY_ID= #csPartyId#  
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b039' 
+		)) AS INDEX_VALUE_DATA_TYPE
+		from dual
+    </select>
+    <!--上年度平均预付账款余额(B033)-->
+     <select id="getFlowAverageShouldPayacountBal" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+     <!--
+         SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId# 
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='b033' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+	-->
+		select 
+		((
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+															AND C.PARTY_ID= #csPartyId# 
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b033' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		)+(
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+															AND C.PARTY_ID= #csPartyId#  
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b033' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		))/((
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+		                                        AND C.PARTY_ID= #csPartyId# 
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b033' 
+		)+(
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+		                                        AND C.PARTY_ID= #csPartyId#  
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b033' 
+		)) AS INDEX_VALUE_DATA_TYPE
+		from dual
+    </select>
+    <!--上年度平均预收账款余额(B053)-->
+     <select id="getFlowAverageShouldGetacountBal" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+     <!--
+      SELECT
+		nvl((	SELECT
+					nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+				FROM
+					TB_ACC_FINANCE_INDEX_DATA D 
+				WHERE
+					D.FINANCE_ID=(select FINANCE_ID from (	SELECT
+												C.FINANCE_ID 
+											FROM
+												TB_ACC_CUSTOMER_FINANCE C 
+											WHERE
+												C.FINANCE_TYPE_CD = '1' 
+												AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+												AND C.PARTY_ID= #csPartyId#
+												AND C.FINANCE_STATUS_CD = '02' 
+											ORDER BY
+												FINANCE_DEADLINE DESC 
+							) where rownum = 1
+					)
+					AND D.INDEX_CD='b053' ),0)AS INDEX_VALUE_DATA_TYPE 
+	FROM
+		dual
+	-->
+	select 
+		((
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+															AND C.PARTY_ID= #csPartyId# 
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b053' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		)+(
+				SELECT
+					nvl((	SELECT
+								nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+							FROM
+								TB_ACC_FINANCE_INDEX_DATA D 
+							WHERE
+								D.FINANCE_ID=(	SELECT
+													FINANCE_ID 
+												FROM
+													(	SELECT
+															C.FINANCE_ID 
+														FROM
+															TB_ACC_CUSTOMER_FINANCE C 
+														WHERE
+															C.FINANCE_TYPE_CD = '1' 
+															AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+															AND C.PARTY_ID= #csPartyId#  
+															AND C.FINANCE_STATUS_CD = '02' 
+														ORDER BY
+															FINANCE_DEADLINE DESC 
+													)
+												WHERE
+													rownum = 1 
+								)
+								AND D.INDEX_CD='b053' ),0)AS INDEX_VALUE_DATA_TYPE 
+				FROM
+					dual
+		))/((
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd')
+		                                        AND C.PARTY_ID= #csPartyId# 
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b053' 
+		)+(
+			SELECT
+		            count(1)
+		        FROM
+		            TB_ACC_FINANCE_INDEX_DATA D 
+		        WHERE
+		            D.FINANCE_ID=(	SELECT
+		                                FINANCE_ID 
+		                            FROM
+		                                (	SELECT
+		                                        C.FINANCE_ID 
+		                                    FROM
+		                                        TB_ACC_CUSTOMER_FINANCE C 
+		                                    WHERE
+		                                        C.FINANCE_TYPE_CD = '1' 
+		                                        AND C.FINANCE_DEADLINE = ADD_MONTHS(to_date(#csDate#,'yyyy-MM-dd'),-12)
+		                                        AND C.PARTY_ID= #csPartyId#  
+		                                        AND C.FINANCE_STATUS_CD = '02' 
+		                                    ORDER BY
+		                                        FINANCE_DEADLINE DESC 
+		                                )
+		                            WHERE
+		                                rownum = 1 
+		            )
+		            AND D.INDEX_CD='b053' 
+		)) AS INDEX_VALUE_DATA_TYPE
+		from dual
+    </select>
+    <!--存货周转天数 (A10)-->
+    <select id="getFlowStockTurnoverDays" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+     SELECT
+		nvl((	SELECT
+					nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+				FROM
+					TB_ACC_FINANCE_INDEX_DATA D 
+				WHERE
+					D.FINANCE_ID=(	SELECT
+										FINANCE_ID 
+									FROM
+										(	SELECT
+												C.FINANCE_ID 
+											FROM
+												TB_ACC_CUSTOMER_FINANCE C 
+											WHERE
+												C.FINANCE_TYPE_CD = '1' 
+												AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+												AND C.PARTY_ID= #csPartyId# 
+												AND C.FINANCE_STATUS_CD = '02' 
+											ORDER BY
+												FINANCE_DEADLINE DESC 
+										)
+									WHERE
+										rownum = 1 
+					)
+					AND D.INDEX_CD='A10' ),0)AS INDEX_VALUE_DATA_TYPE 
+	FROM
+		dual
+    </select>
+    <!--应收帐款周转天数(A9)-->
+    <select id="getFlowShouldGetTurnoverDays" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+       SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId# 
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='A9' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+    </select>
+    <!--净资产(B013)-->
+    <select id="getFlowNetAsset" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+      SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(	SELECT
+											FINANCE_ID 
+										FROM
+											(	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId# 
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+											)
+										WHERE
+											rownum = 1 
+						)
+						AND D.INDEX_CD='b013' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+    </select>
+    <!--净资产00201066-->
+    <select id="get00201066" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		select nvl(ta.PROJECT_VALUE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and t.FINANCE_TYPE_CD='1'
+			and t.FINANCE_STATUS_CD ='02'
+			and ta.PROJECT_CD ='00201066'
+            AND t.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+			and t.PARTY_ID=#csPartyId#
+    </select>
+    <!--长期负债(B072)-->
+    <select id="getFlowLongTermLiability" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(select FINANCE_ID from (	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId#
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+								) where rownum = 1
+						)
+						AND D.INDEX_CD='b072' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+    </select>
+    <!--长期负债00201046-->
+    <select id="get00201046" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		select nvl(ta.PROJECT_VALUE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and t.FINANCE_TYPE_CD='1'
+			and t.FINANCE_STATUS_CD ='02'
+			and ta.PROJECT_CD ='00201046'
+            AND t.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+			and t.PARTY_ID=#csPartyId#
+    </select>
+    <!--长期资产(B064)-->
+    <select id="getFlowLongTermAsset" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		SELECT
+			nvl((	SELECT
+						nvl(D.INDEX_VALUE_DATA_TYPE,0) 
+					FROM
+						TB_ACC_FINANCE_INDEX_DATA D 
+					WHERE
+						D.FINANCE_ID=(select FINANCE_ID from (	SELECT
+													C.FINANCE_ID 
+												FROM
+													TB_ACC_CUSTOMER_FINANCE C 
+												WHERE
+													C.FINANCE_TYPE_CD = '1' 
+													AND C.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+													AND C.PARTY_ID= #csPartyId#
+													AND C.FINANCE_STATUS_CD = '02' 
+												ORDER BY
+													FINANCE_DEADLINE DESC 
+								) where rownum = 1
+						)
+						AND D.INDEX_CD='b064' ),0)AS INDEX_VALUE_DATA_TYPE 
+		FROM
+			dual
+    </select>
+    <!--长期资产00201063-->
+    <select id="get00201063" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.acc.TbAccFinanceIndexData">
+		select nvl(ta.PROJECT_VALUE,0) as INDEX_VALUE_DATA_TYPE
+			from tb_acc_finance_statement_data ta,TB_ACC_CUSTOMER_FINANCE t 
+			where t.FINANCE_ID=ta.FINANCE_ID
+			and t.FINANCE_TYPE_CD='1'
+			and t.FINANCE_STATUS_CD ='02'
+			and ta.PROJECT_CD ='00201063'
+            AND t.FINANCE_DEADLINE = to_date(#csDate#,'yyyy-MM-dd') 
+			and t.PARTY_ID=#csPartyId#
+    </select>
+</sqlMap>

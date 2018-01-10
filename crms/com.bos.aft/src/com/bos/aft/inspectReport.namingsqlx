@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+   <resultMap class="commonj.sdo.DataObject" id="getReportWarnInfo">
+        <result column="WARNING_LEVEL_CD"  property="warnIngLevelCd"/>
+        <result column="firstLevel"  property="firstLevel"/>
+        <result column="ADJUST_DATE"  property="holdDate"/>
+        <result column="CONFIRM_DATE"  property="confirmDate"/>
+   </resultMap>
+   <select id="getReportWarnInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="getReportWarnInfo">
+SELECT
+    w.WARNING_LEVEL_CD ,
+    w.CONFIRM_DATE,
+    ew.firstLevel,
+    ew.ADJUST_DATE
+FROM
+    TB_REW_CSM_EARLY_WARNING w
+LEFT JOIN
+    (
+          select EARLY_WARNING_LEVEL_CD firstLevel, ADJUST_DATE, party_id
+         from (
+               
+               select EARLY_WARNING_LEVEL_CD ,
+                       ADJUST_DATE,
+                       party_id
+                 from TB_REW_LEVEL_ADJUST
+                where CHANGE_TYPE = '03'
+                  and APPLY_STATUS = '4'
+                  and party_id = #partyId#
+                ORDER BY ADJUST_DATE ASC
+               
+               )
+        where rownum = '1' ) ew
+ON
+    w.party_id=ew.party_id
+WHERE
+    w.party_id=#partyId#
+
+    </select>
+    
+   <resultMap class="commonj.sdo.DataObject" id="getReportySignal">
+        <result column="csm_signal_id"  property="csmSignalId"/>
+        <result column="SIGNAL_STATE"  property="signalState"/>
+        <result column="DICTNAME"  property="dictName"/>
+        <result column="parentType"  property="parentType"/>
+   </resultMap>
+   <select id="getReportySignal" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="getReportySignal">
+          select
+                l.csm_signal_id,
+                l.SIGNAL_STATE,
+                e.DICTNAME,
+                e1.DICTNAME parentType
+          from 
+                TB_REW_CSM_SIGNAL_LIST l 
+          left join 
+                EOS_DICT_ENTRY e
+          on
+                l.CSM_SIGNAL_ID=e.dictid and e.DICTTYPEID='XD_YJCD0003'
+          left join 
+                EOS_DICT_ENTRY e1
+          on   
+                e.PARENTID=e1.dictid   and e.DICTTYPEID='XD_YJCD0003'
+          where 
+                l.party_id=#partyId#
+          and   
+                (l.SIGNAL_STATUS_CD='2' or l.SIGNAL_STATUS_CD='5') 
+          and   
+                l.csm_signal_id not in (
+                select
+                      csm_signal_id
+                from
+                      TB_REW_CSM_SIGNAL_LIST
+                where 
+                      party_id=#partyId#
+                and   
+                (SIGNAL_STATUS_CD='2' or SIGNAL_STATUS_CD='5') 
+                and 
+                      CSM_SIGNAL_ID like '25%'     
+                )  
+    </select>
+
+   
+   
+   <resultMap class="commonj.sdo.DataObject" id="planOpinion">
+        <result column="OPINION"  property="opinion"/>
+        <result column="POST_CD"  property="postCd"/>
+    </resultMap>
+    <select id="planOpinion" parameterClass="java.util.HashMap"  resultMap="planOpinion">
+     select w.POST_CD,
+            w.OPINION
+                  from 
+                       TB_WFM_PROCESSINSTANCE p  
+                  left join
+                       TB_WFM_WORKITEMINSTANCE w
+                  on
+                       p.process_id=w.process_id
+                  where p.product_id = #irId#
+	    	 
+     </select>
+     
+    <resultMap class="commonj.sdo.DataObject" id="getCorpClass">
+        <result column="DICTNAME"  property="dictName"/>
+    </resultMap>
+    <select id="getCorpClass" parameterClass="java.util.HashMap"  resultMap="getCorpClass">
+     SELECT
+           e.DICTNAME
+     FROM
+           EOS_DICT_ENTRY e 
+     WHERE
+           e.DICTID=
+           (
+            SELECT
+                   MAX(t.cls_result)
+            FROM
+                   tb_cla_debt_detailInfo t
+            WHERE
+                   t.party_id = #partyId#
+            AND status = '3'
+            AND create_time =
+                  (
+                   SELECT
+                         MAX(create_time)
+                   FROM
+                         tb_cla_debt_detailInfo t0
+                   WHERE
+                         t0.loan_summary_id = t.loan_summary_id
+                   AND t.party_id = t0.party_id
+                   AND status = '3'
+                   )
+            )
+            AND e.DICTTYPEID='XD_FLCD0001'
+	    	 
+     </select>
+     
+     <resultMap class="commonj.sdo.DataObject" id="getDictName">
+        <result column="DICTNAME"  property="dictName"/>
+    </resultMap>
+    <select id="getDictName" parameterClass="java.util.HashMap"  resultMap="getDictName">
+     SELECT
+           e.DICTNAME
+     FROM
+           EOS_DICT_ENTRY e 
+     WHERE
+           e.DICTID=#dictId#
+     AND   
+           e.DICTTYPEID=#dictTypeId#
+	    	 
+     </select>
+    
+     
+     <resultMap class="commonj.sdo.DataObject" id="queryWarnReport">
+        <result column="SUGGEST_STATE"  property="suggestState"/>
+        <result column="MATTER_STATE"  property="matterState"/>
+    </resultMap>
+    <select id="queryWarnReport" parameterClass="java.util.HashMap"  resultMap="queryWarnReport">    
+select SUGGEST_STATE, MATTER_STATE
+  from (SELECT SUGGEST_STATE, MATTER_STATE
+          FROM TB_REW_LEVEL_ADJUST
+         WHERE APPLY_STATUS = '4'
+           AND PARTY_ID = #partyId#
+           AND SUGGEST_STATE IS NOT NULL
+         ORDER BY ADJUST_DATE DESC)
+ where rownum = '1'
+    
+     </select> 
+ 
+    
+</sqlMap>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:kf_xdxt11 -->
+<sqlMap>
+    
+    <select id="queryRiskCla" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.summary_num,
+		       substr(a.org_num, 0, 2) prv_cod,
+		       a.org_num opn_dep,
+		       a.org_num tal_dep,
+		       substr(a.fljg, 2, 1) five_flg,
+		       nvl(b.val_percent, 0) / 100 five_propt
+		  from tb_loan_summary   a,
+		       tb_sys_risk_param b
+		 where a.fljg = b.risk_level
+		       and a.summary_status_cd in ('02', '03')
+		       and length(a.fljg) = 4
+		       <isNotNull property="summaryNum">
+		    	 and a.summary_num = #summaryNum#
+		       </isNotNull>
+	</select>
+	
+	<select id="queryHandRiskCla" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select a.ac_apply_id,b.process_id from TB_CLA_ASSETS_CLASSIFY_APPLY a
+		left join tb_wfm_processinstance b on b.product_id = a.ac_apply_id
+		where a.apply_status='1' and to_char(bt_get_workdate,'yyyy-mm-dd') >=to_char(a.apply_dt+3,'yyyy-mm-dd')
+	</select>
+	
+	
+	<select id="countRiskCla" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"> 
+		select 1
+		  from tb_sup_cls_result
+		 where rcv_date = #rcv_date#
+		       and due_num = #due_num#
+		       and leg_per_cod = #leg_per_cod#
+	</select>
+	
+	<insert id="insertRiskCla" parameterClass="java.util.HashMap">
+		insert into tb_sup_cls_result
+		  (uuid,
+		   rcv_date,
+		   leg_per_cod,
+		   prv_cod,
+		   opn_dep,
+		   tal_dep,
+		   due_num,
+		   five_flg,
+		   five_propt,
+		   create_time,
+		   update_time,
+		   trunc_no)
+		values
+		  (sys_guid(),
+		   #rcv_date#,
+		   #leg_per_cod#,
+		   #prv_cod#,
+		   #opn_dep#,
+		   #tal_dep#,
+		   #due_num#,
+		   #five_flg#,
+		   #five_propt#,
+		   #create_time#,
+		   #update_time#,
+		   #trunc_no#)
+	</insert>
+	
+</sqlMap>

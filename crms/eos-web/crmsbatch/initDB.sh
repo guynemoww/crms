@@ -1,0 +1,23 @@
+#################################shell实现功能介绍############################
+#描述：
+#1、初始化数据用户名和密码，以后变更时只需更改此文件即可
+###############################参数配置区域###################################
+#参数配置选项
+#数据库本地编目名称
+db_alias="crms"
+#数据库用户名
+db_user="crms"
+#数据库密码
+db_pwd="abcd1234"
+#数据库模式名称
+db_schema="CRMS"
+#备份
+clistbak="/crmsshare/CRMS/data/clist/backup"
+#clist 打包文件夹
+clistdir="/crmsshare/CRMS/data/clist"
+#外围数据GTP到指定目录下路径
+srcdir="/crmsshare/CRMS/gtp/files/REC"
+#备份文件路径
+bakdir="/crmsshare/CRMS/data/REC"
+#应用文件路径配置
+appdir="/crmsshare/CRMS/data/apptmp"

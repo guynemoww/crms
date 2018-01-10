@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:sca="http://www.springframework.org/schema/sca" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd   http://www.springframework.org/schema/sca http://www.osoa.org/xmlns/sca/1.0/spring-sca.xsd">
+	<bean id="ConInfoLoadService" class="com.bos.conPrint.ConInfoLoadService">
+		<property name="bigTypeMap">
+			<map>
+				<entry key="05" value-ref="bigtype_zhsx" />
+				<entry key="06" value-ref="bigtype_zq" />
+				<entry key="04" value-ref="bigtype_bz" />
+				<entry key="01" value-ref="bigtype_dy" />
+				<entry key="02" value-ref="bigtype_zy" />
+				<entry key="03" value-ref="bigtype_bzj" />
+			</map>
+		</property>
+		<property name="productList">
+			<list>
+				<ref bean="product_jk" />
+				<ref bean="product_gdzc" />
+				<ref bean="product_cdxy" />
+				<ref bean="product_bh" />
+				<!-- <ref bean="product_wt" /> -->
+				<ref bean="product_tx" />
+			</list>
+		</property>
+		<property name="unprints">
+			<set>
+				<value>02002005</value>
+				<value>02002004</value>
+				<value>02002003</value>
+				<value>02005001</value>
+				<value>01003011</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="bigtype_bz" class="com.bos.conPrint.product.BigType_GRT">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getBigType_BZ" />
+		<property name="reportName" value="GRT" />
+		<property name="reportNameCN" value="个人,最高额,保证合同" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="conInfoLoadService" ref="ConInfoLoadService" />
+	</bean>
+
+	<bean id="bigtype_dy" class="com.bos.conPrint.product.BigType_DY">
+		<property name="reportName" value="GRT" />
+		<property name="reportNameCN" value="个人,最高额,抵押合同" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="sortTypeUtil" ref="grtSortTyep" />
+		<property name="conInfoLoadService" ref="ConInfoLoadService" />
+	</bean>
+
+	<bean id="bigtype_zy" class="com.bos.conPrint.product.BigType_ZY">
+		<property name="reportName" value="GRT" />
+		<property name="reportNameCN" value="个人,最高额,质押合同" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="conInfoLoadService" ref="ConInfoLoadService" />
+		<property name="sortTypeUtil" ref="grtSortTyep" />
+		<property name="sortTypes">
+			<value>bill,stock,yszk,zscq</value>
+		</property>
+	</bean>
+
+	<bean id="bigtype_zq" class="com.bos.conPrint.product.BigType_ZQ">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getBigType_ZQ" />
+		<property name="reportName" value="ZQXY.docx" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="conInfoLoadService" ref="ConInfoLoadService" />
+	</bean>
+
+	<bean id="bigtype_bzj" class="com.bos.conPrint.product.ConInfoLoad_Product">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getBZJXY" />
+		<property name="reportName" value="BZJXY.docx" />
+		<property name="defaultMap" ref="defaultMap" />
+	</bean>
+
+	<bean id="bigtype_zhsx" class="com.bos.conPrint.product.BigType_ZHSX">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getConInfo_ZHSX" />
+		<property name="reportName" value="ZHSX.docx" />
+		<property name="defaultMap" ref="defaultMap" />
+	</bean>
+
+	<bean id="product_cdxy" class="com.bos.conPrint.product.ConInfoLoad_CDXY">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getConInfo_CDXY" />
+		<property name="reportName" value="CDXY" />
+		<property name="reportNameCN" value="银行承兑协议" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>01008002</value>
+				<value>01008001</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="product_bh" class="com.bos.conPrint.product.ConInfoLoad_BH">
+		<property name="loadConSql" value="com.bos.conApply.ContractPrintSQL.getConInfo_BH" />
+		<property name="reportName" value="KLBHXY.docx" />
+		<property name="reportNameCN" value="开立保函协议" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>01009001</value>
+				<value>01009002</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="product_wt" class="com.bos.conPrint.product.ConInfoLoad_WT">
+		<property name="reportName" value="WTDK" />
+		<property name="reportNameCN" value="委托贷款合同" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>02005002</value>
+				<value>01013001</value>
+				<value>01013010</value>
+				<value>02005010</value>
+				<!--  -->
+				<value>02005001</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="product_tx" class="com.bos.conPrint.product.ConInfoLoad_TX">
+		<property name="reportName" value="SYHPTX.docx" />
+		<property name="reportNameCN" value="商业汇票贴现合同" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>01006002</value>
+				<value>01006001</value>
+				<value>01006010</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="product_gdzc" class="com.bos.conPrint.product.ConInfoLoad_GDZC">
+		<property name="reportName" value="GDZCJK.docx" />
+		<property name="reportNameCN" value="固定资产借款合同" />
+		<property name="showRepayNum" value="99" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>01003007</value>
+				<value>01003013</value>
+				<value>01001030</value>
+				<value>01003016</value>
+				<value>01003002</value>
+				<value>01003003</value>
+				<value>01003001</value>
+				<value>01003005</value>
+				<value>01003012</value>
+				<value>01003015</value>
+			</set>
+		</property>
+	</bean>
+
+
+
+	<bean id="product_jk" class="com.bos.conPrint.product.ConInfoLoad_JK">
+		<property name="reportName" value="JK" />
+		<property name="reportNameCN" value="01_流动资金借款合同,02_个人借款合同" />
+		<property name="showRepayNum" value="99" />
+		<property name="showPayNum" value="99" />
+		<property name="defaultMap" ref="defaultMap" />
+		<property name="products">
+			<set>
+				<value>01001011</value>
+				<value>01001001</value>
+				<value>02001016</value>
+				<value>02003004</value>
+				<value>02001001</value>
+				<value>02003008</value>
+				<value>02003012</value>
+				<value>02003013</value>
+				<value>02001002</value>
+				<value>02003001</value>
+				<value>02001007</value>
+				<value>01001016</value>
+				<value>02003005</value>
+				<value>02003002</value>
+				<value>01001013</value>
+				<value>02001015</value>
+				<value>01001009</value>
+				<value>01001023</value>
+				<value>02003006</value>
+				<value>01001017</value>
+				<value>02001008</value>
+				<value>02003009</value>
+				<value>01001014</value>
+				<value>02003007</value>
+				<value>01001007</value>
+				<value>01001029</value>
+				<value>02001005</value>
+				<value>02001013</value>
+				<value>01001041</value>
+				<value>01001028</value>
+				<value>01001015</value>
+				<value>02001003</value>
+				<value>01001012</value>
+				<value>01001027</value>
+				<value>01001008</value>
+				<value>02003010</value>
+				<value>01001020</value>
+				<value>01001021</value>
+				<value>01001024</value>
+				<value>01001019</value>
+				<value>01001025</value>
+				<value>01001010</value>
+				<value>02003011</value>
+				<value>01001018</value>
+				<value>01001026</value>
+				<value>02001014</value>
+				<value>01001022</value>
+				<!-- 平武流程添加 -->
+				<value>01001040</value>
+				<value>01001041</value>
+				<value>01001042</value>
+				<!--  -->
+				<value>02002005</value>
+				<value>02002004</value>
+				<value>02002003</value>
+				<value>01003011</value>
+			</set>
+		</property>
+	</bean>
+
+	<bean id="defaultMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="con.LOAN_USE" value=" / " />
+				<entry key="con.CURRENCY_CD" value=" / " />
+				<entry key="con.CONTRACT_AMT_CN" value=" / " />
+				<entry key="con.CONTRACT_TERM" value=" / " />
+				<entry key="con.CYCLE_UNIT" value=" / " />
+				<entry key="con.BEGIN_DATE" value=" / " />
+				<entry key="con.END_DATE" value=" / " />
+				<entry key="con.RATE_TYPE" value=" / " />
+				<entry key="con.YEAR_RATE" value=" / " />
+				<entry key="con.FLOAT_WAY" value=" / " />
+				<entry key="con.RATE_FLOAT_PROPORTION" value=" / " />
+				<entry key="con.IR_UPDATE_FREQUENCY" value=" / " />
+				<entry key="con.INTEREST_COLLECT_TYPE" value=" / " />
+				<entry key="con.PAY_WAY" value=" / " />
+				<entry key="con.REPAYMENT_TYPE" value=" / " />
+				<entry key="con.MAIN_GUARANTY_TYPE" value=" / " />
+				<entry key="con.SUB_PARTY_NAME_04" value=" / " />
+				<entry key="con.SUBCONTRACT_NUM_04" value=" / " />
+				<entry key="con.SUB_PARTY_NAME_01" value=" / " />
+				<entry key="con.SUBCONTRACT_NUM_01" value=" / " />
+				<entry key="con.SUB_PARTY_NAME_02" value=" / " />
+				<entry key="con.SUBCONTRACT_NUM_02" value=" / " />
+				<entry key="add.A_SEND_ADDR" value=" / " />
+				<entry key="add.A_POSTCODE" value=" / " />
+				<entry key="add.A_RECEIVER" value=" / " />
+				<entry key="add.A_PHONE" value=" / " />
+				<entry key="add.A_EMAIL" value=" / " />
+				<entry key="add.B_SEND_ADDR" value=" / " />
+				<entry key="add.B_POSTCODE" value=" / " />
+				<entry key="add.B_RECEIVER" value=" / " />
+				<entry key="add.B_PHONE" value=" / " />
+				<entry key="add.B_EMAIL" value=" / " />
+				<entry key="con.ARBITRATE_TYPE" value=" / " />
+				<entry key="con.ARBITRATE_NAME" value=" / " />
+				<entry key="con.TOTAL_COUNT_CN" value=" / " />
+
+				<entry key="con.JCXMMC" value=" / " />
+				<entry key="con.BZJBL" value=" / " />
+				<entry key="con.HPZL" value=" / " />
+				<entry key="con.PAYOUT_TYPE" value=" / " />
+				<entry key="con.PREPAYMENT_PENALTY" value=" / " />
+				<entry key="con.PREPAY_MAKEUP_RATE" value=" / " />
+
+				<entry key="con.BZ_CN" value=" / " />
+				<entry key="con.ZGBJXE_CN" value=" / " />
+				<entry key="con.SUBBEGIN_DATE" value=" / " />
+				<entry key="con.SUBEND_DATE" value=" / " />
+				<entry key="con.SUB_SCOPE" value=" / " />
+				<entry key="con.SUB_AMT_CN" value=" / " />
+				
+				<entry key="con.A_HOLD_NUM" value="一" />
+				<entry key="con.B_HOLD_NUM" value="一" />
+				<entry key="con.C_HOLD_NUM" value="一" />
+				
+				<entry key="repay1.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay1.REPAY_AMT_WY" value="       " />
+				<entry key="repay2.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay2.REPAY_AMT_WY" value="       " />
+				<entry key="repay3.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay3.REPAY_AMT_WY" value="       " />
+				<entry key="repay4.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay4.REPAY_AMT_WY" value="       " />
+				<entry key="repay5.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay5.REPAY_AMT_WY" value="       " />
+				<entry key="repay6.REPAY_DATE" value="     年   月    日" />
+				<entry key="repay6.REPAY_AMT_WY" value="       " />
+
+				<entry key="pay1.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay1.PAYOUT_AMT_WY" value="       " />
+				<entry key="pay2.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay2.PAYOUT_AMT_WY" value="       " />
+				<entry key="pay3.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay3.PAYOUT_AMT_WY" value="       " />
+				<entry key="pay4.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay4.PAYOUT_AMT_WY" value="       " />
+				<entry key="pay5.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay5.PAYOUT_AMT_WY" value="       " />
+				<entry key="pay6.PAYOUT_DATE" value="     年   月    日" />
+				<entry key="pay6.PAYOUT_AMT_WY" value="       " />
+			</map>
+		</constructor-arg>
+	</bean>
+</beans>

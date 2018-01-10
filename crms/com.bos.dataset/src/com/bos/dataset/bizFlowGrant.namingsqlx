@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--授权结果查询 -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="getParam">
+        <result column="AUTH_LV" property="authLv"/>
+        <result column="POSICODE" property="posicode"/>
+         <result column="PERSON_LV" property="personLv"/>
+   </resultMap>
+    <select id="bizFlowGrant"  parameterClass="java.util.Map" resultMap="getParam">
+    <![CDATA[
+		with sup_orgs as
+		 (select * from tb_sys_product t start with t.product_id = #productType# connect by prior t.superior_id = t.product_id)
+		select   s.auth_lv,s.posicode,s.person_lv from(  
+			select g.auth_lv,g.posicode,g.person_lv
+			  from tb_grant_level_mapping g
+			 where g.orgcode = #orgcode#
+			   and (g.product_type = #productType# or
+			       g.product_type in (select product_id from sup_orgs))
+			   and g.is_low = #isLow#
+			   and g.guar_type in ($guarType$)
+			   and g.max_amt*10000 >= #authAmt#
+			 order by g.product_type desc, g.max_amt,g.auth_lv desc) s
+    	 where rownum = 1
+
+    ]]></select>
+    
+    <select id="bizFlowZeroGrant"  parameterClass="java.util.Map" resultMap="getParam">
+    <![CDATA[
+		
+		select auth_lv, posicode, person_lv
+		  from (select z.orglevel as auth_lv, z.posicode, z.person_lv
+		          from tb_grant_zero_mapping z
+		         where z.max_mat * 10000 >= #authAmt#
+		         order by z.max_mat)
+		 where rownum = 1
+
+    ]]></select>
+</sqlMap>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:guyan -->
+<sqlMap>
+	<resultMap class="commonj.sdo.DataObject" id="getorgseqlevelbypidMap">
+        <result column="ORGSEQ"  property="ORGSEQ"/>
+        <result column="ORGLEVEL"  property="ORGLEVEL"/>
+    </resultMap>
+    <resultMap class="commonj.sdo.DataObject" id="getorgidbypseqMap">
+        <result column="ORGID"  property="ORGID"/>
+    </resultMap>
+    <resultMap class="commonj.sdo.DataObject" id="getEmpOpeIdByOrgIdMap">
+        <result column="EMPID"  property="EMPID"/>
+        <result column="OPERATORID"  property="OPERATORID"/>
+    </resultMap>
+	<!-- 根据机构查询子机构-->
+    <select id="getorgidbypid" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+		SELECT ORGID FROM OM_ORGANIZATION WHERE PARENTORGID=#parentid#
+	]]></select>
+	
+    <select id="getorgseqlevelbypid" parameterClass="java.util.HashMap" resultMap="getorgseqlevelbypidMap"><![CDATA[
+		SELECT ORGSEQ,ORGLEVEL FROM OM_ORGANIZATION WHERE ORGID=#orgid#
+	]]></select>
+	
+	<select id="judgeemprole" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+		select partyid from om_partyrole where partyid in( 
+        	select eo.orgid from om_emporg eo,om_organization o where empid=#empid# and o.orglevel <= #orglevel#) 
+        		and partytype='org' and roleid=#roleid#
+	]]></select>
+	
+	<select id="getorgidbypseq" parameterClass="java.util.HashMap" resultMap="getorgidbypseqMap"><![CDATA[
+		SELECT ORGID FROM OM_ORGANIZATION WHERE ORGSEQ LIKE '$orgseq$%'
+	]]></select>
+	
+	<!--根据机构id查询机构下人员-->
+	<select id="getEmpOpeIdByOrgId" parameterClass="java.util.HashMap" resultMap="getEmpOpeIdByOrgIdMap"><![CDATA[
+		SELECT EMPID,OPERATORID FROM OM_EMPLOYEE WHERE EMPID in (SELECT EMPID FROM OM_EMPORG WHERE ORGID=#orgid#)			
+	]]></select>
+	
+	<select id="queryUserOrgInfo" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.organization.OmOrganization">
+	    SELECT O.ORGID,
+       O.ORGCODE,
+       O.ORGNAME,
+       O.ORGLEVEL,
+       O.PARENTORGID,
+       O.ORGSEQ,
+       EO.ISMAIN
+  FROM OM_ORGANIZATION O, OM_EMPORG EO, OM_EMPLOYEE E
+ WHERE O.ORGID = EO.ORGID
+   AND EO.EMPID = E.EMPID
+   AND E.USERID = #userid#
+ ORDER BY EO.ISMAIN DESC, EO.ORGID
+	</select>
+	<!--删除人员角色信息-->
+	<delete id="deleteOperatorRole" parameterClass="java.util.HashMap" ><![CDATA[
+		
+		delete from AC_OPERATORROLE where 
+		roleid=#roleid# and 
+		orgid in (select orgid from V_OM_ORGANIZATION where parentorgid=$orgid$)
+
+
+	]]></delete>
+		<!--删除机构角色信息-->
+	<delete id="deleteOmPartyRole" parameterClass="java.util.HashMap" ><![CDATA[
+	
+			delete from OM_PARTYROLE where 
+			roleid=#roleid# and 
+			partyid in (select orgid from V_OM_ORGANIZATION where parentorgid=$orgid$)
+
+	]]></delete>
+	
+	<update id="deleteIpmOfUserid" parameterClass="java.util.HashMap" >
+    <![CDATA[  delete from TB_PUB_IPMANAGE where userid=#userid#]]>
+    </update>
+	 <update id="deleteIpM" parameterClass="java.util.HashMap" >
+    <![CDATA[  delete from TB_PUB_IPMANAGE where IP=#ip#]]>
+    </update>
+      <update id="deleteIpMs" >
+    <![CDATA[  delete from TB_PUB_IPMANAGE  ]]>
+    </update>
+</sqlMap>

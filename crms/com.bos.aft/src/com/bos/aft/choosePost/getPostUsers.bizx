@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="getPostUsers" gridVisibility="false" rulerVisibility="true"
+	snapToGeometry="true" productVersion="6.3">
+	<nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释"
+		nodeType="note" type="note" content="查询岗位成员信息" title="3231&#x9;14-7-18 下午5:27">
+		<location x="105" y="320" />
+		<size height="100" width="149" />
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign1"
+		name="赋值1" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link1"
+			name="link1" displayName="link3" isDefault="true" type="transition">
+			<sourceNode>assign1</sourceNode>
+			<targetNode>end1</targetNode>
+		</sourceConnections>
+		<targetConnections>link2</targetConnections>
+		<location x="490" y="89" />
+		<size height="28" width="28" />
+		<nodeLabel>assign1label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">page/count</process:from>
+			<process:to type="query">total</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label"
+		nodeType="label">
+		<location x="488" y="125" />
+		<figSize height="17" width="32" />
+		<node>assign1</node>
+	</nodes>
+	<nodes xsi:type="process:tEnd" id="end1" name="结束1" displayName="结束"
+		collapsed="false" nodeType="common" type="end">
+		<targetConnections>link1</targetConnections>
+		<location x="625" y="89" />
+		<size height="28" width="28" />
+		<nodeLabel>end1label</nodeLabel>
+		<process:returns>
+			<process:return id="0" language="com.bos.pub.sys.PosToUserEntity[]"
+				name="members" type="query" valueType="DataObject">members</process:return>
+			<process:return id="1" language="Int" name="total"
+				type="query" valueType="Primitive">total</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end1label" name="label"
+		nodeType="label">
+		<location x="623" y="125" />
+		<figSize height="17" width="32" />
+		<node>end1</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="赋值" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link0"
+			name="link0" displayName="link1" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>subprocess0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="218" y="89" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">posiname</process:from>
+			<process:to type="query">map/posiname</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">orgName</process:from>
+			<process:to type="query">map/orgName</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">userNum</process:from>
+			<process:to type="query">map/userNum</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">userName</process:from>
+			<process:to type="query">map/userName</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="220" y="125" />
+		<figSize height="17" width="25" />
+		<node>assign0</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess0"
+		name="查询用户信息" displayName="querUser" collapsed="false" type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link2"
+			name="link2" displayName="link2" isDefault="true" type="transition">
+			<sourceNode>subprocess0</sourceNode>
+			<targetNode>assign1</targetNode>
+		</sourceConnections>
+		<targetConnections>link0</targetConnections>
+		<location x="366" y="90" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess0label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.pub.queryUser.querUser</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="map" type="query"
+					value="java.util.HashMap" valueType="Java" pattern="reference">map</process:inputVariable>
+				<process:inputVariable id="1" name="page"
+					type="query" value="com.eos.foundation.PageCond" valueType="DataObject"
+					pattern="reference">page</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="user"
+					type="query" value="com.bos.pub.sys.PosToUserEntity[]" valueType="DataObject">members</process:outputVariable>
+				<process:outputVariable id="1" name="total"
+					type="query" value="Int" valueType="Primitive">total</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess0label"
+		name="label" nodeType="label">
+		<location x="343" y="125" />
+		<figSize height="17" width="73" />
+		<node>subprocess0</node>
+	</nodes>
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" collapsed="false" nodeType="common" type="start">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="link0" isDefault="true" type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>assign0</targetNode>
+		</sourceConnections>
+		<location x="60" y="90" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		nodeType="label">
+		<location x="62" y="126" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<topRuler />
+	<leftRuler />
+	<process:info author="3231" createTime="2014-07-18 17:27:26"
+		date="2014-07-18Z" description="" name="getPostUsers" version="6.3" />
+	<process:variables>
+		<process:variable anyType="java.util.HashMap"
+			description="" historyStateLocation="client" isArray="false" name="map" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="msg"
+			primitiveType="String" />
+	</process:variables>
+	<process:inputs varArgs="false">
+		<process:input description="岗位名称" isArray="false" name="posiname"
+			primitiveType="String" />
+		<process:input description="岗位编号" isArray="false" name="orgName"
+			primitiveType="String" />
+		<process:input description="" isArray="false"
+			modelType="com.eos.foundation.PageCond" name="page" />
+		<process:input description="" isArray="false" name="userName"
+			primitiveType="String" />
+		<process:input description="" isArray="false" name="userNum"
+			primitiveType="String" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="true"
+			modelType="com.bos.pub.sys.PosToUserEntity" name="members" />
+		<process:output description="" isArray="false" name="total"
+			primitiveType="Int" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+</process:tBusinessLogic>

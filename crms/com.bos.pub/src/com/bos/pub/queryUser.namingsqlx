@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+   
+    <resultMap class="com.bos.pub.sys.PosToUserEntity" id="user">
+        <result column="POSINAME" javaType="string" property="posiname"/>
+         <result column="EMPID" javaType="string" property="empid"/>
+          <result column="EMPNAME" javaType="string" property="empname"/>
+           <result column="USERID" javaType="string" property="userid"/>
+            <result column="ORGID" javaType="string" property="orgid"/>
+            <result column="POSICODE" javaType="string" property="posicode"/>
+            <result column="ORGNAME" javaType="string" property="orgname"/>
+            <result column="ORGCODE" javaType="string" property="orgcode"/>
+            
+    </resultMap>
+    <select id="queryUserMsg" parameterClass="java.util.HashMap" resultMap="user">
+   select  pos.POSINAME,
+		   emp.EMPID,
+		   emp.EMPNAME,
+		   emp.USERID,
+		   po.ORGID,
+		   pos.POSICODE,
+           org.ORGNAME,
+           org.ORGCODE
+		   from OM_POSITION pos ,
+		   OM_EMPPOSITION po,
+		   OM_EMPLOYEE emp ,
+          OM_ORGANIZATION org
+   		where emp.empid=po.empid 
+   		      and pos.positionID=po.positionID  
+              and emp.ORGID=org.ORGID
+   	   <isNotNull property="posiname">
+	    	and pos.POSINAME like '%$posiname$%'
+	   </isNotNull>
+	   <isNotNull property="orgid">
+	    	and po.ORGID=#orgid#
+	   </isNotNull>
+	    <isNotNull property="posicode">
+	    	 and pos.POSICODE like '%$posicode$%'
+	   </isNotNull>
+	    <isNotNull property="userNum">
+	    	 and emp.userId like '%$userNum$%'
+	   </isNotNull>
+	    <isNotNull property="userName">
+	    	 and emp.EMPNAME like '%$userName$%'
+	   </isNotNull>
+	    <isNotNull property="orgName">
+	    	 and org.ORGNAME like '%$orgName$%'
+	   </isNotNull>
+	   
+    </select>
+</sqlMap>

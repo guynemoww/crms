@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:YANGZHOU -->
+<sqlMap>
+  <resultMap class="commonj.sdo.DataObject" id="queryRoleByidsMap">
+        <result column="ROLEID"  property="ROLEID"/>
+    </resultMap>
+    
+   
+   <select id="select_orgemp" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.organization.OmEmployee"><![CDATA[
+   SELECT E.* FROM OM_EMPLOYEE E,OM_EMPORG O,AC_OPERATOR A  
+   WHERE E.EMPID = O.EMPID AND O.ORGID =#orgid#
+ 	 AND E.EMPID NOT IN
+    (SELECT EMPID FROM OM_EMPPOSITION EP,OM_POSITION P
+	       WHERE EP.POSITIONID=P.POSITIONID AND P.ORGID=#orgid#) 
+	 AND E.USERID=A.USERID AND A.STATUS != 'del' 
+	 order by E.USERID
+    ]]></select>  
+    
+        <!-- 更新机构排序 -->
+    <update id="updateOrgSortNo" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		UPDATE om_organization a set a.sortno
+			= (select max(sortno)+1 from om_organization b where a.parentorgid = b.parentorgid and a.isteam=b.isteam)
+			WHERE a.orgcode=#orgcode#
+    	]]>
+    </update>
+    	<select id="queryRolesByOrgIds" parameterClass="java.util.Map" resultMap="queryRoleByidsMap"><![CDATA[  
+		SELECT DISTINCT ROLEID FROM OM_PARTYROLE WHERE PARTYID in ($orgids$) AND PARTYTYPE='org'
+	]]></select>
+	
+    <select id="organization_query" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.organization.OmOrganization">
+	    <![CDATA[
+	    	select 
+		    	orgid        ,
+				orgcode      ,
+				orgname      ,
+				orglevel     ,
+				orgdegree    ,
+				parentorgid  ,
+				orgseq       ,
+				orgtype      ,
+				orgaddr      ,
+				zipcode      ,
+				manaposition ,
+				managerid    ,
+				orgmanager   ,
+				linkman      ,
+				linktel      ,
+				email        ,
+				weburl       ,
+				startdate    ,
+				enddate      ,
+				status       ,
+				area         ,
+				createtime   ,
+				lastupdate   ,
+				updator      ,
+				sortno       ,
+				isleaf       ,
+				subcount     ,
+				remark       ,
+				buno         ,
+				auditbankno  ,
+				paymentsysno ,
+				parentorgcode,
+				isteam       
+			from OM_ORGANIZATION
+		   where parentorgid = $parentorgid$
+		]]>
+		<isNotEmpty prepend="" property="isteam"> 
+			<![CDATA[
+				and isteam = '$isteam$'
+			]]>
+		</isNotEmpty> 
+		<![CDATA[   	 
+		   order by sortno desc	 
+		]]>
+	</select>
+	
+	<select id="queryRoleByids" parameterClass="java.util.Map" resultClass="com.bos.utp.dataset.privilege.AcRole"><![CDATA[
+		select roleid,rolename,roletype from AC_ROLE where roleid in ($roleids$)
+	]]></select>
+	
+	<!-- 根据机构ID查询机构的角色ID -->
+	<select id="queryRoleIdsByOrg" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject"><![CDATA[
+		select ROLEID from OM_PARTYROLE where PARTYID=#orgId#
+	]]></select>
+	
+	<!-- 根据用户ID、角色ID、机构ID统计用户角色ID数量 -->
+	<select id="countoperole"  resultClass="java.lang.String" parameterClass="java.util.HashMap"><![CDATA[
+            SELECT ROLEID from AC_OPERATORROLE where OPERATORID=#operatorid# and ROLEID=#roleId# and ORGID=#orgId#
+	]]></select>
+	
+	<!-- 根据用户ID查询机构信息 -->
+	<select id="queryOrgsByEmpId"  resultClass="commonj.sdo.DataObject" parameterClass="java.util.HashMap"><![CDATA[
+		 SELECT o.ORGNAME  AS orgname,
+           o.ORGCODE AS orgcode,
+           o.ORGID    AS orgid,
+           t.rolename
+      FROM OM_ORGANIZATION o
+      left join (select ar.orgid, (listagg(r.rolename,',') within group (order by r.rolename)) as rolename
+                   from ac_operatorrole ar, ac_role r, om_employee oe
+                  where ar.roleid = r.roleid
+                    and ar.operatorid = oe.operatorid
+                    and oe.empid = #empid#
+                  group by ar.orgid) t
+        on o.orgid = t.orgid
+     WHERE o.ORGID IN (SELECT ORGID FROM OM_EMPORG WHERE EMPID = #empid#)
+	]]></select>
+	
+	<!-- 根据机构ID查询角色信息 -->
+	<select id="queryRolesByorgId"  resultClass="commonj.sdo.DataObject" parameterClass="java.util.HashMap">
+    	SELECT ROLEID,ROLENAME FROM AC_ROLE WHERE ROLEID IN (
+    		SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYID=#orgid# and PARTYTYPE='org'
+    		<isNotNull prepend=" and " property="isAdmin"> 
+             	roleid != 'eosadmin'
+        	</isNotNull>
+    		)
+	</select>
+	
+	<!-- 删除用户在某机构下的角色关系 -->
+	<delete id="delemporgroles" parameterClass="java.util.HashMap"><![CDATA[
+    	delete from AC_OPERATORROLE where OPERATORID=#empid# and ORGID=#orgid#
+	]]></delete>
+	
+	<!-- 根据用户ID、机构ID查询用户角色ID -->
+	<select id="queryEmpRoles"  resultClass="commonj.sdo.DataObject" parameterClass="java.util.HashMap"><![CDATA[
+        SELECT ROLEID from AC_OPERATORROLE where OPERATORID=#empid# and ORGID=#orgid#
+	]]></select>
+	
+	
+	<!--根据地址code转换成地址名称-->
+	<select id="queryAddrName"  resultClass="java.lang.String" parameterClass="java.lang.String"><![CDATA[
+        select dictname from tb_pub_district where dictid like '$addr$%'
+	]]></select>
+	
+	<!-- add by shangmf:根据empId查询userId -->
+	<select id="queryUserIdByEmpId"  resultClass="commonj.sdo.DataObject" parameterClass="java.util.HashMap"><![CDATA[      
+		select userid from om_employee  where empid = #empid#
+	]]></select>
+	
+	<select id="searchOrgAccRelList" resultClass="java.util.HashMap" parameterClass="java.util.HashMap">    
+		SELECT * FROM TB_ORG_ACC_REL WHERE 1=1
+		<isNotNull prepend=" AND " property="oprOrgId"> (OPR_ORG_ID = #oprOrgId# OR OPR_ORG_NO = #oprOrgId#) </isNotNull>
+		<isNotNull prepend=" AND " property="accOrgId"> (ACC_ORG_ID = #accOrgId# OR ACC_ORG_NO = #accOrgId#)</isNotNull>
+		<isNotNull prepend=" AND " property="productId"> (PRODUCT_ID = #productId# OR PRODUCT_NO = #productId#)</isNotNull>
+		<isNotNull prepend=" AND " property="status">STATUS = #status#</isNotNull>
+		<isNotNull prepend=" AND " property="col1">COL1 = #col1#</isNotNull>
+		<isNotNull prepend=" AND " property="col2">COL2 = #col2#</isNotNull>
+	</select>
+</sqlMap>

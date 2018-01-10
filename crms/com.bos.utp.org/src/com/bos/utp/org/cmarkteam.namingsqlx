@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+	<!-- 
+
+    <resultMap class="com.bos.utp.dataset.employee.fptycmarkteaminfonot" id="markteaminfonot">
+
+        <result column="campteamid" property="campteamid" javaType="string" />
+        <result column="campteamnm" property="campteamnm" javaType="string" />
+        <result column="orgname" property="orgname" javaType="string" />
+
+    </resultMap>
+    -->
+    <!-- 查询未属于的营销团队列表 -->
+
+    <select id="querycmarkteamnotin" parameterClass="java.util.HashMap" resultClass="com.bos.utp.org.markTeam.CMarkTeamNotInInfo">
+    	<![CDATA[
+    		select 
+   				i.camp_teamid as campteamid,
+   				i.camp_team_nm as campteamnm,
+   				o.orgname as orgname
+			from f_pty_c_mark_team_info i left join om_organization o on o.orgcode = i.upper_org_id
+			where i.camp_teamid not in
+			(
+ 			  select t.camp_teamid as campTeamId from f_pty_c_team_rel_mgr r
+  		 	  left join f_pty_c_mark_team_info t on t.camp_teamid=r.camp_teamid where r.cust_mngr_id=#empCode#
+			) and o.orgcode=#orgCode#
+    	]]>
+    </select>
+    
+    <!-- 查询已属于的营销团队列表 -->
+    <select id="querycmarkteamempin" parameterClass="java.util.HashMap" resultClass="com.bos.utp.org.markTeam.CMarkTeamNotInInfo">
+    	<![CDATA[
+    		select i.camp_teamid as campteamid,
+    			   i.camp_team_nm as campteamnm,
+    			   i.camp_team_dsc as campteamdsc
+    	    from f_pty_c_team_rel_mgr m
+  			left join om_employee e on m.cust_mngr_id=e.empcode
+  			left join f_pty_c_mark_team_info i on m.camp_teamid=i.camp_teamid
+  			where e.empcode=#empcode#
+    	]]>
+    </select>
+    
+    
+    
+    <!-- 根据orgid某机构下的营销团队列表 -->
+    <select id="querycmarkteamnbyorgid" parameterClass="java.util.HashMap" resultClass="com.bos.utp.org.markTeam.CMarkTeamNotInInfo">
+    	<![CDATA[
+    		select t.camp_teamid as campteamid,t.camp_team_nm as campteamnm,t.camp_team_dsc as campteamdsc,o.orgname as orgname 
+    		from f_pty_c_mark_team_info t left join om_organization o on t.upper_org_id=o.orgcode
+    		where t.upper_org_id=(select o.orgcode from om_organization o where o.orgid = #orgid#)
+    	]]>
+    </select>
+</sqlMap>

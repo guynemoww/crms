@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:fengjiahui -->
+<!-- 查询平台客户信息 -->
+<sqlMap>
+ 
+    <resultMap class="commonj.sdo.DataObject" id="parentOrg">
+        <result column="ORGID" property="orgId"/>
+        <result column="ORGCODE" property="orgCode"/>
+        <result column="ORGNAME" property="orgName"/>
+        <result column="PARENTORGID" property="parentOrgId"/>
+    </resultMap>
+    <select id="queryParentOrgInfo" parameterClass="java.util.HashMap" resultMap="parentOrg">
+		SELECT
+		   o.ORGID,
+		   o.ORGCODE,
+		   o.ORGNAME,
+		   o.PARENTORGID 
+		FROM
+		   OM_ORGANIZATION o
+		WHERE
+		    1=1
+		<isNotNull property="orgNum">
+		AND o.ORGCODE = #orgNum# and o.ORGLEVEL <![CDATA[ >2]]>
+		</isNotNull>
+    </select>
+	
+</sqlMap>

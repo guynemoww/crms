@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="querySequence" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		<!--select seqname from syscat.sequences where seqname = #sequenceName#-->
+		select SEQUENCE_NAME from user_sequences where SEQUENCE_NAME = #sequenceName#
+    </select>
+    <update id="createSequence" parameterClass="java.util.HashMap">
+    	<!--create sequence $sequenceName$ as bigint start with 1 increment by 1 no minvalue maxvalue 9999999999 no cycle cache 20 no order-->
+    	create sequence $sequenceName$ increment BY 1 START WITH 1 NOMINvalue maxvalue 9999999999 NOCYCLE cache 20
+    </update>
+    <select id="getSequence" parameterClass="java.util.HashMap" resultClass="int">
+		select $sequenceName$.Nextval from dual
+    </select>
+</sqlMap>

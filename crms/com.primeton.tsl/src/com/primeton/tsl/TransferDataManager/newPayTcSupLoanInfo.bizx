@@ -1,0 +1,943 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="newPayTcSupLoanInfo.bizx" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="7.0.0.0">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign16</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <location x="45" y="30"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束" type="end">
+    <targetConnections>link9</targetConnections>
+    <targetConnections>link16</targetConnections>
+    <targetConnections>link17</targetConnections>
+    <targetConnections>link8</targetConnections>
+    <targetConnections>link27</targetConnections>
+    <location x="886" y="247"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="com.primeton.plus.PayOutRq" name="oPayOutVo" type="query" valueType="Java">oPayOutVo</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="47" y="66"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="888" y="283"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>subprocess1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link37</targetConnections>
+    <location x="170" y="30"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">MA1_1101</process:from>
+      <process:to type="query">trnCod</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">iPayOutVo/trustFlg</process:from>
+      <process:to type="query">trustFlg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="172" y="66"/>
+    <figSize height="17" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo1" name="获取返回对象" displayName="getBOSFXIIRsPayOutVo" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>assign3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="390" y="30"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo1label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getBOSFXIIRsPayOutVo</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="trnCod" type="query" value="java.lang.String" valueType="Java" pattern="reference">trnCod</process:inputVariable>
+      <process:inputVariable id="1" name="bosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java" pattern="reference">oBosfxii</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.plus.PayOutRq" valueType="Java">oPayOutVo</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo1label" name="label" nodeType="label">
+    <location x="365" y="66"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="赋值交易次数和是否访问核心" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link3" name="link3" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>assign6</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link22" name="link22" displayName="连接线" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>assign13</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;3&quot;.equals(trnTimes) &amp;&amp; &quot;1&quot;.equals(toCoreSys)&amp;&amp;!&quot;1&quot;.equals(isDk)</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link35" name="垫款" displayName="连接线" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>assign15</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="OBJEQ">
+          <process:leftOperand type="query">isDk</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link15</targetConnections>
+    <location x="60" y="247"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/tranTimes</process:from>
+      <process:to type="query">trnTimes</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/toCoreSys</process:from>
+      <process:to type="query">toCoreSys</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo</process:from>
+      <process:to type="query">iPayOutVo</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="-4" y="283"/>
+    <figSize height="17" width="157"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="赋值1" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link8" name="link8" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link20</targetConnections>
+    <location x="861" y="375"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0000000000000</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0000000000000</process:from>
+      <process:to type="query">oPayOutVo/baseVO/errCod</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">hxresponse/resTranHeader/HRetMsg</process:from>
+      <process:to type="query">oPayOutVo/baseVO/errMsg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="859" y="411"/>
+    <figSize height="17" width="32"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="逻辑流1101" displayName="easyLcsWebService" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link0" name="link0" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>invokePojo1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <location x="284" y="30"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.easyLcsWebService</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="trnCod" type="query" value="String" valueType="Primitive" pattern="reference">trnCod</process:inputVariable>
+        <process:inputVariable id="1" name="iObjectVo" type="query" value="java.lang.Object" valueType="Java" pattern="reference">iPayOutVo</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="oBosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java">oBosfxii</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="265" y="65"/>
+    <figSize height="17" width="65"/>
+    <node>subprocess1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="错误码" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link6" name="link6" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>assign5</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;00000&quot;.equals(rpsCod)</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link9" name="link9" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code></process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="495" y="30"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/errCod</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="491" y="66"/>
+    <figSize height="17" width="37"/>
+    <node>assign3</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="逻辑流1101" displayName="easyLcsWebService" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link14" name="link14" displayName="link0" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link13</targetConnections>
+    <location x="285" y="135"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.easyLcsWebService</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="trnCod" type="query" value="String" valueType="Primitive" pattern="reference">trnCod</process:inputVariable>
+        <process:inputVariable id="1" name="iObjectVo" type="query" value="java.lang.Object" valueType="Java" pattern="reference">iPayOutVo</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="oBosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java">oBosfxii</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="266" y="170"/>
+    <figSize height="17" width="65"/>
+    <node>subprocess2</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign4" name="错误码" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link15" name="link15" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>assign4</sourceNode>
+      <targetNode>assign1</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;00000&quot;.equals(rpsCod)</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link16" name="link16" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign4</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link12</targetConnections>
+    <location x="496" y="135"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign4label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/errCod</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign4label" name="label" nodeType="label">
+    <location x="492" y="171"/>
+    <figSize height="17" width="37"/>
+    <node>assign4</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign5" name="赋值4" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link13" name="link13" displayName="link2" isDefault="true" type="transition">
+      <sourceNode>assign5</sourceNode>
+      <targetNode>subprocess2</targetNode>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="171" y="135"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign5label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo</process:from>
+      <process:to type="query">iPayOutVo</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign5label" name="label" nodeType="label">
+    <location x="169" y="171"/>
+    <figSize height="17" width="32"/>
+    <node>assign5</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="获取返回对象" displayName="" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link12" name="link12" displayName="link4" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>assign4</targetNode>
+    </sourceConnections>
+    <targetConnections>link14</targetConnections>
+    <location x="391" y="135"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getBOSFXIIRsPayOutVo</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="trnCod" type="query" value="java.lang.String" valueType="Java" pattern="reference">trnCod</process:inputVariable>
+      <process:inputVariable id="1" name="bosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java" pattern="reference">oBosfxii</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.plus.PayOutRq" valueType="Java">oPayOutVo</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="366" y="171"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign6" name="赋值2" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link17" name="link17" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign6</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="495" y="247"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign6label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">300050909</process:from>
+      <process:to type="query">oPayOutVo/baseVO/errCod</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">没有转发核心</process:from>
+      <process:to type="query">oPayOutVo/baseVO/errMsg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign6label" name="label" nodeType="label">
+    <location x="493" y="283"/>
+    <figSize height="17" width="32"/>
+    <node>assign6</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign8" name="赋值3" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link5" name="link5" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>assign8</sourceNode>
+      <targetNode>subprocess0</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;AAAAAAA&quot;.equals(rpsCod)</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link7" name="link7" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign8</sourceNode>
+      <targetNode>assign14</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link28</targetConnections>
+    <location x="496" y="495"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign8label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">hxresponse/resTranHeader/HRetCode</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign8label" name="label" nodeType="label">
+    <location x="494" y="531"/>
+    <figSize height="17" width="32"/>
+    <node>assign8</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo3" name="获取返回对象" displayName="调用核心失败撤销核算" collapsed="false" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link20" name="link20" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>assign2</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link32</targetConnections>
+    <location x="828" y="495"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo3label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getBOSFXIIRsRepayCancel</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="trnCod" type="query" value="java.lang.String" valueType="Java" pattern="reference">trnCod</process:inputVariable>
+      <process:inputVariable id="1" name="bosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java" pattern="reference">oBosfxii</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.plus.RepayCancel" valueType="Java">repayCancel</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo3label" name="label" nodeType="label">
+    <location x="803" y="531"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo3</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess0" name="逻辑流1101" displayName="easyLcsWebService" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link21" name="link21" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess0</sourceNode>
+      <targetNode>invokePojo2</targetNode>
+    </sourceConnections>
+    <targetConnections>link5</targetConnections>
+    <targetConnections>link36</targetConnections>
+    <location x="630" y="406"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess0label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.easyLcsWebService</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="trnCod" type="query" value="String" valueType="Primitive" pattern="reference">trnCod</process:inputVariable>
+        <process:inputVariable id="1" name="iObjectVo" type="query" value="java.lang.Object" valueType="Java" pattern="reference">iPayOutVo</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="oBosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java">oBosfxii</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess0label" name="label" nodeType="label">
+    <location x="611" y="441"/>
+    <figSize height="17" width="65"/>
+    <node>subprocess0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo2" name="获取返回对象" displayName="getBOSFXIIRsPayOutVo" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link26" name="link26" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo2</sourceNode>
+      <targetNode>assign9</targetNode>
+    </sourceConnections>
+    <targetConnections>link21</targetConnections>
+    <location x="725" y="330"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo2label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getBOSFXIIRsPayOutVo</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="trnCod" type="query" value="java.lang.String" valueType="Java" pattern="reference">trnCod</process:inputVariable>
+      <process:inputVariable id="1" name="bosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java" pattern="reference">oBosfxii</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.plus.PayOutRq" valueType="Java">oPayOutVo</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo2label" name="label" nodeType="label">
+    <location x="700" y="366"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo2</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign9" name="错误码" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link27" name="link27" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign9</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link26</targetConnections>
+    <location x="803" y="283"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign9label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/errCod</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign9label" name="label" nodeType="label">
+    <location x="799" y="319"/>
+    <figSize height="17" width="37"/>
+    <node>assign9</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo6" name="调用核心接口" displayName="通用记账" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link28" name="link28" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo6</sourceNode>
+      <targetNode>assign8</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link23</targetConnections>
+    <targetConnections>link39</targetConnections>
+    <location x="435" y="495"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo6label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.plusclient.CrmsCallPlusImpl.executeXD01</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="requestBody" type="query" value="com.primeton.mgrcore.OXD011_AccoutingReq" valueType="Java" pattern="reference">hxrequest</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.mgrcore.OXD012_AccoutingRes" valueType="Java">hxresponse</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo6label" name="label" nodeType="label">
+    <location x="410" y="531"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo6</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign10" name="赋值5" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link23" name="link23" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign10</sourceNode>
+      <targetNode>invokePojo6</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link38" name="link38" displayName="连接线" type="transition">
+      <sourceNode>assign10</sourceNode>
+      <targetNode>assign17</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;8&quot;.equals(trustFlg) </process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="363" y="495"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign10label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">iPayOutVo/baseVO/rcnStan</process:from>
+      <process:to type="query">hxrequest/chargeSeq</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">iPayOutVo/baseVO/accSysDate</process:from>
+      <process:to type="query">hxrequest/outSystemDate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">XDHS</process:from>
+      <process:to type="query">hxrequest/busiType1</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">XD01</process:from>
+      <process:to type="query">hxrequest/thridTransCode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">A</process:from>
+      <process:to type="query">hxrequest/remarkInfo</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">hxzrequests</process:from>
+      <process:to type="query">hxrequest/fxd011</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">allrecord</process:from>
+      <process:to type="query">hxrequest/recNum</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">iPayOutVo/baseVO/trnDep</process:from>
+      <process:to type="query">hxrequest/hxorg</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">allMoney</process:from>
+      <process:to type="query">hxrequest/amount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">B00140</process:from>
+      <process:to type="query">hxrequest/summaryCode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">放款</process:from>
+      <process:to type="query">hxrequest/summaryDescription</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign10label" name="label" nodeType="label">
+    <location x="361" y="531"/>
+    <figSize height="17" width="32"/>
+    <node>assign10</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopStart" description="" id="loopstart0" name="循环" displayName="循环" grouped="true" type="loopstart" matchedName="loopend0" loopType="iterate">
+    <sourceConnections xsi:type="process:tLink" id="link29" name="link29" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>loopstart0</sourceNode>
+      <targetNode>assign11</targetNode>
+    </sourceConnections>
+    <targetConnections>link30</targetConnections>
+    <targetConnections>link34</targetConnections>
+    <location x="101" y="502"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopstart0label</nodeLabel>
+    <process:condition/>
+    <process:iterate iterable="hxzrequests" iterableElement="hxzrequest"/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopstart0label" name="label" nodeType="label">
+    <location x="101" y="534"/>
+    <figSize height="17" width="25"/>
+    <node>loopstart0</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopEnd" id="loopend0" name="循环结束" displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart0">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>loopend0</sourceNode>
+      <targetNode>assign10</targetNode>
+    </sourceConnections>
+    <targetConnections>link19</targetConnections>
+    <location x="302" y="502"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopend0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopend0label" name="label" nodeType="label">
+    <location x="290" y="534"/>
+    <figSize height="17" width="49"/>
+    <node>loopend0</node>
+  </nodes>
+  <nodes xsi:type="model:GroupNode" id="group0" name="group" grouped="true" gstart="loopstart0" gend="loopend0">
+    <location x="101" y="497"/>
+    <size height="51" width="226"/>
+    <chidren>loopend0</chidren>
+    <chidren>loopstart0</chidren>
+    <chidren>assign11</chidren>
+    <chidren>assign12</chidren>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign11" name="赋值6" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link18" name="link18" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign11</sourceNode>
+      <targetNode>assign12</targetNode>
+    </sourceConnections>
+    <targetConnections>link29</targetConnections>
+    <location x="200" y="500"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign11label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/trnDep</process:from>
+      <process:to type="query">hxzrequest/chargeBrch</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign11label" name="label" nodeType="label">
+    <location x="198" y="536"/>
+    <figSize height="17" width="32"/>
+    <node>assign11</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess3" name="撤销核算" displayName="easyLcsWebService" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link32" name="link32" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>subprocess3</sourceNode>
+      <targetNode>invokePojo3</targetNode>
+    </sourceConnections>
+    <targetConnections>link33</targetConnections>
+    <location x="709" y="495"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess3label</nodeLabel>
+    <process:flow index="0" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.easyLcsWebService</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="trnCod" type="literal" value="String" valueType="Primitive" pattern="reference">MA1_5127</process:inputVariable>
+        <process:inputVariable id="1" name="iObjectVo" type="query" value="java.lang.Object" valueType="Java" pattern="reference">repayCancel</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="oBosfxii" type="query" value="com.primeton.tsl.BOSFXII" valueType="Java">oBosfxii</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess3label" name="label" nodeType="label">
+    <location x="698" y="530"/>
+    <figSize height="17" width="49"/>
+    <node>subprocess3</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign7" name="赋值7" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link33" name="link33" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign7</sourceNode>
+      <targetNode>subprocess3</targetNode>
+    </sourceConnections>
+    <targetConnections>link25</targetConnections>
+    <location x="630" y="495"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign7label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO/rcnStan</process:from>
+      <process:to type="query">repayCancel/origStan</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/dueNum</process:from>
+      <process:to type="query">repayCancel/dueNum</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/baseVO</process:from>
+      <process:to type="query">repayCancel/baseVO</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">repayCancel/baseVO/rcnStan</process:from>
+      <process:to type="query">repayCancel/baseVO/origStan</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign7label" name="label" nodeType="label">
+    <location x="628" y="531"/>
+    <figSize height="17" width="32"/>
+    <node>assign7</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo4" name="核算数据转化为核心数据" displayName="将核算json转化为核心字符串" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" description="" id="link10" name="link10" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link31" name="link31" displayName="连接线" type="transition">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>invokePojo7</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;8&quot;.equals(trustFlg) </process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link24</targetConnections>
+    <location x="90" y="375"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo4label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.plusToHx</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="accEntJson" type="query" value="java.lang.String" valueType="Java" pattern="reference">jsonRecode</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.primeton.mgrcore.FXD011[]" valueType="Java">hxzrequests</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo4label" name="label" nodeType="label">
+    <location x="35" y="411"/>
+    <figSize height="17" width="133"/>
+    <node>invokePojo4</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign12" name="赋值8" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link19" name="link19" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign12</sourceNode>
+      <targetNode>loopend0</targetNode>
+    </sourceConnections>
+    <targetConnections>link18</targetConnections>
+    <location x="250" y="500"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign12label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">allrecord+1</process:from>
+      <process:to type="query">allrecord</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign12label" name="label" nodeType="label">
+    <location x="248" y="536"/>
+    <figSize height="17" width="32"/>
+    <node>assign12</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign13" name="赋值9" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link24" name="link24" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign13</sourceNode>
+      <targetNode>invokePojo4</targetNode>
+    </sourceConnections>
+    <targetConnections>link22</targetConnections>
+    <location x="72" y="310"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign13label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">oPayOutVo/accEntJson</process:from>
+      <process:to type="query">jsonRecode</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign13label" name="label" nodeType="label">
+    <location x="70" y="346"/>
+    <figSize height="17" width="32"/>
+    <node>assign13</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign14" name="赋值10" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link25" name="link25" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign14</sourceNode>
+      <targetNode>assign7</targetNode>
+    </sourceConnections>
+    <targetConnections>link7</targetConnections>
+    <location x="555" y="495"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign14label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0</process:from>
+      <process:to type="query">oPayOutVo/baseVO/toCoreSys</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">oPayOutVo/baseVO/tranTimes</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">B1101</process:from>
+      <process:to type="query">oPayOutVo/baseVO/tranCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign14label" name="label" nodeType="label">
+    <location x="550" y="531"/>
+    <figSize height="17" width="39"/>
+    <node>assign14</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo5" name="运算逻辑" displayName="转换发生额" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link30" name="link30" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo5</sourceNode>
+      <targetNode>loopstart0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <location x="102" y="436"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo5label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getAllMoney</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="fxd011s" type="query" value="com.primeton.mgrcore.FXD011[]" valueType="Java" pattern="reference">hxzrequests</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">allMoney</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo5label" name="label" nodeType="label">
+    <location x="89" y="472"/>
+    <figSize height="17" width="49"/>
+    <node>invokePojo5</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo7" name="运算逻辑1" displayName="转换发生额" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link34" name="link34" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo7</sourceNode>
+      <targetNode>loopstart0</targetNode>
+    </sourceConnections>
+    <targetConnections>link31</targetConnections>
+    <location x="189" y="406"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo7label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.primeton.tsl.TransferDataUtil.getAllMoney1</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="fxd011s" type="query" value="com.primeton.mgrcore.FXD011[]" valueType="Java" pattern="reference">hxzrequests</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">allMoney</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo7label" name="label" nodeType="label">
+    <location x="172" y="442"/>
+    <figSize height="17" width="56"/>
+    <node>invokePojo7</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign15" name="赋值11" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link36" name="link36" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign15</sourceNode>
+      <targetNode>subprocess0</targetNode>
+    </sourceConnections>
+    <targetConnections>link35</targetConnections>
+    <location x="300" y="353"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign15label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">AAAAAAA</process:from>
+      <process:to type="query">rpsCod</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign15label" name="label" nodeType="label">
+    <location x="295" y="389"/>
+    <figSize height="17" width="39"/>
+    <node>assign15</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign16" name="赋值12" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link37" name="link37" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign16</sourceNode>
+      <targetNode>assign0</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="114" y="30"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign16label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">iPayOutVo/isDk</process:from>
+      <process:to type="query">isDk</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign16label" name="label" nodeType="label">
+    <location x="109" y="66"/>
+    <figSize height="17" width="39"/>
+    <node>assign16</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign17" name="赋值13" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link39" name="link39" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign17</sourceNode>
+      <targetNode>invokePojo6</targetNode>
+    </sourceConnections>
+    <targetConnections>link38</targetConnections>
+    <location x="403" y="437"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign17label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">贷款</process:from>
+      <process:to type="query">hxrequest/summaryDescription</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign17label" name="label" nodeType="label">
+    <location x="398" y="473"/>
+    <figSize height="17" width="39"/>
+    <node>assign17</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="git" createTime="2015-05-30 13:23:07" date="2015-05-30Z" description="" name="newPayTcSupLoanInfo" version="7.0.0.0"/>
+  <process:variables>
+    <process:variable description="交易代码" historyStateLocation="client" isArray="false" name="trnCod" primitiveType="String"/>
+    <process:variable description="交易次数标志----计量系统修改后下传" historyStateLocation="client" isArray="false" name="trnTimes" primitiveType="String"/>
+    <process:variable description="交易是否转发核心系统标志----计量系统修改后下传" historyStateLocation="client" isArray="false" name="toCoreSys" primitiveType="String"/>
+    <process:variable description="报文体" historyStateLocation="client" isArray="false" modelType="com.bos.pub.sys.HxRq01001000002BODY02" name="dataObject2"/>
+    <process:variable description="错误码" historyStateLocation="client" isArray="false" name="rpsCod" primitiveType="String"/>
+    <process:variable anyType="com.bos.pub.socket.service.request.base.EsbAppHeadRq" description="应用头" historyStateLocation="client" isArray="false" name="iEsbAppHeadRq"/>
+    <process:variable description="测试是否屏蔽放款冲正" historyStateLocation="client" isArray="false" name="testPbErr1101" primitiveType="String"/>
+    <process:variable description="放款开关" historyStateLocation="client" isArray="false" name="fkIsOpen" primitiveType="String"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.bos.pub.sys.HxRq01001000002BODY05" name="dataObject3"/>
+    <process:variable anyType="com.primeton.mgrcore.OXD011_AccoutingReq" description="核心请求报文头" historyStateLocation="client" isArray="false" name="hxrequest"/>
+    <process:variable anyType="com.primeton.mgrcore.OXD012_AccoutingRes" description="核心响应报文头" historyStateLocation="client" isArray="false" name="hxresponse"/>
+    <process:variable anyType="com.primeton.mgrcore.FXD011" description="核心请求报文头嵌套类" historyStateLocation="client" isArray="false" name="hxzrequest"/>
+    <process:variable anyType="com.primeton.plus.RepayCancel" description="调用核心失败后撤销" historyStateLocation="client" isArray="false" name="repayCancel"/>
+    <process:variable description="传给核心记录条数" historyStateLocation="client" isArray="false" name="allrecord" primitiveType="Long"/>
+    <process:variable description="核算传给核心的json字符串" historyStateLocation="client" isArray="false" name="jsonRecode" primitiveType="String"/>
+    <process:variable anyType="com.primeton.mgrcore.FXD011" description="核心请求报文头嵌套类all" historyStateLocation="client" isArray="true" name="hxzrequests"/>
+    <process:variable description="发生额" historyStateLocation="client" isArray="false" name="allMoney" primitiveType="String"/>
+    <process:variable description="受托支付标志" historyStateLocation="client" isArray="false" name="trustFlg" primitiveType="String"/>
+    <process:variable description="是否垫款" historyStateLocation="client" isArray="false" name="isDk" primitiveType="String"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input anyType="com.primeton.plus.PayOutRq" description="请求计量的数据对象" isArray="false" name="iPayOutVo"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output anyType="com.primeton.plus.PayOutRq" description="计量返回的数据对象" isArray="false" name="oPayOutVo"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

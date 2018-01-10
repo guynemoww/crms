@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi -->
+<sqlMap>
+	<!--删除表中批量日期的数据_渠道为T24   1-票据|2-T24-->
+    <delete id="deleteBatchDateDataT24" parameterClass="java.util.HashMap"><![CDATA[
+    	delete from TB_BATCH_COMPARE_BALANCE 
+    	where substr(TRADEDATE,1,8)=#filedate#
+    	and CHANNELS='2'
+    ]]></delete>
+    <!--删除表中批量日期的数据_渠道为票据   1-票据|2-T24-->
+    <delete id="deleteBatchDateDataFKXX" parameterClass="java.util.HashMap"><![CDATA[
+    	delete from TB_BATCH_COMPARE_BALANCE 
+    	where substr(TRADEDATE,1,8)=#filedate#
+    	and CHANNELS='1'
+    ]]></delete>
+    
+    <select id="queryBizPartyIds" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		select party_id
+        from (select rownum seqno,
+                     party_id
+                from (select distinct party_id
+                        from tb_biz_approve)) t
+		 where seqno > #groupTotal# * #frequency#
+		       and seqno &lt;= #groupTotal# * (#frequency# + 1)
+	</select>
+	
+	<select id="queryBizTotalPage" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select ceil(count(*) / to_number(#groupTotal#))
+		  from (select distinct party_id
+		          from tb_biz_approve)
+	</select>
+	
+	 <select id="querySummaryNums" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		select summary_num
+		  from (select rownum seqno,
+		               summary_num
+		          from tb_loan_summary 
+		          where summary_status_cd in ('02', '03', '04')) t
+		 where seqno > #groupTotal# * #frequency#
+		       and seqno &lt;= #groupTotal# * (#frequency# + 1)
+	</select>
+	
+	<select id="querySummaryTotalPage" parameterClass="java.util.HashMap" resultClass="java.lang.Integer">
+		select ceil(count(*)/to_number(#groupTotal#)) from tb_loan_summary where summary_status_cd in ('02', '03', '04')
+	</select>
+	
+    <update id="deletePayPlanTemp" parameterClass="java.util.HashMap">
+		 delete from tb_sup_prin_plan_temp
+	</update>
+</sqlMap>

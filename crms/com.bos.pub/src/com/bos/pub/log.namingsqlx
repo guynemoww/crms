@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <insert id="insertLog" parameterClass="java.util.Map" >
+insert into TB_PUB_LOG(LOG_ID,USER_NUM,ORG_NUM,CREATE_TIME,LOG_TYPE,
+		LOG_IP,LOG_FUNCCODE,LOG_DESC,CREATE_DBTIME)
+values(#LOG_ID#,#USER_NUM#,#ORG_NUM#,#CREATE_TIME#,#LOG_TYPE#,#LOG_IP#,#LOG_FUNCCODE#,#LOG_DESC#,sysdate)
+	</insert>
+    <insert id="insertSnapshot" parameterClass="java.util.Map" >
+insert into TB_PUB_LOG(LOG_ID,USER_NUM,ORG_NUM,CREATE_TIME,LOG_TYPE,
+		LOG_IP,LOG_FUNCCODE,LOG_DESC,BIZ_NUM,BIZ_TYPE,BIZ_TASK_ID,CREATE_DBTIME)
+values(#LOG_ID#,#USER_NUM#,#ORG_NUM#,#CREATE_TIME#,#LOG_TYPE#,#LOG_IP#,#LOG_FUNCCODE#,#LOG_DESC#,#BIZ_NUM#,#BIZ_TYPE#,#BIZ_TASK_ID#,sysdate)
+	</insert>
+    <insert id="insertLogDetailBiz" parameterClass="java.util.Map" >
+
+insert into tb_pub_log_detail_biz(op_type,op_seq,val_ori,val_new,tb_name,col_name,create_time,log_id,detail_id)
+
+with pkeys as (SELECT distinct s.tbname,upper(replace(replace(colnames,'+',''),'_','')) pkey 
+FROM SYSIBM.SYSINDEXES s
+join tb_pub_log_detail d on s.tbname=substr(d.tb_name,5)
+where uniquerule='P' AND d.log_id in(#log_id#, #log_id_pre#))
+
+, log_new(tb_name,tb_name2,pkey,val_new) as (
+select substr(d.tb_name,5) tb_name, d.tb_name tb_name2,pkeys.pkey,val_new from tb_pub_log_detail d
+join pkeys on pkeys.tbname=substr(d.tb_name,5) and pkeys.pkey=upper(d.col_name)
+where log_id=#log_id#)
+, log_old(tb_name,tb_name2,pkey,val_new) as (
+select substr(d.tb_name,5) tb_name, d.tb_name tb_name2,pkeys.pkey,val_new from tb_pub_log_detail d
+join pkeys on pkeys.tbname=substr(d.tb_name,5) and pkeys.pkey=upper(d.col_name)
+where log_id= #log_id_pre#)
+
+, changes(tb_name,tb_name2,pkey,val_new,stat,rm) as (
+
+select n.*,'insert' stat,row_number()over() rm  from log_new n where not exists(
+        select 1 from log_old o 
+        where o.tb_name=n.tb_name and o.pkey=n.pkey and o.val_new=n.val_new)
+union all
+
+select n.*,'delete' stat,row_number()over() rm  from log_old n where not exists(
+        select 1 from log_new o 
+        where o.tb_name=n.tb_name and o.pkey=n.pkey and o.val_new=n.val_new)
+union all
+
+select n.*,'update' stat,row_number()over() rm  from log_old n where exists(
+        select 1 from log_new o 
+        where o.tb_name=n.tb_name and o.pkey=n.pkey and o.val_new=n.val_new)
+)
+
+, upd_always_display as (
+        select 'TB_BIZ_AMAPV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_AMAPV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SGAPV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SGAPV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_BANK_MEMBER_APV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_BANK_MEMBER_APV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_BANK_STRUCT_APV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_BANK_STRUCT_APV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SINGLE_APPROVE' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SINGLE_APPROVE' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SINGLE_APPDETAIL' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_SINGLE_APPDETAIL' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_APPSG_LOANRATE' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_APPSG_LOANRATE' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_AMOUNT_APPROVE' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_AMOUNT_APPROVE' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_AMOUNT_APPDETAIL' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_AMOUNT_APPDETAIL' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_APPAM_LOANRATE' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_APPAM_LOANRATE' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_CAMEO_APV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_CAMEO_APV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_LOAN_GROUP_APV' tb_name,'PRODUCTTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_BIZ_LOAN_GROUP_APV' tb_name,'CURRENCYTYPE' col_name from sysibm.dual
+        union all
+        select 'TB_CSM_MANAGEMENT_TEAM' tb_name,'USERID' col_name from sysibm.dual
+)
+, may_changed as (
+select d.stat,d.rm,d.tb_name_real,d.pkey,
+        (case when nvl(d1.val_new,'')=nvl(d2.val_new,'') then null else d2.val_new end) val_ori,
+        d1.* from (
+                select tmp1.*,(case when uap.tb_name is not null then '1' end) always_display from tb_pub_log_detail tmp1
+                left join upd_always_display uap on tmp1.tb_name like '%'||uap.tb_name||'%' and upper(tmp1.col_name)=uap.col_name
+        ) d1
+join (select c.stat,c.rm,c.tb_name tb_name_real,c.pkey,d.* from tb_pub_log_detail d join changes c on d.tb_name=c.tb_name2 
+        and c.pkey=upper(d.col_name) and d.val_new=c.val_new and c.stat='update') d 
+    on d.log_id=d1.log_id and d.tb_name=d1.tb_name 
+join (select c.stat,c.rm,c.tb_name tb_name_real,d.* from tb_pub_log_detail d join changes c on d.tb_name=c.tb_name2 
+        and c.pkey=upper(d.col_name) and d.val_new=c.val_new and c.stat='update') dd
+    on d.tb_name_real=dd.tb_name_real and d.col_name=dd.col_name and d.val_new=dd.val_new
+join tb_pub_log_detail d2 on dd.log_id=d2.log_id and dd.tb_name=d2.tb_name and d2.col_name=d1.col_name
+        and d2.log_id= #log_id_pre#
+
+where d1.log_id=#log_id# 
+        and (nvl(d1.val_new,'x')!=nvl(d2.val_new,'x') 
+                or d.pkey=upper(d1.col_name) 
+                or d1.always_display is not null 
+        )
+)
+
+, real_changed as (
+select ch.tb_name_real,ch.stat,ch.rm from may_changed ch
+group by ch.tb_name_real,ch.stat,ch.rm having sum(case when length(nvl(ch.val_ori,''))>0 then 1 else 0 end) >0
+)
+
+select mc.stat,mc.rm,mc.val_ori,mc.val_new,mc.tb_name_real,mc.col_name,mc.create_dbtime,mc.log_id,mc.detail_id from may_changed mc 
+where 
+exists (select stat,rm from real_changed rc where mc.tb_name_real=rc.tb_name_real and mc.stat=rc.stat and mc.rm=rc.rm)
+
+union all
+select d.stat,d.rm,null val_ori,d1.val_new,d.tb_name_real,d1.col_name,d1.create_dbtime,
+        #log_id# log_id,d1.detail_id from tb_pub_log_detail d1
+join (select c.stat,c.rm,c.tb_name tb_name_real,d.* from tb_pub_log_detail d join changes c on d.tb_name=c.tb_name2 
+        and c.pkey=upper(d.col_name) and d.val_new=c.val_new and c.stat='delete') d 
+    on d.log_id=d1.log_id and d.tb_name=d1.tb_name 
+where d1.log_id= #log_id_pre# 
+
+
+union all
+select d.stat,d.rm,null val_ori,d1.val_new,d.tb_name_real,d1.col_name,d1.create_dbtime,d1.log_id,d1.detail_id from tb_pub_log_detail d1
+join (select c.stat,c.rm,c.tb_name tb_name_real,d.* from tb_pub_log_detail d join changes c on d.tb_name=c.tb_name2 
+        and c.pkey=upper(d.col_name) and d.val_new=c.val_new and c.stat='insert') d 
+    on d.log_id=d1.log_id and d.tb_name=d1.tb_name 
+where d1.log_id=#log_id#
+
+
+	</insert>
+    <insert id="insertLogDetail" parameterClass="java.util.Map" >
+insert into TB_PUB_LOG_DETAIL(DETAIL_ID, LOG_ID,TB_NAME,COL_NAME,VAL_NEW,OP_TYPE,CREATE_DBTIME)
+values(#DETAIL_ID#,#LOG_ID#,#TB_NAME#,#COL_NAME#,#VAL_NEW#,#OP_TYPE#,sysdate)
+	</insert>
+    <select id="common_select" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" remapResults="true" >$sql$</select>
+    <select id="selectLogDetail" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select tb_name,col_name,val_new,op_type,detail_id from tb_pub_log_detail where log_id=#logId#
+order by create_dbtime --主键是先插入的
+    </select>
+    <select id="selectLogDetailBiz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select * from tb_pub_log_detail_biz where log_id=#log_id#
+order by create_time
+    </select>
+    <select id="selectLogPreByDetail" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+with d1 as (
+select col_name,val_new,create_dbtime,substr(tb_name,5) tb_name from tb_pub_log_detail d where detail_id=#detailId#)
+
+select * from tb_pub_log where log_id in (
+select d.log_id from tb_pub_log_detail d,d1
+where d.col_name=d1.col_name and d.val_new=d1.val_new and d.create_dbtime &lt; d1.create_dbtime and d.tb_name like '%'||d1.tb_name and rownum=1
+order by d.create_dbtime desc )
+    </select>
+    <select id="selectLogPreByLogId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+with log_new(biz_num,biz_type,log_funccode,create_dbtime) as (
+select biz_num,biz_type,log_funccode,create_dbtime from tb_pub_log where log_id=#logId#)
+
+select * from tb_pub_log log_old, log_new
+  where log_old.biz_num=log_new.biz_num and log_old.biz_type=log_new.biz_type and log_old.log_funccode=log_new.log_funccode
+  and log_old.create_dbtime &lt; log_new.create_dbtime and rownum=1
+order by log_old.create_dbtime desc 
+    </select>
+    <select id="selectLogForBiz" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select t.log_id,t.user_num,t.org_num,to_char(t.create_dbtime,'yyyy-mm-dd HH24:mi:ss') create_dbtime,
+to_char(t.create_time,'yyyy-mm-dd HH24:mi:ss') create_time,t.log_type,t.log_ip,t.log_funccode,t.log_desc,t.biz_type,t.biz_num,t.biz_task_id
+from tb_pub_log t, tb_pub_log_detail_biz ta 
+where 1=1
+and t.log_id=ta.log_id
+<isNotNull prepend="AND" property="biz_type">
+	t.biz_type=#biz_type#
+</isNotNull>
+<isNotNull prepend="AND" property="biz_num">
+	t.biz_num=#biz_num#
+</isNotNull>
+<isNotNull prepend="AND" property="biz_task_id">
+	t.biz_task_id=#biz_task_id#
+</isNotNull>
+<isNotNull prepend="AND" property="userNum">
+	t.user_num=#userNum#
+</isNotNull>
+<isNotNull prepend="AND" property="orgNum">
+	t.org_num=#orgNum#
+</isNotNull>
+<isNotNull prepend="AND" property="log_type">
+	t.log_type=#log_type#
+</isNotNull>
+<isNotNull prepend="AND" property="log_id">
+	t.log_id=#log_id#
+</isNotNull>
+<isNotNull prepend="AND" property="log_desc">
+	t.log_desc like '%$log_desc$%'
+</isNotNull>
+<isNotNull prepend="AND" property="create_dbtime0">
+	t.create_dbtime &gt;=#create_dbtime0#
+</isNotNull>
+<isNotNull prepend="AND" property="create_dbtime9">
+	t.create_dbtime &lt;=#create_dbtime9#
+</isNotNull>
+group by t.log_id,t.user_num,t.org_num,t.create_dbtime,t.log_ip,
+t.create_time,t.log_type,t.log_funccode,t.log_desc,t.biz_type,t.biz_num,t.biz_task_id
+order by create_dbtime desc
+    </select>
+    <select id="selectLog" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select log_id,USER_NUM,ORG_NUM,to_char(create_dbtime,'yyyy-mm-dd HH24:mi:ss') create_dbtime,
+to_char(create_time,'yyyy-mm-dd HH24:mi:ss') create_time,log_type,log_ip,log_funccode,log_desc,biz_type,biz_num,biz_task_id
+from tb_pub_log
+where 1=1 
+<isNotNull prepend="AND" property="biz_type">
+	biz_type=#biz_type#
+</isNotNull>
+<isNotNull prepend="AND" property="biz_num">
+	biz_num=#biz_num#
+</isNotNull>
+<isNotNull prepend="AND" property="biz_task_id">
+	biz_task_id=#biz_task_id#
+</isNotNull>
+<isNotNull prepend="AND" property="create_user">
+	USER_NUM=#create_user#
+</isNotNull>
+<isNotNull prepend="AND" property="create_org">
+	ORG_NUM=#create_org#
+</isNotNull>
+<isNotNull prepend="AND" property="log_type">
+	log_type=#log_type#
+</isNotNull>
+<isNotNull prepend="AND" property="log_id">
+	log_id=#log_id#
+</isNotNull>
+<isNotNull prepend="AND" property="log_desc">
+	log_desc like '%$log_desc$%'
+</isNotNull>
+<isNotNull prepend="AND" property="create_dbtime0">
+	create_dbtime &gt;= to_date(#create_dbtime0#,'yyyy-mm-dd HH24:mi:ss')
+</isNotNull>
+<isNotNull prepend="AND" property="create_dbtime9">
+	create_dbtime &lt;= to_date(#create_dbtime9#,'yyyy-mm-dd HH24:mi:ss')
+</isNotNull>
+order by create_dbtime desc
+    </select>
+</sqlMap>

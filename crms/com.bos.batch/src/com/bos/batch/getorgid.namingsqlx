@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:wangjixi -->
+<sqlMap>
+
+      
+    <select id="getOrgIds" parameterClass="java.util.HashMap" resultClass="string"><![CDATA[
+    select parentorgid as orgid  from OM_ORGANIZATION where orglevel in ('1','2','3','4') and buno='1'
+	union
+	select parentorgid as orgid from OM_ORGANIZATION where orglevel = '5'
+	union
+	select orgid from OM_ORGANIZATION where orglevel in ('1','2','3','4') and buno='0'
+        ]]> </select>
+    <!--InputDate就是前台跑批的批量日期-->
+    <select id="getMaxDate" parameterClass="java.util.HashMap" resultClass="string"><![CDATA[
+    select max(InputDate) from TB_BATCH_C_LIST
+        ]]> </select>
+    
+    <select id="getTzMaxDate" parameterClass="java.util.HashMap" resultClass="string"><![CDATA[
+    select max(InputDate) from TB_BATCH_OCCUR_REPORT
+        ]]> </select>
+    
+    <!--重跑标识-->
+    <select id="getReload" parameterClass="java.util.HashMap" resultClass="string"><![CDATA[
+    select BATCH_TEMP1 from TB_BATCH_TASK_DATE
+        ]]> </select>
+    
+    <!--如果正常跑已经存在的月末数据清单时,会发生这个月末数据清单的重复插入;故删除-->
+    <select id="deleteInputDate" parameterClass="java.util.HashMap">
+          Delete From TB_BATCH_DATALIST_ATTACHMENT Where 1=1 
+          and inputDate=#inputDate#
+          and DATALISTTYPE=#dataListType#
+    </select>
+    
+    <!--删除当前日期七天之前的数据清单，保留所有月末数据清单-->
+    <select id="deleteAllDate" parameterClass="java.util.HashMap"><![CDATA[
+          Delete From TB_BATCH_DATALIST_ATTACHMENT Where 1=1 
+          and DATALISTTYPE=#dataListType#
+          and (inputDate >=replace(#inputDate#,'-','') or inputDate <=replace(#oldDate#,'-','') ) and substr(inputdate,5,8) not in ('0131','0228','0229','0331','0430','0531','0630','0731','0831','0930','1031','1130','1231')
+    	 ]]> 
+   </select>
+    
+</sqlMap>

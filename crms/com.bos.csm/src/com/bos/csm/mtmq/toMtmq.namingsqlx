@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+<!--客户授信信息查询CP001-->
+<select id="findCsmMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+select distinct im.bar_code,
+                t.party_num,
+                t.party_name,
+                #certType# as cert_type,
+                #certNum# as cert_num,
+                t.party_type_cd,
+                nvl(csm.whether_black_list, 0) whether_black_list,
+                t.is_potential_cust,
+                team.user_num,
+                team.org_num,
+                org.orgname as org_name,
+                nvl((select user_placing_cd from tb_csm_management_team team ,v_csm_party t where team.party_id=t.PARTY_ID 
+   <isNotEmpty  prepend="" property="flag1"> and t.registr_cd = #certNum# </isNotEmpty>
+   <isNotEmpty  prepend="" property="flag2"> and t.cert_type = #certType# and t.cert_num = #certNum# </isNotEmpty>
+                and team.user_num=#userNum# and team.org_num=#orgNum# and rownum=1),'00')as user_placing_cd
+  from v_csm_party t
+  left join  (select distinct s.bar_code, s.business_number
+                     from tb_pub_image_type b,tb_pub_image_document s
+     where b.image_type_id = s.image_document_type_id 
+     and b.superior_id in('10103','10102','10283','10282'))im
+    on im.business_number = t.PARTY_NUM
+ inner join tb_csm_management_team team
+    on t.party_id = team.party_id and team.user_placing_cd='01'
+ inner join om_organization org
+    on org.orgcode = team.org_num
+ inner join (select c.party_id, c.whether_black_list
+               from tb_csm_corporation c
+             union all
+             select p.party_id, p.whether_black_list
+               from tb_csm_natural_person p) csm
+    on t.party_id = csm.party_id
+   <isNotEmpty  prepend="" property="flag1"> and t.registr_cd = #certNum# </isNotEmpty>
+   <isNotEmpty  prepend="" property="flag2"> and t.cert_type = #certType# and t.cert_num = #certNum# </isNotEmpty>
+	</select>
+	
+	<!--押品信息查询-->
+	<select id="findDzyMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+  	   select gmb.surety_no,gmb.sort_type,gmb.mortgage_status,emp.empname
+		 from tb_grt_mortgage_basic gmb,
+		 om_employee emp,
+		 (            select surety_id from tb_grt_house          a where  a.house_prop_no        =#suretyNo#                       
+			union all select surety_id from tb_grt_landuse        b where  b.land_use_no          =#suretyNo#  
+			union all select surety_id from tb_grt_vehicle        c where  c.certificate_no       =#suretyNo#  
+			union all select surety_id from tb_grt_machine        d where  d.machine_no           =#suretyNo#  
+			union all select surety_id from tb_grt_goods          e where  e.inventory_no         =#suretyNo#  
+			union all select surety_id from tb_grt_deposit        f where  f.deposit_no           =#suretyNo#  
+			union all select surety_id from tb_grt_receivables    g where  g.contract_no          =#suretyNo#  
+			union all select surety_id from tb_grt_bond           h where  h.bond_no              =#suretyNo#  
+			union all select surety_id from tb_grt_inmarketstock  i where  i.stock_code           =#suretyNo#  
+			union all select surety_id from tb_grt_road_bridge    j where  j.charging_contract_no =#suretyNo#  
+			union all select surety_id from tb_grt_stock          k where  k.stock_code           =#suretyNo#  
+			union all select surety_id from tb_grt_fund           l where  l.fund_code            =#suretyNo#  
+			union all select surety_id from tb_grt_bill           m where  m.bill_no              =#suretyNo#  
+			union all select surety_id from tb_grt_depot          n where  n.depot_no             =#suretyNo#  
+			union all select surety_id from tb_grt_lanbill        o where  o.lan_bill_no          =#suretyNo#  
+			union all select surety_id from tb_grt_license        p where  p.license_no           =#suretyNo#  
+			union all select surety_id from tb_grt_ckts           q where  q.cktszh               =#suretyNo#  
+			union all select surety_id from tb_grt_rest_profit    r where  r.land_use_no          =#suretyNo#  
+			union all select surety_id from tb_grt_resourceprofit s where  s.forest_no            =#suretyNo#  
+			union all select surety_id from tb_grt_managemoney    t where  t.treaty_no            =#suretyNo#  
+		)grt
+		where gmb.user_num = emp.userid 
+		  and grt.surety_id = gmb.surety_id
+		  and gmb.user_num = #userNum# 
+		  and gmb.org_num = #orgNum# 
+		  and gmb.sort_type = #sortType#
+	</select>
+	
+	<!--项目信息查询-->
+	<select id="findProjectMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select distinct im.bar_code,
+			                c.party_num,
+			                c.party_name,
+			                c.cert_type,
+			                c.cert_num,
+			                p.project_id,
+			                p.project_name,
+			                to_char(p.create_time, 'yyyymmdd') as create_time,
+			                team.user_num,
+			                team.org_num
+			  from tb_csm_project_info p
+			  left join tb_pub_image_document im
+			    on im.business_number = p.project_id, v_csm_party c,
+			 tb_csm_management_team team
+			 where p.party_id = c.party_id
+			   and p.party_id = team.party_id
+			   and team.user_num=#userNum#
+			   and team.org_num=#orgNum#
+	    <isNotEmpty  prepend="" property="projectName">  and p.project_name = #projectName# </isNotEmpty>
+	    <isNotEmpty  prepend="" property="certNum">  and c.CERT_NUM=#certNum# and c.CERT_TYPE=#certType#</isNotEmpty>
+	</select>
+	
+	
+	<select id="findDict" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select listagg(t.dictid, ',') within group(order by dictid) as dictid
+		  from eos_dict_entry t
+		 where dicttypeid = #dictTypeId#
+	</select>
+	
+	<select id="findUserRoles" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.roleid,a.empcode,org.orgcode,role.rolename
+		  from om_employee a, ac_operator o, ac_operatorrole p,om_organization org,ac_role role
+		 where a.userid = o.userid
+		   and o.operatorid = p.operatorid
+		   and a.orgid=org.orgid
+		   and p.roleid=role.roleid
+		   and a.empcode=#userNum#
+		   and org.orgcode=#orgNum#
+	</select>
+	
+	<!--根据合同借据号查合同借据信息-->
+	<select id="findConSumMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	  	select * from (
+		select t.summary_id as conSumId from tb_loan_summary t where t.summary_num=#conSumNum#
+		union all
+		select c.contract_id as conSumId from tb_con_contract_info c where c.contract_num=#conSumNum#)
+	</select>
+	
+		<!--CP009查询财报id-->
+	<select id="findfinancialStatementId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select t1.financial_statement_id from tb_acc_financial_statement  t1 
+			where t1.finance_id=#Financeid# and t1.financial_statement_sort_cd=#financialStatementSortCd#
+	</select>
+	<select id="queryDocTree" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t1.* from tb_pub_image_type t,tb_pub_image_type t1
+			where t.IMAGE_TYPE_ID=t1.superior_id
+			and t.IMAGE_CONTROL_TYPE=#imgTplCd#
+	</select>
+	
+	<!-- 查找客户经理权限	-->
+    <select id="checkManageRight" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select b.party_id from tb_csm_party a, tb_csm_management_team b
+			 where a.party_id = b.party_id
+			   and b.user_num = #cstMgrNo#
+	<isNotEmpty  prepend="" property="cstMgrInstNo">  and b.org_num = #cstMgrInstNo#</isNotEmpty>
+	<isNotEmpty  prepend="" property="ittbrId">  and b.org_num = #ittbrId#</isNotEmpty>
+	<isNotEmpty  prepend="" property="eCIFCstNo">  and a.ecif_party_num = #eCIFCstNo#</isNotEmpty>
+	<isNotEmpty  prepend="" property="crCstNo">  and a.party_num=#crCstNo#</isNotEmpty>
+	<isNotEmpty  prepend="" property="userPlacingCd">   and b.user_placing_cd = #userPlacingCd#</isNotEmpty>
+			 
+    </select>
+    <!-- 查找当前机构、当前客户经理下的客户ID	-->
+    <select id="findPartyId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select b.party_id
+		  from tb_csm_management_team a, tb_csm_party b
+		 where a.party_id = b.party_id
+		   and a.user_num = #userNum#
+		   and a.org_num = #orgNum#
+		   and b.party_num = #partyNum#
+    </select>
+    <!-- 查找合同信息	-->
+    <select id="findConMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select distinct a.party_name,
+			       a.CERT_TYPE,
+			       a.CERT_NUM,
+			       t.contract_num,
+			       t.product_type,
+			       to_char(t.begin_date, 'YYYYMMDD') as begin_date,
+			       to_char(t.end_date, 'YYYYMMDD') as end_date,
+			       t.contract_amt,
+			       b.bar_code,
+			       t.con_status
+			  from tb_con_contract_info  t
+			  join v_csm_party  a
+			    on t.party_id = a.party_id
+			  join tb_csm_management_team  c
+			    on a.PARTY_ID = c.party_id
+			  left join tb_pub_image_document  b
+			    on t.contract_num = b.business_number
+			 where c.user_num = #cstMgrNo#
+			   and c.org_num = #ittbrId#
+			   and t.con_status in $ctrSt$
+ 		<isNotEmpty prepend="" property="cstNm">  and a.party_name like '%$cstNm$%' </isNotEmpty>
+    	<isNotEmpty prepend="" property="idntTp">  and a.CERT_TYPE = #idntTp# </isNotEmpty>
+ 		<isNotEmpty prepend="" property="identNo">  and a.CERT_NUM = #identNo# </isNotEmpty>
+    </select>
+    <!-- 查找业务申请信息	-->
+    <select id="findBsnInf" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select distinct k.bar_code,
+                k.business_number,
+                t.apply_id,
+                a.PARTY_NUM,
+                a.party_name,
+                a.CERT_TYPE,
+                a.CERT_NUM,
+                t.biz_num,
+                t.biz_type,
+                case
+                  when t.biz_type in ('01', '04') then
+                   t.product_type
+                  when t.biz_type in ('02', '03', '05') then
+                   null
+                end product_type,
+                t.status_type
+        from tb_biz_apply t
+        left join (select distinct s.bar_code, s.business_number
+                     from (select *
+                             from tb_pub_image_type
+                            where superior_id in ('10365','10176')) b,
+                          tb_pub_image_document s
+                    where b.image_type_id = s.image_document_type_id) k
+          on k.business_number = t.biz_num, v_csm_party a
+       where t.party_id = a.party_id
+         and t.user_num = #cstMgrNo#
+         and t.org_num = #ittbrId#
+         and t.status_type in $aplySt$
+    <isNotEmpty prepend="" property="cstNm">  and a.party_name like '%$cstNm$%' </isNotEmpty>
+      <isNotEmpty prepend="" property="idntTp">  and a.CERT_TYPE = #idntTp# </isNotEmpty>
+    <isNotEmpty prepend="" property="identNo">  and a.CERT_NUM = #identNo# </isNotEmpty>
+    </select>
+    
+     <!--日常检查信息列表查询CP007-->
+	<select id="finddaycheckMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t2.PARTY_NUM,
+		       t2.PARTY_NAME,
+		       t2.CERT_TYPE,
+		       t2.CERT_NUM,
+		       t1.check_num,
+		       t3.bar_code,
+		       t4.jjye,
+		       (select to_char(check_date, 'yyyyMMdd')
+		          from tb_aft_normal_check
+		         where party_id = t2.PARTY_ID
+		           and check_count = (t1.check_count - 1)) before_check_date
+		  from tb_aft_normal_check t1
+		  left join (select a.business_number, a.bar_code
+		               from tb_pub_image_document a
+		              group by a.business_number, a.bar_code) t3
+		    on t1.check_num = t3.business_number, v_csm_party t2
+		  left join (select b.party_id, sum(b.jjye) as jjye
+		               from tb_loan_summary b
+		              where b.summary_status_cd in ('02', '03')
+		              group by b.party_id) t4
+		    on t2.PARTY_ID = t4.party_id
+		 where t1.party_id = t2.PARTY_ID
+
+		   and t1.user_num = #userNum#
+		   and t1.org_Num = #orgNum#
+   		<isNotNull property="csmName">  and t2.PARTY_NAME like '%$csmName$%' </isNotNull>
+      	<isNotNull property="certType"> and t2.CERT_TYPE=#certType# </isNotNull>
+    	<isNotNull property="certNum">  and t2.CERT_NUM=#certNum#  </isNotNull>
+	</select>
+	
+	<!--逾期借据信息查询-->
+	<select id="yqsummaryMsg" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select t2.PARTY_NUM,
+		       t2.PARTY_NAME,
+		       t3.product_type,
+		       t1.summary_num,
+		       t1.summary_amt,
+		       t1.jjyqbj,
+		     <!--   t1.arrear_itr,
+		       t1.punish_itr,
+		       -->
+		      ''	as arrear_itr,
+		       '' as punish_itr,
+		       t1.yqts,
+		       t4.bar_code
+		  from tb_loan_summary t1, v_csm_party t2, tb_loan_info t3
+		  left join (select a.business_number, a.bar_code
+		               from tb_pub_image_document a
+		              group by a.business_number, a.bar_code) t4
+		    on t3.loan_num = t4.business_number
+		 where t1.party_id = t2.PARTY_ID
+		   and t1.loan_id = t3.loan_id
+		   and t1.summary_status_cd = '03'
+		   and t1.user_num='$userNum$'
+		   and t1.org_num='$orgNum$'
+	   	<isNotNull property="csmName">  and t2.PARTY_NAME like '%$csmName$%' </isNotNull>
+	    <isNotNull property="certType"> and t2.CERT_TYPE='$certType$' </isNotNull>
+	    <isNotNull property="certNum">  and t2.CERT_NUM='$certNum$'  </isNotNull>
+	</select>
+	
+	<!-- 根据业务号查找影像信息	-->
+    <select id="findImgInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select t.image_document_id
+  		  from tb_pub_image_document t
+ 		  where t.business_number = #businessNumber#
+   	 	  and t.bar_code is not null
+    </select>
+    
+    <!-- 根据模板查找影像信息	-->
+    <select id="findImgByImgTplCd" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select t.*
+		  from tb_pub_image_type t
+		 where t.superior_id =
+		       (select t.image_type_id
+		          from tb_pub_image_type t
+		         where t.image_control_type = #imgTplCd#)
+    </select>
+</sqlMap>

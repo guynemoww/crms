@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:李伟 -->
+<sqlMap> 
+    <select id="queryAppraisalContactPage" parameterClass="java.util.HashMap" resultClass="com.bos.csm.specialcustomer.AppAgency.TbCsmAppraisalContactView">
+SELECT 
+    p.party_id partyId,     
+    p.party_name partyName,
+    a.address_type_cd addressTypeCd,
+    a.nationality_cd nationalityCd,
+    a.telephone telephone,
+    a.update_time updateTime,
+    a.address_id addressId,
+    a.zip_num zipNum,
+    a.fax fax,
+    a.linkman_name linkmanName,
+    a.mobile_phone mobilePhone
+FROM tb_csm_special_customer p
+JOIN tb_csm_address a ON p.party_id = a.party_id	   
+	   <isNotNull property="partyId">
+	    	and p.party_id = #partyId#
+	   </isNotNull>            
+    </select>   
+<select id="querySpecialTeamPage" parameterClass="java.util.HashMap" resultClass="com.bos.csm.specialcustomer.AppAgency.TbCsmSpecialTeamView">
+ SELECT 
+       n.party_id partyId,
+       n.party_name partyName,
+       n.party_num partyNum,
+       c.orgn_num orgnNum,    
+       c.corp_customer_type_cd corpCustomerTypeCd     
+FROM tb_csm_special_customer n
+JOIN tb_csm_party p ON p.party_id = n.party_id
+JOIN tb_csm_corporation c ON n.party_id = c.party_id
+	   <isNotNull property="partyName">
+	    	and n.party_name like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and n.party_num = #partyNum#
+	   </isNotNull>
+	   <isNotNull property="corpCustomerTypeCd">
+	    	and c.corp_customer_type_cd = #corpCustomerTypeCd#
+	   </isNotNull>             
+</select>
+</sqlMap>

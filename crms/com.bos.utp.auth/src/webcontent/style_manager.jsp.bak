@@ -1,0 +1,121 @@
+<%@page pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<%@include file="/common/nui/common.jsp" %>
+<%
+	UserObject user = (UserObject)session.getAttribute("userObject");
+	String userId = "";
+	String layout = "";
+	if(user!=null){
+		Object lay = user.getAttributes().get("layout");
+		userId = user.getUserId();
+		if(lay != null){
+			layout = lay.toString();
+		}
+	}
+%>
+<%@page import="com.eos.data.datacontext.UserObject"%>
+<html>
+<head>
+<title>用户信息修改</title>
+
+</head>
+<body >
+<div id="form1" >
+<table width="100%" showCollapseButton="true" bodyStyle="padding:0;" border="0" cellpadding="0" cellspacing="0">
+  		<tr>
+	    	 <td id="menuLocation" height="28" class="git_top">系统参数 > 我的参数 > 我的风格</td>
+	  	</tr>
+</table>
+  <div id="panel1" class="nui-panel" title="风格设置" iconCls="icon-add" style="width:99%;height:86%;" 
+    showToolbar="true" showCollapseButton="true" showFooter="true" allowResize="true">
+    <table align="center" border="0" width="100%" >
+      <tr>
+      	<td align="right">
+         	 选择布局：
+        </td>
+        <td>
+        	<div id="menuType" name="menuType" align="center" class="mini-dictradiogroup" dictTypeId="UTP_LAYOUTSTYLE" >
+	  		</div>
+	  		<div name="userId" value="<%=userId %>" class="nui-hidden" />
+        </td>
+      </tr>
+      <tr>
+      	<td align="right">
+         	 选择皮肤：
+        </td>
+        <td colspan="1">
+        	<div id="pageStyle" name="pageStyle" align="center" class="mini-dictradiogroup" dictTypeId="UTP_SKINSTYLE" >
+	  		</div>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+      	<td>
+        	<img id="layoutSkin" width="700" hight="320" src="" />
+        </td>
+      </tr>
+      <tr>
+      	<td><font color="red">注意：以上设置需要重新登录后才能生效。</font></td>
+      </tr>
+    </table>
+  </div>
+  <div style="text-align:center;padding:10px;">
+     <a class="nui-button" iconCls="icon-save" onclick="btnUpdate_onClick()" >保存</a>
+   </div>
+</div>
+
+<script type="text/javascript">
+   nui.parse();
+   
+   var form = new nui.Form("#form1");
+   
+   $.ajax({
+       url: "com.bos.utp.auth.StyleManager.getTypeAndStyle.biz.ext",
+       type: 'POST',
+       cache: false,
+       contentType:'text/json',
+       cache: false,
+       async: false,//非异步，即同步
+       success: function (data) {
+           var o = nui.decode(data);
+           //form.setData(o);
+           var type = o.menuType;
+           var style = o.pageStyle;
+           nui.get("menuType").setValue(type);
+           nui.get("pageStyle").setValue(style);
+           preview();//预览
+       }
+   });
+   
+   function btnUpdate_onClick(){
+     //var myStyle = nui.get("menuType").getValue();
+     var formData = form.getData(true,true);
+     
+     var json = nui.encode({oper:formData});
+     $.ajax({
+            url: "com.bos.utp.auth.StyleManager.updateMenuTypeAndStyle.biz.ext",
+            type: 'POST',
+            data: json,
+            cache: false,
+            contentType:'text/json',
+            success: function (text) {
+            	nui.alert("保存成功！");
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            	nui.alert("保存失败!");
+            }
+        });
+   }
+   
+   $("#pageStyle").click( preview );
+   $("#menuType").click( preview );
+   function preview(){
+ 	   var menuType = nui.get("menuType").getValue();
+	   var pageStyle = nui.get("pageStyle").getValue();
+	   var path = "<%=contextPath%>/mainframe/images/preview/" +　menuType + "_" + pageStyle+ ".PNG";
+	   document.getElementById("layoutSkin").src=path;  
+   }
+   
+</script>
+</body>
+</html>

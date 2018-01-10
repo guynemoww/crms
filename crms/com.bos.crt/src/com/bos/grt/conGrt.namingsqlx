@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <!-- 获取合同下关联的抵押合同信息-->
+    <select id="getConDyList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			    select ta.bz,
+           tc.party_name,
+           ta.subcontract_num,
+           ta.if_top_subcon,
+           decode(ta.if_top_subcon,'1',ta.zgbjxe,ta.subcontract_amt)as subcontract_amt,
+           decode(ta.if_top_subcon,'1',tb.surety_amt,ta.subcontract_amt)as surety_amt,
+           tb.con_subcon_id,
+           t.relation_id,
+           ta.subcontract_id,
+           ta.bz,
+           tb.operation_type
+      from tb_biz_subcontract_rel t,
+           tb_con_subcontract     ta,
+           tb_con_subcontract_rel tb,
+           tb_csm_party           tc
+          <!-- tb_con_contract_info td -->
+     where t.subcontract_id = ta.subcontract_id
+       and ta.subcontract_id = tb.subcontract_id
+       and ta.party_id = tc.party_id
+        <!--and td.contract_id=tb.contract_id -->
+        <!-- modi by shanmf:增加状态04的显示 20170921 -->
+       and ta.subcontract_status in ('01', '02', '03', '05','04')  
+		and ta.SUBCONTRACT_TYPE=#subcontractType#
+		<isNotNull property="applyId">  and t.APPLY_ID = '$applyId$' </isNotNull>
+		<isNotNull property="contractId">  and tb.CONTRACT_ID='$contractId$' </isNotNull>
+    </select>
+    
+       <!-- 获取已签合同抵押合同信息-->
+    <select id="getConDyListTmp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			    select ta.bz,
+		       tc.party_name,
+		       ta.subcontract_num,
+		       ta.if_top_subcon,
+		       nvl(ta.subcontract_amt, ta.zgbjxe) as subcontract_amt,
+		       decode(ta.if_top_subcon,'1',tb.surety_amt,td.contract_amt)as surety_amt,
+		       tb.con_subcon_id,
+		       t.relation_id,
+		       ta.subcontract_id,
+		       ta.bz,
+		       tb.operation_type
+		  from tb_biz_subcontract_rel t,
+		       tb_con_subcontract_t     ta,
+		       tb_con_subcontract_rel tb,
+		       tb_csm_party           tc,
+		       tb_con_contract_info td
+		 where t.subcontract_id = ta.subcontract_id
+		   and ta.subcontract_id = tb.subcontract_id
+		   and ta.party_id = tc.party_id
+		   and td.contract_id=tb.contract_id
+		   and ta.subcontract_status in ('01', '02', '03')	
+		and ta.SUBCONTRACT_TYPE=#subcontractType#
+		<isNotNull property="applyId">  and t.APPLY_ID = '$applyId$' </isNotNull>
+		<isNotNull property="contractId">  and tb.CONTRACT_ID='$contractId$' </isNotNull>
+    </select>
+    
+    
+    
+    <!-- 获取未提交的业务合同且担保合同未新增的担保合同-->
+    <select id="getTZCon" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select *
+			from TB_CON_SUBCONTRACT_REL rel,TB_CON_SUBCONTRACT sub
+			where sub.SUBCONTRACT_ID=rel.SUBCONTRACT_ID
+			and rel.OPERATION_TYPE='02'			
+            and sub.subcontract_status='01'
+			and rel.CONTRACT_ID=#contractId#
+    </select>
+    
+       <!-- 获取最高额可用余额-->
+    <select id="getZGEYE" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select sum(nvl(t1.surety_amt,0)) as yyje  from tb_con_subcontract_rel t1,tb_con_contract_info t2 where
+	t1.contract_id=t2.contract_id and
+ 	t1.subcontract_id=#subcontractId# and t2.con_status='03' and t2.contract_num not in (
+ select contract_num from tb_con_contract_info where contract_id=#contractId#
+ )   
+    </select>
+    
+    
+    
+    <!-- 获取押品是否关联到有效的业务合同-->
+    <select id="getGrtCon" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from TB_GRT_MORTGAGE_BASIC m ,TB_CON_SUB_GRT_REL rel,TB_CON_SUBCONTRACT sub
+			where m.SURETY_ID=rel.SURETY_ID
+            and sub.SUBCONTRACT_ID=rel.SUBCONTRACT_ID
+            and sub.SUBCONTRACT_STATUS='03'
+			and m.SURETY_ID=#suretyId#
+    </select>
+       
+    <!-- 获取已签合同保证合同信息-->
+    <select id="getConBzrList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (
+		      select ta.SUBCONTRACT_NUM,ta.IF_TOP_SUBCON,
+             	decode(ta.IF_TOP_SUBCON,'1',ta.ZGBJXE,'0',info.CONTRACT_AMT,'0') SUBCONTRACT_AMT,
+             	decode(ta.IF_TOP_SUBCON,'1',tb.SURETY_AMT,'0',info.CONTRACT_AMT,'0') SURETY_AMT,
+                tb.CON_SUBCON_ID,t.RELATION_ID,ta.SUBCONTRACT_ID,ta.BZ,tb.OPERATION_TYPE
+                from TB_CON_SUBCONTRACT ta
+                inner join TB_CON_SUBCONTRACT_REL tb on ta.SUBCONTRACT_ID = tb.SUBCONTRACT_ID
+                inner join TB_BIZ_SUBCONTRACT_REL t on t.SUBCONTRACT_ID = ta.SUBCONTRACT_ID
+                left join TB_CON_CONTRACT_INFO info on tb.CONTRACT_ID=info.CONTRACT_ID
+                where ta.SUBCONTRACT_TYPE='04'
+                and ta.SUBCONTRACT_STATUS in('01','02','03','05')
+		        and tb.CONTRACT_ID=#contractId#
+		)th left join (
+		    select listagg(tx.PARTY_NAME,',') within group(order by PARTY_NAME) as PARTY_NAME,ty.SUBCONTRACT_ID  
+		        from TB_GRT_GUARANTEE_BASIC tz,TB_CON_SUB_GRT_REL ty,TB_CSM_PARTY tx,TB_CON_SUBCONTRACT_REL tw
+		        where tz.SURETY_ID=ty.SURETY_ID
+		        and tz.PARTY_ID=tx.PARTY_ID
+		        and ty.SUBCONTRACT_ID=tw.SUBCONTRACT_ID
+		        and tw.CONTRACT_ID=#contractId#
+		        group by ty.SUBCONTRACT_ID
+		) ti 
+		on th.SUBCONTRACT_ID=ti.SUBCONTRACT_ID
+    </select>
+    
+    <!-- 获取合同下的保证金协议列表-->
+     <select id="getConBZJList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	   select ta.CON_SUBCON_ID,t.SUBCONTRACT_ID,t.SUBCONTRACT_NUM,p.PARTY_NAME,t.BZ,t.SUBCONTRACT_AMT,t.BZJJE,ta.operation_type
+		    from TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL ta,TB_CSM_PARTY p
+		    where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+		    and p.PARTY_ID=t.PARTY_ID
+            and t.SUBCONTRACT_STATUS in('01','02','03','05')
+		    and t.SUBCONTRACT_TYPE=#subcontractType#
+		    and ta.CONTRACT_ID=#contractId#
+    </select>
+    
+     <!-- 获取合同下的追加保证金历史记录列表-->
+     <select id="getConBZJRecordList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	   select ta.CON_SUBCON_ID,t.SUBCONTRACT_ID,t.SUBCONTRACT_NUM,p.PARTY_NAME,t.BZ,t.SUBCONTRACT_AMT,t.BZJJE,ta.operation_type
+		    from TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL ta,TB_CSM_PARTY p
+		    where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+		    and p.PARTY_ID=t.PARTY_ID
+            and t.SUBCONTRACT_STATUS in('01','02','03','05')
+		    and t.SUBCONTRACT_TYPE=#subcontractType#
+		    and ta.CONTRACT_id in (select a.contract_id from tb_con_contract_info a 
+        where a.contract_num=( select b.contract_num from tb_con_contract_info b 
+        where b.contract_id=#contractId#)
+        and a.con_status ='03')
+    </select>
+    
+    <!-- 担保合同 对应批复信息-->
+    <select id="getApproveInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select te.APPROVE_ID,te.APPLY_ID from TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL ta,tb_con_contract_info tb,tb_biz_amount_detail_approve tc,tb_biz_amount_approve td,tb_biz_approve te
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.CONTRACT_ID=tb.CONTRACT_ID
+			and tb.AMOUNT_DETAIL_ID =tc.AMOUNT_DETAIL_ID
+			and tc.AMOUNT_ID=td.AMOUNT_ID
+			and td.APPROVE_ID=te.APPROVE_ID
+			and t.SUBCONTRACT_ID=#subcontractId#
+    </select>
+    <!--获取 担保合同 对应的押品信息 -->
+    <select id="getConSub" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tb.surety_id,ta.RELATION_ID,tc.PARTY_NAME,tb.SURETY_NO,tb.COLL_TYPE,tb.SORT_TYPE,t.BZ,tb.ASSESS_VALUE,tb.MORTGAGE_VALUE,(nvl(tb.MORTGAGE_VALUE,0)-nvl(tb.avi_amt,0)) as used_AMT,ta.SURETY_AMT
+        from TB_CON_SUBCONTRACT t,TB_CON_SUB_GRT_REL ta,TB_GRT_MORTGAGE_BASIC tb,TB_CSM_PARTY tc
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SURETY_ID=tb.SURETY_ID
+			and tb.PARTY_ID=tc.PARTY_ID
+			<isNotNull property="subcontractId">  and t.SUBCONTRACT_ID=#subcontractId# </isNotNull>
+			<isNotNull property="subcontractNum">  and t.SUBCONTRACT_NUM=#subcontractNum# </isNotNull>
+			
+    </select>
+    <!--获取 保证合同 下关联 保证人信息-->
+    <!-- 移植数据显示不同字段 -->
+    <select id="getConSubBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				 select ta.surety_id,
+			        tb.relation_id,
+			        tc.subcontract_type,
+			        td.party_name,
+			        td.party_id,
+			        td.party_type_cd,
+			        td.cert_num,
+			        td.cert_type,
+			        case when te.if_data_move = '1' then tb.surety_amt else ta.surety_amt end as total_amt,
+			        (ta.surety_amt - ta.usable_guarantee_limit) as used_amt,
+			        decode(tc.if_top_subcon, '1', tb.surety_amt, te.rmb_amt) as surety_amt
+			   from tb_grt_guarantee_basic ta,
+			        tb_con_sub_grt_rel     tb,
+			        tb_con_subcontract     tc,
+			        tb_con_subcontract_rel td,
+			        tb_con_contract_info   te,
+			        v_csm_party            td
+			  where ta.surety_id = tb.surety_id
+			    and tb.subcontract_id = tc.subcontract_id
+			    and ta.party_id = td.party_id
+			    and tc.subcontract_id = td.subcontract_id
+			    and td.contract_id = te.contract_id
+			    and te.con_status != '06'
+			   	and tb.SUBCONTRACT_ID=#subcontractId#
+			<isNotNull property="contractId">  and te.CONTRACT_ID=#contractId# </isNotNull>
+    </select>
+    
+    <!--获取 担保合同 对应的押品信息   保证金-->
+    <select id="getConSubBzj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  ta.RELATION_ID,m.SURETY_ID,m.MARGIN_SORT,m.OPEN_BANK,M.MARGIN_ACCOUNT,
+				m.ACCT_NAME,m.CURRENCY_CD,m.ACC_BALANCE,
+				to_char(m.BEGIN_DATE,'yyyy-mm-dd') as BEGIN_DATE,
+				to_char(m.END_DATE,'yyyy-mm-dd') as END_DATE,
+				m.IS_JIXI,
+				m.MARGIN_RATE,
+				m.APPEND_FLAG,
+				m.APPEND_AMT
+            from TB_CON_SUBCONTRACT t,TB_CON_SUB_GRT_REL ta,tb_grt_mortgage_basic tb,TB_CSM_PARTY tc,tb_grt_margin m
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SURETY_ID=tb.SURETY_ID
+			and t.PARTY_ID=tc.PARTY_ID
+            and m.SURETY_ID=tb.SURETY_ID
+			and t.SUBCONTRACT_ID=#subcontractId#
+    </select>
+    
+ 
+    <!--抵押合同页面选择抵质人信息 -->
+    <select id="selectParty" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.PARTY_ID AS PARTY_ID,ta.PARTY_NAME AS PARTY_NAME,ta.PARTY_TYPE_CD
+			from TB_BIZ_GRT_REL t,tb_csm_party ta,TB_GRT_MORTGAGE_BASIC tb 
+			where t.APPLY_ID=#applyId#
+			and t.SURETY_TYPE =#subcontractType#
+			and t.SURETY_ID=tb.SURETY_ID
+			and tb.PARTY_ID=ta.PARTY_ID
+			and tb.mortgage_status!='06'
+			group by ta.PARTY_ID,ta.PARTY_NAME,ta.PARTY_TYPE_CD
+    </select>
+    <!--抵押合同页面选择保证人信息 -->
+    <select id="selectPartyBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.PARTY_ID AS partyId,ta.PARTY_NAME AS partyname
+			from TB_BIZ_GRT_REL t,tb_csm_party ta,TB_GRT_GUARANTEE_BASIC tb 
+			where t.APPLY_ID=#applyId#
+			and t.SURETY_TYPE =#subcontractType#
+			and t.SURETY_ID=tb.SURETY_ID
+			and tb.PARTY_ID=ta.PARTY_ID
+			group by ta.PARTY_ID,ta.PARTY_NAME
+    </select>
+    <!--签担保合同时，查询该客户下，该业务申请下  该笔业务下的担保物信息(担保合同可以引入的押品) -->
+    <!-- modi by shangmf:20171020:因后续担保跟押品引入押品时，有可能有重复记录，所以加上distinct -->
+    <select id="selSubGrt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select distinct t.SURETY_ID,tb.PARTY_NAME, t.SURETY_NO,t.SORT_TYPE, 'CNY' AS CURRENCY_CD,nvl(t.MORTGAGE_VALUE,0) as MORTGAGE_VALUE,(nvl(t.MORTGAGE_VALUE,0)-nvl(t.avi_amt,0)) as surety_amt
+    		from TB_GRT_MORTGAGE_BASIC t,TB_BIZ_GRT_REL ta,tb_csm_party tb
+			where t.SURETY_ID=ta.SURETY_ID
+			and t.party_id=tb.party_id
+			and t.PARTY_ID =(select party_id from TB_CON_SUBCONTRACT where SUBCONTRACT_ID =#subcontractId# )
+			and ta.APPLY_ID =#applyId#
+			and ta.SURETY_TYPE=#subcontractType#
+			and t.MORTGAGE_STATUS !='06'
+    </select>
+        <!--签担保合同时，可以引入的保证人 -->
+    <select id="selSubGrtBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select t.surety_id,
+		       tb.party_name,
+		       tb.cert_num,
+		       tb.cert_type,
+		       t.currency_cd,
+		       t.surety_amt,
+		       (t.surety_amt - t.usable_guarantee_limit)as used_amt
+		  from tb_grt_guarantee_basic t, tb_biz_grt_rel ta, v_csm_party tb
+		 where t.surety_id = ta.surety_id
+		   and t.party_id = tb.party_id
+			and t.PARTY_ID not in (select te.PARTY_ID from TB_CON_SUBCONTRACT_REL td,tb_con_contract_info te where td.CONTRACT_ID=te.CONTRACT_ID and td.SUBCONTRACT_ID =#subcontractId#
+                                union
+                                select te.PARTY_ID from TB_CON_SUBCONTRACT_REL td,tb_con_credit_info te where td.CONTRACT_ID=te.CONTRACT_ID and td.SUBCONTRACT_ID =#subcontractId#)
+			and ta.APPLY_ID =#applyId#
+			and ta.SURETY_TYPE=#subcontractType#
+			<!--and t.IF_TOP_AMT = (select IF_TOP_SUBCON from TB_CON_SUBCONTRACT where SUBCONTRACT_ID =#subcontractId# )-->
+    </select>
+    
+    <!--签担保合同时，保证金 -->
+    <select id="selSubGrtBzj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  m.SURETY_ID,m.MARGIN_SORT,m.MARGIN_ACCOUNT,m.OPEN_BANK,m.ACCT_NAME,m.CURRENCY_CD,m.ACC_BALANCE,to_char(m.END_DATE,'yyyy-mm-dd') as END_DATE,m.IS_JIXI,m.MARGIN_RATE
+        from TB_GRT_MORTGAGE_BASIC t,TB_BIZ_GRT_REL ta,tb_csm_party tb,TB_GRT_MARGIN m
+			where t.SURETY_ID=ta.SURETY_ID
+			and t.party_id=tb.party_id
+            and m.SURETY_ID=t.SURETY_ID
+			and t.PARTY_ID =(select party_id from TB_CON_SUBCONTRACT where SUBCONTRACT_ID =#subcontractId# )
+			and ta.APPLY_ID =#applyId#
+			and ta.SURETY_TYPE=#subcontractType#
+    </select>
+    
+    <!--add by shangmf:根据contractId取合同信息 -->
+    <select id="selConInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select con.contract_num,con.product_type,to_char(con.begin_date,'yyyymmdd') as begin_date,to_char(con.end_date,'yyyymmdd') as end_date,
+    	to_char(con.contract_amt) as contract_amt,con.currency_cd,con.guaranty_type,con.main_guaranty_type,con.con_status,con.user_num ,con.org_num
+    	from tb_con_contract_info con
+			where con.contract_id=#contractId#
+    </select>
+    
+    <!--add by shangmf:根据contractId取担保合同信息：缺 pb_guar_tp_cd保证担保类型:pbGuarTpCd，可以不要 -->
+    <select id="selGuarInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ta.subcontract_num,ta.bz,to_char(ta.subcontract_amt) as subcontract_amt,ta.subcontract_status,ta.subcontract_type,tc.party_num,tc.party_name,to_char(ta.begin_date,'yyyymmdd') as begin_date,to_char(ta.end_date,'yyyymmdd') as end_date,ta.if_top_subcon,to_char(ta.zgbjxe) as zgbjxe
+		from
+           tb_con_subcontract     ta,
+           tb_con_subcontract_rel tb,
+           tb_csm_party           tc 
+        where ta.subcontract_id = tb.subcontract_id and ta.party_id = tc.party_id and tb.contract_id=#contractId#
+    </select>
+    
+    <!--add by shangmf:根据contractId取质押物信息 -->
+    <select id="selcollInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select tc.relation_id,ta.subcontract_num,td.surety_no 
+			from tb_con_subcontract ta,tb_con_subcontract_rel tb,TB_CON_SUB_GRT_REL tc,tb_grt_mortgage_basic td
+			where ta.subcontract_id=tb.subcontract_id and tb.subcontract_id = tc.subcontract_id and tc.surety_id = td.surety_id
+			and tb.contract_id=#contractId#
+    </select>  
+    
+    <!--获取 综合授信 下关联 保证人信息-->
+    <!-- 移植数据显示不同字段 -->
+    <select id="getCreditSubBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select ta.surety_id,
+              tb.relation_id,
+              tc.subcontract_type,
+              td.party_name,
+              td.party_id,
+              td.party_type_cd,
+              td.cert_num,
+              td.cert_type,
+              case when tc.if_data_move = '1' then tb.surety_amt else ta.surety_amt end as total_amt,
+              (ta.surety_amt - ta.usable_guarantee_limit) as used_amt,
+              tb.surety_amt as surety_amt
+         from tb_grt_guarantee_basic ta,
+              tb_con_sub_grt_rel     tb,
+              tb_con_subcontract     tc,
+              tb_con_subcontract_rel tf,
+              tb_con_credit_info   te,
+              v_csm_party  td                       
+        where ta.surety_id = tb.surety_id
+          and tb.subcontract_id = tc.subcontract_id
+         and ta.party_id = td.party_id
+          and tc.subcontract_id = tf.subcontract_id
+          and tf.contract_id = te.contract_id       
+          and te.con_status != '06'
+          and tb.SUBCONTRACT_ID=#subcontractId#
+          <isNotNull property="contractId">  and te.CONTRACT_ID=#contractId# </isNotNull>
+    </select> 
+    <!--获取 保证金账户状态-->
+    <update id="updateMarginStatus" parameterClass="java.util.HashMap">
+     	 update  tb_grt_margin tg set tg.margin_status=#marginStatus# where tg.surety_key_id= (select t.surety_key_id
+              from tb_con_subcontract_rel r, tb_grt_margin t,TB_CON_SUB_GRT_REL w
+             where w.surety_id = t.surety_id
+               and r.SUBCONTRACT_ID = w.SUBCONTRACT_ID
+               and t.margin_status=#oldMarginStatus# 
+               and r.contract_id = #contractId#)
+     </update> 
+     
+     <!--获取追加保证金记录 对应  保证金账户列表-->
+    <select id="getConSubBzjRecord" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  ta.RELATION_ID,m.SURETY_ID,m.MARGIN_SORT,m.OPEN_BANK,M.MARGIN_ACCOUNT,
+				m.ACCT_NAME,m.CURRENCY_CD,m.ACC_BALANCE,
+				to_char(m.END_DATE,'yyyy-mm-dd') as END_DATE,m.IS_JIXI,m.MARGIN_RATE,m.margin_status,m.surety_key_id
+            from TB_CON_SUBCONTRACT t,TB_CON_SUB_GRT_REL ta,tb_grt_mortgage_basic tb,TB_CSM_PARTY tc,tb_grt_margin m
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.SURETY_ID=tb.SURETY_ID
+			and t.PARTY_ID=tc.PARTY_ID
+            and m.SURETY_ID=tb.SURETY_ID
+            <!--and m.margin_status='03'-->
+            and m.append_flag='1'
+			and t.SUBCONTRACT_ID=#subcontractId#
+    </select>
+    
+    <select id="getBzjInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT cs.SUBCONTRACT_ID,ci.CONTRACT_AMT,cs.BZJBL,cs.BZJJE
+FROM TB_CON_CONTRACT_INFO ci 
+INNER JOIN TB_CON_SUBCONTRACT_REL csr ON ci.CONTRACT_ID= csr.CONTRACT_ID
+INNER JOIN TB_CON_SUBCONTRACT cs ON cs.SUBCONTRACT_ID=csr.SUBCONTRACT_ID
+WHERE ci.CONTRACT_ID=#contractId# AND cs.SUBCONTRACT_TYPE='03'
+    </select>
+    
+	<select id="validBzjAccBalance" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT sgr.SUBCONTRACT_ID,SUM(NVL(gm.ACC_BALANCE,0))ACC_BALANCE FROM TB_CON_SUB_GRT_REL sgr 
+INNER JOIN tb_grt_margin gm ON sgr.SURETY_ID=gm.SURETY_ID
+WHERE sgr.SUBCONTRACT_ID=#subcontractId# 
+GROUP BY sgr.SUBCONTRACT_ID 
+HAVING $NEW_BZJJE$ &lt;= SUM(NVL(gm.ACC_BALANCE,0))
+	</select>
+</sqlMap>

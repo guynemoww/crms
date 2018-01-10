@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:CHJ -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="RiskHistoryList">
+        <result column="party_id" property="partyId"/>
+        <result column="party_name" property="partyName"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="cert_type" property="certType"/>
+        <result column="cert_num" property="certNum"/>
+        <result column="corp_customer_type_cd" property="corpCustomerTypeCd"/>
+        <result column="contract_id" property="contractId"/>
+        <result column="contract_num" property="contractNum"/>
+        <result column="contractNum2" property="contractNum2"/>
+        <result column="contract_amt" property="contractAmt"/>
+        <result column="con_balance" property="conBalance"/>
+        <result column="con_yu_e" property="conYuE"/>
+        <result column="begin_date" property="beginDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="currency_cd" property="currencyCd"/>
+        <result column="product_type" property="productType"/>
+        <result column="cls_result" property="clsResult"/>
+    </resultMap>
+    
+    <select id="queryRiskHistoryList" parameterClass="java.util.HashMap" resultMap="RiskHistoryList">
+		select 
+			 t3.party_id,
+			 t3.party_name,
+	         t4.cert_type,   
+	         t4.cert_num,
+	         t4.corp_customer_type_cd,
+	         t3.party_num,
+	         t2.contract_id,
+	         t2.contract_num,
+	         t2.contract_num contractNum2,
+	         t2.contract_amt,
+	         t2.con_balance, 
+	         t2.con_yu_e,
+	         to_char(t2.begin_date,'yyyy-MM-dd') begin_date,
+			 to_char(t2.end_date,'yyyy-MM-dd') end_date,
+	         t2.currency_cd, 
+	         t2.product_type,
+	         t2.cls_result
+	    from (select distinct contract_num from tb_cla_debt_detailInfo) t1,
+	         tb_con_contract_info t2,
+	         tb_csm_party t3,
+	         (SELECT party_id,cert_type, cert_num,'' corp_customer_type_cd
+	            FROM tb_csm_natural_person
+	          UNION
+	          SELECT party_id,'202' cert_type, org_register_cd cert_num,corp_customer_type_cd
+	            FROM tb_csm_corporation) t4
+     where t1.contract_num = t2.contract_num
+       and t3.party_id = t2.party_id
+       and t4.party_id = t2.party_id
+       and t2.con_status = '03'
+       and t2.org_num in (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%$orgId$%')
+       <isNotNull property="posiFlag">
+       	  AND t2.user_num=#userNum#
+       </isNotNull>
+       <isNotNull property="certType">
+			AND t4.cert_type = '$certType$'
+		</isNotNull>
+		<isNotNull property="certNum">
+			AND t4.cert_num = '$certNum$'
+		</isNotNull>
+		<isNotNull property="partyName">
+			AND t3.party_name LIKE '%$partyName$%'
+		</isNotNull>
+		<isNotNull property="contractNum">
+			AND t1.contract_num = '$contractNum$'
+		</isNotNull>
+    </select>
+    
+    <resultMap class="java.util.HashMap" id="RiskHistoryListDetail">
+        <result column="create_time" property="createTime"/>
+        <result column="cla_method" property="claMethod"/>
+        <result column="cls_result" property="clsResult"/>
+        <result column="user_num" property="userNum"/>
+    </resultMap>
+    <select id="queryRiskHistoryListDetail" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select 
+    		CLA_METHOD, 
+    		USER_NUM, 
+    		to_char(CREATE_TIME,'yyyy/MM/dd hh24:mi:ss') CREATE_TIME, 
+    		CLS_RESULT
+	  	from 
+	  		tb_cla_debt_detailInfo
+	 	where 
+	 		contract_num = #contractNum#
+	 		and status != '3'
+	 	order by CREATE_TIME
+    </select>
+</sqlMap>

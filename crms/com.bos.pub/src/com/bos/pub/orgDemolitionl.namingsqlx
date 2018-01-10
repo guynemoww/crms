@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+
+    <resultMap class="java.util.HashMap" id="qcountfk">
+        <result column="countfk" property="countfk"/>
+    </resultMap>
+    
+    <select id="queryfkcount" parameterClass="java.util.HashMap"  resultMap="qcountfk">
+	select count(0) countfk
+	from tb_loan_info l,
+	tb_loan_detail k 
+	where l.loan_info_id=k.loan_info_id 
+	and (k.loan_detail_status_cd in('02','03')
+	 or(k.loan_detail_status_cd ='04' and 
+	k.loan_detail_id not in(select  a.loan_detail_id from tb_loan_summary a where a.LOAN_STATUS ='02'))
+	)
+	<isNotNull property="partyId">
+	and k.PARTY_ID=#partyId#
+	</isNotNull>
+	
+    </select>
+    
+    <select id="queryfkcountCrdit" parameterClass="java.util.HashMap"  resultMap="qcountfk">
+	select count(0) countfk
+	from tb_loan_info l,
+	tb_loan_detail k 
+	where l.loan_info_id=k.loan_info_id 
+	and (k.loan_detail_status_cd in('02','03')
+	 or(k.loan_detail_status_cd ='04' and 
+	k.loan_detail_id not in(select  a.loan_detail_id from tb_loan_summary a where a.LOAN_STATUS ='02'))
+	)
+	<isNotNull property="approveId">
+	and l.CONTRACT_ID in
+	(
+	select distinct CONTRACT_ID from TB_CON_CONTRACT where APPROVE_ID=#approveId#
+	)
+	</isNotNull>
+	
+    </select>
+    
+      
+   
+   
+    <select id="queryConPage" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    SELECT
+		t1.CONTRACT_NUM,
+		t1.PRODUCT_TYPE,
+    	t1.MAIN_SURETY_MODE,
+    	t1.ORG_NUM,
+		t2.PARTY_NAME,
+		t1.LOAN_DIRECTION,
+   	 	t3.SHBACK_ENTERPRISE_SIZE_CD
+	FROM
+		TB_CON_CONTRACT t1 
+			INNER JOIN TB_CSM_PARTY t2 
+			ON t1.PARTY_ID=t2.PARTY_ID 
+				INNER JOIN TB_CSM_CORPORATION t3 
+				ON t1.PARTY_ID=t3.PARTY_ID
+    	where 1=1
+    	<isNotNull property="partyName">
+    		and t2.PARTY_NAME like  '%$partyName$%'
+    	</isNotNull>
+    	<isNotNull property="orgNum">
+    		and t1.ORG_NUM = #orgNum#
+    	</isNotNull>
+    	<isNotNull property="enterpriseSize">
+    		and t3.SHBACK_ENTERPRISE_SIZE_CD =#enterpriseSize#
+    	</isNotNull>
+    	<isNotNull property="loanDirection">
+    		and t1.LOAN_DIRECTION =#loanDirection#
+    	</isNotNull>
+    	<isNotNull property="suretyMode">
+    		and t1.MAIN_SURETY_MODE =#suretyMode#
+    	</isNotNull>
+     </select>
+     <select id="queryLoanPage" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     	SELECT
+			t1.LOAN_NUM,
+    		t1.CURRENCY_CD,
+    		t1.LOAN_AMT,
+    		t3.PARTY_NAME,
+    		t2.MAIN_SURETY_MODE,
+    		t2.LOAN_DIRECTION,
+   			 t1.ORG_NUM,
+   			 t4.SHBACK_ENTERPRISE_SIZE_CD
+		FROM
+			TB_LOAN_SUMMARY t1 
+				INNER JOIN TB_CON_CONTRACT t2 
+				ON t1.CONTRACT_ID=t2.CONTRACT_ID 
+					INNER JOIN TB_CSM_PARTY t3 
+					ON t1.PARTY_ID=t3.PARTY_ID 
+						INNER JOIN TB_CSM_CORPORATION t4 
+						ON t1.PARTY_ID = t4.PARTY_ID
+			where 1=1
+			<isNotNull property="partyName">
+    			and t3.PARTY_NAME like  '%$partyName$%'
+    		</isNotNull>
+    		<isNotNull property="orgNum">
+    			and t1.ORG_NUM = #orgNum#
+    		</isNotNull>
+    		<isNotNull property="enterpriseSize">
+    			and t4.SHBACK_ENTERPRISE_SIZE_CD =#enterpriseSize#
+    		</isNotNull>
+    		<isNotNull property="loanDirection">
+    			and t2.LOAN_DIRECTION =#loanDirection#
+    		</isNotNull>
+    		<isNotNull property="suretyMode">
+    			and t2.MAIN_SURETY_MODE =#suretyMode#
+    		</isNotNull>
+     </select>
+</sqlMap>

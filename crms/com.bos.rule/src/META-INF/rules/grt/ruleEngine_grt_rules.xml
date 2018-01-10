@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+   
+	<!-- 押品管理出库校验-->
+	<rule id="RGRT_0001" name="押品存在在途授信业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的出库信息，不允许重复申请" checkLevel="err">
+		<sql><![CDATA[select count(*) c from TB_GRT_OUT_DETAIL detail,TB_GRT_OUT o where o.OUT_ID=detail.OUT_ID and o.APPROVE_STATE in ('01','02') and detail.SURETY_KEY_ID=@suretyKeyId]]></sql>
+	</rule>
+	<!-- 押品管理生效担保合同-->
+	<rule id="RGRT_0002" name="押品关联有用的担保合同" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="押品已关联到担保合同$[c],不能删除" checkLevel="err">
+		<sql><![CDATA[
+					select nvl(listagg(sub.subcontract_num, ',') within
+			           group(order by sub.subcontract_num),
+			           '0') as c
+			  from TB_GRT_MORTGAGE_BASIC m,
+			       TB_CON_SUB_GRT_REL    rel,
+			       TB_CON_SUBCONTRACT    sub
+			 where m.SURETY_ID = rel.SURETY_ID
+			   and sub.SUBCONTRACT_ID = rel.SUBCONTRACT_ID
+			   and sub.SUBCONTRACT_STATUS in ('01','02','03','04','05')
+			and m.SURETY_ID=@suretyId		
+		]]></sql>
+	</rule>	
+	<rule id="RGRT_0003" name="押品关联生效担保合同" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="押品已关联到生效的担保合同$[c],不能删除" checkLevel="err">
+		<sql><![CDATA[
+					select nvl(listagg(sub.subcontract_num, ',') within
+			           group(order by sub.subcontract_num),
+			           '0') as c
+			  from TB_GRT_MORTGAGE_BASIC m,
+			       TB_CON_SUB_GRT_REL    rel,
+			       TB_CON_SUBCONTRACT    sub
+			 where m.SURETY_ID = rel.SURETY_ID
+			   and sub.SUBCONTRACT_ID = rel.SUBCONTRACT_ID
+			   and sub.SUBCONTRACT_STATUS = '03'
+			and m.SURETY_ID=@suretyId		
+		]]></sql>
+	</rule>	
+	<rule id="RGRT_0004" name="编辑时校验权证编号是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的登记权证编号$[registerCertiNo]已存在" checkLevel="err">
+		<sql><![CDATA[select count(*)c from tb_grt_reg_card t where t.register_certi_no=@registerCertiNo and t.surety_key_id!=@suretyKeyId
+		 ]]></sql>
+	</rule>
+	
+	<rule id="RGRT_0005" name="主合同下是否有在途的担保合同调整" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合同下有在途的担保合同$[c]调整流程" checkLevel="err">
+		<sql><![CDATA[
+			select nvl(listagg(c.subcontract_num, ',') within
+			           group(order by c.subcontract_num),
+			           '0') as c
+			  from tb_con_contract_info   a,
+			       tb_con_subcontract_rel b,
+			       tb_con_subcontract_t   c
+			 where a.contract_id = b.contract_id
+			   and b.subcontract_id = c.subcontract_id
+			   and c.status in ('01', '02')
+			   and a.contract_id=@contractId
+    ]]></sql>
+	</rule>
+	
+	<rule id="RGRT_0006" name="担保合同关联的主合同有在途调整" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同下有在途的主合同$[c]调整流程" checkLevel="err">
+		<sql><![CDATA[
+		 select nvl(listagg(a.contract_num, ',') within
+           group(order by a.contract_num),
+           '0') as c
+  from (select distinct a.contract_num
+          from (select a.contract_num,
+                       a.contract_id,
+                       a.con_status,
+                       a.old_contract_id
+                  from tb_con_contract_info a
+                union all
+                select a.contract_num,
+                       a.contract_id,
+                       a.con_status,
+                       a.old_contract_id
+                  from tb_con_credit_info a) a,
+               tb_con_subcontract_rel b,
+               tb_con_subcontract c
+         where (a.contract_id = b.contract_id or
+               a.old_contract_id = b.contract_id)
+           and b.subcontract_id = c.subcontract_id
+           and a.con_status in ('01', '02')
+           and c.subcontract_id =@subcontractId) a
+
+    ]]></sql>
+	</rule>
+	
+	<rule id="RGRT_0007" name="担保合同关联有生效或在途调整主合同" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="担保合同下有生效的或在途调整的主合同$[c]" checkLevel="err">
+		<sql><![CDATA[
+			 	  select nvl(listagg(a.contract_num, ',') within
+           		group(order by a.contract_num),
+		           '0') as c
+		  from (select distinct a.contract_num
+		          from (select a.contract_num,
+		                       a.contract_id,
+		                       a.con_status,
+		                       a.old_contract_id
+		                  from tb_con_contract_info a
+		                union all
+		                select a.contract_num,
+		                       a.contract_id,
+		                       a.con_status,
+		                       a.old_contract_id
+		                  from tb_con_credit_info a) a,
+		               tb_con_subcontract_rel b,
+		               tb_con_subcontract c
+		         where (a.contract_id = b.contract_id or
+		               a.old_contract_id = b.contract_id)
+		           and b.subcontract_id = c.subcontract_id
+		           and a.con_status in ('01', '02')
+		           and c.subcontract_id =@subcontractId) a
+    ]]></sql>
+	</rule>
+	
+	<rule id="RGRT_0008" name="权证下的押品存在在途出账流程" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="权证下的押品有在途出账$[c]的流程" checkLevel="err">
+		<sql><![CDATA[
+				    select nvl(listagg(t.loan_num, ',') within group(order by t.loan_num),
+				               '0') as c
+				      from (select distinct t.loan_num
+				              from tb_loan_info           t,
+				                   tb_con_sub_grt_rel     b,
+				                   tb_con_subcontract_rel c,
+				                   tb_grt_card_mortagage  a
+				              left join tb_grt_house te
+				                on a.surety_id = te.surety_id
+				             where a.surety_id = b.surety_id
+				               and b.subcontract_id = c.subcontract_id
+				               and c.contract_id = t.contract_id
+				               and t.loan_status in ('01', '02')
+				               and nvl(te.house_prop_status, '01') = '01'
+				               and t.product_type not in
+				                   ('01013001', '02005001','01013010', '02005010', '02005002', '02005003')
+				              and a.surety_key_id = @suretyKeyId
+				               ) t
+    ]]></sql>
+	</rule>
+	
+	<rule id="RGRT_0009" name="新增时校验权证编号是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的登记权证编号$[registerCertiNo]已存在" checkLevel="err">
+		<sql><![CDATA[select count(*)c from tb_grt_reg_card t where t.register_certi_no=@registerCertiNo 
+		 ]]></sql>
+	</rule>
+	
+</checkrules>

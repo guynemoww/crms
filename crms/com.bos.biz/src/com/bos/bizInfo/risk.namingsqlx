@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+	<select id="getIsBlackList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select nvl(count(1),0) as isBlackList from tb_lst_info where party_id = '$partyId$' and list_status = '2'
+    </select>
+	<select id="getIsCreditRating" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT nvl(general_adjust_rating_cd,'') as isCreditRating FROM TB_IRM_INTERNAL_RATING_APPLY
+			where party_id =  '$partyId$'   and RATING_STATE='03' and rating_Type = '3'
+    </select>
+	<select id="getIsCreditRatingJy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT nvl(general_adjust_rating_cd,'') as isCreditRatingJy FROM TB_IRM_INTERNAL_RATING_APPLY
+			where party_id =  '$partyId$'   and RATING_STATE='03' and rating_Type = '2'
+    </select>
+	<select id="getIsCreditRatingXf" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT nvl(general_adjust_rating_cd,'') as isCreditRatingXf FROM TB_IRM_INTERNAL_RATING_APPLY
+			where party_id =  '$partyId$'   and RATING_STATE='03' and rating_Type = '1'
+    </select>
+	<select id="getIsBuslMaturityMonth" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (case when months_between(sysdate,r.register_end_date)+1>0  then 1 else  0 end) as IsBuslMaturityMonth  from tb_csm_corporation r 
+		 	where r.party_id =  '$partyId$'
+    </select>
+	<select id="getIsCreditcardInspection" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (case when months_between(sysdate,r.org_register_end_date)+1>0  then 1 else  0 end) as ISCREDITCARDINSPECTION  from tb_csm_corporation r 
+		 	where r.party_id =  '$partyId$' 
+    </select>
+	<select id="getIsEarnings3Months" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (case when  months_between(r.finance_deadline,sysdate)+3>=0  then 1 else  0 end ) as ISEARNINGS3MONTHS
+ 			from tb_acc_customer_finance r where r.party_id = '$partyId$'  order by r.finance_deadline desc
+    </select>
+	<select id="getIsMultiLoan" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (case when
+		(select count(1) from (select org_num from tb_biz_apply r 
+			where r.party_id = '$partyId$'  group by r.org_num)) >1 then 1 else 0
+			    end ) as ISMULTILOAN
+		from dual
+    </select>
+	<select id="getIsCollateralRateQualifed" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT nvl(count(1),0) as isCollateralRateQualifed FROM tb_biz_amount_detail_apply t, tb_biz_amount_apply ta
+		where t.AMOUNT_ID=ta.AMOUNT_ID
+		<isNotNull property="applyId"> and ta.APPLY_ID = '$applyId$' </isNotNull>
+    </select>
+</sqlMap>

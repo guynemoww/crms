@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+	<resultMap id="guarGroup" class="java.util.HashMap">
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="jointGuaranteeType" column="JOINT_GUARANTEE_TYPE" />
+			<result property="jointGuaranteeStatus" column="JOINT_GUARANTEE_STATUS"/>
+			<result property="isDifOrgGuarantee" column="IS_DIF_ORG_GUARANTEE" />
+			<result property="createDate" column="CREATE_DATE" />
+			<result property="updateDate" column="UPDATE_DATE" />
+			<result property="updateOrgNum" column="UPDATE_ORG_NUM" />
+			<result property="updateUserNum" column="UPDATE_USER_NUM" />
+			<result property="memberNum" column="MEMBER_NUM" />
+			<result property="manageWay" column="MANAGE_WAY" />
+	</resultMap>
+    <select id="guarGroupList" parameterClass="java.util.HashMap" resultMap="guarGroup">
+		SELECT T1.*,
+		       T2.*,
+		       T3.* ,(SELECT COUNT(T4.ID)
+		               FROM TB_CSM_GUAR_MEMEBER T4
+		              WHERE T4.PARTY_ID = T1.PARTY_ID ) AS MEMBER_NUM
+		  FROM TB_CSM_MANAGEMENT_TEAM T1
+		  JOIN TB_CSM_PARTY T2 ON T1.PARTY_ID = T2.PARTY_ID
+		  JOIN TB_CSM_GUAR_GROUP T3 ON T1.PARTY_ID = T3.PARTY_ID
+		 WHERE T2.PARTY_TYPE_CD = '04'
+		   AND T3.JOINT_GUARANTEE_STATUS NOT IN ('09')
+		   AND T1.USER_NUM = #userNum#
+		   AND T1.org_NUM = #orgNum#
+		   <isNotNull property="partyNum">  AND T2.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		   <isNotNull property="jointGuaranteeStatus">  AND T3.JOINT_GUARANTEE_STATUS = #jointGuaranteeStatus# </isNotNull>
+		   <isNotNull property="memberName">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GUAR_MEMEBER T5, TB_CSM_PARTY T6
+		         WHERE T5.PARTY_ID = T1.PARTY_ID
+		           AND T6.PARTY_ID = T5.RELATED_CUST_PARTY_ID
+		           AND T6.PARTY_NAME LIKE '%$memberName$%') 
+ 		   </isNotNull>
+ 		   <isNotNull property="certType">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GUAR_MEMEBER T5, V_CSM_PARTY V
+		         WHERE T5.PARTY_ID = T1.PARTY_ID
+		           AND V.PARTY_ID = T5.RELATED_CUST_PARTY_ID
+		           AND V.CERT_TYPE = #certType#) 
+ 		   </isNotNull>
+ 		   <isNotNull property="certNum">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GUAR_MEMEBER T5, V_CSM_PARTY V
+		         WHERE T5.PARTY_ID = T1.PARTY_ID
+		           AND V.PARTY_ID = T5.RELATED_CUST_PARTY_ID
+		           AND V.CERT_NUM LIKE '%$certNum$%') 
+ 		   </isNotNull>
+ 		   <isNotNull property="middleCode">  
+		   AND EXISTS
+ 				(SELECT 1
+		          FROM TB_CSM_GUAR_MEMEBER T5, V_CSM_PARTY V
+		         WHERE T5.PARTY_ID = T1.PARTY_ID
+		           AND V.PARTY_ID = T5.RELATED_CUST_PARTY_ID
+		           AND V.MIDDLE_CODE LIKE '%$middleCode$%') 
+ 		   </isNotNull>
+    </select>
+    <resultMap id="member" class="java.util.HashMap">
+			<result property="id" column="ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="orgRegisterCd" column="ORG_REGISTER_CD"/>
+			<result property="registrCd" column="REGISTR_CD"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="status" column="STATUS"/>
+			<result property="relatedCustPartyId" column="RELATED_CUST_PARTY_ID"/>
+			<result property="unifySocietyCreditNum" column="UNIFY_SOCIETY_CREDIT_NUM"/>
+	</resultMap>
+    <select id="memberList" parameterClass="java.util.HashMap" resultMap="member">
+		SELECT T1.ID,
+		       T1.PARTY_ID,
+		       T1.RELATED_CUST_PARTY_ID,
+		       V.PARTY_NUM,
+		       V.PARTY_NAME,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       V.unify_society_credit_num,
+		       V.ORG_REGISTER_CD,
+		       V.REGISTR_CD,
+		       V.PARTY_TYPE_CD,
+		       T1.STATUS
+		  FROM TB_CSM_GUAR_MEMEBER T1
+		  JOIN V_CSM_PARTY V ON T1.RELATED_CUST_PARTY_ID = V.PARTY_ID
+		 WHERE T1.PARTY_ID = #groupPartyId#
+    </select>
+    
+    <select id="manageWay" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select case
+		         when (select count(*)
+		                 from (select distinct mt.org_num
+		                         from tb_csm_guar_memeber    gm,
+		                              tb_csm_management_team mt
+		                        where gm.related_cust_party_id = mt.party_id
+		                          and gm.party_id =
+		                              #partyId#
+		                          and mt.user_placing_cd = '01')) = 1 then
+		          3
+		         else
+		          case
+		            when (select count(*)
+		                    from (select distinct o.parentorgid, o.orglevel
+		                          
+		                            from om_organization o
+		                           where o.orgcode in
+		                                 (select mt.org_num
+		                                    from tb_csm_guar_memeber    gm,
+		                                         tb_csm_management_team mt
+		                                   where gm.related_cust_party_id = mt.party_id
+		                                     and gm.party_id =
+		                                          #partyId#
+		                                     and mt.user_placing_cd = '01'))) = 1 then
+		             2
+		            else
+		             1
+		          end
+		       end AS WAY
+		  from dual
+    </select  >
+    
+    <resultMap id="c" class="java.util.HashMap">
+			<result property="c" column="C"/>
+	</resultMap>
+    <select id="checkList" parameterClass="java.util.HashMap"  resultMap="c">
+		SELECT COUNT(*) C
+		  FROM (SELECT LISTAGG(R.RELATED_CUST_PARTY_ID, ',') WITHIN GROUP(ORDER BY R.PARTY_ID) AS LIST_STR,
+		               R.PARTY_ID,
+		               COUNT(*) AS LIST_COUNT
+		          FROM TB_CSM_GUAR_MEMEBER R,  tb_csm_guar_group cgg
+            	 where r.party_id=cgg.party_id and cgg.joint_guarantee_status in ('01','02','03')
+		         GROUP BY R.PARTY_ID) T
+		 WHERE LIST_STR =
+		       (SELECT LIST_STR
+		          FROM (SELECT LISTAGG(R.RELATED_CUST_PARTY_ID, ',') WITHIN GROUP(ORDER BY R.PARTY_ID) AS LIST_STR,
+		                       R.PARTY_ID,
+		                       COUNT(*) AS LIST_COUNT
+		                  FROM TB_CSM_GUAR_MEMEBER R
+		                 GROUP BY R.PARTY_ID) T
+		         WHERE 1 = 1
+		           AND PARTY_ID = #partyId#)
+    </select>
+</sqlMap>

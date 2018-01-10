@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:aobin@git.com.cn -->
+<sqlMap>
+    <insert id="insertAccFinanceStatementData" parameterClass="java.util.Map" >
+         insert into TB_ACC_FINANCE_STATEMENT_DATA(FINANCE_STATEMENT_DATA_ID,FINANCIAL_STATEMENT_ID,FINANCE_ID,PROJECT_CD,PROJECT_VALUE,PRE_TOTAL_VALUE,CREATE_TIME,UPDATE_TIME)
+            values(#FINANCE_STATEMENT_DATA_ID#,#FINANCIAL_STATEMENT_ID#,#FINANCE_ID#,#PROJECT_CD#,$PROJECT_VALUE$,$PRE_TOTAL_VALUE$,#CREATE_TIME#,#UPDATE_TIME#)
+	</insert>
+	<delete id="deleteAccFinanceStatementData" parameterClass="java.util.Map" >
+	    delete from TB_ACC_FINANCE_STATEMENT_DATA where FINANCIAL_STATEMENT_ID=#FINANCIAL_STATEMENT_ID# and FINANCE_ID=#FINANCE_ID#
+	</delete>
+	<delete id="deleteAccFinanceIndexData" parameterClass="java.util.Map" >
+	    delete from TB_ACC_FINANCE_INDEX_DATA where FINANCE_ID=#FINANCE_ID#
+	</delete>
+	<select id="querySheetItem" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT
+			 
+			COUNT(*) AS itemSize
+		   
+		FROM
+		
+			TB_ACC_NFD_ITEM a
+		
+   		where 1=1
+   		<isNotNull property="sheetId">
+   			and	a.SHEET_ID=#sheetId#
+   		</isNotNull>
+   			and a.ITEM_TYPE in ('2','3')
+    </select>
+    <select id="queryZeroSize" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT
+			 
+			COUNT(*) AS zeroSize
+		   
+		FROM
+			TB_ACC_FINANCE_STATEMENT_DATA a
+   		where 1=1
+
+   		and	a.FINANCIAL_STATEMENT_ID=#financialStatementId#
+   		and a.PROJECT_VALUE='0'
+
+    </select>
+    <select id="queryPreZeroSize" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT
+			 
+			COUNT(*) AS zeroSize
+		   
+		FROM
+			TB_ACC_FINANCE_STATEMENT_DATA a
+   		where 1=1
+
+   		and	a.FINANCIAL_STATEMENT_ID=#financialStatementId#
+   		and  (a.PRE_TOTAL_VALUE is null or a.PRE_TOTAL_VALUE='0')
+
+    </select>
+</sqlMap>

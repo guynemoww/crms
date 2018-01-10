@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+ 
+ <resultMap class="commonj.sdo.DataObject" id="queryWarnCsmInfo">
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="party_name" property="partyName"/>
+        <result column="cert_type" property="certType"/>
+        <result column="cert_num" property="certNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="USER_PLACING_CD" property="userPlacingCd"/>
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="party_type_cd" property="partyTypeCd"/>
+        <result column="CONFIRM_DATE" property="confirmDate"/>
+        <result column="credit_amt" property="creditAmt"/>
+        <result column="available_amt" property="availableAmt"/> 
+        <result column="balance" property="balance"/> 
+        <result column="balance1" property="balance1"/> 
+        <result column="corp_customer_type_cd" property="corpCustomerTypeCd"/> 
+</resultMap>
+
+<select id="queryWarnCsmInfo2" parameterClass="commonj.sdo.DataObject"  resultMap="queryWarnCsmInfo">
+    select  distinct p.party_id,
+	                p.party_num,
+	                p.party_name,
+	                p.cert_type,
+	                p.cert_num,
+	                p.PARTY_TYPE_CD,
+	                p.ORG_NUM,
+	                p.USER_NUM,
+	                '01' USER_PLACING_CD,
+	                w.WARNING_LEVEL_CD,
+	                w.CONFIRM_DATE,
+	                pl.credit_amt,
+	                pl.available_amt_real available_amt,
+	                pl.used_amt_real balance1,
+	                x.jjye balance,
+	                cc.corp_customer_type_cd
+	  from TB_REW_CSM_EARLY_WARNING w,
+	       v_csm_party              p
+	  left join v_crd_party_limit pl
+	    on pl.party_id = p.party_id
+	       and pl.limit_type in ('01', '02')
+	  left join (select tli.party_id,
+	                    sum(tls.jjye) jjye
+	               from tb_loan_info    tli,
+	                    tb_loan_summary tls
+	              where tli.loan_id = tls.loan_id
+	                    and tls.summary_status_cd in ('02', '03')
+	              group by tli.party_id) x
+	    on p.party_id = x.party_id
+	  left join tb_csm_corporation cc
+	    on cc.party_id = p.party_id
+	 WHERE p.party_type_cd = '01'
+	       and p.party_id = w.party_id
+	       and p.user_num=#userNum#
+	
+		   <isNotNull property="certType">
+			   and p.cert_type like '%$certType$%'
+		   </isNotNull>
+		   <isNotNull property="certNum">
+			   and p.cert_num  like '%$certNum$%'
+		   </isNotNull>
+		   <isNotNull property="partyName">
+			   and p.party_name  like '%$partyName$%'
+		   </isNotNull>
+		   <isNotNull property="partyNum">
+			   and p.party_num = #partyNum#
+		   </isNotNull>
+		   <isNotNull property="levelCd">
+		      and w.WARNING_LEVEL_CD =#levelCd#
+		   </isNotNull>
+			
+</select>
+<select id="queryWarnCsmInfo2BySH" parameterClass="commonj.sdo.DataObject"  resultMap="queryWarnCsmInfo">
+    select  distinct p.party_id,
+	                p.party_num,
+	                p.party_name,
+	                p.cert_type,
+	                p.cert_num,
+	                p.PARTY_TYPE_CD,
+	                p.ORG_NUM,
+	                p.USER_NUM,
+	                '01' USER_PLACING_CD,
+	                w.WARNING_LEVEL_CD,
+	                w.CONFIRM_DATE,
+	                pl.credit_amt,
+	                pl.available_amt_real available_amt,
+	                pl.used_amt_real balance1,
+	                x.jjye balance,
+	                cc.corp_customer_type_cd
+	  from TB_REW_CSM_EARLY_WARNING w,
+	       v_csm_party              p
+	  left join v_crd_party_limit pl
+	    on pl.party_id = p.party_id
+	       and pl.limit_type in ('01', '02')
+	  left join (select tli.party_id,
+	                    sum(tls.jjye) jjye
+	               from tb_loan_info    tli,
+	                    tb_loan_summary tls
+	              where tli.loan_id = tls.loan_id
+	                    and tls.summary_status_cd in ('02', '03')
+	              group by tli.party_id) x
+	    on p.party_id = x.party_id
+	  left join tb_csm_corporation cc
+	    on cc.party_id = p.party_id
+	 WHERE p.party_type_cd = '01'
+	       and p.party_id = w.party_id
+	 <isNull property="orgid">
+			and (p.user_num=#userNum#
+		     or p.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgNum#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or p.org_num in (#orgNum#))
+         </isNull>
+		   <isNotNull property="certType">
+			   and p.cert_type like '%$certType$%'
+		   </isNotNull>
+		   <isNotNull property="certNum">
+			   and p.cert_num  like '%$certNum$%'
+		   </isNotNull>
+		   <isNotNull property="partyName">
+			   and p.party_name  like '%$partyName$%'
+		   </isNotNull>
+		   <isNotNull property="partyNum">
+			   and p.party_num = #partyNum#
+		   </isNotNull>
+		   <isNotNull property="levelCd">
+		      and w.WARNING_LEVEL_CD =#levelCd#
+		   </isNotNull>
+			<isNotNull property="orgid">
+			  and (p.user_num=#userNum#
+		     or p.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgid#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or p.org_num in (select o.orgcode from om_organization o where o.orgid = #orgid#))
+			</isNotNull>
+</select>
+<!--为queryWarnCsmInfo2做备份 供参考-->
+<select id="queryWarnCsmInfo2BackUp" parameterClass="commonj.sdo.DataObject"  resultMap="queryWarnCsmInfo">
+    select  distinct p.party_id,
+	                p.party_num,
+	                p.party_name,
+	                p.cert_type,
+	                p.cert_num,
+	                p.PARTY_TYPE_CD,
+	                p.ORG_NUM,
+	                p.USER_NUM,
+	                '01' USER_PLACING_CD,
+	                w.WARNING_LEVEL_CD,
+	                w.CONFIRM_DATE,
+	                pl.credit_amt,
+	                pl.available_amt_real available_amt,
+	                pl.used_amt_real balance1,
+	                x.jjye balance,
+	                cc.corp_customer_type_cd
+	  from TB_REW_CSM_EARLY_WARNING w,
+	       v_csm_party              p
+	  left join v_crd_party_limit pl
+	    on pl.party_id = p.party_id
+	       and pl.limit_type in ('01', '02')
+	  left join (select tli.party_id,
+	                    sum(tls.jjye) jjye
+	               from tb_loan_info    tli,
+	                    tb_loan_summary tls
+	              where tli.loan_id = tls.loan_id
+	                    and tls.summary_status_cd in ('02', '03')
+	              group by tli.party_id) x
+	    on p.party_id = x.party_id
+	  left join tb_csm_corporation cc
+	    on cc.party_id = p.party_id
+	 WHERE p.party_type_cd = '01'
+	       and p.party_id = w.party_id
+			and (p.user_num=#userNum#
+		     or p.org_num in (select a.orgcode
+		       from om_organization a
+		      start with a.orgid in (select d.orgid
+		                              from om_empposition  a,
+		                                   om_position     b,
+		                                   om_employee     c,
+		                                   om_organization d
+		                             where a.positionid = b.positionid
+		                               and c.empid = a.empid
+		                               and d.orgid = a.orgid
+		                               and d.orgcode = #orgNum#
+		                               and c.empcode = #userNum#)
+		     connect by prior a.orgid = a.parentorgid))
+		   <isNotNull property="certType">
+			   and p.cert_type like '%$certType$%'
+		   </isNotNull>
+		   <isNotNull property="certNum">
+			   and p.cert_num  like '%$certNum$%'
+		   </isNotNull>
+		   <isNotNull property="partyName">
+			   and p.party_name  like '%$partyName$%'
+		   </isNotNull>
+		   <isNotNull property="partyNum">
+			   and p.party_num = #partyNum#
+		   </isNotNull>
+		   <isNotNull property="levelCd">
+		      and w.WARNING_LEVEL_CD =#levelCd#
+		   </isNotNull>
+			<isNotNull property="orgid">
+			  and p.org_num in (select o.orgcode from om_organization o where o.orgseq like '%$orgid$%')
+			</isNotNull>
+   
+</select>
+<resultMap class="commonj.sdo.DataObject" id="queryCsmGroupWarnInfo">
+        
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="CREDIT_RATING_CD" property="initialCredit"/>
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="confirm_date" property="confirmDate"/>
+        <result column="CREDIT_AMT" property="CREDIT_AMT"/>
+        <result column="BALANCE" property="BALANCE"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+   
+    </resultMap>
+      <!--为queryCsmGroupWarnInfo备份，参考--> 
+   <select id="queryCsmGroupWarnInfoBackUp" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_name,
+		       p.party_id,
+		       p.party_num,
+		       a.credit_rating_cd,
+		       w.warning_level_cd,
+		       w.confirm_date,
+		       t4.credit_amt,
+		       t4.available_amt,
+		       t4.balance,
+		       t.user_num,
+		       t.org_num
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.rating_state = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id
+		  left join (select nvl(sum(t.credit_amt), 0) as credit_amt,
+		                    nvl(sum(t.available_amt), 0) as available_amt,
+		                    nvl(sum(t.credit_amt), 0) - nvl(sum(t.available_amt), 0) balance,
+		                    t.group_party_id
+		               from v_crd_gm_party_limit t
+		              group by t.group_party_id) t4
+		    on g.party_id = t4.group_party_id, tb_csm_party p, tb_csm_management_team t,
+		 tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+			   and (t.user_num=#userNum#
+			     or t.org_num in (select a.orgcode
+			       from om_organization a
+			      start with a.orgid = (select d.orgid
+		                              from om_empposition  a,
+		                                   om_position     b,
+		                                   om_employee     c,
+		                                   om_organization d
+		                             where a.positionid = b.positionid
+		                               and c.empid = a.empid
+		                               and d.orgid = a.orgid
+		                               and d.orgcode = #orgNum#
+		                               and c.empcode = #userNum#)
+		     connect by prior a.orgid = a.parentorgid))
+	    <isNotNull property="partyName">
+	    	and p.party_Name like '%$partyName$%'
+	    </isNotNull>
+	    <isNotNull property="levelCd">
+	    	and w.warning_level_cd = #levelCd#
+	    </isNotNull>
+	    <isNotNull property="partyNum">
+	    	and p.party_Num = #partyNum#
+	    </isNotNull>
+	     <isNotNull property="orgid">
+	  		and t.org_num in (select o.orgcode from om_organization o where o.orgseq like '%$orgid$%')
+		</isNotNull>
+   </select>
+
+<select id="queryCsmGroupWarnInfo" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_name,
+		       p.party_id,
+		       p.party_num,
+		       a.credit_rating_cd,
+		       w.warning_level_cd,
+		       w.confirm_date,
+		       t4.credit_amt,
+		       t4.available_amt,
+		       t4.balance,
+		       t.user_num,
+		       t.org_num
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.rating_state = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id
+		  left join (select nvl(sum(t.credit_amt), 0) as credit_amt,
+		                    nvl(sum(t.available_amt), 0) as available_amt,
+		                    nvl(sum(t.credit_amt), 0) - nvl(sum(t.available_amt), 0) balance,
+		                    t.group_party_id
+		               from v_crd_gm_party_limit t
+		              group by t.group_party_id) t4
+		    on g.party_id = t4.group_party_id, tb_csm_party p, tb_csm_management_team t,
+		 tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+		       and t.user_num=#userNum#
+		       
+	    <isNotNull property="partyName">
+	    	and p.party_Name like '%$partyName$%'
+	    </isNotNull>
+	    <isNotNull property="levelCd">
+	    	and w.warning_level_cd = #levelCd#
+	    </isNotNull>
+	    <isNotNull property="partyNum">
+	    	and p.party_Num = #partyNum#
+	    </isNotNull>
+	    
+   </select>
+   <select id="queryCsmGroupWarnInfoBySH" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_name,
+		       p.party_id,
+		       p.party_num,
+		       a.credit_rating_cd,
+		       w.warning_level_cd,
+		       w.confirm_date,
+		       t4.credit_amt,
+		       t4.available_amt,
+		       t4.balance,
+		       t.user_num,
+		       t.org_num
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.rating_state = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id
+		  left join (select nvl(sum(t.credit_amt), 0) as credit_amt,
+		                    nvl(sum(t.available_amt), 0) as available_amt,
+		                    nvl(sum(t.credit_amt), 0) - nvl(sum(t.available_amt), 0) balance,
+		                    t.group_party_id
+		               from v_crd_gm_party_limit t
+		              group by t.group_party_id) t4
+		    on g.party_id = t4.group_party_id, tb_csm_party p, tb_csm_management_team t,
+		 tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+		       <isNull property="orgid">
+			   and (t.user_num=#userNum#
+			     or t.org_num in (select a.orgcode
+			       from om_organization a
+			      start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgNum#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or p.org_num in (#orgNum#))
+		     </isNull>
+	    <isNotNull property="partyName">
+	    	and p.party_Name like '%$partyName$%'
+	    </isNotNull>
+	    <isNotNull property="levelCd">
+	    	and w.warning_level_cd = #levelCd#
+	    </isNotNull>
+	    <isNotNull property="partyNum">
+	    	and p.party_Num = #partyNum#
+	    </isNotNull>
+	     <isNotNull property="orgid">
+	  		 and (t.user_num=#userNum#
+		     or t.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgid#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or t.org_num in (select o.orgcode from om_organization o where o.orgid = #orgid#))
+		</isNotNull>
+   </select>
+<!--查询当前用户的机构信息-->
+<select id="findCurrentOrgInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+        select o.orgid as ORGID, o.orgcode as ORGCODE, o.orgname as ORGNAME, o.orglevel as ORGLEVEL
+		  from om_organization o
+		 where o.orgcode = #orgcode#
+</select>
+
+<resultMap class="commonj.sdo.DataObject" id="sumWarrantMoney">
+        <result column="Total_SUM_MONEY" property="totalMoney"/>
+</resultMap>
+    
+  <select id="sumWarrantMoney" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="sumWarrantMoney">
+<!--SELECT
+	SUM(t1.Guarantee_right_money) Total_SUM_MONEY
+FROM
+	tb_con_subcontract t1
+LEFT JOIN
+    tb_con_guaranty_relation t2
+ON
+    t1.SUBCONTRACT_ID = t2.SUBCONTRACT_ID
+AND t2.if_effective='1'
+WHERE
+    t1.subcontract_status_cd='01'
+AND 
+    t1.party_id=#partyId#-->
+    
+select sum(gr.surety_amt) Total_SUM_MONEY
+  from tb_biz_grt_rel gr
+  left join tb_grt_mortgage_basic mb on gr.surety_id = mb.surety_id
+  left join tb_grt_guarantee_basic gb on gr.surety_id = gb.surety_id,
+ tb_biz_apply ba
+ where ba.apply_id = gr.apply_id
+   and ba.party_id = #partyId#
+                 
+</select>
+
+	<!--更新预警信号状态：生效-->
+    <select id="updateOpen" parameterClass="java.util.HashMap">
+            update tb_rew_csm_signal_list sl set sl.signal_status_cd = '2',sl.hold_date = #curDate#
+ 			 where sl.customer_warning_updateid = #applyId#
+    </select>
+    
+    <!--更新预警信号状态：关闭-->
+    <select id="updateClose" parameterClass="java.util.HashMap">
+            update tb_rew_csm_signal_list sl set sl.signal_status_cd = '3',sl.close_date = #curDate#
+ 			 where sl.customer_warning_close = #applyId#
+    </select>
+    
+    <!--更新预警变更状态-->
+    <select id="updateAdjustStatus" parameterClass="java.util.HashMap">
+            update tb_rew_level_adjust rla set rla.apply_status = '4' 
+ 			 where rla.level_adjust_id = #applyId#
+    </select>
+    
+    <!--更新评定级别-->
+    <select id="updateEarlyWarning" parameterClass="java.util.HashMap">
+            update tb_rew_csm_early_warning w set w.warning_level_cd = #level#,w.confirm_date = #curDate#
+ 			 where w.party_id = #partyId#
+    </select>
+    
+    <!--查询是否有在途业务-->
+    <select id="findFlowOnWay" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select *
+			  from tb_rew_level_adjust rla
+			 where rla.apply_status != '4'
+			   and rla.party_id = #partyId#
+    </select>
+    
+    <!--关闭时不删除，修改预警信号状态-->
+    <select id="deleteSignalClose" parameterClass="java.util.HashMap">
+            update tb_rew_csm_signal_list sl set sl.signal_status_cd = '2'
+ 			 where sl.customer_warning_close = #applyId# and sl.signal_status_cd = '5'
+    </select>
+    
+    <!--新增时删除预警信号-->
+    <select id="deleteSignalOpen" parameterClass="java.util.HashMap">
+            delete from tb_rew_csm_signal_list sl 
+ 			 where sl.customer_warning_updateid = #applyId#
+ 			 and sl.SIGNAL_SOURCE_CD = '1'
+    </select>
+    
+    <!--查询是否已存在记录-->
+    <select id="findIsExist" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select * from tb_rew_level_adjust a where a.party_id = #partyId# 
+               and a.change_type in ('01', '03')
+			   and not exists (select 1
+			          from tb_rew_level_adjust b
+			         where b.remarks = a.level_adjust_id)
+    </select>
+    
+    <!--查询出上次新增信号ID-->
+    <select id="findLastAddAdjustId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select a.level_adjust_id as ADJUST_ID
+			  from tb_rew_level_adjust a
+			 where 1 = 1
+			   and a.party_id = #partyId#
+			   and a.change_type in ('01', '03')
+			   and a.apply_status = '4'
+			 order by a.adjust_date desc 
+    </select>
+    
+    
+    <!--没有生效的信号且级别为0时，不可发起下调流程-->
+    <select id="findIsExistValSignal" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select 1
+		  from dual
+		 where exists (select 1
+		          from tb_rew_csm_signal_list sl
+		         where sl.signal_status_cd = '2'
+		           and party_id = #partyId#)
+		    or exists
+		 (select 1
+		          from tb_rew_csm_early_warning
+		         where warning_level_cd != '0'
+		           and warning_level_cd is not null
+		           and party_id = #partyId#)
+
+    </select>
+    
+    <!--查询岗位信息-->
+    <select id="findPos" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+            select e.empid,
+			       e.empcode,
+			       e.empname,
+			       pp.posicode POSICODE,
+			       pp.posiname,
+			       o.orgcode,
+			       o.orgname,
+			       o.orgdegree ORGDEGREE,
+			       o.orglevel ORGLEVEL
+			  from om_employee e, om_empposition ep, om_position pp, om_organization o
+			 where ep.empid = e.empid 
+			   and ep.orgid = o.orgid
+			   and ep.positionid = pp.positionid
+			   and e.empcode = #empcode#
+			   and o.orgcode = #orgcode#
+    </select>
+	
+	<!--预警提示状态更新-->
+    <update id="updateTbRemindInfo" parameterClass="java.util.HashMap">
+    	update tb_tab_remind_info set remind_status = '02' 
+    	where remind_type = '06' and remind_status = '01' 
+    	and party_id = #partyId#
+    </update>
+</sqlMap>

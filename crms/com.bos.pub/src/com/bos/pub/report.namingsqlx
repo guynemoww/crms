@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+  
+    <select id="reportMenuQuery" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     select * from tb_report_menu where menu_present is not null 
+    </select>
+    
+     <select id="reportMenu" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+      select distinct b.menu_id,b.user_Id,a.menu_name,a.menu_path,a.menu_present
+            from tb_report_user_relation b
+            left join tb_report_menu a
+            on a.menu_id=b.menu_id
+            where b.user_id=#userId#
+             union
+             select distinct c.menu_id,d.user_Id,c.menu_name,c.menu_path,c.menu_present
+             from tb_report_user_relation d,tb_report_menu c
+             where d.user_id=#userId# and c.menu_present is null   and c.menu_id in(
+               select a.menu_present
+            from tb_report_user_relation b
+            left join tb_report_menu a
+            on a.menu_id=b.menu_id
+             )
+    </select>
+      
+</sqlMap>

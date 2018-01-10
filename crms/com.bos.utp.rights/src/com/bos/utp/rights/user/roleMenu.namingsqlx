@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+	<!-- 角色菜单查询 
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="MENUNAME" javaType="string" property="text"/>
+        <result column="MENUID" javaType="string" property="id"/>
+        <result column="PARENTSID" javaType="string" property="pid"/>
+        <result column="ISLEAF" javaType="string" property="isLeaf"/>
+        <result column="MENUCHECK" javaType="string" property="menucheck"/>
+        <result column="FUNCCODE" javaType="string" property="funccode"/>
+        <result column="ROLEID" javaType="string" property="roleid"/>
+    </resultMap>
+   
+    <select id="roleMenuQuery" parameterClass="HashMap" resultMap="resultMap"><![CDATA[
+    SELECT '$roleId$' as ROLEID, AM.FUNCCODE, AM.MENUNAME, AM.MENUID, AM.PARENTSID, 
+       (CASE
+         WHEN AM.ISLEAF = '1' THEN
+          'true'
+         ELSE
+          'false'
+       END) ISLEAF, 
+       (CASE
+         WHEN (ARF.FUNCCODE IS NULL OR AM.ISLEAF != '1') THEN
+          'false'
+         ELSE
+          'true'
+       END) MENUCHECK 
+  FROM AC_MENU AM LEFT JOIN 
+       (SELECT ARF.FUNCCODE
+          FROM AC_ROLE AR, AC_ROLEFUNC ARF
+         WHERE AR.ROLEID = ARF.ROLEID
+           AND AR.ROLEID = #roleId#) ARF
+  ON AM.FUNCCODE = ARF.FUNCCODE
+   WHERE EXISTS
+ (SELECT 1
+          FROM AC_MENU AMS
+         WHERE (AM.MENUID = AMS.PARENTSID AND AM.ISLEAF != '1')
+            OR (AM.ISLEAF = '1' AND AM.FUNCCODE IS NOT NULL))
+    
+    ]]>
+	<isNotNull prepend="AND" property="id">
+        AM.PARENTSID=#id#
+    </isNotNull>
+    </select>
+    -->
+	<!-- 删除角色菜单信息 
+	<delete id="deleteRoleMenu" parameterClass="HashMap">
+		DELETE AC_ROLEFUNC arf WHERE arf.ROLEID=#roleId#
+	</delete>
+    -->
+	<!-- 新增角色菜单信息 
+	<insert id="insertRoleMenu" parameterClass="HashMap">
+		INSERT INTO AC_ROLEFUNC 
+		  SELECT #roleId#,AM.FUNCCODE,nvl(AM.APPID,1),AFG.FUNCGROUPID 
+		  FROM AC_MENU AM,AC_FUNCTION AF,AC_FUNCGROUP AFG 
+		  WHERE AM.FUNCCODE=AF.FUNCCODE AND AF.FUNCGROUPID=AFG.FUNCGROUPID AND AM.MENUID=#id# 
+		  AND NOT EXISTS (SELECT 1 FROM AC_ROLEFUNC ARF WHERE ARF.FUNCCODE=AM.FUNCCODE AND ARF.ROLEID=#roleId#)
+	</insert>
+	-->
+</sqlMap>

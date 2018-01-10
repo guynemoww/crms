@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+	 
+	 <select id="getWriteOffOther" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT PARTY_ID,STATUS FROM TB_ASSET_HANDLE_PLAN p WHERE p.id=#planId# 
+	 </select>
+	 
+	 <select id="createWriteOffLoanInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ci.CONTRACT_NUM,ls.SUMMARY_ID,ls.SUMMARY_NUM,ls.SUMMARY_AMT,ls.JJYE,ls.NORMAL_ITR,ls.ARREAR_ITR,ls.PUNISH_ITR,ls.ORG_NUM
+,to_char(ls.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(ls.END_DATE,'yyyy-MM-dd') END_DATE
+FROM TB_LOAN_SUMMARY ls
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ls.CONTRACT_ID=ci.CONTRACT_ID
+WHERE ls.SUMMARY_ID=#summaryId#
+	 </select>
+	 
+	 <select id="getAplusWriteOffInfoByCrms" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT
+'9999' LEG_PER_COD
+,wol.TAL_ORG_NUM TAL_DEP
+,wo.ACCT_ORG OPN_DEP
+,wo.ACCT_NO PAY_PRIM_ACCT
+,wo.ACCT_NAME PAY_PRIM_NAME
+,wol.SUMMARY_NUM DUE_NUM
+,wol.OFF_AMT PAD_UP_AMT
+,hp.PLAN_NUM
+,wol.SUM_NORMAL_ITR PAD_UP_NOR_ITR_IN
+,wol.SUM_ARREAR_ITR PAD_UP_DFT_ITR_IN
+,wol.SUM_PUNISH_ITR PAD_UP_PNS_ITR_IN
+,'0' DEAL_FLG
+,wol.SUMMARY_ID
+FROM TB_ASSET_WRITE_OFF_LOAN wol
+INNER JOIN TB_ASSET_WRITE_OFF wo ON wo.ID=wol.ID
+INNER JOIN TB_ASSET_HANDLE_PLAN hp ON hp.ID=wol.ID
+WHERE hp.ID =#id# AND wol.SUMMARY_ID=#summaryId#
+	 </select>
+
+	 <select id="getAplusWriteOffInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT * FROM APLUS.TC_SUP_DEBT_ASSET WHERE DUE_NUM=#DUE_NUM# AND DEAL_FLG='0'
+	 </select>
+	 
+	 <delete id="deleteAplusWriteOff" parameterClass="java.util.HashMap">
+DELETE FROM TC_SUP_DEBT_ASSET WHERE DUE_NUM=#DUE_NUM# AND DEAL_FLG='0'
+	 </delete>
+	 
+	 <insert id="insertAplusWriteOff" parameterClass="java.util.HashMap">
+INSERT INTO TC_SUP_DEBT_ASSET(
+			RCV_DATE,
+			LEG_PER_COD,
+			DEP_COD,
+			TAL_DEP,
+			OPN_DEP,
+			PAY_PRIM_ACCT,
+			PAY_PRIM_NAME,
+			DUE_NUM,
+			SEQ_NO,
+			PAD_UP_AMT,
+			PAD_UP_NOR_ITR_IN,
+			PAD_UP_DFT_ITR_IN,
+			PAD_UP_PNS_ITR_IN,
+			DEAL_FLG,
+			TEL_NO
+		)
+	VALUES(
+		#RCV_DATE#,
+		#LEG_PER_COD#,
+		#DEP_COD#,
+		#TAL_DEP#,
+		#OPN_DEP#,
+		#PAY_PRIM_ACCT#,
+		#PAY_PRIM_NAME#,
+		#DUE_NUM#,
+		#SEQ_NO#,
+		#PAD_UP_AMT#,
+		#PAD_UP_NOR_ITR_IN#,
+		#PAD_UP_DFT_ITR_IN#,
+		#PAD_UP_PNS_ITR_IN#,
+		#DEAL_FLG#,
+		#TEL_NO#
+	)
+	 </insert>
+	
+</sqlMap>

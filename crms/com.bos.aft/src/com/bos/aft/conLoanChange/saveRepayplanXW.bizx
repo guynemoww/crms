@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="saveRepayplanXW" detailDescription="" demonstration="" urls=""
+	gridVisibility="false" rulerVisibility="true" snapToGeometry="true"
+	productVersion="7.0.0.0">
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" type="start">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>transactionbegin0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<location x="60" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束"
+		type="end">
+		<targetConnections>link7</targetConnections>
+		<location x="794" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:returns>
+			<process:return id="0" language="String" name="msg"
+				type="query" valueType="Primitive">msg</process:return>
+			<process:return id="1" language="String" name="flag"
+				type="query" valueType="Primitive">flag</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="62" y="96" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="796" y="96" />
+		<figSize height="17" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tTransactionBegin" id="transactionbegin0"
+		name="事务开始" displayName="事务开始" type="transactionbegin">
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link9" name="link9" displayName="连接线" isDefault="true"
+			type="transition">
+			<sourceNode>transactionbegin0</sourceNode>
+			<targetNode>invokePojo0</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="NOTNULLANDEMPTY">
+					<process:leftOperand type="query">repayPlans2</process:leftOperand>
+					<process:rightOperand type="literal">1</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="208" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>transactionbegin0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="transactionbegin0label"
+		name="label" nodeType="label">
+		<location x="198" y="96" />
+		<figSize height="17" width="49" />
+		<node>transactionbegin0</node>
+	</nodes>
+	<nodes xsi:type="process:tTransactionCommit" id="transactioncommit0"
+		name="事务提交" displayName="事务提交" type="transactioncommit">
+		<sourceConnections xsi:type="process:tLink" id="link0"
+			name="link0" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>transactioncommit0</sourceNode>
+			<targetNode>assign0</targetNode>
+		</sourceConnections>
+		<targetConnections>link10</targetConnections>
+		<location x="498" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>transactioncommit0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="transactioncommit0label"
+		name="label" nodeType="label">
+		<location x="488" y="96" />
+		<figSize height="17" width="49" />
+		<node>transactioncommit0</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo0"
+		name="更新小贷还款计划" displayName="更新小贷还款计划表" type="invoke" index="0"
+		invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link10"
+			name="link10" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo0</sourceNode>
+			<targetNode>transactioncommit0</targetNode>
+		</sourceConnections>
+		<targetConnections>link9</targetConnections>
+		<location x="356" y="60" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo0label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.bos.aft.updateRepayXW.updateRepay</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="repayPlans2"
+				type="query" value="commonj.sdo.DataObject[]" valueType="Java"
+				pattern="reference">repayPlans2</process:inputVariable>
+			<process:inputVariable id="1" name="endDate"
+				type="query" value="java.util.Date" valueType="Java" pattern="reference">endDate</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="java.lang.String" valueType="Java">flag</process:outputVariable>
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo0label"
+		name="label" nodeType="label">
+		<location x="319" y="96" />
+		<figSize height="17" width="97" />
+		<node>invokePojo0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="赋值" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link7"
+			name="link7" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>end0</targetNode>
+		</sourceConnections>
+		<targetConnections>link0</targetConnections>
+		<location x="646" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="literal" pattern="reference">保存成功！</process:from>
+			<process:to type="query">msg</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="648" y="96" />
+		<figSize height="17" width="25" />
+		<node>assign0</node>
+	</nodes>
+	<topRuler>
+		<guides position="1027" horizontal="true" />
+	</topRuler>
+	<leftRuler />
+	<process:info author="xiaoxia" createTime="2015-05-27 17:13:05"
+		date="2015-05-27Z" description="" name="saveConLoanChange" version="7.0.0.0" />
+	<process:variables />
+	<process:inputs varArgs="false">
+		<process:input anyType="commonj.sdo.DataObject"
+			description="" isArray="true" name="repayPlans2" />
+		<process:input description="" isArray="false" name="endDate"
+			primitiveType="Date" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="false" name="msg"
+			primitiveType="String" />
+		<process:output description="" isArray="false" name="flag"
+			primitiveType="String" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+	<process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

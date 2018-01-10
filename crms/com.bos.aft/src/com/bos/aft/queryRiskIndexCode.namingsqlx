@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lizhi -->
+<sqlMap>
+	<resultMap class="commonj.sdo.DataObject" id="optionCards">
+		<result column="INDEX_CD_ID" property="indexCdId"/>
+		<result column="INDEX_CD" property="indexCd"/>
+        <result column="INDEX_NAME" property="indexName"/>
+        <result column="STANDARD_INDEX_CD" property="standardIndexCd"/>
+    </resultMap>
+    <!--取选项卡 com.bos.aft.queryRiskIndexCode.queryOptionCards-->
+    <select id="queryOptionCards" parameterClass="java.util.HashMap" resultMap="optionCards">
+		<![CDATA[
+		SELECT
+			t1.INDEX_CD_ID,
+			t1.INDEX_CD,
+		    t1.INDEX_NAME,
+		    t1.STANDARD_INDEX_CD
+		FROM 
+			TB_CLA_RISK_INDEX_CODE t1 
+		WHERE
+		    1=1
+		    
+   		AND t1.INDEX_CD like INSERT(#indexCd#,9,2,'%')            
+	    ORDER BY t1.INDEX_CD
+	    ]]>
+    </select>
+    
+
+   <resultMap class="commonj.sdo.DataObject" id="corpCustomerTypeCd">
+     	<result column="corp_customer_type_cd" property="corpCustomerTypeCd"/>
+    </resultMap>
+     <!-- 查询客户类型 -->
+	<select id="queryCorpCustomerTypeCd" parameterClass="java.util.HashMap" resultMap="corpCustomerTypeCd">
+		<![CDATA[
+		select corp_customer_type_cd from tb_csm_corporation 
+		where party_id= #partyId#
+	    ]]>
+   </select>
+   
+</sqlMap>

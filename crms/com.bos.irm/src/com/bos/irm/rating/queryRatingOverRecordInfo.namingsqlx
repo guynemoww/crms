@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:黄龙龙 -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="QueryOverRecord">
+        <result column="ORG_NUM" property="orgNum"/>
+        <result column="POST_CD" property="postCd"/>
+        <result column="overthrow_reason" property="overthrowReason"/>
+        <result column="ira_apply_id" property="iraApplyId"/>
+        <result column="overthrow_dt" property="overthrowDt"/>
+    </resultMap>
+    <select id="QueryOverRecord" parameterClass="java.util.HashMap" resultMap="QueryOverRecord">
+    	select 
+			tor.ORG_NUM,
+			tor.POST_CD,
+			tor.BEFORE_GRADE as  overthrow_reason,
+			tor.ira_apply_id,
+			tor.overthrow_dt
+			from tb_irm_overthrow_record tor 
+			where 1=1
+			and rownum = 1
+				<isNotNull property="iraApplyId">
+		    		and	tor.ira_apply_id= #iraApplyId#
+		    	</isNotNull> 
+		    	<isNotNull property="posCd">
+		    		and	tor.POST_CD= #posCd#
+		    	</isNotNull> 
+			order by tor.overthrow_dt desc
+				    	
+    </select>
+
+    <select id="QueryOverRecordFirst" parameterClass="java.util.HashMap" resultMap="QueryOverRecord">
+    	select 
+			tor.ORG_NUM,
+			tor.POST_CD,
+			tor.AFTER_GRADE as  overthrow_reason,
+			tor.ira_apply_id,
+			tor.overthrow_dt
+			from tb_irm_overthrow_record tor 
+			where 1=1
+				<isNotNull property="iraApplyId">
+		    		and	tor.ira_apply_id= #iraApplyId#
+		    	</isNotNull> 
+			order by tor.overthrow_dt desc
+     </select>
+
+</sqlMap>

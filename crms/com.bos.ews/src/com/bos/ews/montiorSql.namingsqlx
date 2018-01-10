@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="queryCsmWarnInfo">
+        
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="ECIF_PARTY_NUM" property="ecifPartyNum"/>
+        <result column="CREDIT_RATING_CD" property="initialCredit"/>
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="confirm_date" property="confirmDate"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+   
+    </resultMap>
+    <select id="queryCsmWarnInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryCsmWarnInfo">
+SELECT
+    p.party_Name ,
+    p.party_id,
+    p.party_num,
+    p.ECIF_PARTY_NUM,
+    t.USER_PLACING_CD,
+    r.CREDIT_RATING_CD,
+    w.WARNING_LEVEL_CD,
+    w.confirm_date,
+    t.USER_NUM,
+    t.ORG_NUM
+FROM
+    tb_csm_party p
+JOIN
+    tb_csm_management_team t
+ON
+    p.party_id=t.party_id 
+AND    
+    t.USER_PLACING_CD = '01'
+LEFT JOIN
+    tb_rew_csm_early_warning w
+ON
+    p.party_id=w.party_id
+LEFT JOIN
+    TB_IRM_INTERNAL_RATING_RESULT r
+ON
+    p.party_id=r.party_id
+AND
+    r.RATING_STATE=1
+LEFT JOIN
+    V_OM_ORGANIZATION voo 
+ON
+    t.ORG_NUM = voo.ORGCODE
+WHERE 1=1
+        <isNotNull property="orgcode">
+	    	and voo.parentorgcode = #orgcode#
+	    </isNotNull>
+	    
+	    <isNotNull property="partyNum">
+	    	and p.party_num = #partyNum#
+	    </isNotNull>
+	    
+	    <isNotNull property="partyName">
+	    	and p.party_Name like '%$partyName$%'
+	    </isNotNull>
+	               
+	    <isNotNull property="partyTypeCd">
+	    	and   p.PARTY_TYPE_CD= #partyTypeCd# 
+	    </isNotNull> 
+	    
+	    <isNotNull property="LevelCd">
+	    	and w.warning_level_cd  is  null 
+	    </isNotNull>      
+	    
+	     <isNotNull property="noLevelCd">
+	    	and (w.warning_level_cd is not null )
+	    </isNotNull>       
+    </select>
+ 
+    <resultMap class="commonj.sdo.DataObject" id="querySingleCsm">
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+    </resultMap>
+    <select id="querySingleCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="querySingleCsm">
+        SELECT
+           p.party_Name ,
+           p.party_id,
+           p.party_num,
+           t.USER_NUM,
+           t.ORG_NUM
+      FROM    
+           TB_CSM_CORPORATION c
+      LEFT JOIN
+           tb_csm_party p
+      ON      
+           c.party_id=p.party_id
+      LEFT JOIN
+           tb_csm_management_team t 
+      ON
+           p.party_id=t.party_id
+      AND 
+           t.USER_PLACING_CD = '01'
+      LEFT JOIN
+           tb_rew_csm_early_warning w 
+      ON
+           p.party_id=w.party_id
+      LEFT JOIN
+           V_OM_ORGANIZATION voo
+      ON
+           t.ORG_NUM = voo.ORGCODE
+      WHERE  1=1
+       AND
+           w.warning_level_cd  is null 
+        <isNotNull property="orgcode">
+	    	and  voo.parentorgcode = #orgcode#
+	    </isNotNull>    
+	    
+	    <isNotNull property="partyName">
+	    	and  p.party_Name like '%$partyName$%'
+	    </isNotNull>   
+         
+        <isNotNull property="partyNum">
+            and  p.party_num=#partyNum#
+        </isNotNull>
+        
+   </select>
+   
+   <resultMap class="commonj.sdo.DataObject" id="queryGroupCsm">
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+    </resultMap>
+    <select id="queryGroupCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryGroupCsm">
+      SELECT
+           p.party_Name ,
+           p.party_id,
+           p.party_num,
+           t.USER_NUM,
+           t.ORG_NUM
+      FROM    
+           TB_CSM_GROUP_COMPANY c
+      JOIN
+           tb_csm_party p
+      ON      
+           c.party_id=p.party_id
+      JOIN
+           tb_csm_management_team t 
+      ON
+           p.party_id=t.party_id  
+      AND  
+           t.USER_PLACING_CD = '01'
+      LEFT JOIN
+           tb_rew_csm_early_warning w
+      ON
+           p.party_id=w.party_id
+      AND 
+          (w.warning_level_cd  is  null or w.warning_level_cd ='08')
+      LEFT JOIN
+           V_OM_ORGANIZATION voo
+      ON
+           t.ORG_NUM = voo.ORGCODE
+           
+      WHERE   1=1
+        <isNotNull property="orgcode">
+	    	and  voo.parentorgcode = #orgcode#
+	    </isNotNull>        
+	    
+	    <isNotNull property="partyName">
+	    	and  p.party_Name like '%$partyName$%'
+	    </isNotNull>   
+   </select>
+   
+   <resultMap class="commonj.sdo.DataObject" id="queryWarrantCsm">
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+    </resultMap>
+    <select id="queryWarrantCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryWarrantCsm">
+      SELECT
+           p.party_Name ,
+           p.party_id,
+           p.party_num,
+           t.USER_NUM,
+           t.ORG_NUM
+      FROM    
+           TB_CSM_GUARANTY_PARTNER gp
+      JOIN
+           tb_csm_party p
+      ON      
+           gp.party_id=p.party_id
+      JOIN
+           tb_csm_management_team t
+      ON
+           p.party_id=t.party_id
+      AND  
+           t.USER_PLACING_CD = '01' 
+      LEFT JOIN
+           tb_rew_csm_early_warning w
+      ON
+           p.party_id=w.party_id
+      AND  
+           (w.warning_level_cd  is null or w.warning_level_cd ='08') 
+      LEFT JOIN
+           V_OM_ORGANIZATION voo
+      ON
+           t.ORG_NUM = voo.ORGCODE
+      WHERE 1=1 
+        
+        <isNotNull property="orgcode">
+	    	and  voo.parentorgcode = #orgcode#
+	    </isNotNull>    
+        
+        <isNotNull property="partyName">
+	    	and  p.party_Name like '%$partyName$%'
+	    </isNotNull> 
+   </select>
+</sqlMap>

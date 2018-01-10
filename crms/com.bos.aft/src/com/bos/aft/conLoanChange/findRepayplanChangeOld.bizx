@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="findRepayplanChangeOld" detailDescription="" demonstration=""
+	urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true"
+	productVersion="7.0.0.0">
+	<nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束"
+		type="end">
+		<targetConnections>link4</targetConnections>
+		<location x="646" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:returns>
+			<process:return id="0"
+				language="com.bos.dataset.con_cha.TbConRepayplanChange[]" name="repayPlans"
+				type="query" valueType="DataObject">repayPlans</process:return>
+			<process:return id="1" language="Int" name="total"
+				type="query" valueType="Primitive">total</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="648" y="96" />
+		<figSize height="17" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="赋值" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link5"
+			name="link5" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>invokePojo1</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="208" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">changeId</process:from>
+			<process:to type="query">repayEntity/changeId</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">true</process:from>
+			<process:to type="query">page/isCount</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">1</process:from>
+			<process:to type="query">repayEntity/newOrOld</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="210" y="96" />
+		<figSize height="17" width="25" />
+		<node>assign0</node>
+	</nodes>
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" collapsed="false" type="start">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="link0" isDefault="true" type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>assign0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<location x="60" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		nodeType="label">
+		<location x="62" y="96" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign1"
+		name="总条数" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link4"
+			name="link4" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign1</sourceNode>
+			<targetNode>end0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link6</targetConnections>
+		<location x="498" y="60" />
+		<size height="28" width="28" />
+		<nodeLabel>assign1label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">page/count</process:from>
+			<process:to type="query">total</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label"
+		nodeType="label">
+		<location x="494" y="96" />
+		<figSize height="17" width="37" />
+		<node>assign1</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo1"
+		name="查询原还款计划" displayName="Query with page according to SDO query template."
+		type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link6"
+			name="link6" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo1</sourceNode>
+			<targetNode>assign1</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link5</targetConnections>
+		<location x="356" y="60" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo1label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseExt.queryEntitiesByTemplateWithPage</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">default</process:inputVariable>
+			<process:inputVariable id="1" name="template"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">repayEntity</process:inputVariable>
+			<process:inputVariable id="2" name="pagecond"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">page</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="commonj.sdo.DataObject[]" valueType="Java">repayPlans</process:outputVariable>
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo1label"
+		name="label" nodeType="label">
+		<location x="325" y="96" />
+		<figSize height="17" width="85" />
+		<node>invokePojo1</node>
+	</nodes>
+	<topRuler />
+	<leftRuler />
+	<process:info author="LPC" createTime="2015-05-14 18:39:59"
+		date="2015-05-14Z" description="" name="queryRepayPlans" version="7.0.0.0" />
+	<process:variables>
+		<process:variable description=""
+			historyStateLocation="client" isArray="false"
+			modelType="com.bos.dataset.con_cha.TbConRepayplanChange" name="repayEntity" />
+	</process:variables>
+	<process:inputs varArgs="false">
+		<process:input description="" isArray="false" name="changeId"
+			primitiveType="String" />
+		<process:input description="" isArray="false"
+			modelType="com.eos.foundation.PageCond" name="page" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="true"
+			modelType="com.bos.dataset.con_cha.TbConRepayplanChange" name="repayPlans" />
+		<process:output description="" isArray="false" name="total"
+			primitiveType="Int" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+	<process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

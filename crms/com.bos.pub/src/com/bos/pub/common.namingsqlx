@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:王世春 -->
+<sqlMap>
+    <select id="selectPrimaryKeyCols" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    SELECT concat(A.COLUMN_NAME,'') COLS
+	  FROM user_constraints C, user_cons_columns A
+	 WHERE C.CONSTRAINT_NAME = A.CONSTRAINT_NAME
+	   AND C.Table_Name = A.Table_Name
+	   AND C.CONSTRAINT_TYPE = 'P'
+	   AND C.Table_Name = #TABNAME#
+    </select>
+    
+	    
+	<!--查询参数表-->
+	<select id="queryPubConfig" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+	<![CDATA[
+		SELECT 
+			cfg_group, 
+			cfg_key, 
+			cfg_value, 
+			cfg_status
+		FROM 
+			tb_pub_config 
+		WHERE 
+			cfg_status = '1'
+			AND cfg_group = #cfgGroup# 
+			AND cfg_key = #cfgKey#
+	]]>
+	</select>
+	
+	<!-- 查询序列 -->
+	<select id="selectSeqByName" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+		SELECT $SEQNAME$ AS SEQNO FROM DUAL
+    </select>
+    <!--对私客户 通过合同编号 获取批复表中的期限和期限单位-->	
+	<select id="getTermFromApprove" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select 
+			p.apply_xw_term term,
+			p.cycle_unit_xw unit
+			from 
+			tb_con_contract_info f , 
+			tb_biz_xw_approve p
+			where f.amount_detail_id = p.amount_detail_id
+			<isNotNull property="contractId">  and f.contract_id = #contractId# </isNotNull>
+	</select>
+
+</sqlMap>

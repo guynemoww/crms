@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="importRegistry.bizx" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3">
+  <nodes xsi:type="model:Note" id="node1" name="注释1" displayName="注释" collapsed="false" nodeType="note" type="note" content="注册登记信息：&#xD;&#xA;文件：ECIF_BOS_O_REGISTRY_&#xD;&#xA;表：TB_BATCH_REGISTRY" title="lizhi&#x9;14-9-2 下午4:12">
+    <location x="107" y="135"/>
+    <size height="87" width="291"/>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" collapsed="false" type="end">
+    <targetConnections>link2</targetConnections>
+    <location x="695" y="40"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="String" name="status" type="query" valueType="Primitive">status</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" nodeType="label">
+    <location x="697" y="76"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link0" name="link0" displayName="link0" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>subprocess2</targetNode>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="400" y="40"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">ECIF_BOS_O_REGISTRY_</process:from>
+      <process:to type="query">loadfilepre</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">.dat</process:from>
+      <process:to type="query">loadfilesuf</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">loadfilepre+filedate+loadfilesuf</process:from>
+      <process:to type="query">loadfile</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">TB_BATCH_REGISTRY</process:from>
+      <process:to type="query">loadtable</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">status</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">REGISTRY_ID,ECIF_ID,REGISTRY_TP_CD,ECON_DEPART_TP_CD,OTHER_BUSINESS,SHAREHOLDER_FUND_TP_CD,MAJOR_BUSINESS,REGISTRY_CITY_TP_CD,REGISTRY_ADDRESS,REGISTRY_POSTAL,REGISTRY_COUNTRY_TP_CD,REGISTRY_COUNTY_TP_CD,REGISTRY_DT,REGISTRY_PROVINCE_TP_CD,REGISTRY_CURRENCY_TP_CD,REGISTRY_CAPTIAL_AMT,PARENT_COMPANY_NAME,MAJOR_MANAG_APPROVAL_NUM,MAJOR_ORG_TP_CD,MAJOR_ORG_NUMBER,DEPART_OWNER_NAME,DEPART_OWNER_ID_TP_CD,DEPART_OWNER_ID,FIRST_LEVEL_LEGAL_NAME,FIRST_LEVEL_LEGAL_ID,SUPERIOR_DEPART_NAME,REGISTRY_PERIOD,CAPTIAL_RECORD_PERCENT,OTHER_ACCT_PERMIT_CODE,CUST_CRT_REASON,T24_REGISTRY_TP_CD,REGISTRY_CODE,T24_MAJOR_ORG_TP_CD,T24_DEPART_OWNER_ID_TP_CD,ANNUAL_INSPECTION,FINANCE_CONTACT_PHONE,REGISTER_ASSETS_RATE,INITIAL_FUND,FINANCIAL_RESOURCES,HOST_UNIT,CORP_LINK_MAN,FINANCE_LINKMAN,LEGAL_CERTIFICATE_END_DATE,PURPOSE_BIZ_SCOPE,REGISTER_ORG,UNIT_SCALE,MANAGER_LEVEL_STATE,OPERATE_STATE,MAJOR_PRODUCT_STATE,OPEN_ACCT_APPROVAL_NO,INITIAL_FUND_CURRENCY,ORG_REGISTER_DATE,CUSTOMER_CREDIT_POLICY,SOURCE_SYS_TP_CD,SMALL_CORP_REASON,ANNUAL_SALES,CUSTOMER_BUSINESS_STATE,OTHER_BANK_LOAN_ORIGIN,PUBLIC_ENTERPRISE_TYPE,MARKET_PART_TP_CD,ENTER_ORGAN_FORM_TP_CD,LAST_UPDATE_DT,LAST_UPDATE_TX_ID,LAST_UPDATE_USER,OR_RESERVED_1,OR_RESERVED_2,OR_RESERVED_3,OR_RESERVED_4,OR_RESERVED_5,OR_RESERVED_6,OR_RESERVED_7,OR_RESERVED_8,OR_RESERVED_9,OR_RESERVED_10,OR_RESERVED_11,OR_RESERVED_12,OR_RESERVED_13,OR_RESERVED_14,OR_RESERVED_15,OR_RESERVED_16,OR_RESERVED_17,OR_RESERVED_18,OR_RESERVED_19,OR_RESERVED_20</process:from>
+      <process:to type="query">loadcols</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="402" y="76"/>
+    <figSize height="17" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess1" name="获取文件日期" displayName="getFileDate" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link3" name="link3" displayName="link3" isDefault="true" type="transition">
+      <sourceNode>subprocess1</sourceNode>
+      <targetNode>assign0</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <location x="253" y="41"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess1label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.getFileDate</process:partner>
+      <process:inputVariables/>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="filedate" type="query" value="String" valueType="Primitive">filedate</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess1label" name="label" nodeType="label">
+    <location x="230" y="76"/>
+    <figSize height="17" width="73"/>
+    <node>subprocess1</node>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" collapsed="false" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="link2" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>subprocess1</targetNode>
+    </sourceConnections>
+    <location x="105" y="40"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" nodeType="label">
+    <location x="107" y="76"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="process:tSubprocess" description="" id="subprocess2" name="导入数据" displayName="loadData" collapsed="false" type="subprocess">
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="link1" isDefault="true" type="transition">
+      <sourceNode>subprocess2</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="567" y="41"/>
+    <size height="27" width="27"/>
+    <nodeLabel>subprocess2label</nodeLabel>
+    <process:flow index="0" synchronization="true" transactionType="join" varArgs="false">
+      <process:partner type="literal">this.loadData</process:partner>
+      <process:inputVariables>
+        <process:inputVariable id="0" name="filefrom" type="literal" value="String" valueType="Primitive" pattern="reference">ECIF</process:inputVariable>
+        <process:inputVariable id="1" name="loadfile" type="query" value="String" valueType="Primitive" pattern="reference">loadfile</process:inputVariable>
+        <process:inputVariable id="2" name="loadtable" type="query" value="String" valueType="Primitive" pattern="reference">loadtable</process:inputVariable>
+        <process:inputVariable id="3" name="loadcolums" type="query" value="String" valueType="Primitive" pattern="reference">loadcols</process:inputVariable>
+      </process:inputVariables>
+      <process:outputVariables>
+        <process:outputVariable id="0" name="status" type="query" value="String" valueType="Primitive">status</process:outputVariable>
+      </process:outputVariables>
+    </process:flow>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="subprocess2label" name="label" nodeType="label">
+    <location x="556" y="76"/>
+    <figSize height="17" width="49"/>
+    <node>subprocess2</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="lizhi" createTime="2014-09-03 17:44:21" date="2014-09-03Z" description="" name="数据导入_ECIF_注册登记信息" version="6.3"/>
+  <process:variables>
+    <process:variable description="要导入的文件" historyStateLocation="client" isArray="false" name="loadfile" primitiveType="String"/>
+    <process:variable description="要导入的数据表名称" historyStateLocation="client" isArray="false" name="loadtable" primitiveType="String"/>
+    <process:variable description="要导入的文件日期" historyStateLocation="client" isArray="false" name="filedate" primitiveType="String"/>
+    <process:variable description="要导入的文件前缀" historyStateLocation="client" isArray="false" name="loadfilepre" primitiveType="String"/>
+    <process:variable description="要导入的文件后缀" historyStateLocation="client" isArray="false" name="loadfilesuf" primitiveType="String"/>
+    <process:variable description="源数据文件夹" historyStateLocation="client" isArray="false" name="dataDir" primitiveType="String"/>
+    <process:variable description="要导入的字段" historyStateLocation="client" isArray="false" name="loadcols" primitiveType="String"/>
+  </process:variables>
+  <process:inputs varArgs="false"/>
+  <process:outputs>
+    <process:output description="1：成功 2：失败" isArray="false" name="status" primitiveType="String"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

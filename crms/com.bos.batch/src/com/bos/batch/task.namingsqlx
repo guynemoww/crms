@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:李磊BOS -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <!--拉当前批量的时候，会判断前一天所有被“执行时是否判断”标识字段标识为是的任务是否有不成功的。-->   
+	<!--BATCH_TEMP2  执行时是否判断  1-是   2-否-->
+    <select id="countUnSuccessedTask" parameterClass="java.util.HashMap"  resultClass="Integer">
+        select count(a.console_id)
+		From TB_BATCH_TASK_CONSOLE a,TB_BATCH_TASK_CONFIG b
+		Where a.BATCH_ID=b.BATCH_ID 
+		and a.STATUS!='1' 
+		and b.BATCH_TEMP2='1'
+    	<isNotNull property="batchDate">
+        and a.batch_date = #batchDate#
+    	</isNotNull>
+    </select>
+    
+    <!--获取批量日批量任务执行个数-->
+    <select id="countTaskByDate" parameterClass="java.util.HashMap"  resultClass="Integer">
+         select count(distinct t1.batch_id)
+		   from tb_batch_task_console t1
+		  right join tb_batch_task_config t2
+		     on t1.batch_id = t2.batch_id
+		  where 1 = 1
+	    	<isNotNull property="batchDate" >
+	          and batch_date = #batchDate#
+	    	</isNotNull>
+     </select>
+     
+    <select id="countTaskByDateAndGroup" parameterClass="java.util.HashMap"  resultClass="Integer">
+           select count(distinct batch_id) From TB_BATCH_TASK_CONSOLE Where 1=1
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+    	<isNotNull property="batchGroup" >
+          and batch_group = #batchGroup#
+    	</isNotNull>
+     </select>
+     
+     <select id="countB3task" parameterClass="java.util.HashMap"  resultClass="Integer">
+           select count(distinct batch_id) From TB_BATCH_TASK_CONSOLE Where batch_group='B3'
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+     </select>
+     
+     <select id="countB4task" parameterClass="java.util.HashMap"  resultClass="Integer">
+           select count(distinct batch_id) From TB_BATCH_TASK_CONSOLE Where batch_group='B4'
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+     </select>
+     
+    <!--获取批量日批量关键任务执行个数--> 
+     <select id="MonitorCriticalTaskisStart" parameterClass="java.util.HashMap"  resultClass="Integer">
+			 select count(distinct t1.batch_id)
+			   from tb_batch_task_console t1
+			  right join tb_batch_task_config t2
+			     on t1.batch_id = t2.batch_id
+			    and t2.batch_temp1 = '1'
+			  where 1 = 1
+    	<isNotNull property="batchDate" >
+          and t1.batch_date = #batchDate#
+    	</isNotNull>
+     </select>
+     
+     <resultMap class="commonj.sdo.DataObject" id="setTimeTask">
+        <result column="flag" property="flag"/>
+    </resultMap>
+    <!--检查第三、四批的依赖任务是否执行成功( spMQ25BillRpt 任务是否成功执行)-->
+    <select id="checkQ25RptTaskFinish" parameterClass="java.util.HashMap" resultClass="Integer">
+    	select count(*) from TB_BATCH_TASK_CONSOLE Where batch_id = (select batch_id from tb_batch_task_config where batch_code = 'spMQ25BillRpt')
+    	and STATUS='1'	
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="UnSuccessedTasks">
+         <result column="batch_id"  property="batch_id"/>
+         <result column="batch_group"  property="batch_group"/>
+         <result column="starttime"  property="starttime"/>
+         <result column="batch_date"  property="batch_date"/>
+         <result column="batch_name"  property="batch_name"/>
+         <result column="batch_bizname"  property="batch_bizname"/>
+         <result column="BATCH_TEMP1"  property="BATCH_TEMP1"/>
+    </resultMap>
+    
+    
+    <!--获取当天未执行成功的批量列表-->
+    <select id="getUnSuccessedTasks" parameterClass="java.util.HashMap" resultMap="UnSuccessedTasks">
+    	select * From TB_BATCH_TASK_CONSOLE,TB_BATCH_TASK_CONFIG Where TB_BATCH_TASK_CONSOLE.BATCH_ID=TB_BATCH_TASK_CONFIG.BATCH_ID 
+    	and TB_BATCH_TASK_CONSOLE.STATUS='2' 
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+    </select>
+    <!--获取当天未执行成功的关键任务个数-->
+     <select id="getUnSuccessedTaskCount" parameterClass="java.util.HashMap"  resultClass="Integer"><![CDATA[
+    	select count(distinct t1.batch_id) From TB_BATCH_TASK_CONSOLE t1 right join TB_BATCH_TASK_CONFIG t2 on t1.BATCH_ID=t2.BATCH_ID 
+    	and t1.STATUS='2' and t2.BATCH_TEMP1='1' where 1=1
+    	]]>		
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    
+        <!--获取配置的批量总数-->
+    <select id="countConfigTasks" parameterClass="java.util.HashMap"  resultClass="Integer">
+			select count(distinct batch_id)
+			  from TB_BATCH_TASK_CONFIG
+			 where BATCH_STATUS = '1'
+			   and BATCH_CODE !='startBatchMonitor'
+    </select>
+    
+        <!--获取当天批量成功的数量-->
+    <select id="countSucceedTasks" parameterClass="java.util.HashMap"  resultClass="Integer">
+            select count(distinct batch_id)
+			  from tb_batch_task_console
+			 where status = '1'
+	    	<isNotNull property="batchDate">
+	          and batch_date = #batchDate#
+	    	</isNotNull>
+    </select>
+    
+        <!--获取配置的关键批量总数-->
+    <select id="countConfigCriticalTasks" parameterClass="java.util.HashMap"  resultClass="Integer">
+         select count(distinct batch_id)
+		   from tb_batch_task_config
+		  where batch_status = '1'
+		    and batch_temp1 = '1'
+    </select>
+    
+        <!--获取当天关键批量成功的数量-->
+    <select id="countSucceedCriticalTasks" parameterClass="java.util.HashMap"  resultClass="Integer">
+		 select count(distinct a.batch_id)
+		   from tb_batch_task_config a
+		   left join tb_batch_task_console b
+		     on b.batch_id = a.batch_id
+		  where a.batch_temp1 = '1'
+		    and a.batch_status = '1'
+		    and b.status = '1'
+	    	<isNotNull property="batchDate" >
+	          and batch_date = #batchDate#
+	    	</isNotNull>
+    </select>
+    
+       <!--获取当天跑了那些批量组-->
+    <select id="getTaskGroups" parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject"><![CDATA[
+           select distinct batch_group From TB_BATCH_TASK_CONSOLE where 1=1
+           ]]>
+    	<isNotNull property="batchDate" >
+          and batch_date = #batchDate#
+    	</isNotNull>
+    </select>
+       <!--获取批量日期-->
+    <resultMap class="commonj.sdo.DataObject" id="res1">
+         <result column="batch_date"  property="batch_date"/>
+    </resultMap>
+    <select id="getbatchdate" parameterClass="java.util.HashMap"  resultMap="res1"><![CDATA[
+           select batch_date from tb_batch_task_date
+           ]]>
+    </select>
+    <!--设置批量日期-->
+    <update id="updateTbBatchTaskDate" parameterClass="java.util.HashMap" ><![CDATA[
+		update tb_batch_task_date set batch_date=#batchDate# where 1 = 1 
+	]]></update>
+    <update id="updateBatchDateConsole" parameterClass="java.util.HashMap" ><![CDATA[
+		update tb_batch_task_console set batch_date=#batchDate# where date(starttime)=#batchDate# 
+		and batch_id=(select batch_id from tb_batch_task_config where batch_code='setbatchdate')
+	]]></update>
+	<update id="updateBatchDateMonitor" parameterClass="java.util.HashMap" ><![CDATA[
+		update tb_batch_task_monitor set job_batchdate=#batchDate# where date(job_starttime)=#batchDate# 
+		and job_code='setbatchdate'
+	]]></update>
+	
+	<resultMap class="commonj.sdo.DataObject" id="checkPoint2">
+   		 <result column="count" property="count"/>
+    </resultMap>
+    <!--检查点2：判断数据导入后，表中是否有符合条件的数据，有则任务成功，没有则任务失败-->
+    <select id="checkbd" parameterClass="java.util.HashMap"  resultClass="Integer"><![CDATA[
+           select count(*) from TB_BATCH_BUSINESS_DUEBILL where BALANCE >0 and date(createtime)=#batchDate#
+    ]]></select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="dupBills">
+         <result column="business_num"  property="business_num"/>
+    </resultMap>
+    
+    <!--获取重复借据号-->
+    <select id="checkDupBill" parameterClass="java.util.HashMap" resultMap="dupBills"><![CDATA[
+    	select business_num from tb_loan_summary group by business_num having count(business_num)>1
+    	]]>			
+    	
+    </select>
+    
+</sqlMap>

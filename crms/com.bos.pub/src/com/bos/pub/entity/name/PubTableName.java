@@ -1,0 +1,48 @@
+package com.bos.pub.entity.name;
+
+public interface PubTableName {
+	String TB_PUB_ACCOUNT_CHANGE = "com.bos.dataset.pub.TbPubAccountChange";
+	String TB_PUB_DATE = "com.bos.pub.meta.TbPubDate";
+	String TB_PUB_DECI_TABLE = "com.bos.pub.decision.TbPubDeciTable";
+	String TB_PUB_DECI_TABLE_COL = "com.bos.pub.decision.TbPubDeciTableCol";
+	String TB_PUB_DECI_TABLE_HEAD = "com.bos.pub.decision.TbPubDeciTableHead";
+	String TB_PUB_DISTRICT = "com.bos.dataset.pub.TbPubDistrict";
+	String TB_PUB_DISTRICT_ECIF = "com.bos.dataset.pub.TbPubDistrictEcif";
+	String TB_PUB_DOC = "com.bos.pub.updown.TbPubDoc";
+	String TB_PUB_DOC_RECORD = "com.bos.pub.updown.TbPubDocRecord";
+	String TB_PUB_EVENT = "com.bos.dataset.pub.TbPubEvent";
+	String TB_PUB_EXPIRE_CHECK = "com.bos.dataset.pub.TbPubExpireCheck";
+	String TB_PUB_FIELD_FLE_FEED = "com.bos.pub.sys.TbPubFieldFleFeed";
+	String TB_PUB_FIELD_RECORD = "com.bos.pub.sys.TbPubFieldRecord";
+	String TB_PUB_FINANCIAL_ACCOUNT = "com.bos.dataset.pub.TbPubFinancialAccount";
+	String TB_PUB_GRANT_LOGS = "com.bos.pub.decision.TbPubGrantLogs";
+	String TB_PUB_GRANT_PACKAGE = "com.bos.pub.decision.TbPubGrantPackage";
+	String TB_PUB_GRANT_PARAM = "com.bos.pub.decision.TbPubGrantParam";
+	String TB_PUB_GRANT_RULE = "com.bos.pub.decision.TbPubGrantRule";
+	String TB_PUB_GRANT_TABLE = "com.bos.pub.decision.TbPubGrantTable";
+	String TB_PUB_GRANT_TABLE_COL = "com.bos.pub.decision.TbPubGrantTableCol";
+	String TB_PUB_GRANT_TABLE_RULE = "com.bos.pub.decision.TbPubGrantTableRule";
+	String TB_PUB_IMAGE_DOCUMENT = "com.bos.dataset.pub.TbPubImageDocument";
+	String TB_PUB_IMAGE_TYPE = "com.bos.dataset.pub.TbPubImageType";
+	String TB_PUB_INDEX_BASE = "com.bos.pub.model.TbPubIndexBase";
+	String TB_PUB_INDEX_ITEM = "com.bos.pub.model.TbPubIndexItem";
+	String TB_PUB_INDEX_RANGE = "com.bos.pub.model.TbPubIndexRange";
+	String TB_PUB_INTERFACE_COLS = "com.bos.dataset.pub.TbPubInterfaceCols";
+	String TB_PUB_INTERFACE_RECORD = "com.bos.dataset.pub.TbPubInterfaceRecord";
+	String TB_PUB_IPMANAGE = "com.bos.pub.sys.TbPubIpmanage";
+	String TB_PUB_MARKET_INFO = "com.bos.pub.sys.TbPubMarketInfo";
+	String TB_PUB_MESSAGE = "com.bos.dataset.pub.TbPubMessage";
+	String TB_PUB_MESSAGE_HIS = "com.bos.dataset.pub.TbPubMessageHis";
+	String TB_PUB_MODEL = "com.bos.pub.model.TbPubModel";
+	String TB_PUB_MODEL_INDEX = "com.bos.pub.model.TbPubModelIndex";
+	String TB_PUB_MODEL_RE = "com.bos.pub.model.TbPubModelRe";
+	String TB_PUB_MODEL_RE_DETAIL = "com.bos.pub.model.TbPubModelReDetail";
+	String TB_PUB_NOTICE = "com.bos.pub.sys.TbPubNotice";
+	String TB_PUB_PARAM = "com.bos.pub.model.TbPubParam";
+	String TB_PUB_REPAY_ACCOUNT = "com.bos.dataset.pub.TbPubRepayAccount";
+	String TB_PUB_RULE = "com.bos.pub.model.TbPubRule";
+	String TB_PUB_TASK_INFO = "com.bos.dataset.pub.TbPubTaskInfo";
+	String TB_PUB_TRAD_INFO = "com.bos.dataset.pub.TbPubTradInfo";
+	String TB_PUB_TRANS_WATER = "com.bos.pub.sys.TbPubTransWater";
+	String TB_PUB_WORKDAY_MANAGE = "com.bos.dataset.pub.TbPubWorkdayManage";
+}

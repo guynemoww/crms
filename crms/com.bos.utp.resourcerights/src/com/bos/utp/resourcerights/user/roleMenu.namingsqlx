@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+	<!-- 角色菜单查询 -->
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="MENUNAME" javaType="string" property="text"/>
+        <result column="MENUID" javaType="string" property="id"/>
+        <result column="PARENTSID" javaType="string" property="pid"/>
+        <result column="ISLEAF" javaType="String" property="isLeaf"/>
+        <result column="MENUCHECK" javaType="String" property="checked"/>
+        <result column="FUNCCODE" javaType="string" property="funccode"/>
+        <result column="ROLEID" javaType="string" property="roleid"/>
+        <result column="TYPE" javaType="string" property="type"/>
+    </resultMap>
+    <select id="roleMenuQueryAll" parameterClass="HashMap" resultMap="resultMap"><![CDATA[
+    SELECT DISTINCT '$roleId$' ROLEID,
+       AM.FUNCCODE,
+       AM.MENUNAME,
+       AM.MENUID,
+       AM.PARENTSID,
+       (CASE WHEN AM.ISLEAF = '1' THEN 'true' ELSE 'false' END) ISLEAF,
+       (CASE WHEN (ARF.FUNCCODE IS NULL OR AM.ISLEAF != '1') THEN 'false' ELSE 'true' END) MENUCHECK,
+       'F' type,
+       DISPLAYORDER
+  FROM (SELECT AMF.*
+  FROM AC_MENU         AM,
+       AC_MENU         AMF,
+       AC_FUNCTION     AF
+ WHERE AM.FUNCCODE = AF.FUNCCODE AND AM.MENUSEQ LIKE '%.' || AMF.MENUID || '.%') AM
+  left join (SELECT ARF.FUNCCODE
+               FROM AC_ROLE AR, AC_ROLEFUNC ARF
+              WHERE AR.ROLEID = ARF.ROLEID
+                AND AR.ROLEID = #roleId#) ARF on AM.FUNCCODE = ARF.FUNCCODE
+ WHERE 1=1
+    ]]>
+    order by DISPLAYORDER
+    </select>
+    
+    <select id="roleMenuQuery" parameterClass="HashMap" resultMap="resultMap">
+    SELECT DISTINCT '$roleId$' ROLEID,
+    A.FUNCCODE,
+       A.MENUNAME,
+       A.MENUID,
+       A.PARENTSID,
+       (CASE WHEN A.ISLEAF = '1' THEN 'true' ELSE 'false' END) ISLEAF,
+       (CASE WHEN (ARF.FUNCCODE IS NULL OR A.ISLEAF != '1') THEN 'false' ELSE 'true' END) MENUCHECK,
+       'F' type,
+       DISPLAYORDER from (SELECT AMF.*,ARF.ROLEID
+  FROM AC_OPERATOR     AO,
+       AC_OPERATORROLE AOR,
+       AC_ROLEFUNC     ARF,
+       AC_MENU         AM,
+       AC_MENU         AMF
+ WHERE AO.OPERATORID = AOR.OPERATORID
+   AND AOR.ROLEID = ARF.ROLEID
+   AND ARF.FUNCCODE = AM.FUNCCODE
+   AND ARF.APPID = nvl(AM.APPID, 1)
+   AND AM.MENUSEQ LIKE '%.' || AMF.MENUID || '.%'
+   AND AO.OPERATORID = #operatorId#) A left join (SELECT ARF.FUNCCODE
+               FROM AC_ROLE AR, AC_ROLEFUNC ARF
+              WHERE AR.ROLEID = ARF.ROLEID
+                AND AR.ROLEID = #roleId#) ARF on A.FUNCCODE = ARF.FUNCCODE WHERE 1=1
+	<isNotNull prepend="AND" property="orgid">
+        A.ROLEID IN (SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYTYPE='org' AND PARTYID=#orgId#)
+    </isNotNull>
+    order by A.DISPLAYORDER
+    </select>
+    
+    <select id="resourceMenuQueryAll" parameterClass="HashMap" resultMap="resultMap">
+    SELECT DISTINCT '$roleId$' ROLEID,
+       FUNCCODE,
+       MENUNAME,
+       MENUID,
+       PARENTSID,
+       ISLEAF,
+       MENUCHECK,
+       TYPE,
+       DISPLAYORDER FROM (
+    SELECT C.FUNCCODE,
+       C.MENUNAME,
+       C.MENUID,
+       C.PARENTSID,
+       'false' ISLEAF,
+       'false' MENUCHECK,
+       'F' TYPE,
+       DISPLAYORDER
+  FROM (SELECT AMF.*
+  FROM AC_ROLEFUNC     ARF,
+       AC_MENU         AM,
+       AC_MENU         AMF
+ WHERE ARF.FUNCCODE = AM.FUNCCODE
+   AND ARF.APPID = nvl(AM.APPID, 1)
+   AND AM.MENUSEQ LIKE '%.' || AMF.MENUID || '.%'
+   AND ARF.ROLEID=#roleId#) C
+union
+SELECT ARCE.RESOURCEID FUNCCODE,
+       ARCE.RESOURCENAME MENUNAME,
+       ARCE.RESOURCEID MENUID,
+       AM.MENUID PARENTSID,
+       'false' ISLEAF,
+       (CASE WHEN ARROLE.RESOURCEID IS NULL THEN 'false' ELSE 'true' END) MENUCHECK,
+       'B' TYPE,
+       ARCE.DISPLAYORDER
+  FROM AC_MENU AM,
+       AC_RESOURCE ARCE left join 
+       (SELECT *
+          FROM AC_RESOURCEROLE ARS
+         WHERE ARS.PERMISSIONTYPE = 'R'
+           AND ARS.RESOURCEIDVALUE = #roleId#) ARROLE on ARCE.RESOURCEID = ARROLE.RESOURCEID
+ WHERE AM.FUNCCODE = ARCE.FUNCCODE
+   AND ARCE.FUNCCODE IN (SELECT AM.FUNCCODE
+  FROM AC_MENU AM, AC_ROLEFUNC ARF
+ WHERE AM.FUNCCODE = ARF.FUNCCODE
+   AND ARF.ROLEID = #roleId#)
+   ) A
+    order by DISPLAYORDER
+    </select>
+    
+    <select id="resourceMenuQuery" parameterClass="HashMap" resultMap="resultMap">
+    SELECT DISTINCT '$roleId$' ROLEID,
+       FUNCCODE,
+       MENUNAME,
+       MENUID,
+       PARENTSID,
+       ISLEAF,
+       MENUCHECK,
+       TYPE,
+       DISPLAYORDER FROM (
+    SELECT C.FUNCCODE,
+       C.MENUNAME,
+       C.MENUID,
+       C.PARENTSID,
+       'false' ISLEAF,
+       'false' MENUCHECK,
+       'F' TYPE,
+       DISPLAYORDER
+  FROM (SELECT AMF.*,ARF.ROLEID
+  FROM AC_OPERATOR     AO,
+       AC_OPERATORROLE AOR,
+       AC_ROLEFUNC     ARF,
+       AC_MENU         AM,
+       AC_MENU         AMF
+ WHERE AO.OPERATORID = AOR.OPERATORID
+   AND AOR.ROLEID = ARF.ROLEID
+   AND ARF.FUNCCODE = AM.FUNCCODE
+   AND ARF.APPID = nvl(AM.APPID, 1)
+   AND AM.MENUSEQ LIKE '%.' || AMF.MENUID || '.%'
+   AND AO.OPERATORID = #operatorId#
+           AND ARF.FUNCCODE IN (SELECT FUNCCODE FROM AC_ROLEFUNC WHERE ROLEID = #roleId#)) C
+union
+SELECT ARCE.RESOURCEID FUNCCODE,
+       ARCE.RESOURCENAME MENUNAME,
+       ARCE.RESOURCEID MENUID,
+       AM.MENUID PARENTSID,
+       'false' ISLEAF,
+       (CASE WHEN B.RESOURCEID IS NULL THEN 'false' ELSE 'true' END) MENUCHECK,
+       'B' TYPE,
+       ARCE.DISPLAYORDER
+  FROM AC_MENU         AM,
+       AC_OPERATOR     AO,
+       AC_OPERATORROLE AOR,
+       AC_RESOURCEROLE ARROLE,
+       AC_RESOURCE     ARCE left join
+       (SELECT *
+          FROM AC_RESOURCEROLE ARS
+         WHERE ARS.PERMISSIONTYPE = 'R'
+           AND ARS.RESOURCEIDVALUE = #roleId#) B on ARCE.RESOURCEID = B.RESOURCEID
+ WHERE AM.FUNCCODE = ARCE.FUNCCODE
+   AND AO.OPERATORID = AOR.OPERATORID
+   AND AOR.ROLEID = ARROLE.RESOURCEIDVALUE
+   AND ARROLE.RESOURCESTATE = 'show'
+   AND ARROLE.PERMISSIONTYPE = 'R'
+   AND ARCE.RESOURCEID=ARROLE.RESOURCEID
+   AND AO.OPERATORID = #operatorId#
+   AND ARCE.FUNCCODE IN (SELECT AM.FUNCCODE
+  FROM AC_MENU AM, AC_ROLEFUNC ARF
+ WHERE AM.FUNCCODE = ARF.FUNCCODE
+   AND ARF.ROLEID = #roleId#)
+   <isNotNull prepend="AND" property="orgid">
+        AOR.ROLEID IN (SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYTYPE='org' AND PARTYID=#orgId#)
+    </isNotNull>
+   ) A
+    order by DISPLAYORDER
+    </select>
+    
+	<!-- 删除角色菜单信息 -->
+	<delete id="deleteRoleMenu" parameterClass="HashMap">
+		DELETE FROM AC_ROLEFUNC WHERE ROLEID=#roleId#
+		<isEqual prepend="AND" property="iseosadmin" compareValue="false">
+        	FUNCCODE IN (SELECT FUNCCODE FROM AC_ROLEFUNC WHERE ROLEID IN (SELECT ROLEID FROM AC_OPERATORROLE WHERE OPERATORID = #operatorId#) AND ROLEID IN (SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYTYPE='org' AND PARTYID=#orgId#))
+    	</isEqual>
+	</delete>
+	
+	<!-- 删除按钮资源信息 -->
+	<delete id="deleteResourceMenu" parameterClass="HashMap">
+		DELETE FROM AC_RESOURCEROLE WHERE PERMISSIONTYPE='R' AND RESOURCEIDVALUE=#roleId#
+		<isEqual prepend="AND" property="iseosadmin" compareValue="false">
+        	RESOURCEID IN (SELECT RESOURCEID FROM AC_RESOURCEROLE WHERE PERMISSIONTYPE='R' AND RESOURCEIDVALUE IN (SELECT ROLEID FROM AC_OPERATORROLE WHERE OPERATORID = #operatorId#) AND RESOURCEIDVALUE IN (SELECT ROLEID FROM OM_PARTYROLE WHERE PARTYTYPE='org' AND PARTYID=#orgId#))
+    	</isEqual>
+	</delete>
+	
+	<!-- 删除按钮资源信息 -->
+	<delete id="deleteResourceMenuOfRoleOper" parameterClass="HashMap">
+		DELETE FROM AC_RESOURCEROLE WHERE PERMISSIONTYPE='R' AND RESOURCEIDVALUE=#roleId#
+			AND RESOURCEID IN (SELECT RESOURCEID FROM AC_RESOURCE WHERE FUNCCODE NOT IN (SELECT FUNCCODE FROM AC_ROLEFUNC WHERE ROLEID=#roleId#))
+	</delete>
+    
+	<!-- 新增角色菜单信息 -->
+	<insert id="insertRoleMenu" parameterClass="HashMap">
+		INSERT INTO AC_ROLEFUNC 
+		  SELECT '$roleId$',AM.FUNCCODE,AM.APPID,AF.FUNCGROUPID
+		  FROM AC_MENU AM,AC_FUNCTION AF
+		  WHERE AM.FUNCCODE=AF.FUNCCODE  AND AM.MENUID=#id# 
+		  AND NOT EXISTS (SELECT 1 FROM AC_ROLEFUNC ARF WHERE ARF.FUNCCODE=AM.FUNCCODE AND ARF.ROLEID=#roleId#)
+	</insert>
+	
+	<!-- 新增按钮资源信息 -->
+	<insert id="insertResourceMenu" parameterClass="HashMap">
+		INSERT INTO AC_RESOURCEROLE
+  (RESOURCEID, RESOURCEIDVALUE, RESOURCESTATE, PERMISSIONTYPE)
+VALUES
+  (#id#, #roleId#, 'show', 'R')
+	</insert>
+</sqlMap>

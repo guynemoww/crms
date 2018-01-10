@@ -1,0 +1,107 @@
+package com.bos.utp.dict;
+
+import com.bos.utp.dict.dataset.EosDictEntry;
+import com.bos.utp.dict.dataset.EosDictType;
+import com.bos.utp.dict.util.DictResponse;
+import com.eos.das.entity.IDASCriteria;
+import com.eos.das.entity.criteria.CriteriaType;
+import com.eos.foundation.PageCond;
+import com.eos.foundation.eoscommon.BusinessDictUtil;
+import com.eos.spring.DASDaoSupport;
+import commonj.sdo.DataObject;
+
+/**
+ * <pre>
+ * Title: ������������
+ * Description: �����ܵ����� 
+ * </pre>
+ * @author wangbing (mailto:service6@primeton.com)
+ * @version 1.00.00
+ * 
+ */
+/*
+ * �޸���ʷ
+ * $log$
+ */
+public class EosDictTypeService extends DASDaoSupport implements IEosDictTypeService{
+	public void addEosDictType(EosDictType eosDictType){
+//		getDASTemplate().getPrimaryKey(eosDictType);
+		getDASTemplate().insertEntity(eosDictType);
+	}
+
+	public void deleteEosDictType(EosDictType[] eosDictTypes ){
+		for(DataObject eosDictType:eosDictTypes){
+			getDASTemplate().deleteEntityCascade(eosDictType);
+		}
+	}
+	
+	public void deleteEosDictType(EosDictType eosDictType, CriteriaType criteriaType) {
+		String dicttypeid = eosDictType.get("dicttypeid").toString();
+		criteriaType.set_entity(EosDictEntry.QNAME);
+		criteriaType.set("_expr[1]/eosDictType.dicttypeid", dicttypeid);
+		criteriaType.set("_expr[1]/_op", "=");
+		IDASCriteria dasCriteria = getDASTemplate().criteriaTypeToDASCriteria(criteriaType);
+		EosDictEntry[] entry = getDASTemplate().queryEntitiesByCriteriaEntity(EosDictEntry.class, dasCriteria);
+		for(DataObject eosEntryType:entry){
+			getDASTemplate().deleteEntityCascade(eosEntryType);
+		}
+		getDASTemplate().deleteEntityCascade(eosDictType);
+	}
+
+	public void getEosDictType(EosDictType eosDictType){
+		getDASTemplate().expandEntity(eosDictType);
+	}
+	
+	public int countTDictTypes(CriteriaType criteria) {
+		criteria.set_entity(EosDictType.QNAME);
+		IDASCriteria dasCriteria = getDASTemplate().criteriaTypeToDASCriteria(criteria);
+		return getDASTemplate().count(dasCriteria);
+		
+	}
+
+
+	public EosDictType[]  queryEosDictTypes(CriteriaType criteriaType,PageCond pageCond){
+		criteriaType.set_entity(EosDictType.QNAME);
+//		if (sortFilder !=null && sortOrder != null) {
+//			criteria.set("_orderby[1]/_property", sortFilder);
+//			criteria.set("_orderby[1]/_sort", sortOrder);
+//		}
+		IDASCriteria dasCriteria = getDASTemplate().criteriaTypeToDASCriteria(criteriaType);
+		return getDASTemplate().queryEntitiesByCriteriaEntityWithPage(EosDictType.class, dasCriteria, pageCond);
+	}
+
+
+    public void updateEosDictType(EosDictType eosDictType){
+	    getDASTemplate().updateEntity(eosDictType);
+    }
+    
+    public DictResponse reloadDictType() {
+		BusinessDictUtil.reLoad();
+		return new DictResponse(true, "刷新成功");
+	}
+
+	public void saveEosDictType(EosDictType[] eosDictTypes, CriteriaType criteria) {
+
+		for(EosDictType eosDictType : eosDictTypes)
+		{
+			String state = (String)eosDictType.get("_state");
+			if ("added".equals(state)) 
+			{
+				addEosDictType(eosDictType);
+			} 
+			
+			else if ("removed".equals(state) || "deleted".equals(state)) 
+			{
+				deleteEosDictType(eosDictType,criteria);
+			} 
+
+			else if ("modified".equals(state)) //���£�_stateΪ�գ���modified
+			{
+				updateEosDictType(eosDictType);
+			}
+		}
+	
+	}
+    
+}
+

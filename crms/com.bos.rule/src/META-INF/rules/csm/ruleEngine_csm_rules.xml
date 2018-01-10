@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+    <rule id="R0001" name="判断字符串是否相等" checktype="eqn" checkedFieldName="#sum(#sum($v1,$v3),-454)" targetDataList="$v2" errCode="2101015-011" errMsg="$[v1]+$[v3]-454不等于$[v2]" checkLevel="warn">
+        <sql>select count(1) v1 from tc_pub_dic</sql>
+        <sql>select count(1) v3 from tc_pub_dicsub</sql>
+        <sql><![CDATA[select count(1) v2 from tc_pub_dicsub where BIGCLASS_CD <> @bigclasscd]]></sql>
+        <condition>C0001</condition>
+        <condition>C0002</condition>
+        <condition>C0003</condition>
+        <formula><![CDATA[((C0001&&C0002)&&(C0003||C0002))]]></formula>
+    </rule>
+
+	<rule id="RCSM_0001" name="新增时注册登记号码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from( 
+						select t.party_id from tb_csm_party tp left join tb_csm_corporation t on t.party_id=tp.party_id where t.registr_cd = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.register_code = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_third_party t on t.party_id=tp.party_id where t.registr_cd = @certno and tp.LEG_ORG = @legorg )]]></sql>
+	</rule>
+	<rule id="RCSM_0011" name="新增时组织机构代码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from( 
+						select t.party_id from tb_csm_party tp left join tb_csm_corporation t on t.party_id=tp.party_id where t.org_register_cd = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.org_register_cd = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_third_party t on t.party_id=tp.party_id where t.org_register_cd = @certno and tp.LEG_ORG = @legorg) ]]></sql>
+	</rule>
+	<rule id="RCSM_0012" name="新增时公司客户名称是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的公司客户名称$[partyName]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[
+		select count(1) c from tb_csm_party where party_name = @partyName and LEG_ORG=@legorg
+		 ]]></sql>
+	</rule>
+	<rule id="RCSM_0111" name="新增时中征码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from( 
+						select t.party_id from tb_csm_party tp left join tb_csm_corporation t on t.party_id=tp.party_id where t.middel_code = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.middle_code = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_third_party t on t.party_id=tp.party_id where t.middel_code = @certno and tp.LEG_ORG = @legorg )  ]]></sql>
+	</rule>
+	<rule id="RCSM_unifySocietyCreditNum" name="新增时校验统一社会信用代码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的校验统一社会信用代码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(*) c from(
+						select t.party_id from tb_csm_party tp left join tb_csm_corporation t on t.party_id=tp.party_id where t.unify_society_credit_num = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.unify_society_credit_num = @certno and tp.LEG_ORG = @legorg
+						union all
+						select t.party_id from tb_csm_party tp left join tb_csm_third_party t on t.party_id=tp.party_id where t.unify_society_credit_num = @certno and tp.LEG_ORG = @legorg )
+			 ]]></sql>
+	</rule>
+		<rule id="RCSM_0116" name="编辑时校验统一社会信用代码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的校验统一社会信用代码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(*) c from(
+						select t.party_id from tb_csm_corporation t where t.unify_society_credit_num = @certno and t.party_id!=@partyId
+						union all
+						select t.party_id from tb_csm_financial_institution t where t.unify_society_credit_num = @certno and t.party_id!=@partyId
+						union all
+						select t.party_id from tb_csm_third_party t where t.unify_society_credit_num = @certno and t.party_id!=@partyId )
+			 ]]></sql>
+	</rule>
+	<rule id="RCSM_0112" name="编辑时中征码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[		select count(1) c from( 
+				select a.party_id from tb_csm_corporation a where a.middel_code = @certno and a.party_id!=@partyId union all
+   				select b.party_id from tb_csm_third_party b where b.middel_code= @certno and b.party_id!=@partyId union all
+    			select c.party_id from tb_csm_financial_institution c where c.middle_code= @certno and c.party_id!=@partyId)  ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0113" name="编辑时组织机构代码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[	select count(1) c from( 
+		select a.party_id from tb_csm_corporation a where a.org_register_cd = @certno and a.party_id!=@partyId union all
+    	select b.party_id from tb_csm_third_party b where b.org_register_cd= @certno and b.party_id!=@partyId union all
+    	select c.party_id from tb_csm_financial_institution c where c.org_register_cd= @certno and c.party_id!=@partyId) ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0114" name="编辑时组注册登记号码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[			select count(1) c from( 
+		select a.party_id from tb_csm_corporation a where a.registr_cd = @certno and a.party_id!=@partyId union all
+    	select b.party_id from tb_csm_third_party b where b.registr_cd= @certno and b.party_id!=@partyId union all
+   		select c.party_id from tb_csm_financial_institution c where c.register_code= @certno and c.party_id!=@partyId) ]]></sql>
+	</rule>
+	<rule id="RCSM_0115" name="编辑时统一授信客户名称是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的统一授信客户名称$[partyName]已存在" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_party t where t.party_type_cd='06'
+							and t.party_name=@partyName and t.party_id!=@partyId
+		 ]]></sql>
+	</rule>
+
+	<rule id="RCSM_middleCode" name="根据对公客户中征码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户中征码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_corporation where middel_code = @certno and party_Id!=@partyId  ]]></sql>
+	</rule>
+	<rule id="RCSM_0901" name="根据统一成员是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户已存在于其他的统一授信客户中" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_group_member where corporation_party_id = @partyId ]]></sql>
+	</rule>
+	<rule id="RCSM_0002" name="根据营业执照，校验同业客户是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.register_code = @certno and tp.LEG_ORG = @legorg]]></sql>
+	</rule>
+	
+	<rule id="RCSM_00021" name="根据同业客户组织机构代码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c  from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.org_register_cd = @certno and tp.LEG_ORG = @legorg ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_00022" name="根据同业客户中征码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c  from tb_csm_party tp left join tb_csm_financial_institution t on t.party_id=tp.party_id where t.middle_code = @certno and tp.LEG_ORG = @legorg ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_00023" name="根据同业客户swift码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certno]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_financial_institution where swift_bic_num = @certno  ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_00024" name="校验证件号码是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="输入的客户证件号码$[certNum]已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_natural_person a,tb_csm_party b  where a.party_id=b.party_id and b.leg_org=@legorg and a.cert_num = @certNum and a.cert_type=@certType  ]]></sql>
+	</rule>
+	<rule id="RCSM_00025" name="该客户是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户已经存在" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_natural_person tn left join  tb_csm_party tp on tn.party_id=tp.party_id where tn.cert_num = @certNum and tn.cert_type=@certType and tp.party_name=@partyName and tp.leg_org=@legorg ]]></sql>
+	</rule>
+	<rule id="RCSM_PO" name="根据自然人客户配偶是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户配偶已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_natural_relative where party_id = @partyId and appellation='1120'  ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_PO1" name="根据自然人客户配偶是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="该客户已婚，必须录入配偶信息" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_natural_relative where party_id = @partyId and appellation='1120'  ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_PO2" name="校验自然人客户是否未婚" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户未婚，关联关系不能录入配偶信息" checkLevel="err">
+		<sql><![CDATA[ select count(1) c from tb_csm_natural_person t  where t.party_id=@partyId  and  t.marriage_cd='10']]></sql>
+	</rule>
+	
+	<rule id="RCSM_RELATION" name="判断自然人客户关联人是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该关系人已存在，不能重复加入" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_natural_relative where party_id = @partyId and relativeid_party_id=@relativeidPartyId  ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0003" name="根据参与者ID，校验对公客户是否录入附属信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入附属信息" checkLevel="err">
+		<sql><![CDATA[
+			select count(1) c
+			  from tb_csm_attached_info t
+			 where T.party_Id = @partyId
+			   AND T.NATIONALITY_CD IS NOT NULL
+			   AND T.STREET_ADDRESS IS NOT NULL
+			   AND T.ADDRESS_VALUE IS NOT NULL
+			   AND T.LINKMAN_NAME IS NOT NULL
+			   AND T.ACCOUNT_CONTACTS_PHONE IS NOT NULL
+		]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0004" name="根据参与者ID，校验对公客户是否录入财务信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入财务信息" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_acc_customer_finance where party_Id = @partyId and finance_status_cd='02' ]]></sql>
+	</rule>
+	<rule id="RCSM_1009" name="公积金委托贷款" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="公积金委托贷款" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_entrust_account where party_Id = @partyId and entrust_type='02' ]]></sql>
+	</rule>
+	<rule id="RCSM_1014" name="根据参与者ID，校验对公客户是否录入企业类财务信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入财务信息" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_acc_customer_finance where party_Id = @partyId and finance_status_cd='02' and CUSTOMER_TYPE_CD IN('002','006','013','004','012','014') ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0005" name="根据参与者ID，校验对公客户是否录入实际控制人信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入实际控制人信息" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_control_info where party_Id = @partyId ]]></sql>
+	</rule>
+	
+	<rule id="RCSM_0007" name="根据参与者ID，校验对公客户是否录入注册资本信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入注册资本信息" checkLevel="err">
+		<sql><![CDATA[select count(1) c from tb_csm_registered_capital where party_Id = @partyId ]]></sql>
+	</rule>
+
+	<!-- 自然人客户完整性校验 -->
+	<rule id="RCSM_0008" name="根据参与者ID，校验自然人客户是否录入信用信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入信用信息" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_csm_credit_info where party_Id = @partyId ]]></sql>
+	</rule>
+	<rule id="RCSM_0009" name="根据参与者ID，校验自然人客户是否录入家庭财务信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请录入家庭财务信息" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_csm_family_affairs where party_Id = @partyId ]]></sql>
+	</rule>
+	<!-- 集团成员是否参与业务校验 -->
+	<rule id="RCSM_0010" name="集团成员是否参与业务校验" checktype="less"  checkedFieldName="$c" endValue="1" errCode="2015110-001" errMsg="该成员已经参与业务申请，无法删除" checkLevel="err">
+	<sql><![CDATA[select count(*) c from tb_biz_apply t where t.biz_type in ('05','06')and t.status_type not in('06')  and t.party_id=@partyId ]]></sql>
+	</rule>
+	<!-- 集团是否在业务流程中 -->
+	<rule id="RCSM_00102" name="集团是否在业务流程中" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该统一授信客户在业务申请流程中" checkLevel="err">
+	<sql><![CDATA[select count(*) c from tb_biz_apply t where t.status_type in ('01','02') and t.party_id=@partyId ]]></sql>
+	</rule>
+	<rule id="RCSM_00101" name="根据参与者ID，校验自然人客户是否录入配偶信息" checktype="greater"  checkedFieldName="$c" startValue="0" errCode="2015110-001" errMsg="婚姻状况为已婚、初婚、再婚、复婚时，关系人信息-配偶信息必输。" checkLevel="err">
+	<sql><![CDATA[select count(*) c from tb_csm_natural_relative t where t.party_id=@partyId AND t.appellation='1120']]></sql>
+	</rule>
+	
+	<!-- 客户关联情况  -->
+	<rule id="RCSM_1000" name="根据参与者ID，校验客户是否加入联保小组" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="未加入联保小组" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_csm_guar_memeber where related_cust_party_id = @partyId ]]></sql>
+	</rule>
+	<rule id="RCSM_1001" name="根据参与者ID，校验客户是否加入我行股东" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="未加入我行股东" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_lst_stock where cert_Type = @certType  and cert_Num = @certNum]]></sql>
+	</rule>
+	<rule id="RCSM_1002" name="根据参与者ID，校验客户是否加入我行关联方" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="未加入我行关联方" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_lst_rela where cert_Type = @certType  and cert_Num = @certNum]]></sql>
+	</rule>
+	<rule id="RCSM_1003" name="根据参与者ID，校验客户是否加入黑名单" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="未加入黑名单" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_lst_info where party_id = @partyId and list_status = '2']]></sql>
+	</rule>
+	<rule id="RCSM_1004" name="校验客户是在名单制调整流程中" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户已经在调整流程中" checkLevel="err">
+	<sql><![CDATA[select count(1) c from tb_lst_info where party_id = @partyId and approve_status = '01']]></sql>
+	</rule>
+	<rule id="RCSM_1005" name="校验客户是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户已经在" checkLevel="err">
+	<sql><![CDATA[select count(1) c  from tb_csm_guar_group tg  left join tb_csm_party tp on tp.party_id=tg.party_id where tp.party_name=@partyName and tp.LEG_ORG = @legorg]]></sql>
+	</rule>
+	<!-- 判断客户下是否填写完整了法人代表信息 -->
+	<rule id="CUS_FR" name="判断客户下是否填写了完整的法人代表信息" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="请先填写基本信息概况中的法人代表（经营者）信息" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM Tb_Csm_Corporation t
+							 WHERE t.party_id=@partyId
+							   AND (t.legal_name is null  or t.legal_Certificate_No is null)
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- 判断客户下是否有相同的股东 -->
+	<rule id="CUS_GD" name="判断客户下是否有相同的股东" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该股东已经在客户名下" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM tb_csm_registered_capital t
+							 WHERE t.party_id=@partyId
+							   AND t.natural_party_id = @naturalPartyId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+	<!-- 判断客户下是否有相同的实际控制人 -->
+	<rule id="CUS_CONTROL" name="判断客户下是否有相同的实际控制人" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该控制人已经在客户名下" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM tb_csm_control_info t
+							 WHERE t.party_id=@partyId
+							   AND t.control_id = @controlId
+			  ]]>
+	    </sql>
+	</rule>
+	
+		<!-- 判断客户下是否有相同的对外股权投资人 -->
+	<rule id="CUS_INVEST" name="判断客户下是否有相同的对外股权投资人" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该被投资人已经在客户名下" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM TB_CSM_INVESTMENT_INFO t
+							 WHERE t.party_id=@partyId
+							   AND t.INVEST_CUST_ID = @investCustId
+			  ]]>
+	    </sql>
+	</rule>
+	
+		<!-- 判断客户下是否有相同的关联关系人 -->
+	<rule id="CUS_RELATION" name="判断客户下是否有相同的关联关系人" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该关联关系人已经在客户名下" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM TB_CSM_OTHER_RELATED_PARTY t
+							 WHERE t.party_id=@partyId
+							   AND t.rela_party_id = @relaPartyId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- 财报校验小贷利润明细表 -->
+	<rule id="CUSACC_0001" name="判断科目值是否满足校验规则" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="校验不通过" checkLevel="err">
+		<sql><![CDATA[
+		select count(*) c
+		 from (select nvl((t.profit_zyywsr - t.profit_zyywcb - t.profit_jyfyhj -
+                   t.profit_cwfy - t.profit_jtkz + t.profit_tzxsr -
+                   t.profit_tzxzc + t.profit_qtyyjsr - t.profit_lrze),
+                   0) as check1,
+               nvl((t.profit_jyfyhj - t.profit_lwgz - t.profit_zj -
+                   t.profit_sdf - t.profit_s - t.profit_qtjyfy),
+                   0) as check2
+		           from tb_acc_finance_nprofit_data t
+		          where t.finance_id = @financeId ) a
+		  where a.check1 != 0
+		     or a.check2 != 0
+		]]></sql>
+	</rule>
+	<rule id="RCSM_1006" name=" 新增时判断自然人客户是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户证件号码$[certNum]已经存在，不能重复加入" checkLevel="err">
+	<sql><![CDATA[SELECT COUNT(1) c FROM TB_CSM_NATURAL_PERSON tn 
+LEFT JOIN TB_CSM_PARTY tp ON tn.PARTY_ID=tp.PARTY_ID 
+WHERE tn.CERT_NUM=@certNum AND tp.LEG_ORG=@legorg]]></sql>
+	</rule>
+	<rule id="RCSM_1007" name=" 判断客户是否已保存行业类别" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户未保存行业小类" checkLevel="err">
+	<sql><![CDATA[SELECT count(1) c FROM TB_CSM_CORPORATION WHERE INDUSTRIAL_TYPE_SAMLL_CD IS NULL AND PARTY_ID=@partyId ]]></sql>
+	</rule>
+	<rule id="RCSM_1008" name="请填写经营信息" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="请填写经营信息" checkLevel="err">
+	<sql><![CDATA[SELECT count(1) c FROM tb_csm_natural_business WHERE PARTY_ID=@partyId ]]></sql>
+	</rule>
+	
+	<rule id="XFE_0001" name="参与机构拆并的经理不允许登陆" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该用户已被纳入[机构拆并],在业务结束前无法登陆" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_TRANSFER xt 
+INNER JOIN TB_CSMXFE_APPROVE xa ON xt.TRANSFER_ID=xa.TRANSFER_ID
+WHERE xt.TRANSFER_TYPE='4' AND xt.STATUS!='99' AND xa.OLD_USER_ID=@userNum
+	</sql>
+	</rule>
+	<rule id="XFE_0002" name="参与客户移交的客户不允许做流程业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该客户已被纳入[客户移交],在业务结束前无法申请新的业务" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_TRANSFER xt 
+INNER JOIN TB_CSMXFE_APPROVE xa ON xt.TRANSFER_ID=xa.TRANSFER_ID
+WHERE xt.TRANSFER_TYPE='1' AND xt.STATUS!='99' AND xa.PARTY_ID=@partyId
+	</sql>
+	</rule>
+	<rule id="XFE_0003" name="移交申请未完成，包含的业务不允许处理" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该批复已被纳入[移交申请],在业务结束前无法处理" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_APPROVE WHERE APPROVE_ID=@approveId AND ACTIVE='0'
+	</sql>
+	</rule>
+	<rule id="XFE_0004" name="移交申请未完成，包含的业务不允许处理" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该合同已被纳入[移交申请],在业务结束前无法处理" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_CONTRACT WHERE CONTRACT_ID =@contractId AND active='0'
+	</sql>
+	</rule>
+	<rule id="XFE_0005" name="移交申请未完成，包含的业务不允许处理" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该放款已被纳入[移交申请],在业务结束前无法处理" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_SUMMARY WHERE SUMMARY_ID =@summaryId AND ACTIVE='0'
+	</sql>
+	</rule>
+	<rule id="XFE_0006" name="移交申请未完成，包含的业务不允许处理" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该押品合同已被纳入[移交申请],在业务结束前无法处理" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_SUBCONTRACT WHERE SUBCONTRACT_ID=@subcontractId AND ACTIVE='0'
+	</sql>
+	</rule>
+	<rule id="XFE_0007" name="移交申请未完成，包含的业务不允许处理" checktype="eqn"  checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="该抵质押物已被纳入[移交申请],在业务结束前无法处理" checkLevel="err">
+	<sql>
+SELECT COUNT(1)c FROM TB_CSMXFE_SUBCONTRACT WHERE SURETY_ID=@suretyId AND ACTIVE='0'
+	</sql>
+	</rule>
+</checkrules>

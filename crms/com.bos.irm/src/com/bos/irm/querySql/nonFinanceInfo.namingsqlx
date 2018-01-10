@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="index_id" property="indexId"/>
+        <result column="property_type_cd" property="propertyTypeCd"/>
+		<result column="index_num" property="indexNum"/>        
+        <result column="index_name" property="indexName"/>
+        <result column="a" property="a"/>
+        <result column="b" property="b"/>
+    </resultMap>
+    <select id="queryNonFinance" parameterClass="java.util.HashMap" resultMap="resultMap">
+    	select tb_irm_model_index.index_id,property_type_cd,index_name,tb_irm_index_score.index_desc b,index_num, tb_irm_model_index.index_desc a
+    	from tb_irm_model_index,tb_irm_index_score
+		where tb_irm_model_index.index_id = tb_irm_index_score.index_id 
+		<isNotNull property="modelId">
+	    	and model_id = #modelId#
+	    </isNotNull>
+		<isNotNull property="indexType">
+	    	and index_type = #indexType#
+	    </isNotNull>
+    </select>
+    
+    
+    <resultMap class="commonj.sdo.DataObject" id="NonFinanceMaps">
+        <result column="INDEX_ID" property="indexId"/>
+        <result column="PROPERTY_TYPE_CD" property="propertyTypeCd"/>
+        <result column="INDEX_NAME" property="indexName"/>      
+        <result column="INDEX_NUM" property="indexNum"/>
+        <result column="index_Desc1" property="indexDesc1"/>        
+        <result column="index_Desc2" property="indexDesc2"/>
+    </resultMap>
+    <select id="queryNonFinanceinfo" parameterClass="java.util.HashMap" resultMap="NonFinanceMaps">
+		select a.INDEX_ID,a.PROPERTY_TYPE_CD,a.INDEX_NAME,b.INDEX_NUM,b.INDEX_DESC index_Desc1,/*a.INDEX_DESC*/ '查看指标说明' index_Desc2
+			from TB_IRM_INDEX_SCORE b,TB_IRM_MODEL_INDEX a
+				where 1=1
+			       and a.INDEX_ID = b.INDEX_ID
+			       <isNotNull property="indexId">
+			       	  and a.INDEX_ID = #indexId#
+			       </isNotNull>
+			       <isNotNull property="indexNum">
+			          and b.INDEX_NUM = #indexNum#
+			       </isNotNull>
+			       and a.PROPERTY_TYPE_CD != '0204'
+			       order by a.INDEX_ID desc
+     </select>
+    <select id="queryNonFinanceinfo2" parameterClass="java.util.HashMap" resultMap="NonFinanceMaps">
+		select a.INDEX_ID,a.PROPERTY_TYPE_CD,a.INDEX_NAME,b.INDEX_NUM,b.INDEX_DESC index_Desc1,/*a.INDEX_DESC*/ '查看指标说明' index_Desc2
+			from TB_IRM_INDEX_SCORE b,TB_IRM_MODEL_INDEX a
+				where 1=1
+			       and a.INDEX_ID = b.INDEX_ID
+			       <isNotNull property="indexId">
+			       	  and a.INDEX_ID = #indexId#
+			       </isNotNull>
+			       <isNotNull property="indexNum">
+			          and b.INDEX_NUM = #indexNum#
+			       </isNotNull>
+			       and a.PROPERTY_TYPE_CD = '0204'
+    </select> 
+    <resultMap class="commonj.sdo.DataObject" id="ReportNonFinanceMaps">
+        <result column="INDEX_ID" property="indexId"/>
+        <result column="PROPERTY_TYPE_CD" property="propertyTypeCd"/>
+        <result column="INDEX_NAME" property="indexName"/>      
+        <result column="INDEX_NUM" property="indexNum"/>
+        <result column="IRA_APPLY_ID" property="iraApplyId"/>        
+        <result column="indexOption" property="indexOption"/>
+        <result column="remarks" property="remarks"/>
+        <result column="index_desc" property="indexDesc"/>
+    </resultMap>
+    <select id="queryReportNonFinanceinfo" parameterClass="java.util.HashMap" resultMap="ReportNonFinanceMaps">
+		SELECT
+			c.T_COMMENT as remarks,
+			c.IRA_APPLY_ID,
+		    a.INDEX_ID  ,
+		    a.PROPERTY_TYPE_CD  ,
+		    a.INDEX_NAME  ,
+		    '查看指标说明' as index_desc,
+		    b.INDEX_NUM  ,
+		    b.INDEX_NUM ||':'||b.INDEX_DESC as indexOption
+		FROM
+		    TB_IRM_INDEX_SCORE b,
+		    TB_IRM_MODEL_INDEX a,
+		    TB_IRM_NON_FINANCIAL_INFO c
+		WHERE
+		    1=1
+		AND a.INDEX_ID = b.INDEX_ID
+		and a.INDEX_ID = c.NON_FINANCIAL_INDEX_ID
+		and b.INDEX_NUM = c.NON_FINANCIAL_VALUE
+		and a.PROPERTY_TYPE_CD != '0204'
+		<isNotNull property="iraApplyId">
+          and c.IRA_APPLY_ID = #iraApplyId#
+       </isNotNull>
+    </select>              
+</sqlMap>

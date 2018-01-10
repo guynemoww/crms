@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="saveMenu" detailDescription="" demonstration="" urls="" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3">
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" type="start">
+    <sourceConnections xsi:type="process:tLink" id="link9" name="link9" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>invokeSpring4</targetNode>
+    </sourceConnections>
+    <location x="44" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束" type="end">
+    <targetConnections>link8</targetConnections>
+    <targetConnections>link17</targetConnections>
+    <location x="1006" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" language="String" name="msg" type="query" valueType="Primitive">msg</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" displayName="label" nodeType="label">
+    <location x="46" y="201"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" displayName="label" nodeType="label">
+    <location x="1008" y="201"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokeSpring0" name="插入菜单" displayName="addAppMenu" type="invoke" index="0" invokeType="invoke_spring" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link14" name="link14" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokeSpring0</sourceNode>
+      <targetNode>invokeSpring5</targetNode>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" id="link2" name="link2" displayName="连接线" lineType="note" type="exception">
+      <sourceNode>invokeSpring0</sourceNode>
+      <targetNode>transactionrollback0</targetNode>
+    </sourceConnections>
+    <targetConnections>link11</targetConnections>
+    <location x="724" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>invokeSpring0label</nodeLabel>
+    <process:spring methodType="beanID" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.utp.framework.AppMenuService.addAppMenu</process:partner>
+      <process:instance instanceName="AppMenuBean"/>
+    </process:spring>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="appMenu" type="query" value="com.bos.utp.framework.application.AcMenu" valueType="Java" pattern="reference">acmenu</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokeSpring0label" name="label" nodeType="label">
+    <location x="714" y="201"/>
+    <figSize height="17" width="49"/>
+    <node>invokeSpring0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="菜单属性赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link1" name="link1" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>transactionbegin1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link16</targetConnections>
+    <location x="570" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">context.getInt(&quot;parentmenu/menulevel&quot;)+1</process:from>
+      <process:to type="query">acmenu/menulevel</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">context.getString(&quot;parentmenu/menuseq&quot;)+acmenu.getString(&quot;menuid&quot;)+&quot;.&quot;</process:from>
+      <process:to type="query">acmenu/menuseq</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0</process:from>
+      <process:to type="query">acmenu/subcount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">acmenu.getString(&quot;menucode&quot;)</process:from>
+      <process:to type="query">acmenu/funccode</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="548" y="96"/>
+    <figSize height="17" width="73"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokeSpring1" name="查询父节点信息" displayName="queryAppMenus" type="invoke" index="0" invokeType="invoke_spring" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link4" name="link4" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokeSpring1</sourceNode>
+      <targetNode>assign3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link3</targetConnections>
+    <location x="405" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>invokeSpring1label</nodeLabel>
+    <process:spring methodType="beanID" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.utp.framework.AppMenuService.queryAppMenus</process:partner>
+      <process:instance instanceName="AppMenuBean"/>
+    </process:spring>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="criteriaType" type="query" value="com.eos.das.entity.criteria.CriteriaType" valueType="Java" pattern="reference">menucriteria</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.bos.utp.framework.application.AcMenu[]" valueType="Java">parentmenus</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokeSpring1label" name="label" nodeType="label">
+    <location x="377" y="96"/>
+    <figSize height="17" width="85"/>
+    <node>invokeSpring1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="设置父节点的查询条件" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link3" name="link3" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>invokeSpring1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link10</targetConnections>
+    <location x="285" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">acmenu/acMenu/menuid</process:from>
+      <process:to type="query">menucriteria/_expr[1]/menuid</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="239" y="96"/>
+    <figSize height="17" width="121"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="父节点赋值" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link16" name="link16" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>assign0</targetNode>
+    </sourceConnections>
+    <targetConnections>link4</targetConnections>
+    <location x="489" y="60"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">parentmenus[0]</process:from>
+      <process:to type="query">parentmenu</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="473" y="96"/>
+    <figSize height="17" width="61"/>
+    <node>assign3</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign9" name="菜单赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link13" name="link13" displayName="link1" isDefault="true" type="transition">
+      <sourceNode>assign9</sourceNode>
+      <targetNode>transactionbegin1</targetNode>
+    </sourceConnections>
+    <targetConnections>link20</targetConnections>
+    <location x="417" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign9label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">1</process:from>
+      <process:to type="query">acmenu/menulevel</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">&quot;.&quot;+acmenu.getString(&quot;menuid&quot;)+&quot;.&quot;</process:from>
+      <process:to type="query">acmenu/menuseq</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">null</process:from>
+      <process:to type="query">acmenu/acMenu</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0</process:from>
+      <process:to type="query">acmenu/subcount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">acmenu.getString(&quot;menucode&quot;)</process:from>
+      <process:to type="query">acmenu/funccode</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign9label" name="label" nodeType="label">
+    <location x="407" y="201"/>
+    <figSize height="17" width="49"/>
+    <node>assign9</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokeSpring4" name="获取主键" displayName="getPrimaryKey" type="invoke" index="0" invokeType="invoke_spring" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link0" name="link0" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokeSpring4</sourceNode>
+      <targetNode>assign6</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link9</targetConnections>
+    <location x="119" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>invokeSpring4label</nodeLabel>
+    <process:spring methodType="beanID" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.utp.framework.AppMenuService.getPrimaryKey</process:partner>
+      <process:instance instanceName="AppMenuBean"/>
+    </process:spring>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="appMenu" type="query" value="com.bos.utp.framework.application.AcMenu" valueType="Java" pattern="reference">acmenu</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokeSpring4label" name="label" nodeType="label">
+    <location x="109" y="201"/>
+    <figSize height="17" width="49"/>
+    <node>invokeSpring4</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokeSpring5" name="插入功能菜单" displayName="addAppFunction" collapsed="false" type="invoke" index="0" invokeType="invoke_spring" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link6" name="link6" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokeSpring5</sourceNode>
+      <targetNode>transactioncommit0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" id="link5" name="link5" displayName="连接线" lineType="note" type="exception">
+      <sourceNode>invokeSpring5</sourceNode>
+      <targetNode>transactionrollback0</targetNode>
+    </sourceConnections>
+    <targetConnections>link14</targetConnections>
+    <location x="796" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>invokeSpring5label</nodeLabel>
+    <process:spring methodType="beanID" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.utp.framework.AppFunctionService.addAppFunction</process:partner>
+      <process:instance instanceName="AppFunctionBean"/>
+    </process:spring>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="appFunction" type="query" value="com.bos.utp.framework.application.AcFunction" valueType="Java" pattern="reference">appFunction</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokeSpring5label" name="label" nodeType="label">
+    <location x="774" y="201"/>
+    <figSize height="17" width="73"/>
+    <node>invokeSpring5</node>
+  </nodes>
+  <nodes xsi:type="process:tTransactionCommit" id="transactioncommit0" name="事务提交" displayName="事务提交" type="transactioncommit">
+    <sourceConnections xsi:type="process:tLink" id="link8" name="link8" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>transactioncommit0</sourceNode>
+      <targetNode>end0</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link6</targetConnections>
+    <location x="864" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>transactioncommit0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="transactioncommit0label" name="label" nodeType="label">
+    <location x="854" y="201"/>
+    <figSize height="17" width="49"/>
+    <node>transactioncommit0</node>
+  </nodes>
+  <nodes xsi:type="process:tTransactionBegin" id="transactionbegin1" name="事务开始" displayName="事务开始" type="transactionbegin">
+    <sourceConnections xsi:type="process:tLink" id="link11" name="link11" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>transactionbegin1</sourceNode>
+      <targetNode>invokeSpring0</targetNode>
+    </sourceConnections>
+    <targetConnections>link1</targetConnections>
+    <targetConnections>link13</targetConnections>
+    <location x="646" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>transactionbegin1label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="transactionbegin1label" name="label" nodeType="label">
+    <location x="636" y="201"/>
+    <figSize height="17" width="49"/>
+    <node>transactionbegin1</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign6" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" description="" id="link20" name="父节点为根" displayName="连接线" isDefault="false" type="transition">
+      <sourceNode>assign6</sourceNode>
+      <targetNode>assign9</targetNode>
+      <process:transitionCondition>
+        <process:complexCondition>
+          <process:code>&quot;root&quot;.equals(parentmenuid) || &quot;null&quot;.equals(parentmenuid) || parentmenuid==null</process:code>
+        </process:complexCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link10" name="" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign6</sourceNode>
+      <targetNode>assign1</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand/>
+          <process:rightOperand/>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link0</targetConnections>
+    <location x="185" y="165"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign6label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">acmenu.getString(&quot;menucode&quot;)</process:from>
+      <process:to type="query">appFunction/funccode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">acmenu.getString(&quot;menuaction&quot;)</process:from>
+      <process:to type="query">appFunction/funcaction</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="expression" pattern="reference">acmenu.getString(&quot;menuname&quot;)</process:from>
+      <process:to type="query">appFunction/funcname</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">appFunction/ismenu</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0</process:from>
+      <process:to type="query">appFunction/functype</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">acmenu/acMenu/menuid</process:from>
+      <process:to type="query">parentmenuid</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">1</process:from>
+      <process:to type="query">acmenu/appid</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign6label" name="label" nodeType="label">
+    <location x="187" y="201"/>
+    <figSize height="17" width="25"/>
+    <node>assign6</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="赋值1" displayName="赋值" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link17" name="link17" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link19</targetConnections>
+    <location x="945" y="75"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">保存失败</process:from>
+      <process:to type="query">msg</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="943" y="111"/>
+    <figSize height="17" width="32"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="process:tTransactionRollback" id="transactionrollback0" name="事务回滚" displayName="事务回滚" type="transactionrollback">
+    <sourceConnections xsi:type="process:tLink" id="link19" name="link19" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>transactionrollback0</sourceNode>
+      <targetNode>assign2</targetNode>
+    </sourceConnections>
+    <targetConnections>link2</targetConnections>
+    <targetConnections>link5</targetConnections>
+    <location x="864" y="75"/>
+    <size height="28" width="28"/>
+    <nodeLabel>transactionrollback0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="transactionrollback0label" name="label" nodeType="label">
+    <location x="854" y="111"/>
+    <figSize height="17" width="49"/>
+    <node>transactionrollback0</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="Administrator" createTime="2013-03-04 16:16:35" date="2013-03-04Z" description="" name="saveFuncGroup" version="6.3"/>
+  <process:variables>
+    <process:variable description="" historyStateLocation="client" isArray="false" modelType="com.primeton.das.criteria.criteriaType" name="menucriteria"/>
+    <process:variable anyType="com.bos.utp.framework.application.AcMenu" description="" historyStateLocation="client" isArray="false" name="parentmenu"/>
+    <process:variable description="" historyStateLocation="client" isArray="false" name="parentmenuid" primitiveType="String"/>
+    <process:variable anyType="com.bos.utp.framework.application.AcMenu" description="" historyStateLocation="client" isArray="true" name="parentmenus"/>
+    <process:variable anyType="com.bos.utp.framework.application.AcFunction" description="" historyStateLocation="client" isArray="false" name="appFunction"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input anyType="com.bos.utp.framework.application.AcMenu" description="" isArray="false" name="acmenu"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output description="" isArray="false" name="msg" primitiveType="String"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+  <process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

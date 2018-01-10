@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process" name="mqRequestCopy.bizx" gridVisibility="false" rulerVisibility="true" snapToGeometry="true" productVersion="6.3">
+  <nodes xsi:type="model:Note" id="node0" name="注释" displayName="注释" collapsed="false" nodeType="note" type="note" content="MQ客户端发送消息并等待相应的公共逻辑流，主要处理以下事项：&#xD;&#xA;1、转换业务实体发送的javabean为xml报文发送给交换；&#xD;&#xA;2、接收交换返回的相应报文，并转换为javabean返回给业务逻辑流；&#xD;&#xA;3、自动重发机制，当接收到交换平台或者T24系统的超时标志后，自动重发" title="武立松&#x9;14-5-17 上午10:58">
+    <location x="190" y="454"/>
+    <size height="151" width="211"/>
+  </nodes>
+  <nodes xsi:type="process:tStart" id="start0" name="开始" displayName="开始" collapsed="false" nodeType="common" type="start">
+    <sourceConnections xsi:type="process:tLink" description="" id="link47" name="link47" displayName="link13" isDefault="true" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>assign0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">1</process:leftOperand>
+          <process:rightOperand type="query">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link48" name="link48" displayName="link4" isDefault="false" type="transition">
+      <sourceNode>start0</sourceNode>
+      <targetNode>invokePojo0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query">aa</process:leftOperand>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <location x="80" y="155"/>
+    <size height="28" width="28"/>
+    <nodeLabel>start0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="start0label" name="label" nodeType="label">
+    <location x="82" y="191"/>
+    <figSize height="17" width="25"/>
+    <node>start0</node>
+  </nodes>
+  <nodes xsi:type="process:tEnd" description="" id="end0" name="结束" displayName="结束" collapsed="false" nodeType="common" type="end">
+    <targetConnections>link51</targetConnections>
+    <targetConnections>link49</targetConnections>
+    <location x="1071" y="154"/>
+    <size height="28" width="28"/>
+    <nodeLabel>end0label</nodeLabel>
+    <process:returns>
+      <process:return id="0" name="reBean" type="query">reBean</process:return>
+    </process:returns>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="end0label" name="label" nodeType="label">
+    <location x="1073" y="190"/>
+    <figSize height="17" width="25"/>
+    <node>end0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign0" name="赋值" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link49" name="link49" displayName="link14" isDefault="true" type="transition">
+      <sourceNode>assign0</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link47</targetConnections>
+    <location x="575" y="365"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label" nodeType="label">
+    <location x="577" y="401"/>
+    <figSize height="17" width="25"/>
+    <node>assign0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo0" name="获取当前日期" displayName="获取当前日期" collapsed="false" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link45" name="link45" displayName="link2" isDefault="true" type="transition">
+      <sourceNode>invokePojo0</sourceNode>
+      <targetNode>assign3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link48</targetConnections>
+    <location x="175" y="155"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo0label</nodeLabel>
+    <process:pojo methodType="static" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.GitUtil.getBusiDateYYYYMMDD</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables/>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">currentDate</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo0label" name="label" nodeType="label">
+    <location x="150" y="191"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo0</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo1" name="获取请求时间" displayName="获取请求时间" collapsed="false" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link50" name="link50" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>invokePojo1</sourceNode>
+      <targetNode>loopstart0</targetNode>
+    </sourceConnections>
+    <targetConnections>link46</targetConnections>
+    <location x="370" y="155"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo1label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.GitUtil.getBusiTimeStr</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables/>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">currentTime</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo1label" name="label" nodeType="label">
+    <location x="345" y="191"/>
+    <figSize height="17" width="73"/>
+    <node>invokePojo1</node>
+  </nodes>
+  <nodes xsi:type="model:GroupNode" id="group0" name="group" grouped="true" gstart="loopstart0" gend="loopend0">
+    <location x="430" y="101"/>
+    <size height="151" width="545"/>
+    <chidren>invokePojo2</chidren>
+    <chidren>invokePojo3</chidren>
+    <chidren>invokePojo4</chidren>
+    <chidren>assign1</chidren>
+    <chidren>invokePojo5</chidren>
+    <chidren>assign2</chidren>
+    <chidren>assign4</chidren>
+    <chidren>switch0</chidren>
+    <chidren>loopstart0</chidren>
+    <chidren>loopend0</chidren>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo2" name="发送消息并返回相应" displayName="发送消息并返回相应" grouped="true" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link39" name="link39" displayName="link5" isDefault="true" type="transition">
+      <sourceNode>invokePojo2</sourceNode>
+      <targetNode>invokePojo4</targetNode>
+    </sourceConnections>
+    <targetConnections>link42</targetConnections>
+    <location x="755" y="186"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo2label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.mq.rq.BaseMQRequest.mqRequest</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="tradInfo" type="query" value="commonj.sdo.DataObject" valueType="Java" pattern="reference">tradInfo</process:inputVariable>
+      <process:inputVariable id="1" name="bosfxii" type="query" value="com.bos.jaxb.javabean.BOSFXII" valueType="Java" pattern="reference">bf</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.bos.jaxb.javabean.BOSFXII" valueType="Java">rebf</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo2label" name="label" nodeType="label">
+    <location x="712" y="222"/>
+    <figSize height="17" width="109"/>
+    <node>invokePojo2</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo3" name="初始化BOSFXII" displayName="初始化BOSFXII" grouped="true" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link44" name="link44" displayName="link1" isDefault="true" type="transition">
+      <sourceNode>invokePojo3</sourceNode>
+      <targetNode>assign2</targetNode>
+    </sourceConnections>
+    <targetConnections>link36</targetConnections>
+    <location x="654" y="186"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo3label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.mq.rq.BaseMQRequest.initBOSFXII</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="bizBean" type="query" value="java.lang.Object" valueType="Java" pattern="reference">bizBean</process:inputVariable>
+      <process:inputVariable id="1" name="rqhr" type="query" value="com.bos.jaxb.javabean.CommonRqHdr" valueType="Java" pattern="reference">rqhdr</process:inputVariable>
+      <process:inputVariable id="2" name="spName" type="query" value="java.lang.String" valueType="Java" pattern="reference">spName</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="com.bos.jaxb.javabean.BOSFXII" valueType="Java">bf</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo3label" name="label" nodeType="label">
+    <location x="623" y="222"/>
+    <figSize height="17" width="84"/>
+    <node>invokePojo3</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo4" name="相应请求" displayName="相应请求" grouped="true" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" description="" id="link40" name="link40" displayName="link11" isDefault="true" type="transition">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>switch0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link41" name="link41" displayName="link9" lineType="inheritance" type="break">
+      <sourceNode>invokePojo4</sourceNode>
+      <targetNode>loopend0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="NE">
+          <process:leftOperand type="query">reBean/reCode</process:leftOperand>
+          <process:rightOperand type="query">link_timeOutFlag</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link39</targetConnections>
+    <location x="820" y="114"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo4label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.mq.rq.BaseMQRequest.mqRespone</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables>
+      <process:inputVariable id="0" name="rebf" type="query" value="com.bos.jaxb.javabean.BOSFXII" valueType="Java" pattern="reference">rebf</process:inputVariable>
+      <process:inputVariable id="1" name="spName" type="query" value="java.lang.String" valueType="Java" pattern="reference">spName</process:inputVariable>
+    </process:inputVariables>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="commonj.sdo.DataObject" valueType="Java">reBean</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo4label" name="label" nodeType="label">
+    <location x="807" y="150"/>
+    <figSize height="17" width="49"/>
+    <node>invokePojo4</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign1" name="初始化报文头" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link36" name="link36" displayName="link0" isDefault="true" type="transition">
+      <sourceNode>assign1</sourceNode>
+      <targetNode>invokePojo3</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link38</targetConnections>
+    <location x="585" y="114"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign1label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="value">spName</process:from>
+      <process:to type="query">rqhdr/sPName</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="value">S64</process:from>
+      <process:to type="query">rqhdr/channelId</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="value">currentDate</process:from>
+      <process:to type="query">rqhdr/clearDate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="value">currentDate</process:from>
+      <process:to type="query">rqhdr/tranDate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="value">requHdr/CompanyCode</process:from>
+      <process:to type="query">rqhdr/companyCode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="value">093070</process:from>
+      <process:to type="query">rqhdr/numTranCode</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="value">currentTime</process:from>
+      <process:to type="query">rqhdr/tranTime</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">rquid</process:from>
+      <process:to type="query">rqhdr/rqUID</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign1label" name="label" nodeType="label">
+    <location x="563" y="150"/>
+    <figSize height="17" width="73"/>
+    <node>assign1</node>
+  </nodes>
+  <nodes xsi:type="process:tInvoke" description="" id="invokePojo5" name="生成请求流水号" displayName="生成请求流水号" grouped="true" nodeType="common" type="invoke" index="0" invokeType="invoke_pojo" varArgs="false">
+    <sourceConnections xsi:type="process:tLink" id="link38" name="link38" displayName="link8" isDefault="true" type="transition">
+      <sourceNode>invokePojo5</sourceNode>
+      <targetNode>assign1</targetNode>
+    </sourceConnections>
+    <targetConnections>link43</targetConnections>
+    <location x="524" y="185"/>
+    <size height="28" width="22"/>
+    <nodeLabel>invokePojo5label</nodeLabel>
+    <process:pojo methodType="instance" synchronization="true" transactionType="join">
+      <process:partner type="literal">com.bos.pub.GitUtil.genUUIDString</process:partner>
+      <process:instance instanceName=""/>
+    </process:pojo>
+    <process:inputVariables/>
+    <process:outputVariables>
+      <process:outputVariable id="0" name="out0" type="query" value="java.lang.String" valueType="Java">rquid</process:outputVariable>
+    </process:outputVariables>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="invokePojo5label" name="label" nodeType="label">
+    <location x="493" y="221"/>
+    <figSize height="17" width="85"/>
+    <node>invokePojo5</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign2" name="组织交易明细数据" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link42" name="link42" displayName="link10" isDefault="true" type="transition">
+      <sourceNode>assign2</sourceNode>
+      <targetNode>invokePojo2</targetNode>
+    </sourceConnections>
+    <targetConnections>link44</targetConnections>
+    <location x="700" y="114"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign2label</nodeLabel>
+    <process:copy>
+      <process:from type="query" pattern="reference">rquid</process:from>
+      <process:to type="query">tradInfo/rquid</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">spName</process:from>
+      <process:to type="query">tradInfo/spname</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">currentDate</process:from>
+      <process:to type="query">tradInfo/trandate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">currentTime</process:from>
+      <process:to type="query">tradInfo/trantime</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">currentDate</process:from>
+      <process:to type="query">tradInfo/cleardate</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">rqhdr/channelId</process:from>
+      <process:to type="query">tradInfo/channelid</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label" nodeType="label">
+    <location x="666" y="150"/>
+    <figSize height="17" width="97"/>
+    <node>assign2</node>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopstart0label" name="label" nodeType="label">
+    <location x="430" y="188"/>
+    <figSize height="17" width="25"/>
+    <node>loopstart0</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopStart" description="" id="loopstart0" name="循环" displayName="循环" grouped="true" type="loopstart" matchedName="loopend0" loopType="while">
+    <sourceConnections xsi:type="process:tLink" id="link37" name="link37" displayName="link7" isDefault="true" type="transition">
+      <sourceNode>loopstart0</sourceNode>
+      <targetNode>assign4</targetNode>
+    </sourceConnections>
+    <targetConnections>link50</targetConnections>
+    <location x="430" y="156"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopstart0label</nodeLabel>
+    <process:condition>
+      <process:simpleCondition operator="LT">
+        <process:leftOperand type="query">sendCount</process:leftOperand>
+        <process:rightOperand type="query">maxSendCount</process:rightOperand>
+      </process:simpleCondition>
+    </process:condition>
+    <process:iterate/>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="loopend0label" name="label" nodeType="label">
+    <location x="938" y="188"/>
+    <figSize height="17" width="49"/>
+    <node>loopend0</node>
+  </nodes>
+  <nodes xsi:type="process:tLoopEnd" id="loopend0" name="循环结束" displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart0">
+    <sourceConnections xsi:type="process:tLink" id="link51" name="link51" displayName="连接线" isDefault="true" type="transition">
+      <sourceNode>loopend0</sourceNode>
+      <targetNode>end0</targetNode>
+    </sourceConnections>
+    <targetConnections>link35</targetConnections>
+    <targetConnections>link34</targetConnections>
+    <targetConnections>link41</targetConnections>
+    <location x="950" y="156"/>
+    <size height="24" width="24"/>
+    <nodeLabel>loopend0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign4" name="发送次数+1" displayName="赋值" grouped="true" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link43" name="link43" displayName="link15" isDefault="true" type="transition">
+      <sourceNode>assign4</sourceNode>
+      <targetNode>invokePojo5</targetNode>
+    </sourceConnections>
+    <targetConnections>link37</targetConnections>
+    <location x="475" y="114"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign4label</nodeLabel>
+    <process:copy>
+      <process:from type="expression" pattern="reference">sendCount++</process:from>
+      <process:to type="query">sendCount</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign4label" name="label" nodeType="label">
+    <location x="457" y="150"/>
+    <figSize height="17" width="65"/>
+    <node>assign4</node>
+  </nodes>
+  <nodes xsi:type="process:tSwitch" id="switch0" name="超时重发" displayName="空操作" grouped="true" type="switch">
+    <sourceConnections xsi:type="process:tLink" description="" id="link34" name="link34" displayName="link17" lineType="inheritance" isDefault="false" type="break">
+      <bendPoint heightToEnd="-1" heightToStart="-38" widthToEnd="-66" widthToStart="27"/>
+      <sourceNode>switch0</sourceNode>
+      <targetNode>loopend0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="NE">
+          <process:leftOperand type="query">reBean/reCode</process:leftOperand>
+          <process:rightOperand type="query">T24_timeOutFlag</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <sourceConnections xsi:type="process:tLink" description="" id="link35" name="link35" displayName="link16" isDefault="true" type="transition">
+      <sourceNode>switch0</sourceNode>
+      <targetNode>loopend0</targetNode>
+      <process:transitionCondition>
+        <process:simpleCondition operator="EQ">
+          <process:leftOperand type="query"/>
+          <process:rightOperand type="literal">1</process:rightOperand>
+        </process:simpleCondition>
+      </process:transitionCondition>
+    </sourceConnections>
+    <targetConnections>link40</targetConnections>
+    <location x="855" y="191"/>
+    <size height="28" width="28"/>
+    <nodeLabel>switch0label</nodeLabel>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="switch0label" name="label" nodeType="label">
+    <location x="845" y="227"/>
+    <figSize height="17" width="49"/>
+    <node>switch0</node>
+  </nodes>
+  <nodes xsi:type="process:tAssign" description="" id="assign3" name="初始化发送次数" displayName="赋值" collapsed="false" type="assign">
+    <sourceConnections xsi:type="process:tLink" id="link46" name="link46" displayName="link12" isDefault="true" type="transition">
+      <sourceNode>assign3</sourceNode>
+      <targetNode>invokePojo1</targetNode>
+      <process:transitionCondition/>
+    </sourceConnections>
+    <targetConnections>link45</targetConnections>
+    <location x="265" y="154"/>
+    <size height="28" width="28"/>
+    <nodeLabel>assign3label</nodeLabel>
+    <process:copy>
+      <process:from type="literal" pattern="reference">0</process:from>
+      <process:to type="query">sendCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">3</process:from>
+      <process:to type="query">maxSendCount</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">e0009970</process:from>
+      <process:to type="query">link_timeOutFlag</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="literal" pattern="reference">e0009998</process:from>
+      <process:to type="query">T24_timeOutFlag</process:to>
+    </process:copy>
+    <process:copy>
+      <process:from type="query" pattern="reference">requHdr/SPName</process:from>
+      <process:to type="query">spName</process:to>
+    </process:copy>
+  </nodes>
+  <nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label" nodeType="label">
+    <location x="237" y="190"/>
+    <figSize height="17" width="85"/>
+    <node>assign3</node>
+  </nodes>
+  <topRuler/>
+  <leftRuler/>
+  <process:info author="lvjianhao" createTime="2014-09-02 15:01:30" date="2014-09-02Z" description="" name="mqRequestCopy" version="6.3"/>
+  <process:variables>
+    <process:variable anyType="com.bos.jaxb.javabean.BOSFXII" description="交易实体" historyStateLocation="client" isArray="false" name="bf"/>
+    <process:variable anyType="com.bos.jaxb.javabean.CommonRqHdr" description="报文头" historyStateLocation="client" isArray="false" name="rqhdr"/>
+    <process:variable anyType="com.bos.jaxb.javabean.BOSFXII" description="返回消息实体" historyStateLocation="client" isArray="false" name="rebf"/>
+    <process:variable description="当前日期" historyStateLocation="client" isArray="false" name="currentDate" primitiveType="String"/>
+    <process:variable description="当前时间" historyStateLocation="client" isArray="false" name="currentTime" primitiveType="String"/>
+    <process:variable description="请求流水号" historyStateLocation="client" isArray="false" name="rquid" primitiveType="String"/>
+    <process:variable description="交易明细" historyStateLocation="client" isArray="false" modelType="com.bos.dataset.pub.TbPubTradInfo" name="tradInfo"/>
+    <process:variable description="重发次数" historyStateLocation="client" isArray="false" name="sendCount" primitiveType="Int"/>
+    <process:variable description="交换超时标志" historyStateLocation="client" isArray="false" name="link_timeOutFlag" primitiveType="String"/>
+    <process:variable description="T24超时标志" historyStateLocation="client" isArray="false" name="T24_timeOutFlag" primitiveType="String"/>
+    <process:variable description="最大重发次数" historyStateLocation="client" isArray="false" name="maxSendCount" primitiveType="Int"/>
+  </process:variables>
+  <process:inputs varArgs="false">
+    <process:input anyType="java.lang.Object" description="交易实体" isArray="false" name="bizBean"/>
+    <process:input description="交易报文头" isArray="false" modelType="com.bos.CRMSInterface.CommInterface.CommonRqHdr" name="requHdr"/>
+  </process:inputs>
+  <process:outputs>
+    <process:output anyType="commonj.sdo.DataObject" description="交易返回信息" isArray="false" name="reBean"/>
+  </process:outputs>
+  <process:extAttribute1>public</process:extAttribute1>
+</process:tBusinessLogic>

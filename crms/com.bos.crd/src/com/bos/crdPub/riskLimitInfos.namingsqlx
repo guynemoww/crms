@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <select id="getRistLimit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select * from tb_crd_risk_limit t,tb_crd_risk_group ta,OM_ORGANIZATION tb
+		where t.LIMIT_GROUP = ta.ID
+		and ta.group_id ='3231ABAC'
+		and t.STATUS_CD ='03'
+        and t.LIMIT_ORG = tb.ORGCODE
+        and t.ORG_NUM=#orgNum#
+   		<isNotNull property="groupName">  and ta.GROUP_NAME like '%$groupName$%' </isNotNull>
+   		<isNotNull property="orgName">  and tb.ORGNAME like '%$orgName$%' </isNotNull>
+    </select>
+    <select id="getRistGroup" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.id,t.GROUP_NAME,t.USER_NUM,t.ORG_NUM from tb_crd_risk_group t,TB_CRD_RISK_LIMIT ta where t.group_id ='3231ABAC' and t.ID=ta.LIMIT_GROUP
+		<isNotNull property="orgcode">  and ta.LIMIT_ORG =#orgcode# </isNotNull>
+   		<isNotNull property="groupName">  and t.GROUP_NAME like '%$groupName$%' </isNotNull>
+   	group by t.id,t.GROUP_NAME,t.USER_NUM,t.ORG_NUM
+    </select>
+    <!--获取当前机构的上级机构-->
+    <select id="getParentOgrCode" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select ORGCODE from OM_ORGANIZATION t where t.ORGID = (select PARENTORGID from OM_ORGANIZATION where ORGCODE=#orgNum#)
+    </select>
+    <!--获取所有限额组-->
+    <select id="getRGroups" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select * from tb_crd_risk_group t where t.group_id ='3231ABAC'
+   		<isNotNull property="groupName">  and t.GROUP_NAME like '%$groupName$%' </isNotNull>
+    </select>
+</sqlMap>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:caozhe -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="queryWarnMgrInfo">
+        <result column="CSM_EARLY_WARNING_ID" property="csmEarlyWarningId"/>
+        <result column="CSM_SIGNAL_ID" property="csmSignalId"/>
+        <result column="LAUNCH_DATE" property="launchDate"/>
+        <result column="SIGNAL_STATUS_CD" property="signalStatusCd"/>
+        <result column="SIGNAL_STATE" property="signalState"/>
+        <result column="CUSTOMER_WARNING_UPDATEID" property="customerWarningUpdateId"/>
+        <result column="CUSTOMER_WARNING_CLOSE" property="customerWarningClose"/>
+        <result column="HOLD_DATE" property="holdDate"/>
+        <result column="CLOSE_DATE" property="closeDate"/>
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="csmWarningTypeId" property="csmWarningTypeId"/>
+        <result column="SIGNAL_SOURCE_CD" property="signalSourceCd"/>
+    </resultMap>
+    
+  <select id="queryWarnMgrInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryWarnMgrInfo">
+ SELECT 
+        CSM_EARLY_WARNING_ID ,
+        CSM_SIGNAL_ID ,
+        LAUNCH_DATE ,
+        SIGNAL_SOURCE_CD ,
+        SIGNAL_STATUS_CD ,
+        SIGNAL_STATE ,
+        CUSTOMER_WARNING_UPDATEID ,
+        CUSTOMER_WARNING_CLOSE ,
+        csmWarningTypeId,
+        HOLD_DATE ,
+        PARTY_ID,
+        CLOSE_DATE 
+FROM
+        TB_REW_CSM_SIGNAL_LIST
+WHERE   
+        PARTY_ID = #partyId#   
+AND
+        CSM_SIGNAL_ID=#csmSignalId#
+AND  
+        SIGNAL_STATUS_CD = #signalStatusCd#                      
+AND                   
+	    CUSTOMER_WARNING_UPDATEID is null
+AND                   
+	    CUSTOMER_WARNING_CLOSE is null	             
+	             
+  </select>
+</sqlMap>

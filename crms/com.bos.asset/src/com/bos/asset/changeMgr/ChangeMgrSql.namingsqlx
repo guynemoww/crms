@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:WangHui -->
+<sqlMap>
+
+    <select id="tasInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT t.TRANSFER_NUM,t.TAS_DATE,p.PARTY_NAME,p.PARTY_NUM,p.CERT_TYPE,p.CERT_NUM,c.CONTRACT_NUM,c.CONTRACT_AMT,c.CON_YU_E
+,c.CONTRACT_TERM,c.CYCLE_UNIT,c.REPAYMENT_TYPE
+FROM TB_ASSET_TRANSFER t
+LEFT JOIN TB_CON_CONTRACT_INFO c ON t.CONTRACT_ID=c.CONTRACT_ID
+LEFT JOIN V_CSM_PARTY p ON c.PARTY_ID=p.PARTY_ID
+WHERE t.id=#transferId#
+	 </select>
+	 
+	 <select id="changeMgrCreateValid" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+SELECT ID FROM TB_ASSET_CHANGE_MGR WHERE TRANSFER_ID=#transferId# AND STATUS IN ('10','20')
+	 </select>
+	 
+	 <select id="changeMgrList" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT 
+tr.ID TRANSFER_id,
+tr.TRANSFER_NUM,
+to_char(tr.TAS_DATE,'yyyy-MM-dd') TAS_DATE,
+ci.CONTRACT_ID,
+ci.CONTRACT_NUM,
+p.PARTY_TYPE_CD,
+p.PARTY_NAME,
+p.CERT_TYPE,
+p.CERT_NUM,
+tr.CON_ORG_NUM,
+tr.CON_USER_NUM,
+tr.TAS_ORG_NUM,
+tr.TAS_USER_NUM,
+tr.TAS_DATE
+FROM TB_ASSET_TRANSFER TR
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=tr.CONTRACT_ID
+INNER JOIN V_CSM_PARTY p ON p.PARTY_ID = ci.PARTY_ID
+LEFT JOIN AC_OPERATOR tasUser ON tasUser.USERID=tr.TAS_USER_NUM
+WHERE tr.STATUS = '30'
+	    <isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+	    <isNotNull property="userNum"> AND tr.TAS_USER_NUM = #userNum#</isNotNull>
+	    <isNotNull property="orgNum"> AND tr.TAS_ORG_NUM = #orgNum#</isNotNull>
+	    <isNotNull property="certType"> AND p.CERT_TYPE = #certType#</isNotNull>
+	    <isNotNull property="certNum"> AND p.CERT_NUM = #certNum#</isNotNull>
+	    <isNotNull property="tasUserName"> AND tasUser.OPERATORNAME LIKE '%'||#tasUserName#||'%'</isNotNull>
+	    <isNotNull property="partyName"> AND p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+	 </select>
+	 
+</sqlMap>

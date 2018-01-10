@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="afterLoanChange" class="java.util.HashMap">
+			<result property="changeId" column="CHANGE_ID"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="loanChangeType" column="LOAN_CHANGE_TYPE"/>
+			<result property="changeDate" column="CHANGE_DATE"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="changeNum" column="CHANGE_NUM"/>
+	</resultMap>
+    <select id="afterLoanChange" parameterClass="java.util.HashMap" resultMap="afterLoanChange">
+		SELECT LC.CHANGE_ID,
+		       LC.ORG_NUM,
+		       P.PARTY_NAME,
+		       V.PARTY_ID,
+		       V.CERT_TYPE,
+		       V.CERT_NUM,
+		       V.MIDDLE_CODE,
+		       CI.CONTRACT_NUM,
+		       LS.SUMMARY_NUM,
+		       LC.LOAN_CHANGE_TYPE,
+		       to_char(LC.CHANGE_DATE,'yyyy-mm-dd') CHANGE_DATE,
+		       LC.User_Num,
+		       LC.Change_Num
+		  FROM TB_CON_LOAN_CHANGE   LC,
+		       TB_LOAN_SUMMARY      LS,
+		       TB_LOAN_INFO         LI,
+		       TB_CON_CONTRACT_INFO CI,
+		       TB_CSM_PARTY         P,
+		       V_CSM_PARTY          V
+		 WHERE LC.SUMMARY_ID = LS.SUMMARY_ID
+		   AND LS.LOAN_ID = LI.LOAN_ID
+		   AND LI.CONTRACT_ID = CI.CONTRACT_ID
+		   AND LC.PARTY_ID = P.PARTY_ID
+		   AND P.PARTY_ID = V.PARTY_ID
+		   AND LC.change_status = '03'
+		   AND LC.ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+     <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+     <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+	 <isNotNull property="userNum">    AND LC.User_Num = #userNum# </isNotNull>
+	 <isNotNull property="certNum">    AND V.CERT_NUM = #certNum# </isNotNull>
+	 <isNotNull property="contractNum">    AND CI.CONTRACT_NUM = #contractNum# </isNotNull>
+	 <isNotNull property="summaryNum">    AND LS.SUMMARY_NUM = #summaryNum# </isNotNull>
+	 <isNotNull property="loanChangeType">    AND LC.LOAN_CHANGE_TYPE = #loanChangeType# </isNotNull>
+		   
+	 </select>
+	 
+	 <resultMap id="afterLoanCheck" class="java.util.HashMap">
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="checkId" column="CHECK_ID"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="type" column="TYPE"/>
+			<result property="createDate" column="CREATE_DATE"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="checkNum" column="CHECK_NUM"/>
+	</resultMap>
+    <select id="afterLoanCheck" parameterClass="java.util.HashMap" resultMap="afterLoanCheck">
+	SELECT T.ORG_NUM,
+		   V.PARTY_ID,
+		   T.CHECK_ID,
+	       V.PARTY_NAME,
+	       V.CERT_TYPE,
+	       V.CERT_NUM,
+	       T.TYPE,
+	       T.CREATE_DATE,
+	       T.USER_NUM,
+	       T.CHECK_NUM
+	  FROM (SELECT  FC.PARTY_ID,
+                 FC.FIRST_CHECK_ID as CHECK_ID,
+                 FC.USER_NUM,
+                 FC.ORG_NUM,
+                 TO_CHAR(FC.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '1' AS TYPE,
+                 FC.CHECK_NUM
+            FROM TB_AFT_FIRST_CHECK FC
+            WHERE check_status = '03' and is_small = '0'
+          UNION ALL
+          SELECT F.PARTY_ID,
+                 F.FIRST_CHECK_ID as CHECK_ID,
+                 F.USER_NUM,
+                 F.ORG_NUM,
+                 TO_CHAR(F.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '1' AS TYPE,
+                 F.CHECK_NUM
+            FROM TB_AFT_FIRST_CHECK F
+            WHERE update_date is not null and is_small = '1'
+          UNION ALL
+          SELECT NC.PARTY_ID,
+                 NC.NORMAL_CHECK_ID as CHECK_ID,
+                 NC.USER_NUM,
+                 NC.ORG_NUM,
+                 TO_CHAR(NC.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '2' AS TYPE,
+                 NC.CHECK_NUM
+            FROM TB_AFT_NORMAL_CHECK NC
+            WHERE check_status = '03' and is_small = '0'
+          UNION ALL
+          SELECT N.PARTY_ID,
+                 N.NORMAL_CHECK_ID as CHECK_ID,
+                 N.USER_NUM,
+                 N.ORG_NUM,
+                 TO_CHAR(N.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '2' AS TYPE,
+                 N.CHECK_NUM
+            FROM TB_AFT_NORMAL_CHECK N
+            WHERE update_date is not null and is_small = '1'
+          UNION ALL
+          SELECT PC.PARTY_ID,
+                 PC.CHECK_ID as CHECK_ID,
+                 PC.USER_NUM,
+                 PC.ORG_NUM,
+                 TO_CHAR(PC.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '4' AS TYPE,
+                 PC.CHECK_NUM
+            FROM TB_AFT_POINT_CHECK PC
+            WHERE check_status = '03'
+          UNION ALL
+          SELECT EC.PARTY_ID,
+                 EC.CHECK_ID as CHECK_ID,
+                 EC.USER_NUM,
+                 EC.ORG_NUM,
+                 TO_CHAR(EC.CREATE_DATE, 'YYYY-MM-DD') AS CREATE_DATE,
+                 '3' AS TYPE,
+                 EC.CHECK_NUM
+            FROM TB_AFT_EXPIRE_CHECK EC
+            WHERE check_status = '03') T,
+	       V_CSM_PARTY V
+	 WHERE T.PARTY_ID = V.PARTY_ID
+		 	AND T.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">    AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="type">    AND T.TYPE = #type# </isNotNull>
+		   <isNotNull property="userNum">    AND T.USER_NUM = #userNum# </isNotNull>
+	 </select>
+</sqlMap>

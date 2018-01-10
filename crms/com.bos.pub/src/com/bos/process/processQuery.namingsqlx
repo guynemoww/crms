@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:LJF -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>     
+    <select id="queryOrgWhereBunoYesOrNo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    	<![CDATA[
+         	select case when(count(*)=0) then 0 else 1 end yesorno  from OM_ORGANIZATION where orgid=#orgid# and buno!='1'
+    	]]>
+    </select>
+    
+    <select id="queryPartyNumOfGroupM" parameterClass="java.lang.String" resultClass="java.lang.String">
+    	<![CDATA[
+         	select p2.party_num as partyNum
+			  from tb_csm_party         p,
+			       tb_csm_group_company cc,
+			       tb_csm_group_member  cm,
+			       tb_csm_party         p2
+			 where p.party_id = cc.party_id
+			   and cc.party_id = cm.group_party_id
+			   and p2.party_id = cm.corporation_party_id
+			   and p.party_num = #custId#
+    	]]>
+    </select>
+    <select id="queryProductDepentInfo" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+    	<![CDATA[
+         	select c.product_department as productDep from tb_biz_amount_apply a
+         	left join tb_biz_amount_detail_apply b on a.amount_id = b.amount_id
+         	left join tb_sys_product c  on c.product_cd = b.product_type
+         	where a.apply_id=#bizId# order by c.product_department
+    	]]>
+    </select>
+    
+</sqlMap>

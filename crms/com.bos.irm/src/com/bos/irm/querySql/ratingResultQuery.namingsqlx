@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:黄龙龙 -->
+<sqlMap>
+
+    <resultMap class="commonj.sdo.DataObject" id="ratingResult">
+        <result column="IRR_RESULT_ID"  property="irrResultId"/> 						<!-- 违约状态 -->
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/> 							<!-- 违约ID -->
+        <result column="RATING_DT"  property="ratingDt"/>								<!-- 违约确认时间 -->
+       	<result column="EFFECTIVE_END_DT"  property="effectiveEndDt"/>					<!-- 用户Id -->
+        <result column="RATING_STATE"  property="ratingState"/>							<!-- 用户名 -->
+        <result column="PARTY_ID"  property="partyId"/>									<!-- 违约条件 -->
+        <result column="ORG_NUM"  property="orgNum"/>									<!-- 客户姓名 -->
+        <result column="USER_NUM"  property="userNum"/>									<!-- 客户id -->
+        <result column="PARTY_NUM"  property="partyNum"/>								<!-- 客户编码 -->
+        <result column="apply_date"  property="applyDate"/>								<!-- 申请日期 -->
+        <result column="party_name"  property="partyName"/>								<!-- 客户编码 -->
+        <result column="PARTY_TYPE_CD"  property="partyTypeCd"/> 						<!-- 客户类型 -->
+        <result column="org_num_1"  property="orgnNum1"/>								<!-- 组织机构代码 -->
+        <result column="ORGNAME"  property="orgname"/>									<!-- 组织机构 -->
+        <result column="EMPNAME"  property="empname"/>									<!-- 经办人 -->
+        <result column="ira_apply_id"  property="iraApplyId"/>									<!-- 评级申请ID -->
+        <result column="IS_PROFESSIONAL"  property="isProfessional"/>									<!-- 是否专业贷款评级 -->
+        <result column="CREDIT_RATING_CD"  property="creditRatingCd"/>									<!-- 评级结果 -->
+        <result column="PROJECT_ID"  property="projectId"/>									<!-- 项目ID -->
+        <result column="PROJECT_NAME"  property="projectName"/>									<!-- 项目名称 -->
+        
+    </resultMap>
+    <select id="queryRatingResult1"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="ratingResult">
+	select
+	   distinct
+	   case 
+	      when nvl(CREDIT_RATING_CD_OLD,'') !='' then tbr.CREDIT_RATING_CD || '(旧)'
+	    else tbr.CREDIT_RATING_CD
+	    end as CREDIT_RATING_CD,
+	   tbr.IRR_RESULT_ID,
+	   tbr.PROJECT_ID,
+	         tbci.PROJECT_NAME,
+	   tbr.IRA_APPLY_ID,
+	   tbr.RATING_DT, 
+	   tbr.EFFECTIVE_END_DT,
+	   tbr.IS_PROFESSIONAL,
+	   '生效' as RATING_STATE,
+	   tbr.PARTY_ID,
+	   tbr.ORG_NUM,
+	   tbr.USER_NUM,
+	   tbc.PARTY_NUM,
+	   tbc.party_name,
+	   esde.DICTNAME AS PARTY_TYPE_CD,
+	   tbr.ira_apply_id,
+	   tem.ORG_NUM as org_num_1,
+	   tbi.apply_date,
+	   omor.ORGNAME,
+	   omem.EMPNAME
+	   from tb_irm_internal_rating_result tbr
+	   left join tb_csm_party tbc on tbr.party_id = tbc.party_id
+	   left join (SELECT tbw.ORG_NUM, tbp.PRODUCT_ID,NEXT_USERS_NUM
+	     FROM TB_WFM_PROCESSINSTANCE tbp
+	     LEFT JOIN TB_WFM_WORKITEMINSTANCE tbw
+	     ON tbp.PROCESS_ID = tbw.PROCESS_ID
+	     AND tbw.NEXT_USERS_NUM IS NULL ) tem on tbr.ira_apply_id = tem.PRODUCT_ID
+	   left join OM_ORGANIZATION omor on tbr.ORG_NUM = omor.ORGCODE
+	   LEFT JOIN  tb_csm_management_team t ON TBC.party_id=t.party_id
+	   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+	   left join OM_EMPLOYEE omem on tbr.USER_NUM = omem.USERID
+	   left join tb_irm_internal_rating_apply tbi on tbi.ira_apply_id = tbr.ira_apply_id
+	   left join tb_csm_project_info tbci on tbr.project_id = tbci.PROJECT_ID
+	   left join EOS_DICT_ENTRY esde ON esde.DICTID = tbc.PARTY_TYPE_CD and DICTTYPEID ='XD_KHCD0219'
+	   where tbr.rating_state = '1'
+	   
+	   <isNotNull property="orgId">
+	       and omor.ORGSEQ like '%$orgId$%'
+	      </isNotNull>
+	   <isNotNull property="orgcode">
+	       and voo.parentorgcode = #orgcode#
+	      </isNotNull>
+	      
+	   <isNotNull property="partyTypeCd">
+	      and  TBC.PARTY_TYPE_CD = #partyTypeCd# 
+	   </isNotNull>
+	   
+	   <isNotNull property="partyNum">
+	      and TBC.PARTY_NUM like '%$partyNum$%' 
+	   </isNotNull>
+	   
+	   <isNotNull property="partyName">
+	      and TBC.PARTY_NAME like '%$partyName$%' 
+	   </isNotNull>
+	   
+	   
+	   <isNotNull property="orgNum">
+	      and tbr.ORG_NUM like '%$orgNum$%' 
+	   </isNotNull>
+	   
+	   <isNotNull property="orgname">
+	      and omor.ORGID = #orgname# 
+	   </isNotNull>
+	   
+	   <isNotNull property="empname">
+	      and omem.EMPNAME like '%$empname$%' 
+	   </isNotNull>
+	   
+	   union
+	   
+	   select
+	   distinct
+	   case 
+	      when nvl(CREDIT_RATING_CD_OLD,'') !='' then tbr.CREDIT_RATING_CD || '(旧)'
+	    else tbr.CREDIT_RATING_CD
+	    end as CREDIT_RATING_CD,
+	   tbr.IRR_RESULT_ID,
+	   tbr.PROJECT_ID,
+	   tbci.PROJECT_NAME,
+	   tbr.IRA_APPLY_ID,
+	   tbr.RATING_DT, 
+	   tbr.EFFECTIVE_END_DT,
+	   tbr.IS_PROFESSIONAL,
+	   '生效' as RATING_STATE,
+	   tbr.PARTY_ID,
+	   tbr.ORG_NUM,
+	   tbr.USER_NUM,
+	   tbc.PARTY_NUM,
+	   tbc.party_name,
+	   esde.DICTNAME AS PARTY_TYPE_CD,
+	   tbr.ira_apply_id,
+	   tem.ORG_NUM as org_num_1,
+	   tbi.apply_date,
+	   omor.ORGNAME,
+	   omem.EMPNAME
+	   from tb_irm_internal_rating_result tbr
+	   left join tb_csm_party tbc on tbr.party_id = tbc.party_id
+	   left join (SELECT tbw.ORG_NUM, tbp.PRODUCT_ID,NEXT_USERS_NUM
+	     FROM TB_WFM_PROCESSINSTANCE tbp
+	     LEFT JOIN TB_WFM_WORKITEMINSTANCE tbw
+	     ON tbp.PROCESS_ID = tbw.PROCESS_ID
+	     AND tbw.NEXT_USERS_NUM IS NULL ) tem on tbr.ira_apply_id = tem.PRODUCT_ID
+	   left join OM_ORGANIZATION omor on tbr.ORG_NUM = omor.ORGCODE
+	   LEFT JOIN  tb_csm_management_team t ON TBC.party_id=t.party_id
+	   LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+	   left join OM_EMPLOYEE omem on tbr.USER_NUM = omem.USERID
+	   left join tb_irm_internal_rating_apply tbi on tbi.ira_apply_id = tbr.ira_apply_id
+	   left join tb_csm_project_info tbci on tbr.project_id = tbci.PROJECT_ID
+	   left join EOS_DICT_ENTRY esde ON esde.DICTID = tbc.PARTY_TYPE_CD and DICTTYPEID ='XD_KHCD0219'
+	   where tbr.rating_state = '1'
+	   
+	   <isNotNull property="orgId">
+	       and omor.ORGSEQ like '%$orgId$%'
+	      </isNotNull>
+	   <isNotNull property="orgcode">
+	       and voo.parentorgcode = #orgcode#
+	      </isNotNull>
+	      
+	   <isNotNull property="partyTypeCd">
+	      and  TBC.PARTY_TYPE_CD = #partyTypeCd# 
+	   </isNotNull>
+	   
+	   <isNotNull property="partyNum">
+	      and TBC.PARTY_NUM like '%$partyNum$%' 
+	   </isNotNull>
+	   
+	   <isNotNull property="partyName">
+	      and TBC.PARTY_NAME like '%$partyName$%' 
+	   </isNotNull>
+	   
+	   
+	   <isNotNull property="orgNum">
+	      and tbr.ORG_NUM like '%$orgNum$%' 
+	   </isNotNull>
+	   
+	   <isNotNull property="orgname">
+	      and omor.orgname like '%$orgname$%' 
+	   </isNotNull>
+	   
+	   <isNotNull property="empname">
+	      and omem.EMPNAME like '%$empname$%' 
+	   </isNotNull>
+</select>
+    <select id="queryRatingResult"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="ratingResult">
+		select
+			distinct
+			case 
+		      when nvl(CREDIT_RATING_CD_OLD,'') !='' then tbr.CREDIT_RATING_CD || '(旧)'
+		    else tbr.CREDIT_RATING_CD
+		    end as CREDIT_RATING_CD,
+			tbr.IRR_RESULT_ID,
+			tbr.PROJECT_ID,
+        	tbci.PROJECT_NAME,
+			tbr.IRA_APPLY_ID,
+			tbr.RATING_DT, 
+			tbr.EFFECTIVE_END_DT,
+			tbr.IS_PROFESSIONAL,
+			'生效' as RATING_STATE,
+			tbr.PARTY_ID,
+			tbr.ORG_NUM,
+			tbr.USER_NUM,
+			tbc.PARTY_NUM,
+			tbc.party_name,
+			esde.DICTNAME AS PARTY_TYPE_CD,
+			tbr.ira_apply_id,
+			tem.ORG_NUM as org_num_1,
+			tbi.apply_date,
+			omor.ORGNAME,
+			omem.EMPNAME
+			from tb_irm_internal_rating_result tbr
+			left join tb_csm_party tbc on tbr.party_id = tbc.party_id
+			left join (SELECT tbw.ORG_NUM, tbp.PRODUCT_ID,NEXT_USERS_NUM
+					FROM TB_WFM_PROCESSINSTANCE tbp
+					LEFT JOIN TB_WFM_WORKITEMINSTANCE tbw
+					ON tbp.PROCESS_ID = tbw.PROCESS_ID
+					AND tbw.NEXT_USERS_NUM IS NULL ) tem on tbr.ira_apply_id = tem.PRODUCT_ID
+			left join OM_ORGANIZATION omor on tbr.ORG_NUM = omor.ORGCODE
+			LEFT JOIN  tb_csm_management_team t ON TBC.party_id=t.party_id
+			LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+			left join OM_EMPLOYEE omem on tbr.USER_NUM = omem.USERID
+			left join tb_irm_internal_rating_apply tbi on tbi.ira_apply_id = tbr.ira_apply_id
+			left join tb_csm_project_info tbci on tbr.project_id = tbci.PROJECT_ID
+			left join EOS_DICT_ENTRY esde ON esde.DICTID = tbc.PARTY_TYPE_CD and DICTTYPEID ='XD_KHCD0219'
+			where tbr.rating_state = '1'
+			and (tbr.IRA_APPLY_ID is not null or tbr.IRA_APPLY_ID !='')
+			<isNotNull property="orgId">
+		    	and omor.ORGSEQ like '%$orgId$%'
+		    </isNotNull>
+			<isNotNull property="orgcode">
+		    	and voo.parentorgcode = #orgcode#
+		    </isNotNull>
+		    
+			<isNotNull property="partyTypeCd">
+			   and  TBC.PARTY_TYPE_CD = #partyTypeCd# 
+			</isNotNull>
+			
+			<isNotNull property="partyNum">
+			   and TBC.PARTY_NUM like '%$partyNum$%' 
+			</isNotNull>
+			
+			<isNotNull property="partyName">
+			   and TBC.PARTY_NAME like '%$partyName$%' 
+			</isNotNull>
+			
+			
+			<isNotNull property="orgNum">
+			   and tbr.ORG_NUM like '%$orgNum$%' 
+			</isNotNull>
+			
+			<isNotNull property="orgname">
+			   and omor.orgname like '%$orgname$%' 
+			</isNotNull>
+			
+			<isNotNull property="empname">
+			   and omem.EMPNAME like '%$empname$%' 
+			</isNotNull>
+			
+			union
+			
+			select
+			distinct
+			case 
+		      when nvl(CREDIT_RATING_CD_OLD,'') !='' then tbr.CREDIT_RATING_CD || '(旧)'
+		    else tbr.CREDIT_RATING_CD
+		    end as CREDIT_RATING_CD,
+			tbr.IRR_RESULT_ID,
+			tbr.PROJECT_ID,
+        	tbci.PROJECT_NAME,
+			tbr.IRA_APPLY_ID,
+			tbr.RATING_DT, 
+			tbr.EFFECTIVE_END_DT,
+			tbr.IS_PROFESSIONAL,
+			'生效' as RATING_STATE,
+			tbr.PARTY_ID,
+			tbr.ORG_NUM,
+			tbr.USER_NUM,
+			tbc.PARTY_NUM,
+			tbc.party_name,
+			esde.DICTNAME AS PARTY_TYPE_CD,
+			tbr.ira_apply_id,
+			tem.ORG_NUM as org_num_1,
+			tbi.apply_date,
+			omor.ORGNAME,
+			omem.EMPNAME
+			from tb_irm_internal_rating_result tbr
+			left join tb_csm_party tbc on tbr.party_id = tbc.party_id
+			left join (SELECT tbw.ORG_NUM, tbp.PRODUCT_ID,NEXT_USERS_NUM
+					FROM TB_WFM_PROCESSINSTANCE tbp
+					LEFT JOIN TB_WFM_WORKITEMINSTANCE tbw
+					ON tbp.PROCESS_ID = tbw.PROCESS_ID
+					AND tbw.NEXT_USERS_NUM IS NULL ) tem on tbr.ira_apply_id = tem.PRODUCT_ID
+			left join OM_ORGANIZATION omor on tbr.ORG_NUM = omor.ORGCODE
+			LEFT JOIN  tb_csm_management_team t ON TBC.party_id=t.party_id
+			LEFT JOIN V_OM_ORGANIZATION voo  ON t.ORG_NUM = voo.ORGCODE
+			left join OM_EMPLOYEE omem on tbr.USER_NUM = omem.USERID
+			left join tb_irm_internal_rating_apply tbi on tbi.ira_apply_id = tbr.ira_apply_id
+			left join tb_csm_project_info tbci on tbr.project_id = tbci.PROJECT_ID
+			left join EOS_DICT_ENTRY esde ON esde.DICTID = tbc.PARTY_TYPE_CD and DICTTYPEID ='XD_KHCD0219'
+			where tbr.rating_state = '1'
+			and (tbr.IRA_APPLY_ID is not null or tbr.IRA_APPLY_ID !='')
+			<isNotNull property="orgId">
+		    	and omor.ORGSEQ like '%$orgId$%'
+		    </isNotNull>
+			<isNotNull property="orgcode">
+		    	and voo.parentorgcode = #orgcode#
+		    </isNotNull>
+		    
+			<isNotNull property="partyTypeCd">
+			   and  TBC.PARTY_TYPE_CD = #partyTypeCd# 
+			</isNotNull>
+			
+			<isNotNull property="partyNum">
+			   and TBC.PARTY_NUM like '%$partyNum$%' 
+			</isNotNull>
+			
+			<isNotNull property="partyName">
+			   and TBC.PARTY_NAME like '%$partyName$%' 
+			</isNotNull>
+			
+			
+			<isNotNull property="orgNum">
+			   and tbr.ORG_NUM like '%$orgNum$%' 
+			</isNotNull>
+			
+			<isNotNull property="orgname">
+			   and omor.orgname like '%$orgname$%' 
+			</isNotNull>
+			
+			<isNotNull property="empname">
+			   and omem.EMPNAME like '%$empname$%' 
+			</isNotNull>
+
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryRatingAppModelType">
+        <result column="PARTY_ID"  property="partyId"/> 						
+        <result column="RATING_MODEL_CD"  property="ratingModelCd"/> 							
+        <result column="RATING_STATE"  property="ratingState"/>								
+        
+    </resultMap>
+    <select id="queryRatingAppModelType"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryRatingAppModelType">
+    SELECT
+    TBR.PARTY_ID,
+    TBA.RATING_MODEL_CD,
+    TBR.RATING_STATE
+	FROM
+	    TB_IRM_INTERNAL_RATING_RESULT TBR
+	LEFT JOIN
+	    TB_IRM_INTERNAL_RATING_APPLY TBA
+	ON
+	    TBR.IRA_APPLY_ID = TBA.IRA_APPLY_ID
+	WHERE
+	     (TBR.PROJECT_ID IS  NULL or TBR.PROJECT_ID  ='')
+	     and TBR.CREDIT_RATING_CD_OLD is null
+	      and nvl(tbr.party_id ,'') !=''
+	    <isNotNull property="ratingState">
+			   and TBR.RATING_STATE = #ratingState# 
+			</isNotNull>
+        </select>
+        
+    <resultMap class="commonj.sdo.DataObject" id="queryRatingOverRecord">
+        <result column="OR_ID"  property="orId"/> 						
+        <result column="IRA_APPLY_ID"  property="iarApplyId"/> 							
+        
+    </resultMap>
+    <select id="queryRatingOverRecord"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryRatingOverRecord">
+    select t2.OR_ID,t2.IRA_APPLY_ID from  TB_IRM_OVERTHROW_RECORD t2
+		left join (
+		select t1.IRA_APPLY_ID,t1.OVERTHROW_DT,POST_CD from TB_IRM_OVERTHROW_RECORD t1
+		where 1=1 
+			<isNotNull property="iraApplyId">
+			   and t1.IRA_APPLY_ID = #iraApplyId# 
+			</isNotNull>
+			<isNotNull property="posCd1">
+			   and t1.POST_CD = #posCd1# 
+			</isNotNull>
+		 ) t3
+		 on t2.IRA_APPLY_ID = t3.IRA_APPLY_ID
+		where 1=1
+		and t2.OVERTHROW_DT   <![CDATA[  >=  ]]>  t3.OVERTHROW_DT
+		<isNotNull property="iraApplyId">
+		   and t2.IRA_APPLY_ID = #iraApplyId# 
+		</isNotNull>
+        </select>
+        
+    <resultMap class="commonj.sdo.DataObject" id="queryLastRatingResultRecord">
+        <result column="CREDIT_RATING_CD"  property="creditRatingCd"/> 						
+        <result column="EFFECTIVE_START_DT"  property="effectiveStartDt"/> 							
+        <result column="EFFECTIVE_END_DT"  property="effectiveEndDt"/> 							
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/> 							
+        <result column="party_id"  property="partyId"/> 							
+        
+    </resultMap>
+    <select id="queryLastRatingResultRecord"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryLastRatingResultRecord">
+    	select 
+		CREDIT_RATING_CD,
+		IRA_APPLY_ID,
+		party_id,
+		EFFECTIVE_START_DT,
+		EFFECTIVE_END_DT
+		from tb_irm_internal_rating_result
+		where 1=1
+		and (CREDIT_RATING_CD_OLD is null or CREDIT_RATING_CD_OLD ='')
+		<isNotNull property="partyId">
+		   and party_id = #partyId# 
+		</isNotNull>
+		<isNotNull property="iraApplyId">
+		   and IRA_APPLY_ID != #iraApplyId# 
+		</isNotNull>
+		<isNotNull property="isProfessional">
+		   and IS_PROFESSIONAL = #isProfessional# 
+		</isNotNull>
+		<isNotNull property="projectId">
+		   and PROJECT_ID = #projectId# 
+		</isNotNull>
+		order by RATING_DT desc
+
+    </select>
+    
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryResult">							
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/>  
+    </resultMap>  
+    <select id="queryResult"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryResult">
+    	select 
+		IRA_APPLY_ID
+		from tb_irm_internal_rating_result
+		where 1=1
+		<isNotNull property="partyId">
+		   and party_id = #partyId# 
+		</isNotNull>
+		<isNotNull property="isProfessional">
+		   and IS_PROFESSIONAL = #isProfessional#
+		</isNotNull>
+		   and RATING_STATE = '1'
+    </select>
+    <select id="queryResult1"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryResult">
+    	select 
+		IRA_APPLY_ID
+		from tb_irm_internal_rating_result
+		where 1=1
+		<isNotNull property="partyId">
+		   and party_id = #partyId# 
+		</isNotNull>
+		<isNotNull property="isProfessional">
+		   and IS_PROFESSIONAL = #isProfessional#
+		</isNotNull>
+		<isNotNull property="projectId">
+		   and PROJECT_ID = #projectId#
+		</isNotNull>
+		   and RATING_STATE = '1'
+    </select>   
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryRatingEngineRating">							
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/>  
+        <result column="INITIAL_RATING_CD"  property="initialRatingCd"/>  
+    </resultMap>  
+    <select id="queryRatingEngineRating"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryRatingEngineRating">
+		select  IRA_APPLY_ID, INITIAL_RATING_CD from 
+		TB_IRM_RATING_ENGINE_CALC
+		where 1=1
+		<isNotNull property="iraApplyId">
+		   and IRA_APPLY_ID = #iraApplyId# 
+		</isNotNull>
+		order by EXECUTION_DATE
+		
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryCreditRatingCd">							
+        <result column="CREDIT_RATING_CD"  property="creditRatingCd"/>  
+    </resultMap>
+    <select id="queryCreditRatingCd"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryCreditRatingCd">
+    	select a.CREDIT_RATING_CD from TB_IRM_SCALE_DEF a where 1=1
+    	<isNotNull property="smallDisplay">
+    	and a.SMALL_LTD_DISPLAY=#smallDisplay#
+    	</isNotNull>
+and a.ORDER_NO in(select max(b.ORDER_NO) from TB_IRM_SCALE_DEF b where 1=1 
+		<isNotNull property="smallDisplay">
+    	and b.SMALL_LTD_DISPLAY=#smallDisplay#
+    	</isNotNull>)
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryLastRatingResult">							
+        <result column="ORDER_NO"  property="orderNo"/>  
+        <result column="PARTY_ID"  property="partyId"/>  
+        <result column="credit_rating_cd"  property="creditRatingCd"/>  
+    </resultMap>  
+    <select id="queryLastRatingResult"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryLastRatingResult">
+		SELECT TX.ORDER_NO , 
+       	TE.PARTY_ID,
+       	te.credit_rating_cd
+		 FROM (SELECT TS.PARTY_ID,
+		        TS.credit_rating_cd     
+		 FROM (SELECT TB.PARTY_ID , MAX(rating_dt) AS rating_dt FROM tb_irm_internal_rating_result TB
+		  WHERE  1=1
+		  and tb.credit_rating_cd not in ('无需评级','未评级')
+		  and (tb.CREDIT_RATING_CD_OLD is null or tb.CREDIT_RATING_CD_OLD ='')
+		  <isNotNull property="isProfessional">
+		   and tb.IS_PROFESSIONAL = #isProfessional# 
+		</isNotNull>
+		<isNotNull property="partyId">
+		   and tb.PARTY_ID = #partyId# 
+		</isNotNull>
+		   group by TB.PARTY_ID
+		 )EM
+		 LEFT JOIN 
+		  tb_irm_internal_rating_result TS
+		 ON EM.PARTY_ID = TS.PARTY_ID AND EM.rating_dt = TS.rating_dt) TE
+		LEFT JOIN  tb_irm_scale_def TX 
+		 ON TX.CREDIT_RATING_DISPLAY = TE.credit_rating_cd
+		<isNotNull property="partyId">
+		   and TE.PARTY_ID = #partyId# 
+		</isNotNull>
+    </select>      
+    <resultMap class="commonj.sdo.DataObject" id="queryLastRatingResultSmallDisplay">							
+        <result column="IRA_APPLY_ID"  property="iraApplyId"/>  
+        <result column="PARTY_ID"  property="partyId"/>  
+        <result column="credit_rating_cd"  property="creditRatingCd"/>  
+        <result column="RATING_DT"  property="ratingCd"/>  
+    </resultMap>  
+    <select id="queryLastRatingResultSmallDisplay"  parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject" resultMap="queryLastRatingResultSmallDisplay">
+		select IRA_APPLY_ID,CREDIT_RATING_CD,PARTY_ID,RATING_DT from tb_irm_internal_rating_result 
+			where 1=1 and (CREDIT_RATING_CD_OLD is null or CREDIT_RATING_CD_OLD ='')
+			<isNotNull property="isProfessional">
+			   and IS_PROFESSIONAL = #isProfessional# 
+			</isNotNull>
+			<isNotNull property="partyId">
+			   and PARTY_ID = #partyId# 
+			</isNotNull>
+			<isNotNull property="projectId">
+			   and PROJECT_ID = #projectId# 
+			</isNotNull>
+			 order by RATING_DT desc
+		
+    </select>    
+        
+    <resultMap class="commonj.sdo.DataObject" id="queryOrgInfo">
+        <result column="ORGID"  property="orgId"/>
+        <result column="PARENTORGID" property="parentOrgId"/>
+        <result column="ORGCODE" property="orgCode"/>
+        <result column="BUNO"  property="buno"/>
+    </resultMap>
+    <select id="queryOrgInfo"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryOrgInfo">
+   
+	    select 
+	      ORGID,
+	      PARENTORGID,
+	      ORGCODE,
+	      BUNO
+		 from 
+		      OM_ORGANIZATION
+		  where 1=1
+		  <isNotNull property="orgId">
+	       and	ORGID=#orgId#  
+	      </isNotNull>
+	 </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryR1">
+        <result column="OPTION_TYPE_CD"  property="orgId"/>
+        <result column="ADJUST_SERIES" property="parentOrgId"/>
+    </resultMap>
+    <select id="queryR1"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryR1">
+	    select 
+	      OPTION_TYPE_CD,
+	      ADJUST_SERIES
+		 from TB_IRM_ADJUST_OPTION
+		  where 1=1
+		  <isNotNull property="governmentAdjustScore">
+	       and	ORGID=#governmentAdjustScore#  
+	      </isNotNull>
+	 </select>
+    <resultMap class="commonj.sdo.DataObject" id="queryBadRating">
+        <result column="CREDIT_RATING_CD"  property="creditRatingCd"/>
+        <result column="CREDIT_RATING_CD_OLD" property="creditRatingCdOld"/>
+    </resultMap>
+    <select id="queryBadRating"  parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryBadRating">
+	    select CREDIT_RATING_CD,CREDIT_RATING_CD_OLD from TB_IRM_INTERNAL_RATING_RESULT where 1=1
+	    <isNotNull property="partyId">
+	      and party_id = #partyId#
+	    </isNotNull>
+	    order by  RATING_DT desc
+	 </select>	    	 
+	 
+</sqlMap>

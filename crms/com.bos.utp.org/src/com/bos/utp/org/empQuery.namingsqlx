@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:yangyong -->
+<sqlMap>    
+	 <resultMap class="com.bos.utp.dataset.organization.OmEmployee" id="resultMap">
+        <result column="empid" property="empid"/>
+        <result column="userid" property="userid"/>
+        <result column="empcode" property="empcode"/>
+        <result column="empname" property="empname"/>
+    </resultMap>
+        <resultMap class="commonj.sdo.DataObject" id="queryEmpOrgsByEmpidMap">
+        <result column="ORGID" property="ORGID"/>
+        <result column="ORGNAME" property="ORGNAME"/>
+    </resultMap>
+    <!-- 查询可加入岗位的人员列表 
+        参数为：positionid，userid，empname用于过滤用户
+      -->
+    <select id="selectEmpAllowAdd"  resultMap="resultMap" parameterClass="java.util.HashMap">
+		SELECT E.EMPID,E.USERID,E.EMPCODE,E.EMPNAME FROM OM_EMPLOYEE E,OM_EMPORG O,OM_POSITION P  
+            WHERE  E.EMPID = O.EMPID AND O.ORGID=P.ORGID  AND P.POSITIONID =#positionid#
+            AND E.EMPID NOT IN (SELECT EMPID FROM OM_EMPPOSITION  WHERE POSITIONID =#positionid#)            
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname#
+           </isNotNull>
+    </select>
+    <select id="countEmpAllowAdd"  resultClass="java.lang.Integer" parameterClass="java.util.HashMap">
+            SELECT COUNT(E.EMPID) FROM OM_EMPLOYEE E,OM_EMPORG O,OM_POSITION P 
+            WHERE  E.EMPID = O.EMPID AND O.ORGID=P.ORGID  AND P.POSITIONID =#positionid#
+            AND E.EMPID NOT IN (SELECT EMPID FROM OM_EMPPOSITION  WHERE POSITIONID =#positionid#)            
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname# 
+           </isNotNull>
+    </select>
+    <!-- 查询已在岗位的人员列表
+        参数为：positionid，userid，empname用于过滤用户
+      -->
+    <select id="selectEmpInPosition"  resultMap="resultMap" parameterClass="java.util.HashMap">
+            SELECT E.EMPID,E.USERID,E.EMPCODE,E.EMPNAME FROM OM_EMPLOYEE E ,OM_EMPPOSITION P
+            WHERE E.EMPID=P.EMPID AND P.POSITIONID =#positionid#
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname# 
+           </isNotNull>
+    </select>
+    <select id="countEmpInPosition"  resultClass="java.lang.Integer" parameterClass="java.util.HashMap">
+            SELECT COUNT(E.EMPID) FROM OM_EMPLOYEE E ,OM_EMPPOSITION P
+            WHERE E.EMPID=P.EMPID AND P.POSITIONID =#positionid#
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname# 
+           </isNotNull>
+    </select>
+    
+    <!-- 更新操作者状态  参数： user_id 用户号  status  用户状态  -->
+    <update id="updateOperatorStatus"  parameterClass="java.util.Map">
+    	UPDATE AC_OPERATOR T SET T.STATUS = #status# WHERE T.USERID = #userid#
+    </update>
+    
+    
+    <!-- 更新操作者密码  参数： user_id 用户号  password  用户密码  -->
+    <update id="updateOperatorPwd"  parameterClass="java.util.Map">
+    	UPDATE AC_OPERATOR T SET T.PASSWORD = #password# , T.INVALDATE = to_date('2000-01-01','yyyy-MM-dd') WHERE T.USERID = #userid#
+    </update>
+    
+    <resultMap class="com.bos.utp.dataset.organization.OmEmpposition" id="resultMap">
+        <result column="empid" property="omEmployee/empid"/>
+        <result column="userid" property="omEmployee/userid"/>
+        <result column="empcode" property="omEmployee/empcode"/>
+        <result column="empname" property="omEmployee/empname"/>
+    </resultMap>
+    <!-- 查询可加入岗位的人员列表 
+        参数为：positionid，empcode，empname用于过滤用户
+      -->
+    <select id="selectOrgPositionEmpAllowAdd"  resultMap="resultMap" parameterClass="java.util.HashMap">    
+            SELECT E.EMPID,E.USERID,E.EMPCODE,E.EMPNAME FROM OM_EMPLOYEE E,OM_EMPORG O,OM_POSITION P 
+            WHERE  E.EMPID = O.EMPID AND O.ORGID=P.ORGID  AND P.POSITIONID =#positionid#
+            AND E.EMPID NOT IN (SELECT EMPID FROM OM_EMPPOSITION  WHERE POSITIONID = #positionid#)            
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname# 
+           </isNotNull>
+      
+    </select>
+    <select id="selectGroupPositionEmpAllowAdd"  resultMap="resultMap" parameterClass="java.util.HashMap">    
+           SELECT E.EMPID,E.USERID,E.EMPCODE,E.EMPNAME FROM OM_EMPLOYEE E,OM_EMPGROUP O,OM_GROUPPOSI P 
+           WHERE   E.EMPID = O.EMPID AND O.GROUPID=P.GROUPID  AND P.POSITIONID =#positionid#
+           AND E.EMPID NOT IN (SELECT EMPID FROM OM_EMPPOSITION  WHERE POSITIONID = #positionid#)  
+           <isNotNull prepend="AND" property="userid">
+                USERID LIKE #userid# 
+           </isNotNull>
+           <isNotNull prepend="AND" property="empname">
+                EMPNAME LIKE #empname# 
+           </isNotNull>
+    </select>
+    
+    
+    <select id="queryOrgEmp"  resultClass="commonj.sdo.DataObject" parameterClass="java.util.HashMap">    
+            select empid from om_employee t where t.orgid in (select orgid
+				  from om_organization t
+				 where t.orgseq like
+				       (select orgseq from om_organization where orgid = #orgid#)||'%')
+      
+    </select>
+    
+    <update id="updateEmp"  parameterClass="commonj.sdo.DataObject">
+    	UPDATE OM_EMPLOYEE T SET T.OTEL = #otel# , T.MOBILENO = #mobileno# , T.OEMAIL = #oemail#
+		WHERE T.EMPID = #empid#
+    </update>
+    
+     <select id="queryEmpOrgsByEmpid" parameterClass="java.util.HashMap" resultMap="queryEmpOrgsByEmpidMap">
+    	SELECT ORGID,ORGNAME FROM OM_ORGANIZATION WHERE ORGID IN (SELECT ORGID 
+    																FROM OM_EMPORG
+    																WHERE EMPID=#empid#) ORDER BY ORGID DESC
+    </select>
+</sqlMap>

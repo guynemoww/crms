@@ -1,0 +1,665 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+	
+	<!-- 影像节点校验 -->
+	<rule id="RIMG_0001" name="根据目录ID，校验名下是否有影像信息" checktype="less"  checkedFieldName="$c" endValue="1"  errCode="2015110-001" errMsg="该目录下存在影像资料信息" checkLevel="err">
+		<sql><![CDATA[select nvl(sum(page_num),0) c from tb_pub_image_document where image_document_type_id=@imageTypeId ]]></sql>
+	</rule>
+	<rule id="RIMG_0002" name="根据目录ID，校验名下是否有子目录" checktype="less"  checkedFieldName="$c" endValue="1"  errCode="2015110-001" errMsg="该目录下存在子节点" checkLevel="err">
+		<sql><![CDATA[select count(*) c from  tb_pub_image_type where  superior_id=@imageTypeId ]]></sql>
+	</rule>
+	
+	
+	<!-- 判断客户是否结清 -->
+	<rule id="PUB_0001" name="判断客户下是否有未结清业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有业务未结清" checkLevel="err">
+		<sql><![CDATA[   SELECT count(*) c
+							  FROM TB_LOAN_SUMMARY LS
+							 WHERE LS.SUMMARY_STATUS_CD IN ('02', '03')
+							   AND LS.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 客户额度在途 -->
+	<rule id="PUB_0002" name="判断客户下是否有客户额度在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有客户额度在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_CRD_PARTY_LIMIT T WHERE T.PARTY_ID =@partyId AND T.STATUS_CD IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 第三方客户额度在途 -->
+	<rule id="PUB_0003" name="判断客户下是否有客户额度在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有客户额度在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_CRD_THIRD_PARTY_LIMIT T WHERE T.PARTY_ID =@partyId AND T.STATUS_CD IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- -业务申请在途 -->
+	<rule id="PUB_0004" name="判断客户下是否有业务申请在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有业务申请在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_BIZ_APPLY T WHERE T.PARTY_ID =@partyId  AND T.STATUS_TYPE IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- -判断该业务否有流程在途 -->
+	<rule id="PUB_BIZ_FlOW" name="判断业务是否有流程中的业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该业务有在途的流程，请撤销流程" checkLevel="err">
+		<sql><![CDATA[   
+						select count(*)c from  tb_wfm_processinstance t 
+						where  t.process_status='run'
+						 and t.product_id=@bizId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- -判断用户是否有流程在途 -->
+	<rule id="PUB_0004_USER" name="判断用户下是否有流程中的业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该用户$[userNum]有在流程中的业务" checkLevel="err">
+		<sql><![CDATA[   
+				select count(*)c
+  				from tb_wfm_processinstance wp
+ 				where wp.process_status = 'run'
+   				and (wp.create_user_num = @userNum or wp.appoint_user_num =@userNum)
+   				and (wp.create_org_num =@orgNum or wp.appoint_org_cd =@orgNum)
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 判断客户是否有流程在途 -->
+	<rule id="PUB_0004_CUS" name="判断客户下是否有流程中的业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有流程在途" checkLevel="err">
+		<sql><![CDATA[   
+				select count(*) c from tb_wfm_processinstance wp,tb_csm_party t
+						where   wp.process_status='run' and t.party_num =wp.cust_id
+						and t.party_id=@partyId
+			  ]]>
+	    </sql>
+	</rule>
+		<!-- -该用户是否已经在目标机构下 -->
+	<rule id="PUB_ORG_USER" name="判断该用户是否已经在目标机构下" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该用户$[userNum]已经在目标机构下" checkLevel="err">
+		<sql><![CDATA[   
+					SELECT COUNT(*) c FROM  om_emporg o
+						where o.empid=(select empid from om_employee where userid=@userNum) 
+  						and o.orgid=@targetOrgId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_FLOW_CUS" name="判断客户和用户下是否有流程中的业务" checktype="eqs"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="管户客户经理下，该客户有流程$[c]在途" checkLevel="err">
+		<sql><![CDATA[   
+              select nvl(listagg(wp.process_id, ',') within
+                         group(order by wp.cust_id),
+                         '0') as c
+                from tb_wfm_processinstance wp, tb_csm_party p
+               where wp.cust_id = p.party_num
+                 and wp.process_status = 'run'
+                 and wp.create_user_num = @userNum
+                 and wp.create_org_num = @orgNum
+                 and p.party_id = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_R100" name="判断该客户是否在移交流程中" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户已有客户移交在途" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c from tb_csm_transfer a, tb_csm_con_list b
+					where a.transfer_id=b.transfer_id
+					and a.app_status='1'and b.party_id=@partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<rule id="PUB_LOAN_CUS" name="判断该客户是否有未结清的借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有未结清的借据" checkLevel="err">
+		<sql><![CDATA[   
+       			 select count(*) c
+          from tb_loan_info t, tb_loan_summary ta
+         where ta.loan_id = t.loan_id
+           and t.party_id = @partyId
+           and ta.user_num = @userNum
+           and ta.org_num=@orgNum
+           and ta.summary_status_cd in ('02', '03', '01')
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+	<rule id="PUB_SUMMARY_BIZ" name="判断该批复是否有未结清的借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复有未结清的借据" checkLevel="err">
+		<sql><![CDATA[   
+				select count(*) c from tb_loan_summary t where t.summary_status_cd in('02','03','01') and t.contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_LOAN_BIZ" name="判断该批复是否有在流程的放款申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复下有在途的放款申请" checkLevel="err">
+		<sql><![CDATA[   
+				select count(*) c from tb_loan_info t where t.loan_status in('02','01')  and t.contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+		<rule id="PUB_CON_CUS" name="判断该客户是否有未结清的合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有未结清的合同" checkLevel="err">
+		<sql><![CDATA[   
+			        select count(*) c from tb_con_contract_info t
+		         where t.party_id = @partyId
+		           and t.user_num = @userNum
+		           and t.org_num=@orgNum
+		           and t.con_status in ('01', '02', '03', '05', '07', '08', '09')
+			  ]]>
+	    </sql>
+	</rule>
+	
+		<rule id="PUB_CON_BIZ" name="判断该批复是否有未结清的合同" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复下有在途的合同" checkLevel="err">
+		<sql><![CDATA[   
+					select count(*) c from tb_con_contract_info t where t.con_status in('01','02')  and contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+	<rule id="PUB_CLASS_BIZ" name="判断该批复是否有未结清的分类" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复下有在途的分类流程" checkLevel="err">
+		<sql><![CDATA[   
+					     select count(*) c from tb_cla_assets_classify_apply t,tb_cla_classify_delt_info a where a.ac_apply_id=t.ac_apply_id and 
+           t.apply_status in('01')  and a.contract_num in(
+					SELECT T.contract_num
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+	<rule id="PUB_SIGNAL_BIZ" name="判断该批复是否有未结清的预警" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户下有在途的预警流程" checkLevel="err">
+		<sql><![CDATA[   
+		 	select count(*)c from tb_rew_level_adjust a where a.apply_status != '4' and a.party_id = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	
+		<rule id="PUB_BIZ_CUS" name="判断该客户是否有未结清的批复" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有未结清的批复" checkLevel="err">
+		<sql><![CDATA[   
+				          select count(*) c
+		            from tb_biz_approve t
+		           where t.party_id = @partyId
+		             and t.user_num = @userNum
+		             and t.org_num=@orgNum
+		             and t.become_effective_mark in ('03', '07', '08')
+		             and t.approve_conclusion in('1','3')
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_FIRST_CHECK" name="判断该皮肤下是否有在途的首次检查" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复$[approveId]下有在途的首次检查流程" checkLevel="err">
+		<sql><![CDATA[   
+		select count(*) c from tb_aft_first_check where check_status in('01','02') and is_small='0' and contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_NORMAL_CHECK" name="判断该客户是否有流程中的日常检查" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户下有在途的日常检查流程" checkLevel="err">
+		<sql><![CDATA[   
+		select count(*) c from tb_aft_normal_check where check_status in ('01','02') and is_small='0' and party_id =@partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<rule id="PUB_POINT_CHECK" name="判断该批复是否有在途的重点检查" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复$[approveId]下有在途的重点检查流程" checkLevel="err">
+		<sql><![CDATA[   
+		select count(*) c from tb_aft_point_check where check_status in ('01','02') and  contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE               TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId)
+               )
+			  ]]>
+	    </sql>
+	</rule>
+	<rule id="PUB_LOAN_CHANGE" name="判断该用户是否有在途的贷后变更流程" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该批复$[approveId]下有在途的贷后变更流程" checkLevel="err">
+		<sql><![CDATA[   
+		select count(*) c from tb_con_loan_change where change_status  in ('01','02') and  contract_id in(
+					SELECT T.CONTRACT_ID
+      		FROM TB_CON_CONTRACT_INFO T
+     		WHERE T.AMOUNT_DETAIL_ID IN
+           (SELECT TC.AMOUNT_DETAIL_ID
+              FROM TB_BIZ_APPROVE            TA,
+                   TB_BIZ_AMOUNT_APPROVE        TB,
+                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+               AND TB.APPROVE_ID = @approveId))
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_CUS_SHARE" name="判断客户是否已经共享 " checktype="eqn"  checkedFieldName="$c"  targetDataList="0"  errCode="2015110-001"   errMsg="变更后的客户经理已经拥有该客户的业务权 " checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM tb_csm_management_team T WHERE T.PARTY_ID = @partyId 
+						AND T.user_num =@newUserNum  AND T.org_num = @newOrgNum and t.user_placing_cd='02'
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- -生效的业务申请 -->
+	<rule id="PUB_BIZ_USER" name="判断用户下是否有生效的业务申请" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该用户$[userNum]有生效的或到期失效的业务申请,请先做业务移交" checkLevel="err">
+		<sql><![CDATA[   
+					SELECT COUNT(*) c FROM tb_biz_approve T WHERE T.become_effective_mark in('03','05','07','08')
+					AND T.USER_NUM=@userNum and t.org_num=@orgNum
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 合同申请在途 -->
+	<rule id="PUB_0005" name="判断客户下是否有合同申请在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有合同申请在途" checkLevel="err">
+		<sql><![CDATA[   
+					SELECT count(*) c FROM TB_CON_CONTRACT_INFO T WHERE T.PARTY_ID =@partyId  AND T.CON_STATUS IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 放款申请在途 -->
+	<rule id="PUB_0006" name="判断客户下是否有放款申请在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有放款申请在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_LOAN_INFO T WHERE T.PARTY_ID =@partyId AND T.LOAN_STATUS IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 评级申请在途 -->
+	<rule id="PUB_0007" name="判断客户下是否有评级申请在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有评级申请在途" checkLevel="err">
+		<sql><![CDATA[   
+				SELECT count(*) c FROM TB_IRM_INTERNAL_RATING_APPLY WHERE PARTY_ID=@partyId AND RATING_STATE IN ('01','02')
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 贷后变更在途 -->
+	<rule id="PUB_0008" name="判断客户下是否有贷后变更在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有贷后变更在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_CON_LOAN_CHANGE LC WHERE LC.CHANGE_STATUS IN ('01', '02') AND LC.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 首次检查在途 -->
+	<rule id="PUB_0009" name="判断客户下是否有首次检查在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有首次检查在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_AFT_FIRST_CHECK FC WHERE FC.CHECK_STATUS IN ('01', '02') AND FC.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 日常检查在途 -->
+	<rule id="PUB_0010" name="判断客户下是否有日常检查在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有日常检查在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_AFT_NORMAL_CHECK NC WHERE NC.CHECK_STATUS IN ('01', '02') AND NC.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 重点检查在途 -->
+	<rule id="PUB_0011" name="判断客户下是否有重点检查在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有重点检查在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_AFT_POINT_CHECK PC WHERE PC.CHECK_STATUS IN ('01', '02') AND PC.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 授信到期前跟踪检查在途 -->
+	<rule id="PUB_0012" name="判断客户下是否有授信到期前跟踪检查在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户$[partyId]授信到期前跟踪检查在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_AFT_EXPIRE_CHECK EC WHERE EC.CHECK_STATUS IN ('01', '02') AND EC.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 预警在途 -->
+	<rule id="PUB_0013" name="判断客户下是否有预警在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户$[partyId]预警在途 在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_REW_LEVEL_ADJUST LA WHERE LA.APPLY_STATUS != '4' AND LA.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 贷后分类在途 -->
+	<rule id="PUB_0014" name="判断客户下是否有贷后分类在途" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户$[partyId]贷后分类在途" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_CLA_DEBT_DETAILINFO A WHERE A.STATUS = '1' AND A.PARTY_ID = @partyId
+			  ]]>
+	    </sql>
+	</rule>
+	
+		<rule id="PUB_PROJECT_LOAN" name="判断借据是否在其他项目中" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该借据已经在其他项目中" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM tb_con_project_relation A WHERE A.relation_status = '1' AND  a.summary_id=@summaryId
+			  ]]>
+	    </sql>
+	</rule>
+	
+<!-- 当借据止期大于封包日期，则校验通过 -->
+	<rule id="PUB_PROJECT_LOAN_DATE" name="判断借据止期是否在项目封包日期之后" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="该借据的止期不在项目封包日期之后" checkLevel="err">
+		<sql><![CDATA[   
+			select (
+			(select to_char(tls.end_date,'YYYYMMDD') from tb_loan_summary tls
+ 			where tls.summary_id=@summaryId) 
+			) 
+			-
+			(select  to_char(tcp.package_date,'YYYYMMDD')
+ 			 from tb_con_project tcp where tcp.project_id=@projectId)
+			c from dual 			  
+			]]>
+	    </sql>
+	</rule>
+	<!-- 当借据止期大于封包日期，则校验通过 -->
+	<rule id="PUB_PROJECT_LOAN_DATE2" name="判断借据止期是否在项目封包日期之后" checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="项目的封包日期应该早于项目下借据的止期" checkLevel="err">
+		<sql><![CDATA[   
+			      (select (
+			      nvl(min(tls.end_date), to_date('9999-12-31', 'YYYY-MM-DD'))
+			      -to_date(@packageDate, 'YYYY-MM-DD'))c
+			       from tb_loan_summary tls ,tb_con_project tcp,tb_con_project_relation tcpr 
+      		where tls.summary_id=tcpr.summary_id and tcpr.project_id=tcp.project_id 
+      		   and tcpr.relation_status='1'
+     		 and tcp.project_id=@projectId) 
+	  
+			]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_PROJECT_RELATION" name="判断项目是否已经关联了借据" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该项目已经关联了借据" checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM tb_con_project_relation A WHERE A.relation_status = '1' AND  a.project_id=@projectId
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_PROJECT_DATE" name="判断借据与项目中的借据指定还息日期是否一致" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="选择的借据与已在项目中借据的指定还息日期不一致" checkLevel="err">
+		<sql><![CDATA[   
+	select count(*) c from  tb_loan_info tli ,tb_con_project_relation tcpr,tb_loan_summary tls
+	where tcpr.summary_id=tls.summary_id and tls.loan_id=tli.loan_id and tcpr.relation_status='1'
+	and tcpr.project_id=@projectId
+	and ( 
+	not exists( select  1 from tb_con_project_relation where project_id=@projectId) 
+	or
+ 	tli.spec_payment_date in
+	(select tli.spec_payment_date from tb_loan_summary tls ,tb_loan_info tli
+	where tls.loan_id=tli.loan_id and tls.summary_id=@summaryId)
+	)			 
+ ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_PROJECT_CURRENCY" name="判断借据币种与项目中的借据是否一致" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="选择的借据与已在项目中借据的币种不一致" checkLevel="err">
+		<sql><![CDATA[   
+		select count(*) c from  tb_loan_info tli ,tb_con_project_relation tcpr,tb_loan_summary tls
+		where tcpr.summary_id=tls.summary_id and tls.loan_id=tli.loan_id and tcpr.relation_status='1'
+		and tcpr.project_id=@projectId and tli.currency_cd=@summaryCurrencyCd
+			  ]]>
+	    </sql>
+	</rule>
+
+	
+	<!-- 判斷聯保小組  在途 結清 -->
+	<rule id="PUB_0016" name="判断聯保小組成員下是否有在途業務或者未結清" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该客户有业务在途或未结清" checkLevel="err">
+		<sql><![CDATA[   
+			SELECT COUNT(*) C
+			  FROM (SELECT 1 C, LS.PARTY_ID
+			          FROM TB_LOAN_SUMMARY LS, TB_LOAN_INFO LI
+			         WHERE LS.LOAN_ID = LI.LOAN_ID
+			           AND LS.SUMMARY_STATUS_CD IN ('02', '03')
+			           AND LI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, T.PARTY_ID
+			          FROM TB_BIZ_APPLY               T,
+			               TB_BIZ_AMOUNT_APPLY        AA,
+			               TB_BIZ_AMOUNT_DETAIL_APPLY ADA
+			         WHERE T.STATUS_TYPE IN ('01', '02')
+			           AND AA.APPLY_ID = T.APPLY_ID
+			           AND ADA.AMOUNT_ID = AA.AMOUNT_ID
+			           AND ADA.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			          SELECT 1 C, T.PARTY_ID
+          				FROM TB_BIZ_APProve               T,
+              			 TB_BIZ_AMOUNT_APProve        AA,
+             			  TB_BIZ_AMOUNT_DETAIL_APprove ADA
+       				  WHERE T.BECOME_EFFECTIVE_MARK = ('03')
+        			    AND AA.approve_id = T.APProve_id
+         				AND ADA.AMOUNT_ID = AA.AMOUNT_ID
+       				    AND ADA.PRODUCT_TYPE IN
+             		 ('01001002', '03001002', '03001004', '03001006')
+        	
+        		UNION ALL
+			        
+			        
+			        
+			        SELECT 1 C, T.PARTY_ID
+			          FROM TB_CON_CONTRACT_INFO T
+			         WHERE T.CON_STATUS IN ('01', '02')
+			           AND T.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, T.PARTY_ID
+			          FROM TB_LOAN_INFO T
+			         WHERE T.LOAN_STATUS IN ('01', '02')
+			           AND T.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, LC.PARTY_ID
+			          FROM TB_CON_LOAN_CHANGE LC, TB_CON_CONTRACT_INFO CI
+			         WHERE LC.CHANGE_STATUS IN ('01', '02')
+			           AND LC.CONTRACT_ID = CI.CONTRACT_ID
+			           AND CI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        UNION ALL
+			        
+			        SELECT 1 C, FC.PARTY_ID
+			          FROM TB_AFT_FIRST_CHECK FC, TB_CON_CONTRACT_INFO CI
+			         WHERE FC.CHECK_STATUS IN ('01', '02')
+			           AND FC.CONTRACT_ID = CI.CONTRACT_ID
+			           AND CI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, PC.PARTY_ID
+			          FROM TB_AFT_POINT_CHECK PC, TB_CON_CONTRACT_INFO CI
+			         WHERE PC.CHECK_STATUS IN ('01', '02')
+			           AND PC.CONTRACT_ID = CI.CONTRACT_ID
+			           AND CI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, EC.PARTY_ID
+			          FROM TB_AFT_EXPIRE_CHECK EC, TB_CON_CONTRACT_INFO CI
+			         WHERE EC.CHECK_STATUS IN ('01', '02')
+			           AND EC.CONTRACT_ID = CI.CONTRACT_ID
+			           AND CI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')
+			        
+			        UNION ALL
+			        
+			        SELECT 1 C, A.PARTY_ID
+			          FROM TB_CLA_DEBT_DETAILINFO A, TB_CON_CONTRACT_INFO CI
+			         WHERE A.STATUS = '1'
+			           AND A.CONTRACT_NUM = CI.CONTRACT_NUM
+			           AND CI.PRODUCT_TYPE IN
+			               ('01001002', '03001002', '03001004', '03001006')) T
+			 WHERE T.PARTY_ID IN
+			       (SELECT T.RELATED_CUST_PARTY_ID
+			          FROM TB_CSM_GUAR_MEMEBER T
+			         WHERE T.PARTY_ID = @partyId)
+			  ]]>
+	    </sql>
+	</rule>
+	<!-- 判断是否有业务权 -->
+	<rule id="PUB_0015" name="判断是否有业务权 " checktype="greater"  checkedFieldName="$c" startValue="0"  errCode="2015110-001" errMsg="用户没有客户业务权 " checkLevel="err">
+		<sql><![CDATA[   
+						SELECT count(*) c FROM TB_CSM_MANAGEMENT_TEAM T WHERE T.PARTY_ID = @partyId AND T.ORG_NUM = @orgNum AND T.USER_NUM = @userNum
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- 判断角色是否已用      add by zhangfahui ,排除超级管理员--> 
+		<rule id="PUB_0017" name="判断角色是否已用 " checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="角色已经使用，不能删除 " checkLevel="err">
+		<sql><![CDATA[   
+		                SELECT count(*) c FROM ac_operatorrole a where a.roleid = @roleid and OPERATORID not in (SELECT OPERATORID FROM AC_OPERATOR WHERE USERID='sysadmin')
+			  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- 判断对私客户证件号码是否存在 -->
+	<rule id="PUB_0018" name="判断对私客户证件号码是否存在 " checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该证件号码已存在" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c from tb_csm_natural_person t where t.cert_type=@certType and t.cert_num=@certNum		
+			and t.party_id!=@partyId	  ]]>
+	    </sql>
+	</rule>
+	
+	<!-- 新增时判断对公客户中同一客户下的项目名称是否存在 -->
+	<rule id="PUB_0019" name="新增时判断对公客户中同一客户下的项目名称是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该用户下已存在同名项目名称" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c
+  			  from tb_csm_project_info t
+ 			 where t.party_id = @partyId
+   			   and t.project_name = @projectName
+   			    ]]>
+	    </sql>
+	</rule>
+	<!-- 编辑时判断对公客户中同一客户下的项目名称是否存在 -->
+	<rule id="PUB_0020" name="编辑时判断对公客户中同一客户下的项目名称是否存在" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该用户下已存在同名项目名称" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c
+  			  from tb_csm_project_info t
+ 			 where t.party_id = @partyId
+   			   and t.project_name = @projectName
+   			   and t.project_id != @projectId 	  ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_0021" name="判断一个机构只能关联一个指定还款账号" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该机构已经关联了一个还款账号，请不要重复关联" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c from tb_pub_repay_account t
+ 			 where  t.repay_account_org_num = @repayAccountOrgNum
+   			 ]]>
+	    </sql>
+	</rule>
+	
+	<rule id="PUB_0022" name="判断一个产品参数只能配置一条规则" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该参数已经存在，不能重复配置" checkLevel="err">
+		<sql><![CDATA[select count(1)c from tb_sys_product_param where (para_column = @paraColumn or para_colunm_name = @paraColunmName) and para_type = @paraType and product_id=@productId ]]></sql>
+	</rule>
+	
+	<!-- 评级申请 -->
+	<rule id="PJSQ_0001" name="有在途业务" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="有在途的评级申请不能发起评级" checkLevel="err">
+		<sql><![CDATA[
+		 select sum(c) c from (
+		select count(*) c from TB_IRM_INTERNAL_RATING_APPLY where PARTY_ID=@partyId and rating_type=@pjlx and RATING_STATE in ('01','02'))
+		]]></sql>
+	</rule>
+	
+	<!-- 用于产品控制参数 -->
+	<rule id="PUB_0023" name="判断两数是否相等" checktype="eqs" checkedFieldName="@paraColumn" targetDataList="@targetVal" errCode="2016516-001" errMsg="$[paraName]只能输入$[targetVal]" checkLevel="err">
+    </rule>	
+    <rule id="PUB_0024" name="判断输入参数是否大于目标参数" checktype="greater" checkedFieldName="@paraColumn" startValue="@targetVal" errCode="2016516-001" errMsg="$[paraName]的值必须大于$[targetVal]" checkLevel="err">
+    </rule>
+    <rule id="PUB_0025" name="判断输入参数是否小于目标参数" checktype="less" checkedFieldName="@paraColumn" endValue="@targetVal" errCode="2016516-001" errMsg="$[paraName]的值必须小于$[targetVal]" checkLevel="err">
+    </rule>
+    <rule id="PUB_0026" name="判断输入参数是否大于等于目标参数" checktype="ge" checkedFieldName="@paraColumn" startValue="@targetVal" errCode="2016516-001" errMsg="$[paraName]的值必须大于等于$[targetVal]" checkLevel="err">
+    </rule>
+    <rule id="PUB_0027" name="判断输入参数是否小于等于目标参数" checktype="le" checkedFieldName="@paraColumn" endValue="@targetVal" errCode="2016516-001" errMsg="$[paraName]的值必须小于等于$[targetVal]" checkLevel="err">
+    </rule>
+    <rule id="PUB_0028" name="判断输入参数是否超出限制值" checktype="ge-le" checkedFieldName="@paraColumn" startValue="@startVal" endValue="@endVal" errCode="2016516-001" errMsg="$[paraName]超出参数限制值，上限:$[endVal],下限:$[startVal]" checkLevel="err">
+    </rule>
+    <rule id="PUB_0029" name="判断是否直属支行" checktype="eqs" checkedFieldName="$c" targetDataList="1" errCode="2016516-001" errMsg="不是直属支行" checkLevel="err">
+    	<sql><![CDATA[
+    	select case
+		         when o1.orgcode = '72100' then
+		          1
+		         else
+		          0
+		       end c
+		  from om_organization o1, om_organization o2
+		 where o1.orgid = o2.parentorgid
+		   and o2.orgcode = @wfCreateOrgCode
+		]]></sql>
+    </rule>
+    
+    
+    	<rule id="PUB_0030" name="判断一个机构的财政账号不能重复" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该机构已经关联了这个贴息账号，请不要重复关联" checkLevel="err">
+		<sql><![CDATA[   
+			select count(*)c from tb_pub_financial_account t where t.org_num=@orgNum and t.tiexi_zh=@tiexiZh
+   			 ]]>
+	    </sql>
+	    
+	</rule>
+</checkrules>

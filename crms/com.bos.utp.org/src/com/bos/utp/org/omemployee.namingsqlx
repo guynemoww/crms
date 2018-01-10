@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+
+    <!-- 根据营销团队id获取客户经理列表 -->
+    <select id="queryEmployeeByTemp" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organizationview.OmOrgEmp">
+    	select eo.orgid as inorgid,
+	       o.orgname as inorgname,
+	       o.orglevel as orglevel,
+	       o.orgcode as orgcode,
+	       e.empid as empid,
+	       e.empcode as empcode,
+	       e.empname as empname,
+	       e.gender as gender,
+	       e.empstatus as empstatus,
+	       opr.operatorid as operatorid,
+	       opr.status as status,
+	       opr.lastlogin
+	       --,to_char(ar.rolename) rolename
+		from om_emporg eo 
+		  inner join om_employee e on eo.empid=e.empid
+		  inner join om_organization o on eo.orgid=o.orgid
+		  left outer join ac_operator opr on e.operatorid=opr.operatorid
+		  /*left join(  select 
+          a.operatorid,
+          listagg(b.rolename, ',') rolename
+          from ac_operatorrole a
+          ,ac_role b 
+          where a.roleid = b.roleid
+          group by a.operatorid) ar on opr.operatorid = ar.operatorid*/
+		where 1=1
+		<isNotNull prepend=" and " property="orgseq"> 
+             o.orgseq like '$orgseq$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empcode"> 
+             e.empcode like '$empcode$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empname"> 
+             e.empname like '%$empname$%'
+        </isNotNull>
+        <isNotNull prepend=" and " property="empstatus"> 
+             e.empstatus=#empstatus#
+        </isNotNull>
+        <isNotNull prepend=" and " property="rolename"> 
+             to_char(ar.rolename) like '%$rolename$%'
+        </isNotNull>
+    </select>
+    
+    <!-- 根据机构id删除角色关联表 ac_operatorrole 对应信息 -->
+    <delete id="delOprRoleByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete ac_operatorrole where operatorid in (select operatorid from om_employee where orgid=#orgid#)
+    	]]>
+    </delete>
+    <!-- 根据机构id删除用户表 om_employee 对应信息 -->
+    <delete id="delOmployeeByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete om_employee where orgid=#orgid#
+    	]]>
+    </delete>
+    <!-- 根据机构id删除机构用户关系表 om_emporg 对应信息 -->
+    <delete id="delEmpOrgByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete om_emporg where orgid=#orgid#
+    	]]>
+    </delete>
+    <!-- 根据operatorid删除用户机构关联表 om_emporg 对应用户主机构信息 -->
+    <delete id="delOmEmporgByEmpid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete from om_emporg where empid=#empid# and (orgid=#orgid# or ismain='1')
+    	]]>
+    </delete>
+    <!-- 新增用户机构关联表 om_emporg 记录信息 -->
+    <insert id="addOmEmporg" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		insert into om_emporg(empid,orgid,ismain)values(#empid#,#orgid#,#ismain#)
+    	]]>
+    </insert>
+    <insert id="addOmEmporgWhenNotExists" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		insert into om_emporg(empid,orgid,ismain)select #empid#,#orgid#,#ismain# from sysibm.sysdummy1 
+    		where not exists (select 1 from om_emporg where empid=#empid# and orgid=#orgid#)
+    	]]>
+    </insert>
+    <!-- 根据operatorid删除用户机构关联表 om_emporg 对应用户主机构信息 -->
+    <update id="updateOmEmployeeSpecialty" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		update OM_EMPLOYEE e set e.specialty=(select listagg(r.roleid,',') from ac_operatorrole r
+  			where r.orgid=e.orgid and r.operatorid=e.operatorid) where e.operatorid=#operatorid#
+    	]]>
+    </update>
+    
+    <delete id="delrolewithoutinemp" parameterClass="java.util.HashMap"><![CDATA[
+		delete from ac_operatorrole where operatorid=#operatorid# and roleid not in( 
+        	select roleid from om_partyrole where partytype='org' and partyid in (
+                select orgid from om_emporg where empid=#empid#))
+	]]>
+	</delete>
+</sqlMap>

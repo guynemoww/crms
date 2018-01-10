@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+	
+	
+	<!-- 出账放款 -->
+	<rule id="RLON_0001" name="在途出账校验" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该合同有未放款的业务" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_info r where r.contract_id =   @contractId and r.loan_status in('01','02') ]]></sql>
+	</rule>
+	<rule id="RLON_0002" name="基本信息保存校验" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="基本信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_info r where r.loan_id =   @loanId and r.update_time is null ]]></sql>
+	</rule>
+	<rule id="RLON_0003" name="合同循环则期限不超过1年" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="循环合同出账期限不能超过1年" checkLevel="err">
+		<sql><![CDATA[select case
+					         when add_months(r.begin_date, 12) < r.end_date then
+					          1
+					         else
+					          0
+					       end as c
+					  from tb_loan_info r
+					 where r.loan_id =   @loanId ]]></sql>
+		<condition>CLON0001</condition>
+	</rule>
+	<rule id="RLON_0004" name="业务申请未添加贴息信息" checktype="ineqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="业务申请未添加贴息信息" checkLevel="err">
+		<sql><![CDATA[    select count(*) c
+						      from tb_loan_info                 r,
+						           tb_con_contract_info         c,
+						           tb_biz_amount_detail_approve ad,
+						           tb_biz_amount_approve        ap,
+						           tb_biz_approve               ba,
+						           tb_biz_tx                    x
+						     where r.contract_id = c.contract_id
+						       and c.amount_detail_id = ad.amount_detail_id
+						       and ad.amount_id = ap.amount_id
+						       and ap.approve_id = ba.approve_id
+						       and ba.apply_id = x.apply_id
+						       and r.loan_id =  @loanId ]]></sql>
+	</rule>
+	<rule id="RLON_0005" name="未添加贴息信息" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="未保存贴息信息" checkLevel="err">
+		<sql><![CDATA[    select  count(1) c
+						      from tb_loan_info                 r,
+						           tb_con_contract_info         c,
+						           tb_biz_amount_detail_approve ad,
+						           tb_biz_amount_approve        ap,
+						           tb_biz_approve               ba,
+						           tb_biz_tx                    x
+						     where r.contract_id = c.contract_id
+			                   and c.amount_detail_id = ad.amount_detail_id
+			                   and ad.amount_id = ap.amount_id
+			                   and ap.approve_id = ba.approve_id
+			                   and ba.apply_id = x.apply_id
+			                   and x.txfs is not null 
+			                   and r.txzq is null
+			                   and r.loan_id =  @loanId ]]></sql>
+	</rule>
+	<rule id="RLON_0006" name="贴息止期或起始日期大于贷款止期" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="贴息止期或起始日期大于贷款止期" checkLevel="err">
+		<sql><![CDATA[    select  count(1) c
+                  from tb_loan_info                 r
+                  where
+                    nvl(r.txzq,r.begin_date)>r.end_date 
+                   and r.loan_id = @loanId ]]></sql>
+	</rule>
+	<rule id="RLON_0007" name="贴息止期大于超出贴息期限" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="贴息止期超出申请贴息期限" checkLevel="err">
+		<sql><![CDATA[    select  count(1) c
+                  from tb_loan_info                 t,
+                       tb_con_contract_info         c,
+                       tb_biz_amount_detail_approve ad,
+                       tb_biz_amount_approve        ap,
+                       tb_biz_approve               ba,
+                       tb_biz_tx                    b
+                 where t.contract_id = c.contract_id
+                   and c.amount_detail_id = ad.amount_detail_id
+                   and ad.amount_id = ap.amount_id
+                   and ap.approve_id = ba.approve_id
+                   and ba.apply_id = b.apply_id
+                   and t.txzq>(
+        case b.qxdw when '01' then add_months(t.begin_date,b.qx*12) 
+
+           when '02'  then add_months(t.begin_date,b.qx*6)
+
+             when '03'  then add_months(t.begin_date,b.qx*3)
+
+               when '04' then add_months(t.begin_date,b.qx)
+
+                 when '05' then (select  t.begin_date+b.qx from dual) end)
+                   and t.loan_id =  @loanId ]]></sql>
+	</rule>
+	<!-- modi by shangmf:缺陷6739：增加按揭贷款不校验入库的限制 02002004个人商用房按揭贷款，02002005个人住房按揭贷款   -->
+	<!-- modi by shangmf:撤销上边6739的缺陷修复，按揭入库的还是要校验 -->
+	<rule id="RLON_0008" name="存在未入库的押品" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在未入库的押品" checkLevel="err">
+		<sql><![CDATA[   select count(*)c
+							  from tb_con_contract_info   t,
+							       tb_con_subcontract_rel ta,
+							       tb_con_subcontract     tb,
+							       tb_grt_mortgage_basic  td,
+							       tb_con_sub_grt_rel     tc
+							  left join tb_grt_house te on tc.surety_id = te.surety_id
+							 where t.contract_id = ta.contract_id
+							   and ta.subcontract_id = tb.subcontract_id
+							   and tb.subcontract_id = tc.subcontract_id
+							   and tc.surety_id = td.surety_id
+							   and tb.subcontract_status = '03'
+							   and td.mortgage_status != '09'
+							   and nvl(te.house_prop_status, '01') = '01'
+							   and t.product_type not in ('01013001', '02005001','01013010', '02005010', '02005002', '02005003', '02002004', '02002005')
+						  	 and t.contract_id = @contractId ]]></sql>
+	</rule>
+	<rule id="RLON_0009" name="账户开户机构与放款机构不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="放/还款账户开户机构与放款机构不一致" checkLevel="err">
+		<sql><![CDATA[   select count(*) c
+						  from tb_loan_info r, tb_loan_zh t
+						 where r.loan_id = t.loan_id
+						   and t.zhlx in ('0', '1')
+						   and r.loan_org != t.zhkhjg
+               			   and r.product_type not in ('01006001','01006002','01006010','01008001','01008010','01008002','01009001','01009002','01009010','01011001','01012001')
+						   and r.loan_id  = @loanId ]]></sql>
+	</rule>
+	<rule id="RLON_0010" name="所选出账机构无对应核算机构" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="所选出账机构无对应核算机构" checkLevel="err">
+		<sql><![CDATA[   select count(1) c from om_organization r where r.orgcode = @orgId  and r.auditbankno is null
+ ]]></sql>
+	</rule>
+	<rule id="RLON_0011" name="银承票据张数和总张数不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="填写汇票张数和列表总张数不一致" checkLevel="err">
+		<sql><![CDATA[   select r.hpzs c from tb_loan_info r where r.loan_id=@loanId 
+ 				]]></sql>
+		<sql><![CDATA[   select count(1) d from tb_loan_hp_amt r where r.loan_id=@loanId 
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0012" name="出账金额大于合同可用额度" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="出账金额大于合同可用额度" checkLevel="err">
+		<sql><![CDATA[   select count(1) c
+						  from tb_loan_info r, tb_con_contract_info t
+						 where r.contract_id = t.contract_id
+						   and r.loan_id = @loanId
+						   and t.con_balance<r.loan_amt
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0013" name="票据总金额和出账金额不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="票据总金额和出票金额之和不一致" checkLevel="err">
+		<sql><![CDATA[   select r.loan_Amt c from tb_loan_info r where r.loan_id=@loanId 
+ 				]]></sql>
+		<sql><![CDATA[   select sum(r.loan_amt) d from tb_loan_hp_amt r where r.loan_id=@loanId 
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0014" name="汇票明细信息不完整" checktype="eqn"  checkedFieldName="$c" targetDataList="0"   errCode="2015110-001" errMsg="汇票明细信息不完整" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_loan_hp_amt r
+						 where r.loan_id = @loanId 
+						 and (r.loan_amt is null
+						    or r.pye_acct_nm is null
+						    or r.pye_acct_no is null
+						    or r.pye_open_acct_bnk_nm is null)
+						   
+ 				]]></sql>
+	</rule>
+	
+	<rule id="RLON_0015" name="还本计划金额之和与出账金额不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="$d"  errCode="2015110-001" errMsg="还本计划金额之和与出账金额不一致" checkLevel="err">
+		<sql><![CDATA[   select r.loan_amt c from tb_loan_info r where r.loan_id=@loanId 
+ 				]]></sql>
+		<sql><![CDATA[   select nvl(sum(r.repay_amt),0) d from tb_loan_repay_plan r where r.loan_id =@loanId 
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0016" name="还本计划最后一期还本日期与借据止期不一致" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="还本计划最后一期还本日期与借据止期不一致" checkLevel="err">
+		<sql><![CDATA[    select count(1) c
+							   from tb_loan_info r
+							  where r.loan_id = @loanId
+							  and r.end_date = 
+							  (select max(t.repay_date) 
+							  from tb_loan_repay_plan t 
+							  where t.loan_id = @loanId)
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0017" name="放款金额与合同可用比较" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="放款金额大于合同可用" checkLevel="err">
+		<sql><![CDATA[   select count(*) c
+						  from tb_loan_info r, tb_con_contract_info t
+						 where r.contract_id = t.contract_id
+						   and r.loan_amt > t.con_balance
+						   and r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0018" name="放款金额与批复明细可用比较" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="放款金额大于批复明细可用" checkLevel="err">
+		<sql><![CDATA[   select count(*) c
+						  from tb_loan_info r, 
+						       tb_con_contract_info t,
+						       tb_biz_amount_detail_approve a
+						 where r.contract_id = t.contract_id
+						   and t.amount_detail_id = a.amount_detail_id
+						   and r.loan_amt*nvl(r.exchange_rate,1) > a.detail_balance
+						   and r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	
+	<rule id="RLON_0019" name="收款人全称不能超过50字符" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="收款人全称不能超过50个字符" checkLevel="err">
+		<sql><![CDATA[ select count(1) c
+						  from tb_loan_hp_amt r
+						 where r.loan_id = @loanId
+						   and LENGTH_UTF8_TO_GBK(r.pye_acct_nm) > 50 
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0020" name="收款人账号不能超过32个字符" checktype="eqn"  checkedFieldName="$c" targetDataList="0"   errCode="2015110-001" errMsg="收款人账号不能超过32个字符" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_loan_hp_amt r
+						 where r.loan_id = @loanId
+						   and LENGTH_UTF8_TO_GBK(r.pye_acct_no) > 32 
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0021" name="收款人开户银行不能超过60个字符" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="收款人开户银行不能超过60个字符" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_loan_hp_amt r
+						 where r.loan_id = @loanId
+						   and LENGTH_UTF8_TO_GBK(r.pye_open_acct_bnk_nm) > 60
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0022" name="一个承兑协议只能出一张电票" checktype="less"  checkedFieldName="$c" endValue="2"  errCode="2015110-001" errMsg="一个合同只能开一张电票" checkLevel="err">
+		<sql><![CDATA[ select count(*) c
+						  from tb_loan_info r, tb_loan_hp_amt t, tb_con_contract_info c
+						 where r.pjzl = '02'
+						   and r.loan_id = t.loan_id
+						   and r.contract_id = c.contract_id
+						   and r.loan_status in('01','02','03')
+						   and t.bill_state = '0'
+						   and r.contract_id = @contractId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0023" name="选了受托支付但是没有受托支付账号信息" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="未录入受托支付账号信息" checkLevel="err">
+		<sql><![CDATA[ select count(*) c
+					     from tb_loan_stzf r
+					    where r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0024" name="受托支付总金额大于出账金额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="受托支付总金额大于出账金额" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						   from tb_loan_info r, tb_loan_stzf t
+						  where r.loan_id = t.loan_id
+						    and (nvl(t.amt1, 0) + nvl(t.amt2, 0) + nvl(t.amt3, 0)) >
+						        nvl(r.loan_amt, 0)
+						    and r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0025" name="还本计划表第一期不能小于等于借据起期" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="还本计划表第一期不能小于或等于借据起期" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_loan_info r, tb_loan_repay_plan t
+						 where r.loan_id = t.loan_id
+						   and t.periods_number = '1'
+						   and r.begin_date >= t.repay_date
+						   and r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0026" name="借新还旧出账金额大于关联借据的借据余额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="借新还旧出账金额大于关联借据的借据余额" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+					      from tb_loan_info                 l,
+					           tb_con_contract_info         r,
+					           tb_biz_amount_detail_approve t,
+					           tb_biz_amount_approve        a,
+					           tb_biz_approve               b,
+					           tb_biz_summary               c,
+					           tb_loan_summary              s
+					    where l.contract_id = r.contract_id 
+					    and r.amount_detail_id = t.amount_detail_id
+					    and t.amount_id = a.amount_id
+					    and a.approve_id = b.approve_id
+					    and b.apply_id = c.apply_id
+					    and c.summary_id = s.summary_id
+					    and l.loan_id = @loanId
+					    and l.loan_amt > nvl(s.jjye , 0)
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0027" name="合作方额度不足" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合作方额度不足" checkLevel="err">
+		<sql><![CDATA[  select count(1) c
+						  from tb_loan_info                 r,
+						       tb_con_contract_info         t,
+						       tb_biz_amount_detail_approve a,
+						       tb_biz_amount_apply          b,
+						       tb_biz_xmxx_apply            c
+						  left join v_crd_third_party_limit d
+						    on c.project_id = d.limit_id
+						 where r.contract_id = t.contract_id
+						   and t.amount_detail_id = a.amount_detail_id
+						   and a.amount_id = b.amount_id
+						   and b.apply_id = c.amount_detail_id
+						   and (case
+						         when to_char(nvl(d.end_date, to_date('19000101', 'yyyymmdd')),
+						                      'yyyymmdd') < to_char(BT_GET_WORKTIME(), 'yyyymmdd') then
+						          0
+						         else
+						          d.available_amt
+						       end) < r.rmb_amt
+						   and r.loan_id = @loanId
+ 				]]></sql>
+	</rule>
+	<rule id="RLON_0028" name="国结出账校验" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="国结产品的合同出账只能做一次出账[该合同已出账]" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_summary r where r.contract_id =   @contractId and r.summary_status_cd in('01','02','03','04')]]></sql>
+	</rule>
+	<rule id="RLON_0029" name="存在在途撤销" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该借据有未完成的撤销交易" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_summary r where r.summary_num =   @summaryNum and r.back_cd='10' ]]></sql>
+	</rule>
+	<rule id="RLON_0030" name="放款信息未保存" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="放款信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_info r where r.loan_id =   @loanId and length(r.loan_org)>0 ]]></sql>
+	</rule>
+	<rule id="RLON_0031" name="票据起止日期检验"   checktype="eqn"  checkedFieldName="$c" targetDataList="1" errCode="2015110-001" errMsg="请满足规则：借据起始日=票据出票日期=#当前业务日期#，票据到期日&lt;借据到期日" checkLevel="err">
+		<sql><![CDATA[
+		SELECT COUNT(1) c FROM TB_LOAN_INFO s WHERE s.LOAN_ID=@loanId AND TO_CHAR(S.BEGIN_DATE,'YYYYMMDD')=TO_CHAR((SELECT OPERATING_DATE FROM TB_PUB_DATE),'YYYYMMDD')
+		AND NOT EXISTS(SELECT 1 FROM TB_BIZ_TXXX_APPLY t WHERE t.CONTRACT_ID=s.CONTRACT_ID AND (s.BEGIN_DATE<>t.BILLBEGINDATE OR s.END_DATE<t.BILLENDDATE))
+		]]></sql>
+		<condition>CCON_0070</condition>
+	</rule>
+	<rule id="RLON_0032" name="业务别信息未保存" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="业务别信息未保存" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_info r where r.loan_id =   @loanId and length(r.LOAN_SUBJECT1)>0 ]]></sql>
+	</rule>
+	<rule id="RLON_0033" name="银承、贴现是否已出账校验" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="该合同已出账" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_loan_summary r where r.contract_id = @contractId and r.summary_status_cd not in('06','09')]]></sql>
+	</rule>
+	<rule id="RLON_0034" name="出账检查是否在合同期限内" checktype="eqn"  checkedFieldName="$c" targetDataList="1"  errCode="2015110-001" errMsg="请在合同起止日期内出账" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info where contract_id = @contractId 
+				and begin_date <= (select operating_date from tb_pub_date)
+				and end_date >= (select operating_date from tb_pub_date)
+		]]></sql>
+	</rule>
+	<rule id="RLON_0035" name="检查合同可用余额" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="合同可用余额不足不允许出账" checkLevel="err">
+		<sql><![CDATA[select count(*) as c from tb_con_contract_info a where a.contract_amt=a.con_yu_e and a.contract_id=@contractId
+		]]></sql>
+	</rule>
+	<!-- anjie 02002004 02002005 如果bu选择保证+抵押，校验抵押物是否入库 ;对于公积金住房委托贷款，控制为，选择保证+抵押或者抵押方式，校验抵押物入库-->
+	<rule id="RLON_0036" name="按揭存在未入库的押品" checktype="eqn"  checkedFieldName="$c" targetDataList="0"  errCode="2015110-001" errMsg="存在未入库的押品" checkLevel="err">
+		<sql><![CDATA[   select count(*)c
+							  from tb_con_contract_info   t,
+							       tb_con_subcontract_rel ta,
+							       tb_con_subcontract     tb,
+							       tb_grt_mortgage_basic  td,
+							       tb_con_sub_grt_rel     tc
+							  left join tb_grt_house te on tc.surety_id = te.surety_id
+							 where t.contract_id = ta.contract_id
+							   and ta.subcontract_id = tb.subcontract_id
+							   and tb.subcontract_id = tc.subcontract_id
+							   and tc.surety_id = td.surety_id
+							   and tb.subcontract_status = '03'
+							   and td.mortgage_status != '09'
+							   and nvl(te.house_prop_status, '01') = '01'
+						  	 and t.contract_id = @contractId ]]></sql>
+	</rule>
+	
+</checkrules>

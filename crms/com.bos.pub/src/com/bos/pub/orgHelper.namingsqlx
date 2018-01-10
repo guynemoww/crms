@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+<!-- 判断2个机构  1同一支行 2同分行 3 同总行 -->
+    <select id="manageWay" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		SELECT CASE
+		         WHEN (#orgcode1# = #orgcode2#) THEN
+		          1
+		         ELSE
+		          CASE
+		            WHEN ((SELECT T.PARENTORGID
+		                     FROM OM_ORGANIZATION T
+		                    WHERE T.ORGCODE = #orgcode1#) =
+		                 (SELECT T.PARENTORGID
+		                     FROM OM_ORGANIZATION T
+		                    WHERE T.ORGCODE = #orgcode2#)) THEN
+		             2
+		            ELSE
+		             3
+		          END
+		       END AS WAY
+		  FROM DUAL
+    </select>
+</sqlMap>

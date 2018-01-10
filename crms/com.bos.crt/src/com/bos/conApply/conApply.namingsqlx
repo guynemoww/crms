@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <select id="getApproveBizInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select * 
+		from tb_csm_party t,tb_biz_approve ta,tb_biz_amount_approve tb
+		where 1=1
+		and t.PARTY_ID=ta.PARTY_ID
+		and ta.APPROVE_ID=tb.APPROVE_ID
+		and ta.BIZ_TYPE in ('02','05')
+		and ta.BECOME_EFFECTIVE_MARK = '03'
+		and ta.APPROVE_CONCLUSION in ('1','3')
+   		<isNotNull property="partyId">  and t.PARTY_ID = '$partyId$' </isNotNull>
+   		<isNotNull property="bizNum">  and ta.BIZ_NUM like '%$bizNum$%' </isNotNull>
+    </select>
+    <select id="getApproveAndSxxy" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select 
+	   tb.biz_num,
+       te.party_name,
+       (case tb.biz_type when '02' then '综合授信项下单笔' else tb.biz_type end ) biz_type   ,
+       (case tb.biz_type_flag when '02' then '综合授信项下单笔' else tb.biz_type_flag end ) biz_type_flag   ,
+       tb.biz_happen_nature,
+       tb.biz_happen_type,
+       td.detail_amt,
+       td.currency_cd,
+       td.credit_term,
+       td.cycle_unit,
+       tb.valid_date,
+       td.end_date,
+       td.amount_detail_id,
+       tb.approve_id,
+       tb.apply_id,
+       td.product_type,
+       te.party_id
+        from tb_biz_approve tb,TB_BIZ_AMOUNT_APPROVE tc,TB_BIZ_AMOUNT_DETAIL_APPROVE td,tb_csm_party te
+		where tb.APPROVE_ID=tc.APPROVE_ID
+		and tc.AMOUNT_ID=td.AMOUNT_ID
+		and tb.party_id=te.party_id
+		and tb.BECOME_EFFECTIVE_MARK ='03'
+		and tb.APPLY_ID in(
+			select t.APPLY_ID from tb_biz_approve t where t.BIZ_TYPE in('01','04','06','07')  and t.APPROVE_CONCLUSION in ('1','3')
+				and t.user_num= #userId# 
+			union 
+			select ta.APPLY_ID from TB_CON_CREDIT_INFO ta where ta.CON_STATUS='03'
+		)
+   		<isNotNull property="partyId">  and tb.PARTY_ID = '$partyId$' </isNotNull>
+   		<isNotNull property="bizNum">  and tb.BIZ_NUM like '%$bizNum$%' </isNotNull>
+   		<isNotNull property="amountDetailId">  and td.AMOUNT_DETAIL_ID= '%amountDetailId%' </isNotNull>
+    </select>
+    <select id="getBizInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			SELECT
+		      a.APPLY_ID,
+		      a.APPLY_MODE_TYPE,
+		      a.biz_happen_type,
+		      b.PARTY_NUM,
+		      b.PARTY_NAME,
+		      a.BIZ_TYPE,
+		      a.BIZ_TYPE_FLAG,
+		      a.APPROVAL_NUM ,
+		      c.CREDIT_AMOUNT,
+		      c.CURRENCY_CD,
+		      TO_CHAR(a.VALID_DATE, 'YYYY-MM-DD') AS VALID_DATE,
+		      TO_CHAR(a.END_DATE, 'YYYY-MM-DD') AS END_DATE,
+		      a.APPROVE_CONCLUSION,
+		      a.USER_NUM,
+		      a.ORG_NUM ,
+		      c.CREDIT_USED,
+		      c.CREDIT_AVI
+		    FROM
+		      tb_biz_approve a ,
+		      TB_CSM_PARTY b ,
+		      TB_BIZ_AMOUNT_APPROVE c
+		    WHERE
+		      a.PARTY_ID = b.PARTY_ID AND
+		      a.APPROVE_ID = c.APPROVE_ID
+		      and a.approve_conclusion in ('1','3')
+		      and a.become_effective_mark = '03'
+   		<isNotNull property="partyId">  and b.PARTY_ID = '$partyId$' </isNotNull>
+   	<!--	 <isNotNull property="userNum">  and a.user_num = '$userNum$' </isNotNull>-->
+   		
+    </select>
+     <!--获取可补足保证金的生效的合同信息-->
+      <select id="getsupplubzj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				 select '业务合同' biz_type,
+				 	 t.product_type,
+				 	 '' apply_id,
+				 	 t.amount_detail_id,
+		             t.CONTRACT_ID,
+		             t.CONTRACT_NUM,
+		             t2.PARTY_NAME,
+		             t2.PARTY_ID,
+		             t2.PARTY_NUM,
+		             t2.PARTY_TYPE_CD,
+		             t.CONTRACT_AMT,
+		             t.CON_BALANCE,
+		             nvl(tls.con_yu_e,0) as con_yu_e,
+		             t.CURRENCY_CD as CURRENCY_CD,
+		             to_char(t.BEGIN_DATE, 'yyyy-mm-dd') as BEGIN_DATE,
+		             t1.BZJJE,
+		             to_char(t.END_DATE, 'yyyy-mm-dd') as END_DATE
+		        from tb_con_contract_info t
+		        left join (select sum(nvl(ts.jjye,0)) as con_yu_e,CONTRACT_ID from tb_loan_summary ts 
+		        <!--关联HP_AMT 出票号码不为空，即出票成功 summary_status_cd ='02' 即正常的借据-->
+		        left join tb_loan_hp_amt tlh on ts.summary_num = tlh.summary_num  and ts.summary_status_cd ='02'  
+		        and tlh.BILL_NO is not null  group by CONTRACT_ID) tls on t.CONTRACT_ID=tls.CONTRACT_ID
+		        left join ( select ta.contract_id,sum(t.BZJJE) BZJJE
+		    from TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL ta
+		    where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+		     group by ta.contract_id ) t1 on  t1.contract_id=t.contract_id left join V_CSM_PARTY t2 on t.party_id=t2.party_id
+		       where t.CON_STATUS = '03'  
+		       <!--增加条件必须是出账后的合同才能追加保证金-->
+		       and tls.con_yu_e >0  
+		       and t.product_type in ('01008001','01008010','01008002')	       
+		         and t.user_num= #userId# 
+   		<isNotNull property="contractNum">  and t.CONTRACT_NUM = #contractNum# </isNotNull>
+   		<isNotNull property="partyName">  and t2.party_name like '%$partyName$%' </isNotNull>
+   		<isNotNull property="certType">  and t2.cert_Type = #certType#  </isNotNull>
+   		<isNotNull property="certNum">  and t2.cert_Num = #certNum# </isNotNull>
+   		<isNotNull property="productType">  and t.product_type like '$productType$%' </isNotNull>
+   		   		
+   		   		
+    </select>
+    
+    <!--获取生效的合同信息-->
+    <select id="getApproveCons" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				 select '业务合同' biz_type,
+				 	 t.product_type,
+				 	 '' apply_id,
+				 	 t.amount_detail_id,
+		             t.CONTRACT_ID,
+		             t.CONTRACT_NUM,
+		             t.CONTRACT_AMT,
+		             t.CON_BALANCE,
+		             nvl(tls.con_yu_e,0) as con_yu_e,
+		             t.CURRENCY_CD as CURRENCY_CD,
+		             to_char(t.BEGIN_DATE, 'yyyy-mm-dd') as BEGIN_DATE,
+		             to_char(t.END_DATE, 'yyyy-mm-dd') as END_DATE
+		        from tb_con_contract_info t
+		        left join (select sum(nvl(jjye,0)) as con_yu_e,CONTRACT_ID from tb_loan_summary where summary_status_cd!='09'  group by CONTRACT_ID) tls on t.CONTRACT_ID=tls.CONTRACT_ID
+		       where t.CON_STATUS = '03'
+		         and t.user_num= #userId# 
+  		<isNotNull property="partyId">  and t.PARTY_ID = '$partyId$' </isNotNull>
+   		<isNotNull property="conNum">  and t.CONTRACT_NUM like '%$conNum$%' </isNotNull>
+		union all
+				 select '综合授信协议' biz_type,
+				     '' as product_type,
+				 	 t.apply_id,
+				 	 '' as amount_detail_id,
+		             t.CONTRACT_ID,
+		             t.CONTRACT_NUM,
+		             tb.CREDIT_AMOUNT as CONTRACT_AMT,
+		             tb.CREDIT_AVI as CON_BALANCE,
+		             (nvl(tb.CREDIT_AMOUNT,0)-nvl(tb.CREDIT_AVI,0)) as con_yu_e,
+		             tb.CURRENCY_CD as CURRENCY_CD,
+		             to_char(ta.VALID_DATE, 'yyyy-mm-dd') as BEGIN_DATE,
+		             to_char(ta.END_DATE, 'yyyy-mm-dd') as END_DATE
+		        from tb_con_credit_info t, tb_biz_approve ta,TB_BIZ_AMOUNT_APPROVE tb
+		       where t.CON_STATUS = '03'
+		        and t.APPLY_ID=ta.APPLY_ID
+		        and ta.APPROVE_ID=tb.approve_id
+                and ta.BECOME_EFFECTIVE_MARK='03'
+  		<isNotNull property="partyId">  and t.PARTY_ID = '$partyId$' </isNotNull>
+   		<isNotNull property="conNum">  and t.CONTRACT_NUM like '%$conNum$%' </isNotNull>
+    </select>
+    
+    <select id="getPrintCons" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+SELECT * FROM (
+	SELECT CONTRACT_NUM num,
+		'05' con_type,
+		'' PRODUCT_TYPE,
+		tb.CREDIT_AMOUNT amt,
+		TO_CHAR( apply.VALID_DATE, 'yyyy-MM-dd' ) BEGIN_DATE,
+		TO_CHAR( apply.END_DATE, 'yyyy-MM-dd' ) END_DATE,
+		'' currency_cd
+	FROM
+		tb_con_credit_info credit,
+		tb_biz_approve apply,
+		TB_BIZ_AMOUNT_APPROVE tb
+	WHERE
+		credit.CON_STATUS = '03'
+		AND apply.APPROVE_ID = tb.approve_id
+		AND credit.APPLY_ID = apply.APPLY_ID
+		AND credit.PARTY_ID = #partyId#
+	UNION ALL 
+	SELECT CONTRACT_NUM num,
+		'00' con_type,
+		PRODUCT_TYPE,
+		CONTRACT_AMT amt,
+		TO_CHAR( BEGIN_DATE, 'yyyy-MM-dd' ) BEGIN_DATE,
+		TO_CHAR( END_DATE, 'yyyy-MM-dd' ) END_DATE,
+		contract.currency_cd
+	FROM
+		tb_con_contract_info contract
+	WHERE
+		contract.CON_STATUS = '03'
+		AND contract.PARTY_ID = #partyId#
+	UNION ALL 
+	SELECT DISTINCT a.subcontract_num num,
+		 a.subcontract_type con_type,
+		'' product_type,
+		DECODE( a.if_top_subcon, '1', a.zgbjxe, DECODE( a.subcontract_type, '03', a.bzjje, a.subcontract_amt )) amt,
+		TO_CHAR( DECODE( a.if_top_subcon, '1', a.begin_date, c.begin_date ), 'yyyy-mm-dd' ) begin_date,
+		TO_CHAR( DECODE( a.if_top_subcon, '1', a.end_date, c.end_date ), 'yyyy-mm-dd' ) end_date,
+		a.bz currency_cd
+	FROM
+		tb_con_subcontract a
+	INNER JOIN tb_con_subcontract_rel b ON a.subcontract_id = b.subcontract_id
+	LEFT JOIN tb_con_contract_info c ON b.contract_id = c.contract_id
+		
+	WHERE  a.CON_PARTY_ID = #partyId#
+		AND a.subcontract_status = '03' AND a.subcontract_type!='03'
+	UNION ALL 
+	SELECT CONTRACT_NUM num,
+		clc.LOAN_CHANGE_TYPE con_type,
+		ci.PRODUCT_TYPE PRODUCT_TYPE,
+		ci.RMB_AMT amt,
+		TO_CHAR( ci.BEGIN_DATE, 'yyyy-MM-dd' ) BEGIN_DATE,
+		TO_CHAR( ci.END_DATE, 'yyyy-MM-dd' ) END_DATE,
+		ci.CURRENCY_CD
+	FROM
+		TB_CON_LOAN_CHANGE clc
+	INNER JOIN TB_CON_CONTRACT_INFO ci ON clc.CONTRACT_ID = ci.CONTRACT_ID
+	WHERE ci.PARTY_ID = #partyId#
+		AND ci.CON_STATUS = '03' AND clc.LOAN_CHANGE_TYPE='06'
+) t WHERE 1 = 1
+		<isNotNull property="conNum">  and t.NUM=#conNum# </isNotNull>
+		<isNotNull property="printType">  and t.con_type=#printType# </isNotNull>
+    </select>
+    
+    <select id="isHightestContract" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select * from TB_CON_SUBCONTRACT sub 
+			where sub.SUBCONTRACT_TYPE=#subContractType# and SUBCONTRACT_STATUS='03' and IF_TOP_SUBCON='1' and sub.SUBCONTRACT_NUM=#subContractNum#
+    </select>
+    
+    <select id="getJtBizInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+         select nvl(sum(tb.CREDIT_AMOUNT),0) as CREDIT_AMT,nvl(sum(tb.CREDIT_AVI),0) as AVAILABLE_AMT,
+             nvl(sum(tb.CREDIT_used),0) as USED_AMT
+         from tb_csm_party t,tb_biz_approve ta,TB_BIZ_AMOUNT_APPROVE tb
+         where t.PARTY_ID=ta.PARTY_ID
+         and ta.APPROVE_ID=tb.APPROVE_ID
+         and ta.BECOME_EFFECTIVE_MARK ='03'
+         and ta.approve_conclusion in ('1','3')
+         and ta.BIZ_TYPE in ('02','05','06','04')
+         and t.PARTY_ID in (
+		 	select t.CORPORATION_PARTY_ID from tb_csm_group_member t where t.GROUP_PARTY_ID=#partyId#) 
+    </select>
+    <select id="getGuarantOrgInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select z.*,t.fdbs,t.bzjbl,t.status_cd from tb_con_guarant_org_info  t,tb_con_zh z
+			where t.PARTY_ID=#partyId#
+			and t.contract_id = z.contract_id
+			and t.STATUS_CD ='03'
+    </select>
+    <!--获取综合授信协议下应关联的的业务合同-->
+    <select id="getcreditContractId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select td.CONTRACT_ID
+			from TB_CON_CREDIT_INFO t,tb_biz_approve ta,tb_biz_amount_approve tb,tb_biz_amount_detail_approve tc,TB_CON_CONTRACT_INFO td
+			where t.APPLY_ID=ta.APPLY_ID
+			and ta.APPROVE_ID=tb.APPROVE_ID
+			and tb.AMOUNT_ID=tc.AMOUNT_ID
+			and tc.AMOUNT_DETAIL_ID=td.AMOUNT_DETAIL_ID
+			and td.CON_STATUS = '03'
+			and ta.BECOME_EFFECTIVE_MARK ='03'
+			and t.CON_STATUS='03'
+			and t.CONTRACT_ID=#creditContractId#
+    </select>
+     <!--合同失效处理更新主合同信息-->
+    <update id="updateConInfoStatus" parameterClass="java.util.Map" >
+			update tb_con_contract_info set con_status = '05' where contract_id  = #contractId#
+	</update>
+     <!--合同失效处理更新从合同信息-->
+    <update id="updateConInfoRelStatus" parameterClass="java.util.Map" >
+		update tb_con_subcontract r
+		   set r.subcontract_status = '05'
+		 where r.subcontract_id in
+		       (select t.subcontract_id
+		          from tb_con_subcontract_rel t
+		         where t.contract_id = #contractId#)
+		 and nvl(r.IF_TOP_SUBCON,'0') = '0'
+	</update>
+     <!--合同失效处理额度重新计算-->
+    <update id="updateCreditLimit" parameterClass="java.util.Map" >
+    	<isNotNull property="partyId">
+			call CRED_RECOUNT(#partyId#)
+		 </isNotNull>
+	</update>
+     <!--合同失效处理非综合授信批复失效-->
+    <update id="updateCancelPF" parameterClass="java.util.Map" >
+		update tb_biz_approve r
+		   set r.become_effective_mark = '06'
+		 where r.approve_id =
+		       (select t.approve_id
+		          from tb_biz_amount_approve t, tb_biz_amount_detail_approve a
+		         where t.amount_id = a.amount_id
+		           and a.amount_detail_id = #amountDetailId#)
+		    and r.biz_type in ('01','04')
+	</update>
+	
+	 <!--合同失效处理额度失效-->
+    <update id="updateCancelLimit" parameterClass="java.util.Map" >
+           update tb_biz_approve r set r.BECOME_EFFECTIVE_MARK ='06'
+           where r.APPROVE_ID =
+		       (select t.APPROVE_ID
+		          from tb_biz_approve t
+		         where t.approve_id =
+		               (select c.approve_id
+		                  from tb_biz_amount_approve c
+		                 where c.amount_id =
+		                       (select b.amount_id
+		                          from tb_biz_amount_detail_approve b
+		                         where b.amount_detail_id = #amountDetailId#)))
+		   and r.BIZ_TYPE in ('01', '04')
+	</update>
+	<select id="getHkjhsByConId" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.crt.TbConRepayPlan">
+		select repay_plan_id repayPlanId,
+			   repay_date repayDate,
+			   repay_amt repayAmt,
+			   periods_number periodsNumber,
+			   create_time createTime,
+			   update_time updateTime,
+			   contract_id contractId
+ 		  from tb_con_repay_plan 
+		  where contract_id =#contractId#  order by repay_Date
+    </select>
+    <!--担保机构合作协议生效时将以前生效的置为失效-->
+    <update id="updateDbxyByPartyId" parameterClass="java.util.Map" >
+          update tb_con_guarant_org_info r set r.status_cd = '04' where r.party_id = #partyId# and r.status_cd = '03'
+	</update>
+	<!--查找借新还旧老合同编号-->
+	<select id="getJxhjContractNum" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select r.contract_num
+		  from tb_con_contract_info r, tb_biz_summary s, tb_loan_summary l
+		 where r.contract_id = l.contract_id
+		   and l.summary_id = s.summary_id
+		   and s.apply_id = #applyId#
+    </select>
+    
+    <!-- add by shangmf:根据合同id查找向下的担保合同 -->
+	<select id="getSubcontractId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select ta.subcontract_id 
+      from tb_con_contract_info con,tb_con_subcontract ta,tb_con_subcontract_rel tb
+      where con.contract_id=tb.contract_id and ta.subcontract_id=tb.subcontract_id 
+      and ta.if_top_subcon='1' and con.contract_id= #contractId# 
+    </select>
+    
+    
+      <!-- 根据合同id查询 借新还旧信息。如果查不到，就不是借新还旧 -->
+	<select id="checkifJxhj" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select apply_id from crms.tb_biz_apply where biz_happen_type = '06' 
+       	<isNotNull property="contractId">  
+       		and apply_id in (
+			select c.apply_id from crms.tb_con_contract_info cci left join crms.tb_biz_amount_detail_apply ada on cci.amount_detail_id = ada.amount_detail_id
+       		left join crms.tb_biz_amount_apply c on c.amount_id = ada.amount_id where cci.contract_id = #contractId# ) 
+       	</isNotNull>
+       	<isNotNull property="applyId">  
+       		and apply_id = #applyId#
+       	</isNotNull>
+    </select>
+    
+      <!--根据contranctId查询该合同的业务发生方式-->
+	<select id="getBizHappenTypeByContractId" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	 select   ta.biz_happen_type         bizHappenType
+       from   tb_biz_approve                        ta,
+              tb_biz_amount_approve                 tp,
+              tb_biz_amount_detail_approve          td,
+              tb_con_contract_info                  tf   
+       where  ta.approve_id = tp.approve_id
+         and  tp.amount_id = td.amount_id 
+         and  td.amount_detail_id = tf.amount_detail_id
+         and  tf.contract_id = #contractId#       
+	</select>
+    
+     <!-- 根据合同id查询 借新还旧账户信息。 -->
+	<select id="QueryJxhjzh" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.crt.TbConZh">
+	  select  tl.zhbs,tl.zhlx,tl.kzbs,tl.zh,tl.zhkhjg,tl.zhmc,tl.acc_status as accStatus,r.contract_id as contractId
+		  from tb_con_contract_info r, tb_biz_summary s, tb_loan_summary l, tb_con_zh tl
+		 where r.contract_id = l.contract_id
+		   and l.summary_id = s.summary_id
+       and r.contract_id=tl.contract_id
+       and tl.zhlx='1'
+       and r.con_status='03'
+       and l.summary_status_cd='02'
+		   and s.apply_id =#applyId# 
+    </select>
+    
+    <!-- 根据合同id查询 是否变更过第一还款账户信息。 -->
+    <select id="QueryDhbgzh" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+   		 select * from (  select t.NEW_REPAY_ACCOUNT,t.NEW_ZHMC,t.NEW_ZHKHJG,t.NEW_KZBS,t.NEW_ZHBS 
+   		 from tb_con_loan_change  t 
+   		 where  t.LOAN_CHANGE_TYPE='04'  
+   		 and t.change_status='03' 
+   		 and t.contract_id=#contractId#
+	    and t.NEW_REPAY_ACCOUNT is not null 
+	    order by t.CHANGE_DATE desc )where rownum=1
+    </select>
+    <!-- 根据合同id查询 业务性质 -->
+    <select id="getConInfoBizType" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+   		  select distinct e.BIZ_TYPE,e.BIZ_TYPE_FLAG,e.APPLY_MODE_TYPE from tb_con_contract_info b,tb_biz_amount_detail_approve c,Tb_Biz_Amount_approve d,tb_biz_approve e
+			where b.CONTRACT_ID = #contractId# 
+			and b.amount_detail_id = c.amount_detail_id
+			and c.amount_id = d.amount_id
+			and d.approve_id = e.approve_id
+    </select>
+      <!-- 根据合同id查询 是否已经发放过票 -->
+    <select id="getCountByContractId" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+   		 select distinct c.amount_detail_id from  tb_loan_hp_amt a ,tb_loan_summary b,tb_biz_pjxx_apply c 
+		where a.summary_num=b.summary_num
+		and c.apply_detail_id=a.apply_detail_id
+    	and c.amount_detail_id=( 
+    	select distinct d.amount_detail_id from tb_con_contract_info d where d.contract_id=#contractId#
+		)
+    </select>
+    
+    
+</sqlMap>

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zengfang -->
+<sqlMap>
+   <!-- 查询重点客户检查名单 -->
+	<resultMap class="commonj.sdo.DataObject" id="ictCorpMap">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="ATTENTION_LIST_ID" property="attentionListId"/><!--客户名单ID -->
+        <result column="ATTENTION_dt" property="attentionDt"/><!--关注日期 -->
+        <result column="ATTENTION_TYPE_Cd" property="attentionTypeCd"/><!--关注名单类型 -->
+        <result column="ATTENTION_REASON_CD" property="attentionReasonCd"/><!--纳入理由 -->
+        <result column="USER_NUM" property="userNum"/><!--经办人 -->
+       
+        <result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    
+    </resultMap>
+    <resultMap class="commonj.sdo.DataObject" id="csmCorpMap">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    	<result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+    	
+    </resultMap>
+     <resultMap class="commonj.sdo.DataObject" id="childDict">
+        <result column="DICTID" property="dictId"/><!--类型代码 -->
+        <result column="DICTNAME" property="dictName"/><!--类型名称 -->
+    </resultMap>
+    <resultMap class="commonj.sdo.DataObject" id="reCount">
+        <result column="repeayCount" property="repeayCount"/><!--重复重点客户的个数 -->
+    </resultMap>
+     <resultMap class="commonj.sdo.DataObject" id="repeatCount">
+        <result column="repCount" property="repCount"/><!--重复重点客户的个数 -->
+    </resultMap>
+    <select id="queryAttentionCorp" parameterClass="java.util.HashMap" resultMap="ictCorpMap">
+		SELECT
+		    a.ATTENTION_LIST_ID,
+		    a.PARTY_ID,
+		    a.ATTENTION_dt,
+		    a.ATTENTION_TYPE_Cd,
+		    a.ATTENTION_REASON_CD,
+		    a.USER_NUM,
+		    p.PARTY_NUM,
+		    p.PARTY_NAME,
+		    p.PARTY_TYPE_CD,
+		    m.ORG_NUM
+		   
+		FROM
+   			TB_AFT_ATTENTION_LIST a  
+       	inner join   TB_CSM_PARTY p
+        	on   p.party_id = a.party_Id  
+        inner join  TB_CSM_MANAGEMENT_TEAM m 		
+     		on  a.party_id = m.party_id
+     	LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+     	WHERE 1=1
+     	<isNotNull property="orgCode">
+   			and voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		<isNotNull property="partyName">
+   			and p.PARTY_NAME like '%$partyName$%'
+   		</isNotNull>
+   		<isNotNull property="partyNum">
+   			and p.PARTY_NUM = #partyNum#
+   		</isNotNull>
+     	<isNotNull property="attentionTypeCd">  
+	    	and a.ATTENTION_TYPE_Cd=#attentionTypeCd#
+	   </isNotNull>
+	   <isNotNull property="attentionReasonCd">
+	    	and a.ATTENTION_REASON_CD=#attentionReasonCd#
+	   </isNotNull>		
+   	
+    </select>
+    
+    
+    
+    
+    
+    <select id="queryCsmCorp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="csmCorpMap">
+
+		
+		SELECT
+		      distinct
+			 p.PARTY_ID,
+			 p.PARTY_NUM,
+			 p.PARTY_NAME,
+			 p.PARTY_TYPE_CD,
+			 m.ORG_NUM
+			 
+		FROM
+			TB_CSM_PARTY p
+		inner join
+   			TB_CSM_MANAGEMENT_TEAM m  
+   		on  
+   		    p.party_id=m.party_id
+   		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where 1=1
+   		
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		
+   		<isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+		<isNotNull property="ecifPartyNum">
+	    	and p.ECIF_PARTY_NUM like '%$ecifPartyNum$%'
+	   </isNotNull>
+	   <isNotNull property="partyTypeCd">
+	    	and p.PARTY_TYPE_CD = #partyTypeCd#
+	   </isNotNull>
+  
+    </select>
+    
+     <resultMap class="commonj.sdo.DataObject" id="queryImportantCsmCorp">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    	<result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+    	
+    </resultMap>
+    <select id="queryImportantCsmCorp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryImportantCsmCorp">
+
+		
+		SELECT
+		      distinct
+			 p.PARTY_ID,
+			 p.PARTY_NUM,
+			 p.PARTY_NAME,
+			 p.PARTY_TYPE_CD,
+			 m.ORG_NUM
+			 
+		FROM
+			TB_CSM_PARTY p
+		inner join
+   			TB_CSM_MANAGEMENT_TEAM m  
+   		on  
+   		    p.party_id=m.party_id
+   		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where p.PARTY_ID NOT IN(
+   		SELECT a.PARTY_ID FROM TB_AFT_ATTENTION_LIST a
+   		)
+   		
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		
+   		<isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+		<isNotNull property="ecifPartyNum">
+	    	and p.ECIF_PARTY_NUM like '%$ecifPartyNum$%'
+	   </isNotNull>
+	   <isNotNull property="partyTypeCd">
+	    	and p.PARTY_TYPE_CD = #partyTypeCd#
+	   </isNotNull>
+  
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryMonitorCsmCorp">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    	<result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+    	
+    </resultMap>
+    <select id="queryMonitorCsmCorp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryMonitorCsmCorp">
+
+		
+		SELECT
+		      distinct
+			 p.PARTY_ID,
+			 p.PARTY_NUM,
+			 p.PARTY_NAME,
+			 p.PARTY_TYPE_CD,
+			 m.ORG_NUM
+			 
+		FROM
+			TB_CSM_PARTY p
+		inner join
+   			TB_CSM_MANAGEMENT_TEAM m  
+   		on  
+   		    p.party_id=m.party_id
+   		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where p.PARTY_ID NOT IN(
+   		SELECT a.PARTY_ID FROM tb_aft_key_monitoring_list a
+   		)
+   		
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		
+   		<isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+		<isNotNull property="ecifPartyNum">
+	    	and p.ECIF_PARTY_NUM like '%$ecifPartyNum$%'
+	   </isNotNull>
+	   <isNotNull property="partyTypeCd">
+	    	and p.PARTY_TYPE_CD = #partyTypeCd#
+	   </isNotNull>
+  
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="querySampleCsmCorp">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    	<result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+    	
+    </resultMap>
+    <select id="querySampleCsmCorp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="querySampleCsmCorp">
+
+		
+		SELECT
+		      distinct
+			 p.PARTY_ID,
+			 p.PARTY_NUM,
+			 p.PARTY_NAME,
+			 p.PARTY_TYPE_CD,
+			 m.ORG_NUM
+			 
+		FROM
+			TB_CSM_PARTY p
+		inner join
+   			TB_CSM_MANAGEMENT_TEAM m  
+   		on  
+   		    p.party_id=m.party_id
+   		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where p.PARTY_ID NOT IN(
+   		SELECT a.PARTY_ID FROM tb_aft_inspect_corp_list a
+   		)
+   		
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		
+   		<isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+		<isNotNull property="ecifPartyNum">
+	    	and p.ECIF_PARTY_NUM like '%$ecifPartyNum$%'
+	   </isNotNull>
+	   <isNotNull property="partyTypeCd">
+	    	and p.PARTY_TYPE_CD = #partyTypeCd#
+	   </isNotNull>
+  
+    </select>
+    
+    <select id="queryChildDict" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="childDict">
+		SELECT
+			 
+			 e.DICTID,
+			 e.DICTNAME
+		   
+		FROM
+			EOS_DICT_ENTRY e
+		
+   		where 1=1
+   		<isNotNull property="parentId">
+   			and		e.PARENTID=#parentId#
+   		</isNotNull>
+   		<isNotNull property="dictTypeId">
+   			and		e.DICTTYPEID=#dictTypeId#
+   		</isNotNull>
+    </select>
+    
+    
+ 	<select id="queryRepeayCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="reCount">
+		SELECT
+			 
+			ATTENTION_LIST_ID as repeayCount
+		   
+		FROM
+			TB_AFT_ATTENTION_LIST a
+		
+   		where 1=1
+   		<isNotNull property="partyId">
+   			and		a.PARTY_ID=#partyId#
+   		</isNotNull>
+    </select>
+    <select id="queryMonRepeatCsm" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="repeatCount">
+		SELECT
+			 
+			MONITORING_LIST_ID as repCount
+		   
+		FROM
+			TB_AFT_KEY_MONITORING_LIST a
+		
+   		where 1=1
+   		<isNotNull property="partyId">
+   			and		a.PARTY_ID=#partyId#
+   		</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="partyType">
+        <result column="partyType" property="partyType"/>
+    </resultMap>
+    <!--查询客户类型名称-->
+    <select id="queryPartyType" parameterClass="java.util.HashMap" resultMap="partyType">
+    	<![CDATA[
+		select DICTNAME partyType from EOS_DICT_ENTRY where DICTTYPEID='XD_KHCD0219' and DICTID=#partyTypeCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="attentionType">
+        <result column="attentionType" property="attentionType"/>
+    </resultMap>
+    <!--查询纳入类型名称-XD_DHNRLX  XD_DHCD0003-->
+    <select id="queryAttentionType" parameterClass="java.util.HashMap" resultMap="attentionType">
+    	<![CDATA[
+		select DICTNAME attentionType from EOS_DICT_ENTRY where DICTTYPEID=#attentionTypeCdDictTypeId# and DICTID=#attentionTypeCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="attentionReason">
+        <result column="attentionReason" property="attentionReason"/>
+    </resultMap>
+    <!--查询纳入理由名称-XD_DHNRLY  XD_DHCD0002-->
+    <select id="queryAttentionReason" parameterClass="java.util.HashMap" resultMap="attentionReason">
+    	<![CDATA[
+		select DICTNAME attentionReason from EOS_DICT_ENTRY where DICTTYPEID=#attentionReasonCdDictTypeId# and DICTID=#attentionReasonCd#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="orgNum">
+        <result column="ORGNAME" property="orgName"/>
+    </resultMap>
+    <!--查询所属机构名称 -->
+    <select id="queryOrgName" parameterClass="java.util.HashMap" resultMap="orgNum">
+    	<![CDATA[
+		select ORGNAME from OM_ORGANIZATION where ORGCODE= #orgNum#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="userName">
+        <result column="userName" property="userName"/>
+    </resultMap>
+    <!--查询经办人名称-->
+    <select id="queryUserName" parameterClass="java.util.HashMap" resultMap="userName">
+    	<!--原来的：select EMPNAME userName from OM_EMP where USERID=#userNum# -->
+    	<![CDATA[
+		select EMPNAME userName from OM_EMPLOYEE where USERID=#userNum#
+		]]>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="dictTypeId">
+        <result column="DICTID" property="dictId"/>
+        <result column="DICTNAME" property="dictName"/>
+    </resultMap>
+    <!--查询总行监控级别集-->
+    <select id="queryDictTypeId1" parameterClass="java.util.HashMap" resultMap="dictTypeId">
+		select DICTID,DICTNAME from EOS_DICT_ENTRY 
+		where 1=1
+		 and	DICTTYPEID = 'XD_DHCD0007'
+    </select>
+    <!--查询非总行监控级别集-->
+    <select id="queryDictTypeId2" parameterClass="java.util.HashMap" resultMap="dictTypeId">
+		select DICTID,DICTNAME from EOS_DICT_ENTRY 
+		where 1=1
+		 and  DICTTYPEID = 'XD_DHCD0007'
+		 and  DICTID in ('01','02','04','05')
+    </select>
+</sqlMap>

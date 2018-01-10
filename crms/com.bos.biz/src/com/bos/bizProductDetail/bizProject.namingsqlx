@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+	<select id="getProjectInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select tc.*, td.PROFESSIONAL_TYPE_CD,te.CREDIT_RATING_CD from (
+		select ta.RELATE_ID,ta.APPLY_DETAIL_ID,ta.PROJECT_LOAN_TYPE,tb.* 
+		from tb_biz_xmxx_apply ta,tb_csm_project_info tb where ta.PROJECT_ID=tb.PROJECT_ID
+	<isNotNull property="amountDetailId"> and ta.AMOUNT_DETAIL_ID = '$amountDetailId$' </isNotNull>
+		) tc left join tb_irm_profession_judge_record td
+		on tc.PROJECT_ID=td.PROJECT_ID
+		and tc.party_id=td.PARTY_ID
+		left join tb_irm_internal_rating_result te
+		on te.PROJECT_ID=tc.project_id
+		and te.PARTY_ID=tc.party_id
+		and te.RATING_STATE='1'
+		and te.IS_PROFESSIONAL='1'
+	</select>
+	<select id="getThirdPartyLimitList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	<![CDATA[
+		select r.currency_cd,
+		       r.item_begin_date,
+		       r.item_type,
+		       r.item_end_date,
+		       (case
+		         when to_char(r.item_end_date, 'yyyymmdd') <
+		              to_char(BT_GET_WORKTIME(), 'yyyymmdd') then
+		          '1'
+		         else
+		          '0'
+		       end) aviflag,
+		       r.main_org_id,
+		       r.user_num,
+		       r.party_id,
+		       r.limit_id,
+		       r.deal_date,
+		       r.remark,
+		       t.party_num,
+		       t.party_name,
+		       v.credit_amt,
+		       v.used_amt,
+		       v.available_amt,
+		       l.project_type,
+		       l.project_name
+		   from v_crd_third_party_limit v, tb_crd_third_party_limit r
+			  left join v_csm_party t
+			    on r.party_id = t.party_id
+			  left join (select i.project_type, i.project_name, p.limit_id
+	                   from tb_crd_project_rel p, tb_csm_project_info i
+	                  where p.project_id = i.project_id) l
+	        on r.limit_id = l.limit_id
+	     where r.status_cd = '03'
+	       and r.limit_id = v.limit_id
+	       and r.limit_type = '09'
+	       and r.item_type != '1'
+		  ]]>
+		 <isNotNull property="partyName">
+			and t.party_name like '%$partyName$%'
+		 </isNotNull>
+		 <isNotNull property="itemName">
+			and l.project_Name like '%$itemName$%'
+		 </isNotNull>
+		 <isNotNull property="itemType">
+			and r.item_type like '%$itemType$%'
+		 </isNotNull>
+	
+	<![CDATA[
+	union all
+		select r.currency_cd,
+		       r.item_begin_date,
+		       r.item_type,
+		       r.item_end_date,
+		       (case
+		         when to_char(r.item_end_date, 'yyyymmdd') <
+		              to_char(BT_GET_WORKTIME(), 'yyyymmdd') then
+		          '1'
+		         else
+		          '0'
+		       end) aviflag,
+		       r.main_org_id,
+		       r.user_num,
+		       r.party_id,
+		       r.limit_id,
+		       r.deal_date,
+		       r.remark,
+		       t.party_num,
+		       t.party_name,
+		       v.credit_amt,
+		       v.used_amt,
+		       v.available_amt,
+		       l.project_type,
+		       l.project_name
+		   from v_crd_third_party_limit v, tb_crd_third_party_limit r
+			  left join v_csm_party t
+			    on r.party_id = t.party_id
+			  left join (select i.project_type, i.project_name, p.limit_id
+	                   from tb_crd_project_rel p, tb_csm_project_info i
+	                  where p.project_id = i.project_id) l
+	        on r.limit_id = l.limit_id
+	     where r.status_cd = '03'
+	       and r.limit_id = v.limit_id
+	       and r.limit_type = '09'
+	       and r.item_type = '1'
+	       and t.third_cust_type_cd='4'
+		  ]]>
+		 <isNotNull property="partyName">
+			and t.party_name like '%$partyName$%'
+		 </isNotNull>
+		 <isNotNull property="itemName">
+			and l.project_Name like '%$itemName$%'
+		 </isNotNull>
+		 <isNotNull property="itemType">
+			and r.item_type like '%$itemType$%'
+		 </isNotNull>
+		
+		
+	<![CDATA[
+		union all
+		select r.currency_cd,
+		       r.item_begin_date,
+		       r.item_type,
+		       r.item_end_date,
+		       (case
+		         when to_char(r.item_end_date, 'yyyymmdd') <
+		              to_char(BT_GET_WORKTIME(), 'yyyymmdd') then
+		          '1'
+		         else
+		          '0'
+		       end) aviflag,
+		       r.main_org_id,
+		       r.user_num,
+		       r.party_id,
+		       r.limit_id,
+		       r.deal_date,
+		       r.remark,
+		       t.party_num,
+		       t.party_name,
+		       v.credit_amt,
+		       v.used_amt,
+		       v.available_amt,
+		       i.project_type,
+		       i.project_name
+		  from v_crd_third_party_limit v, tb_crd_third_party_limit r
+			  left join v_csm_party t
+			    on r.party_id = t.party_id,
+			  tb_crd_project_rel p, tb_csm_project_info i
+			 where r.status_cd = '03'
+			   and r.limit_id = v.limit_id
+			   and p.project_id = i.project_id
+			   and p.limit_id = r.limit_id
+			   and r.limit_type = '09'
+			   and r.item_type = '1'
+	       	   and t.third_cust_type_cd = '2'
+		  ]]>
+		 <isNotNull property="partyName">
+			and t.party_name like '%$partyName$%'
+		 </isNotNull>
+		 <isNotNull property="itemName">
+			and i.project_Name like '%$itemName$%'
+		 </isNotNull>
+		 <isNotNull property="itemType">
+			and r.item_type like '%$itemType$%'
+		 </isNotNull>
+	</select>
+	<select id="getWtr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select r.party_id , r.entrust_project_name ,a.party_name ,a.cert_type , a.cert_num,r.acc_id,a.examine_state,r.entrust_type
+		  from tb_csm_entrust_account r, v_csm_party a, tb_csm_management_team b
+		 where r.party_id = a.party_id
+		   and a.party_id = b.party_id
+		   and nvl(a.third_cust_type_cd,'1111') ='4'
+		   and a.is_potential_cust = '1'
+		   and b.user_num = '$userNum$'
+		   and b.org_num = '$orgNum$'
+		 <isNotNull property="partyName">
+			and a.party_name like '%$partyName$%'
+		 </isNotNull>
+		 <isNotNull property="certType">
+			and a.cert_type like '%$certType$%'
+		 </isNotNull>
+		 <isNotNull property="certNum">
+			and a.cert_num like '%$certNum$%'
+		 </isNotNull>
+		 <isNotNull property="entrustProjectName">
+			and r.entrust_project_name like '%$entrustProjectName$%'
+		 </isNotNull>
+	</select>
+	<select id="getWtrXx" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select r.cert_type,
+		       r.cert_num,
+		       r.party_name,
+		       r.party_id,
+		       t.entrust_project_name
+		  from v_csm_party r, tb_csm_entrust_account t
+		 where r.party_id = t.party_id
+		   and t.acc_id = '$wtxmId$'
+				
+	</select>
+	 <select id="queryTxztList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.id,
+        t.tiexi_org_num,
+        t.tiexi_zt,
+        t.acc_type,
+        t.tiexi_zh,
+        t.user_num,
+        t.org_num,
+        t.create_time,
+        t.update_time
+  from tb_pub_financial_account t
+ 	   where 1 = 1
+ 		 <isNotNull property="tiexiZt">  and t.tiexi_zt like '%$tiexiZt$%'</isNotNull>
+ 		 <isNotNull property="tiexiZh">  and t.tiexi_zh = #tiexiZh# </isNotNull>
+ 		 <isNotNull property="orgNum">  and t.org_num = #orgNum# </isNotNull>
+	</select>
+</sqlMap>

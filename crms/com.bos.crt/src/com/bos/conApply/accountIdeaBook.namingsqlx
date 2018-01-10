@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <!--获取业务ID -->
+    <select id="getBookApplyID" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select e.* from tb_con_contract_info b,tb_biz_amount_detail_apply c,Tb_Biz_Amount_apply d,tb_biz_apply e
+			where 
+       		b.CONTRACT_ID = #contractId#
+			and b.amount_detail_id = c.amount_detail_id
+			and c.amount_id = d.amount_id
+			and d.apply_id = e.apply_id 
+    </select>
+    <!--查询具体明细 -->
+    <select id="getApproveBookInfo" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select * from (
+			select t.end_date,apply.credit_amount, p.PARTY_NAME,p.CERT_NUM,tb.AMOUNT_DETAIL_ID,ta.APPROVE_ID,t.BIZ_NUM,o.ORGNAME,to_char(t.APPLY_DATE,'yyyy-MM-dd') as APPLY_DATE,p.PRODUCT_NAME,p.product_cd,p.superior_id,t.APPROVAL_NUM,t.BIZ_TYPE,t.APPROVE_CONCLUSION,
+		      to_char(t.VALID_DATE,'yyyy-MM-dd') VALID_DATE,tb.DETAIL_AMT,tb.CREDIT_TERM,tb.CYCLE_UNIT,tb.EXCHANGE_RATE,ta.GUARANTY_TYPE,tb.LOAN_USE,tb.REPAYMENT_TYPE,rate.YEAR_RATE,
+		      decode(t.biz_type,'01',30,'04',30,90) SX_DAYS
+		      from tb_biz_approve t, tb_biz_amount_approve ta,tb_biz_amount_detail_approve tb,OM_ORGANIZATION o,TB_SYS_PRODUCT p,
+		                 TB_BIZ_AMOUNT_LOANRATE_APPROVE rate,V_CSM_PARTY p,tb_biz_amount_apply apply
+		      where t.APPROVE_ID=ta.APPROVE_ID
+		      and p.PARTY_ID=t.PARTY_ID
+		      and apply.amount_id=tb.amount_id
+		      and  ta.AMOUNT_ID=tb.AMOUNT_ID
+		            and rate.AMOUNT_DETAIL_ID=tb.AMOUNT_DETAIL_ID
+		      and p.PRODUCT_ID=tb.PRODUCT_TYPE
+		      and t.ORG_NUM=o.ORGCODE
+			    		and t.APPLY_ID=#applyId#)a
+						left join (select bzjblbdy,amount_detail_id from tb_biz_bh_apply
+						union
+						select bzjblbdy,amount_detail_id  from tb_biz_gnxyz_apply
+						union
+						select bzjblbdy,amount_detail_id  from tb_biz_jkbh_apply
+						union
+						select bzjblbdy,amount_detail_id  from tb_biz_jkxyz_apply
+						union
+						select bzjblbdy,amount_detail_id  from tb_biz_klyhcdhp_apply) b
+						on a.AMOUNT_DETAIL_ID=b.AMOUNT_DETAIL_ID
+    </select>
+    
+    <!--获取历史审批意见 -->
+    <select id="getBookWorkInfo" parameterClass="java.util.HashMap" resultClass="com.bos.bps.dataset.bps.TbWfmWorkiteminstance">
+		
+		SELECT w.WORK_INSTANCE_ID as workInstanceId,
+			       w.ACTIVITY_NAME    as activityName,
+			       w.USER_NAME        as userName,
+			       w.USER_NUM         as userNum,
+			       w.ORG_NAME         as orgName,
+			       w.ORG_NUM          as orgNum,
+			       w.POST_NAME        as postName,
+			       w.POST_CD          as postCd,
+			       w.RECEIVE_TIME     as receiveTime,
+			       w.FINISH_TIME      as finishTime,
+			       pp.userid	      as nextUsersNum,
+			       pp.operatorname    as nextUsersName,
+			       w.NEXT_ORG_NAME    as nextOrgName,
+			       w.NEXT_ORG_NUM     as nextOrgNum,
+			       w.NEXT_POST_NAME   as nextPostName,
+			       w.NEXT_POST_NUM    as nextPostNum,
+			       w.OPINION          as opinion,
+			       w.CONCLUSION       as conclusion,
+			       w.WORKITEM_NUM     as workitemNum,
+			       w.IS_SIGN          as isSign,
+			       w.TAG              as tag,
+			       w.STATUS           as status,
+			       w.SUBMIT_TYPE      as submitType,
+			       w.ACTIVITY_ID      as activityId,
+			       w.PROCESS_ID       as processId,
+			       w.PERFORMTIME      as performtime
+			  FROM TB_WFM_WORKITEMINSTANCE w left join 
+			       (select listagg(ao.operatorname, ',') within group(order by pt.id, ao.userid) as operatorname,
+			               listagg(ao.userid, ',') within group(order by pt.id, ao.userid) as userid,
+			               pt.id as wid
+			          from tb_wfm_participant pt, ac_operator ao
+			         where pt.user_num = ao.userid
+			         group by pt.id) pp
+			    on w.id = pp.wid
+			  where  w.PROCESS_ID = #processInstId#
+			   and w.STATUS = 'finish'
+			 ORDER BY w.PERFORMTIME DESC
+    </select>
+     <!--获取流程编号 -->
+    <select id="getBookWorkprocessid" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select distinct process_id from tb_wfm_processinstance 
+			where product_id=#applyId#
+				and process_status = 'finish'
+		      	and processdefname like 'com.bos.bps.biz.%'
+    </select>
+     <!--获取展期变更流程编号 -->
+    <select id="getBookProductProcessid" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select distinct process_id from tb_wfm_processinstance 
+			where product_id=#changeId#
+				and process_status = 'finish'
+		      	and processdefname like 'com.bos.bps.aftb.change_after_loan_zqzh_mccb%'
+    </select>
+     <!--获取展期变更业务性质 -->
+    <select id="getBookProductDepartment" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select f.PRODUCT_DEPARTMENT,a.LOAN_CHANGE_TYPE from tb_con_loan_change a,tb_con_contract_info b,tb_biz_amount_detail_approve c,
+              							 tb_biz_amount_approve d,tb_biz_approve e,tb_sys_product f
+		         where a.change_id=#changeId#
+		           and a.contract_id = b.contract_id
+		           and b.amount_detail_id = c.amount_detail_id
+		           and c.amount_id = d.amount_id
+		           and d.approve_id = e.approve_id
+		           and e.product_type = f.product_cd
+    </select>
+    <!--抵质押明细： -->
+     <select id="getSXMortgageBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select apply_id,party_name,coll_type,assess_value,mortgage_value,surety_no,surety_id,en.dictname as sort_type,PARTY_NUM,APPROVAL_NUM from (
+    	select r.apply_id,p.party_name,decode(m.coll_type,'01','抵押','02','质押') coll_type,m.sort_type
+		      ,m.assess_value,m.mortgage_value,m.surety_no,r.surety_id,p.Party_Num,a.APPROVAL_NUM
+          from tb_biz_grt_rel  r,tb_grt_mortgage_basic m,tb_csm_party p , tb_biz_approve a
+		      where r.surety_id=m.surety_id
+		      and p.party_id=m.party_id
+          and a.apply_id = r.apply_id
+		      and r.surety_type in('01','02')
+		      and r.apply_id=#applyId#
+		                union
+ select gma.apply_id,cpp.party_name,decode(gmb.coll_type,'01','抵押','02','质押') coll_type,gmb.sort_type
+          ,gmb.assess_value,gmb.mortgage_value,gmb.surety_no,gmb.surety_id,cpp.PARTY_NUM,a1.APPROVAL_NUM
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_mortgage_basic gmb , tb_csm_party cpp , tb_biz_approve a1
+           where gma.subcontract_id = css.subcontract_id
+            and sgr.subcontract_id = css.subcontract_id 
+            and gmb.surety_id = sgr.surety_id 
+            and gmb.party_id=cpp.party_id
+            and a1.apply_id = gma.apply_id    
+            and gma.re_type in ('01','02')
+            and gma.apply_id=#applyId#
+         ) al left join eos_dict_entry en on al.sort_type = en.dictid 
+        where en.dicttypeid = 'XD_YPZL01'
+    </select>
+    <!--抵质押明细2： -->
+     <select id="getSXMortgageBasic2" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+ 		select gma.apply_id,cpp.party_name,decode(gmb.coll_type,'01','抵押','02','质押') coll_type,gmb.sort_type
+          ,gmb.assess_value,gmb.mortgage_value,gmb.surety_no,gmb.surety_id,cpp.PARTY_NUM,a1.APPROVAL_NUM
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_mortgage_basic gmb , tb_csm_party cpp , tb_biz_approve a1
+           where gma.subcontract_id = css.subcontract_id
+            and sgr.subcontract_id = css.subcontract_id 
+            and gmb.surety_id = sgr.surety_id 
+            and gmb.party_id=cpp.party_id
+            and a1.apply_id = gma.apply_id    
+            and gma.re_type in ('01','02')
+            and gma.apply_id=#applyId#
+    </select>
+    <!--保证人明细： -->
+    <select id="getSXGuaranteeBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select p.party_name,m.surety_amt,a.APPROVAL_NUM
+				from tb_biz_grt_rel  r,tb_grt_guarantee_basic m,tb_csm_party p,tb_biz_approve a
+				where r.surety_id=m.surety_id
+				and p.party_id=m.party_id
+				and r.surety_type ='04'
+				and a.apply_id = r.apply_id
+				and r.apply_id=#applyId#
+				 union 
+        select cpp.party_name,gmb.surety_amt,a1.APPROVAL_NUM
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_guarantee_basic gmb , tb_csm_party cpp ,tb_biz_approve a1
+ where gma.subcontract_id = css.subcontract_id and sgr.subcontract_id = css.subcontract_id and gmb.surety_id = sgr.surety_id 
+  and   gmb.party_id=cpp.party_id    and gma.re_type = '04' and a1.apply_id = gma.apply_id
+       and gma.apply_id=#applyId#
+    </select>
+    <!--保证人明细2： -->
+    <select id="getSXGuaranteeBasic2" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+        select cpp.party_name,gmb.surety_amt,a1.APPROVAL_NUM
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_guarantee_basic gmb , tb_csm_party cpp ,tb_biz_approve a1
+ 			where gma.subcontract_id = css.subcontract_id and sgr.subcontract_id = css.subcontract_id and gmb.surety_id = sgr.surety_id 
+  				and gmb.party_id=cpp.party_id    and gma.re_type = '04' and a1.apply_id = gma.apply_id
+       			and gma.apply_id=#applyId#
+    </select>
+    <!--保证金明细： -->
+    <select id="getCashDepositList" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+    	select  a.APPROVAL_NUM,rel.RELATION_ID, margin.SURETY_KEY_ID,margin.surety_id,margin.MARGIN_ACCOUNT,margin.MARGIN_SORT,margin.CURRENCY_CD,margin.OPEN_BANK,margin.ACCT_NAME,margin.MAGIN_SCALE,margin.ACC_BALANCE,to_char(margin.END_DATE,'yyyy-mm-dd') as end_date ,margin.IS_JIXI,margin.MARGIN_RATE,margin.append_amt    		
+		    from tb_grt_margin margin,TB_GRT_MORTGAGE_BASIC basic,TB_BIZ_GRT_REL rel,tb_biz_approve a
+		    where margin.surety_id=basic.surety_id
+		    and basic.surety_id=rel.surety_id
+		    and rel.apply_id=#applyId#
+		    and a.apply_id = rel.apply_id
+    </select>
+</sqlMap>

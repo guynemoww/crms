@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zhangqi -->
+<sqlMap>
+
+  	
+    <select id="getFinanceIndexScore" parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.FinanceIndexScore">
+	
+select  t3.PROJECT_CD,t4.PROJECT_NAME,t3.PROJECT_VALUE,nvl(t4.CUSTOMER_TYPE_CD ,nvl(t1.CUSTOMER_TYPE_CD ,'002')) as  CUSTOMER_TYPE_CD from    TB_ACC_CUSTOMER_FINANCE t1   
+left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+,TB_IRM_INTERNAL_RATING_APPLY t2
+where t2.IRA_APPLY_ID= #iraApplyId#
+and  t1.FINANCE_DEADLINE =(select max( FINANCE_DEADLINE) from TB_ACC_CUSTOMER_FINANCE where PARTY_ID=t2.PARTY_ID and FINANCE_STATUS_CD='02'   and FINANCE_TYPE_CD='1')
+and t1.FINANCE_STATUS_CD='02' and t1.PARTY_ID=t2.PARTY_ID and t1.FINANCE_TYPE_CD='1'
+
+	</select>
+	   <select id="getjjye" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+	   
+	   <![CDATA[
+	   select nvl(sum(t1.JJYE),0) as jjye from TB_LOAN_SUMMARY t1 ,TB_IRM_INTERNAL_RATING_APPLY t2 where t1.PARTY_ID=t2.PARTY_ID
+and t1.SUMMARY_STATUS_CD='02'and t1.BEGIN_DATE<=to_date(to_char(t2.APPLY_DATE,'yyyy')||'1231','yyyyMMdd') and t2.IRA_APPLY_ID=#iraApplyId#
+ 
+]]>
+
+			</select>
+			
+			   <select id="getjlr" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+	   select t1.FINANCE_DEADLINE, t3.PROJECT_CD,t4.PROJECT_NAME,t3.PROJECT_VALUE from    TB_ACC_CUSTOMER_FINANCE t1   
+	left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+	left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+	,TB_IRM_INTERNAL_RATING_APPLY t2
+	where 
+	t1.FINANCE_STATUS_CD='02' and t1.FINANCE_TYPE_CD='1' and 
+	t1.PARTY_ID=t2.PARTY_ID   and t3.PROJECT_CD='00202017' and t2.IRA_APPLY_ID= #iraApplyId#
+	order by t1.FINANCE_DEADLINE desc
+	 
+
+			</select>
+					   <select id="getyysr" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+	    select   t3.PROJECT_CD,t4.PROJECT_NAME,t3.PROJECT_VALUE,t3.PRE_TOTAL_VALUE from    TB_ACC_CUSTOMER_FINANCE t1   
+	left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+	left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+	,TB_IRM_INTERNAL_RATING_APPLY t2
+	where 
+     
+	   t1.FINANCE_STATUS_CD='02' and t1.FINANCE_TYPE_CD='1' and 
+	t1.PARTY_ID=t2.PARTY_ID  and t3.PROJECT_CD='00202001' and t2.IRA_APPLY_ID= #iraApplyId#
+	order by t1.FINANCE_DEADLINE desc
+
+			</select>
+			
+			
+			
+			 
+	
+ <select id="getyysr1" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+	    select   t3.PROJECT_CD,t4.PROJECT_NAME,t3.PROJECT_VALUE,t3.PRE_TOTAL_VALUE from    TB_ACC_CUSTOMER_FINANCE t1   
+	left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+	left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+	,TB_IRM_INTERNAL_RATING_APPLY t2
+	where 
+	   t1.FINANCE_STATUS_CD='02' and t1.FINANCE_TYPE_CD='1' and 
+	t1.PARTY_ID=t2.PARTY_ID  and t3.PROJECT_CD='00201067' and t2.IRA_APPLY_ID= #iraApplyId#
+	order by t1.FINANCE_DEADLINE desc
+
+			</select>
+			
+			
+	  
+	   <select id="getFinanceIndex" parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.IndexEntity">
+		    select 
+		   c.index_id,
+		    c.index_code,
+		    c.index_name,
+		    c.index_type,
+ 		     c.property_type_cd,
+		    b.index_value_data_type,
+            d.INDEX_SCORE,
+            d.INDEX_CALC_LOGIC,
+             e.CUSTOMER_TYPE_CD,
+            e.REMARKS as R_EMARKS
+		    from tb_irm_model_index c left join (select   a.ira_apply_id,b.index_cd,b.index_value_data_type from tb_irm_financial_info a,tb_irm_rating_index_data b
+		    where  a.FINANCIAL_INFO_ID = b.FINANCIAL_INFO_ID and a.ira_apply_id=#iraApplyId#)b on c.index_code = b.index_cd
+            left join tb_irm_index_score d on d.INDEX_ID=c.INDEX_ID
+            left join TB_IRM_RATING_FIN_INDEX e on e.INDEX_CD=c.index_code
+		    where   c.model_id=#modelId#   and c.index_type ='01' and e.CUSTOMER_TYPE_CD=#CUSTOMER_TYPE_CD#
+	
+	</select>
+	
+	<select id="getNonFinanceIndexScore" parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.NonFinanceIndexScore">
+		 select 
+		distinct c.index_id,
+		 c.index_code,
+		 c.index_name,
+		 c.index_type,
+		 c.property_type_cd,
+		 a.index_num,
+		 a.index_score,
+		 b.non_financial_value,
+		 c.index_weight  
+		 from tb_irm_index_score a ,tb_irm_non_financial_info b,tb_irm_model_index c 
+		 where  b.non_financial_index_id = a.index_id and b.non_financial_value = a.index_num and a.index_id = c.index_id
+	
+	   <isNotNull property="iraApplyId">
+	    	and b.ira_apply_id= #iraApplyId#
+	   </isNotNull>
+	
+	</select>
+	
+	<select id="getModelScale" parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.TbIrmModelScale">
+		 select  credit_rating_cd,credit_rating_display,min_value,max_value from tb_irm_model_scale where model_id= #modelId#
+	</select>
+	
+	<select id="getModelvalue" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+		 select  credit_rating_cd,credit_rating_display,min_value,max_value from tb_irm_model_scale where model_id= #modelId# and credit_rating_cd=#creditRatingCd#
+	</select>
+	
+	
+	
+		<select id="getindexScale" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+select t1.INDEX_ID,t1.INDEX_SCORE,t2.INDEX_CODE,t2.MODEL_ID,t2.INDEX_NAME,t3.IRA_APPLY_ID from tb_irm_index_calc t1,TB_IRM_MODEL_INDEX t2 ,TB_IRM_RATING_ENGINE_CALC t3,
+(select max(EXECUTION_DATE) as EXECUTION_DATE  from TB_IRM_RATING_ENGINE_CALC ) t4
+ where t1.INDEX_ID=t2.INDEX_ID and t1.REC_ID=t3.REC_ID  and t3.EXECUTION_DATE =t4.EXECUTION_DATE
+and t2.MODEL_ID=#modelId# and t3.IRA_APPLY_ID=#iraApplyId# 
+	</select>
+	
+		<select id="getinitialRatingCd" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+ 		select INITIAL_RATING_CD from TB_IRM_RATING_ENGINE_CALC where EXECUTION_DATE in (
+			select max(EXECUTION_DATE) from TB_IRM_RATING_ENGINE_CALC where IRA_APPLY_ID=#applyId#)
+	</select>
+	
+	<select id="tbIrmOverthrowRecordInsertValidate" parameterClass="java.lang.String" resultClass="java.lang.Long">
+ 		SELECT IRA_APPLY_ID recordNum FROM TB_IRM_OVERTHROW_RECORD WHERE IRA_APPLY_ID = #iraApplyId#
+	</select>
+	
+	
+	<select id="getFinanceIndexWeight" parameterClass="java.util.Map" resultClass="java.lang.String">
+		select index_weight from tb_irm_model_index where index_code='01' and modelId=#modelId#
+	</select>
+	<select id="getNonFinanceIndexWeight" parameterClass="java.util.Map" resultClass="java.lang.String">
+		select index_weight from tb_irm_model_index where index_code='02' and modelId=#modelId#
+	</select>
+	
+	<select id="getTbIrmAdjustOptions" parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.GetTbIrmAdjustOptions">
+		select a.ira_apply_id,a.adjust_value,a.is_adjust,b.adjust_Type_Cd,b.min_value,b.max_value from tb_irm_adjust_options a,tb_irm_adjust_option b where a.adj_opt_id=b.ao_id and ira_apply_id=#iraApplyId# order by b.adjust_order
+	</select>
+	
+	<select id="getLoanMaxAndMinLevel"  resultClass="com.bos.dataset.irm.maxMinLevel">
+		select min(order_no) as min,max(order_no) as max from tb_irm_scale_def where IS_PROFESSIONAL_LOAN='1'
+	</select>
+	
+	<select id="getNonLoanMaxAndMinLevel"  resultClass="com.bos.dataset.irm.maxMinLevel">
+		select min(order_no) as min,max(order_no) as max from tb_irm_scale_def where IS_PROFESSIONAL_LOAN='2'
+	</select>
+	
+	<select id="getMaxAdjustValue"  parameterClass="java.util.Map" resultClass="com.bos.dataset.irm.TbIrmAdjustOptions">
+	    select max(a.adjust_value) as adjustValue  from tb_irm_adjust_options a,tb_irm_adjust_option b where a.adj_opt_id=b.ao_id and adjust_type_cd ='04' and is_adjust in(01,02) and ira_apply_id =#iraApplyId#
+    	union all
+    	select max(a.adjust_value) as adjustValue from tb_irm_adjust_options a,tb_irm_adjust_option b where a.adj_opt_id=b.ao_id and adjust_type_cd ='04' and is_adjust in(03,04) and ira_apply_id =#iraApplyId#
+    	union all
+    	select max(a.adjust_value) as adjustValue from tb_irm_adjust_options a,tb_irm_adjust_option b where a.adj_opt_id=b.ao_id and adjust_type_cd !='04' and is_adjust in(01,02) and ira_apply_id =#iraApplyId#
+    	union all
+    	select max(a.adjust_value)  as adjustValue from tb_irm_adjust_options a,tb_irm_adjust_option b where a.adj_opt_id=b.ao_id and adjust_type_cd !='04' and is_adjust in(03,04) and ira_apply_id =#iraApplyId#
+	</select>
+	
+	
+	    <select id="getFinancedate" parameterClass="java.lang.String" resultClass="java.lang.String">
+	
+select  to_char(t1.FINANCE_DEADLINE,'yyyy-MM-dd') from    TB_ACC_CUSTOMER_FINANCE t1   
+left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+,TB_IRM_INTERNAL_RATING_APPLY t2
+where t2.IRA_APPLY_ID= #iraApplyId#
+and  t1.FINANCE_DEADLINE =(select max( FINANCE_DEADLINE) from TB_ACC_CUSTOMER_FINANCE where PARTY_ID=t2.PARTY_ID and FINANCE_STATUS_CD='02'   and FINANCE_TYPE_CD='1')
+and t1.FINANCE_STATUS_CD='02' and t1.PARTY_ID=t2.PARTY_ID and t1.FINANCE_TYPE_CD='1'
+
+	</select>
+	
+	    <select id="getRatingCd" parameterClass="java.util.Map" resultClass="java.lang.String">
+	
+select GENERAL_ADJUST_RATING_CD from TB_IRM_INTERNAL_RATING_APPLY where RATING_STATE='01' and IRA_APPLY_ID=#iraApplyId#
+
+
+	</select>
+	
+	 <select id="getRatingCdDJ" parameterClass="java.util.Map" resultClass="java.lang.String">
+	
+select A.FRZ_REASON from TB_BIZ_JD_DJ_FLOW A ,TB_BIZ_AMOUNT_APPROVE B
+ where B.AMOUNT_ID = A.AMOUNT_ID and B.AMOUNT_ID=#amountId#
+
+
+	</select>
+	
+	
+	    <select id="getRatingCd1" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+	    
+	     <![CDATA[
+ 
+	select 
+	(case when GENERAL_ADJUST_RATING_CD ='AAA' then '3'
+	when    GENERAL_ADJUST_RATING_CD ='AA'  or  GENERAL_ADJUST_RATING_CD ='AA+'  then '2'
+	else '1' end) as rating_cd
+	from TB_IRM_INTERNAL_RATING_APPLY where   IRA_APPLY_ID=#iraApplyId#
+ 
+]]>
+	
+
+	</select>
+	
+		    <select id="getRatingCd2" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+	    
+	     <![CDATA[
+	     
+	     select (case when NATURAL_PERSON_TYPE_CD='2' or NATURAL_PERSON_TYPE_CD='3' then '4' else null end ) as rating_cd
+
+from TB_CSM_NATURAL_PERSON where PARTY_ID in (
+
+select PARTY_ID from TB_IRM_INTERNAL_RATING_APPLY  where   IRA_APPLY_ID=#iraApplyId# ) 
+ 
+ 
+]]>
+	
+
+	</select>
+	
+	
+			   <select id="getdbje" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+	  select t1.FINANCE_DEADLINE, t3.PROJECT_CD,t3.PROJECT_VALUE from    TB_ACC_CUSTOMER_FINANCE t1   
+	left join tb_acc_finance_statement_data t3 on t3.FINANCE_ID=t1.FINANCE_ID
+	left join tb_acc_finance_statement_code t4 on t4.PROJECT_CD=t3.PROJECT_CD 
+	,TB_IRM_INTERNAL_RATING_APPLY t2
+	where 
+	t1.FINANCE_STATUS_CD='02' and
+    t1.FINANCE_TYPE_CD='1' and 
+	t1.PARTY_ID=t2.PARTY_ID   and t3.PROJECT_CD='00204050'  and t2.IRA_APPLY_ID= #iraApplyId#
+	order by t1.FINANCE_DEADLINE desc
+	 
+
+			</select>
+			
+				   <select id="lastRatingCd" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject">
+select t1.GENERAL_ADJUST_RATING_CD,t2.EFFECTIVE_START_DT,t2.EFFECTIVE_END_DT from TB_IRM_INTERNAL_RATING_APPLY  t1,TB_IRM_INTERNAL_RATING_RESULT t2
+where t1.IRA_APPLY_ID=t2.IRA_APPLY_ID and 
+ t1.PARTY_ID=#partyId# and t2.RATING_STATE='03' and t1.RATING_TYPE=#pjlx#
+	 
+
+			</select>
+			
+	 <select id="getdbjreslt" parameterClass="java.lang.String" resultClass="commonj.sdo.DataObject">
+		select 
+		a.ira_apply_id,
+		b.party_name,
+	       c.rating_dt,
+	       a.rating_type,
+	       c.credit_rating_cd,
+	       c.effective_start_dt,
+	       c.effective_end_dt,
+	       c.rating_state,
+	       c.user_num,
+	       c.org_num
+	  from tb_irm_internal_rating_apply  a,
+	       tb_irm_internal_rating_result c,
+	       tb_csm_party                  b
+	 where a.party_id = b.party_id
+   	and a.ira_apply_id = c.ira_apply_id
+      	and a.party_id = #partyId#
+   	and c.rating_state IN( '03','04')
+	</select>
+
+	<select id="getModeScaleToCombobx" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT CREDIT_RATING_CD id,CREDIT_RATING_CD text FROM TB_IRM_MODEL_SCALE 
+WHERE MODEL_ID=(SELECT * FROM (
+	SELECT MODEL_ID FROM TB_IRM_RATING_MODEL WHERE MODEL_TYPE_CD=#modelTypeCd# AND RATING_MODEL_VER=#ratingModelVer# AND MODEL_STATE=#modelState# ORDER BY START_DATE
+	) WHERE rownum=1) 
+ORDER BY MIN_VALUE DESC
+	</select>
+</sqlMap>

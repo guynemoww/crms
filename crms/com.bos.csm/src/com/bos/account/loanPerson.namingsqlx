@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cc -->
+<sqlMap>
+    <resultMap id="hkjh" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="phoneNumber" column="phone_number"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="amt" column="AMT"/>
+			<result property="bj" column="BJ"/>
+			<result property="lx" column="LX"/>
+			<result property="qc" column="QC"/>
+			<result property="hkzh" column="HKZH"/>
+			<result property="dkzh" column="DKZH"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+	</resultMap>
+    <select id="hkjh" parameterClass="java.util.HashMap" resultMap="hkjh">
+		select 	
+		        L.ORG_NUM,
+		        L.USER_NUM,
+		        V.PARTY_ID,
+		        V.PARTY_NUM,
+		        V.PARTY_NAME,
+		        V.CERT_NUM,
+		        V.CERT_TYPE,
+			  	(SELECT PHONE_NUMBER FROM TB_CSM_NATURAL_PERSON WHERE PARTY_ID=V.PARTY_ID) PHONE_NUMBER,
+				C.CONTRACT_NUM,
+		        L.SUMMARY_NUM,
+		        TO_DATE(T.END_DATE,'yyyymmdd') AS END_DATE, 
+		        T.RCV_TOTAL AMT,
+		        T.RCV_PRN BJ,
+		        T.RCV_ITR LX,
+		        T.CURR_PERI QC,
+		        (SELECT DISTINCT ZH FROM TB_LOAN_ZH WHERE ZHLX='1' AND LOAN_ID=L.LOAN_ID) HKZH,
+		        (SELECT DISTINCT ZH FROM TB_LOAN_ZH WHERE ZHLX='0' AND LOAN_ID=L.LOAN_ID) DKZH,
+		        S.FLJG 
+				FROM TB_LOAN_INFO L,TB_LOAN_SUMMARY S,TB_CON_CONTRACT_INFO C,TB_SUP_PRIN_PLAN T,V_CSM_PARTY V 
+		WHERE   L.LOAN_ID=S.LOAN_ID 
+				AND L.CONTRACT_ID=C.CONTRACT_ID 
+		        AND S.SUMMARY_NUM=T.DUE_NUM
+		        AND L.PARTY_ID=V.PARTY_ID
+		        AND S.SUMMARY_STATUS_CD IN ('02','03')
+		    	AND T.END_DATE &gt; 0 
+		    	<isEqual property="datafinal"  compareValue="searchByEndDate">
+		    	AND SUBSTR(T.END_DATE,0,6) &gt;= #datafinal1#   
+		    	AND SUBSTR(T.END_DATE,0,6) &lt;= #datafinal2# 
+		    	</isEqual>
+		  	  	<isNotNull property="summaryNum"> AND S.SUMMARY_NUM = #summaryNum# </isNotNull>
+		  	  	<isNotNull property="contractNum"> AND C.CONTRACT_NUM = #contractNum# </isNotNull>
+	 			<isNotNull property="partyName"> AND V.PARTY_NAME = #partyName# </isNotNull>
+		 		<isNotNull property="certNum"> AND V.CERT_NUM = #certNum# </isNotNull>
+		    	<isNotNull property="userNum">  AND L.USER_NUM = #userNum# </isNotNull>
+		    	<isNotNull property="orgcode">  AND L.ORG_NUM = #orgcode# </isNotNull>
+		    	<isNotNull property="certType"> AND V.CERT_TYPE = #certType# </isNotNull>
+		    	<isNotNull property="beginDate1"> AND to_date(T.END_DATE,'yyyymmdd') &gt;= to_date(#beginDate1# ,'yyyy-mm-dd hh24:mi:ss') </isNotNull>
+			    <isNotNull property="beginDate2"> AND to_date(T.END_DATE,'yyyymmdd') &lt;= to_date(#beginDate2# ,'yyyy-mm-dd hh24:mi:ss') </isNotNull>
+			    
+			    ORDER BY T.END_DATE
+	 </select>
+	 
+	 
+	 <select id="hkjh1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT SUBSTR(TO_CHAR(BT_GET_WORKDATE, 'YYYYMMDD'),0,6) AS DATE1,
+               SUBSTR(TO_CHAR(ADD_MONTHS(BT_GET_WORKDATE,12), 'YYYYMMDD'),0,6) AS DATE2 
+        FROM DUAL 
+	 </select>
+	 
+	 <select id="hkls1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		SELECT SUBSTR(TO_CHAR(ADD_MONTHS(BT_GET_WORKDATE,-6), 'YYYYMMDD'),0,6) AS DATE1,
+			   SUBSTR(TO_CHAR(BT_GET_WORKDATE, 'YYYYMMDD'),0,6) AS DATE2 
+        FROM DUAL 
+	 </select>
+	 
+	 <resultMap id="hkls" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="rcvDate" column="rcv_date"/>
+			<result property="hkje" column="hkje"/>
+			<result property="hbje" column="hbje"/>
+			<result property="hxje" column="hxje"/>
+			<result property="fljg" column="FLJG"/>
+			<result property="sum1" column="sum1"/>
+			<result property="sum2" column="sum2"/>
+			<result property="sum3" column="sum3"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+	</resultMap>
+    <select id="hkls" parameterClass="java.util.HashMap" resultMap="hkls">
+		SELECT  	
+		        /*+index(SN_SUP_REPAYMENT_INFO IDX_REPAYMENT_INFO_DATE)*/ 
+		        L.ORG_NUM,
+        		L.USER_NUM,
+        		V.PARTY_NUM,
+        		V.PARTY_ID,
+        		V.PARTY_NAME,
+        		V.CERT_NUM,
+          		V.CERT_TYPE,
+        		S.SUMMARY_NUM,
+        		C.CONTRACT_NUM,
+        		TO_DATE(R.RCV_DATE,'yyyymmdd') AS RCV_DATE,
+        		(NVL(PAD_UP_PRN,0)+NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0)+NVL(PAD_UP_PNS_ITR_OUT,0)) HKJE,
+        		NVL(PAD_UP_PRN,0) HBJE,
+        		(NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0)+NVL(PAD_UP_PNS_ITR_OUT,0)) HXJE,
+        		S.FLJG,
+        		NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0) AS SUM1,
+            	NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_OUT,0) AS SUM2,
+            	NVL(PAD_UP_PRN,0)+NVL(PAD_UP_NOR_ITR_IN,0)+NVL(PAD_UP_DFT_ITR_IN,0)+NVL(PAD_UP_NOR_ITR_OUT,0)+NVL(PAD_UP_DFT_ITR_OUT,0)+NVL(PAD_UP_PNS_ITR_IN,0)+NVL(PAD_UP_PNS_ITR_OUT,0) AS SUM3 
+        		FROM TB_LOAN_INFO L,TB_LOAN_SUMMARY S,TB_CON_CONTRACT_INFO C,SN_SUP_REPAYMENT_INFO R,V_CSM_PARTY V
+    	WHERE   L.SUMMARY_NUM=S.SUMMARY_NUM 
+        	AND L.CONTRACT_ID=C.CONTRACT_ID
+        	AND S.SUMMARY_NUM=R.DUE_NUM 
+        	AND L.PARTY_ID=V.PARTY_ID 
+        	AND V.PARTY_TYPE_CD IN ('01','02') 
+			AND L.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    			LIKE '%.'||(SELECT ORGID FROM OM_ORGANIZATION WHERE ORGCODE = #orgcode#)||'.%')
+		    AND R.RCV_DATE &gt; 0 
+
+	  	 	<isNotNull property="datafinal">
+	  	 	AND SUBSTR(R.RCV_DATE,0,6) &gt;= #datafinal1# 
+	    	AND SUBSTR(R.RCV_DATE,0,6) &lt;= #datafinal2# 
+	  	 	<!--
+	    	AND SUBSTR(R.RCV_DATE,0,6) &gt;= substr(to_char(add_months(bt_get_workdate,-6), 'yyyymmdd'),0,6)  
+	    	AND SUBSTR(R.RCV_DATE,0,6) &lt;= substr(to_char(bt_get_workdate, 'yyyymmdd'),0,6) 
+	    	-->
+	    	</isNotNull>
+	  	 	
+	    	
+	    	<isNotNull property="partyNum">  AND V.PARTY_NUM = #partyNum# </isNotNull>
+	  	  	<isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	  	  	
+	  	  	<isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+	 		<isNotNull property="certNum">  AND V.CERT_NUM = #certNum# </isNotNull>
+	 
+	    	<isNotNull property="contractNum"> AND C.CONTRACT_NUM = #contractNum# </isNotNull>
+ 			<isNotNull property="summaryNum">  AND S.SUMMARY_NUM = #summaryNum# </isNotNull>
+	    	<isNotNull property="userNum">  AND L.USER_NUM = #userNum# </isNotNull>
+	    	<isNotNull property="beginDate1">  AND to_date(R.RCV_DATE,'yyyymmdd') &gt;= to_date(#beginDate1# ,'yyyy-mm-dd hh24:mi:ss') </isNotNull>
+		    <isNotNull property="beginDate2"> AND to_date(R.RCV_DATE,'yyyymmdd') &lt;= to_date(#beginDate2# ,'yyyy-mm-dd hh24:mi:ss') </isNotNull>
+			
+			ORDER BY R.RCV_DATE DESC 
+				
+	 </select>
+
+	 <resultMap id="chudai" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="shbj" column="SHBJ"/>
+			<result property="shlx" column="SHLX"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="yearRate" column="YEAR_RATE"/>
+			<result property="bzr" column="BZR"/>
+			<result property="dy" column="DY"/>
+			<result property="zy" column="ZY"/>
+			<result property="hyml" column="HYML"/>
+			<result property="fljg" column="FLJG"/>
+	</resultMap>
+    <select id="chudai" parameterClass="java.util.HashMap" resultMap="chudai">
+		select 	i.org_num,
+				i.user_num,
+				c.product_type,
+				v.party_id,
+				v.party_num,
+				v.party_name,
+				c.contract_num,
+				s.summary_num,
+				s.summary_amt,
+				s.jjye,
+				getbj(s.summary_num) shbj,
+				getlx(s.summary_num) shlx,
+				to_char(s.begin_date,'yyyy-mm-dd') begin_date,
+				to_char(s.end_date,'yyyy-mm-dd') end_date,
+				l.year_rate,
+				getbzr(c.contract_id) bzr,
+				getdy(c.contract_id) dy,
+				getzy(c.contract_id) zy,
+				gethyml(v.party_id) hyml,
+				s.fljg
+		from tb_loan_summary s,tb_loan_info i,tb_loan_loanrate l,tb_con_contract_info c,v_csm_party v
+		where s.loan_id=i.loan_id 
+			  and i.loan_id=l.loan_id 
+			  and i.contract_id=c.contract_id 
+			  and i.party_id=v.PARTY_ID
+			  and v.party_type_cd='02'
+			  and i.org_num IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+			  <isNotNull property="userNum">  AND i.user_num = #userNum# </isNotNull>
+		  	  <isNotNull property="partyNum">  AND v.party_num = #partyNum# </isNotNull>
+		  	  <isNotNull property="partyName">  AND v.party_name LIKE '%$partyName$%' </isNotNull>
+		  	  
+		  	  <isNotNull property="summaryAmt1"> <![CDATA[   AND s.summary_amt &gt;= #summaryAmt1# ]]> </isNotNull>
+			  <isNotNull property="summaryAmt2"> <![CDATA[   AND s.summary_amt &lt;= #summaryAmt2# ]]> </isNotNull>
+			  <isNotNull property="summaryTerm1"> 
+			  <![CDATA[   AND (ceil(months_between(s.end_date,s.begin_date))) &gt;= #summaryTerm1# ]]>
+			   </isNotNull>
+			  <isNotNull property="summaryTerm2"> 
+			  <![CDATA[   AND (ceil(months_between(s.end_date,s.begin_date))) &lt;= #summaryTerm2# ]]>
+			   </isNotNull>
+		  	  <isNotNull property="productType">  AND c.product_type = #productType# </isNotNull>
+		  	  <isNotNull property="middelCode">  AND gethyml(v.party_id) = #middelCode# </isNotNull>
+		  	  
+		  	  <isNotNull property="nhdk"> 
+       		  and c.contract_id in (select contract_id from tb_con_contract_info where amount_detail_id in (
+  				select amount_detail_id from tb_con_xw where sfnhdk=#nhdk#)
+              )
+       		 </isNotNull>
+       		 <isNotNull property="cztx"> 
+       		  and c.contract_id in (select contract_id from tb_con_contract_info where amount_detail_id in (
+  				select amount_detail_id from tb_con_xw where sfcztx=#cztx#)
+              )
+       		 </isNotNull>
+		  	  
+		  	  <isNotNull property="mainGuarantyType">  AND c.main_guaranty_type = #mainGuarantyType# </isNotNull>
+		  	  <isNotNull property="beginDate1"> <![CDATA[   AND s.begin_date &gt;= to_date(#beginDate1# ,'yyyy-mm-dd hh24:mi:ss') ]]> </isNotNull>
+		  	  
+			  <isNotNull property="beginDate2"> <![CDATA[   AND s.begin_date &lt;= to_date(#beginDate2# ,'yyyy-mm-dd hh24:mi:ss') ]]> </isNotNull>
+		  	  
+	 </select>
+	 
+	 <resultMap id="yuqi" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="hkzh" column="HKZH"/>
+			<result property="dkzh" column="DKZH"/>
+			<result property="jjyqbj" column="JJYQBJ"/>
+			<result property="arrearItr" column="ARREAR_ITR"/>
+			<result property="punishItr" column="PUNISH_ITR"/>
+	</resultMap>
+		 <!--逾期利息和应收罚息计算新方法   从计量拿到结计利息数据进行计算，逾期利息不包括罚息，应收罚息包括所有罚息 -->
+    <select id="yuqi" parameterClass="java.util.HashMap" resultMap="yuqi">
+		
+		select l.org_num,
+		       l.user_num,
+		       v.party_id,
+		       v.party_num,
+		       v.party_name,
+		       l.product_type,
+		       s.summary_num,
+		       s.summary_amt,
+		       s.jjye,
+		       to_char(s.begin_date, 'yyyy-mm-dd') begin_date,
+		       to_char(s.end_date, 'yyyy-mm-dd') end_date,
+		       s.yqts,
+		       s.jjyqbj,
+		       s.arrear_itr,
+		       s.punish_itr,
+		       (select zh
+		          from tb_loan_zh
+		         where zhlx = '0'
+		               and loan_id = l.loan_id) dkzh,
+		       (select zh
+		          from tb_loan_zh
+		         where zhlx = '1'
+		               and loan_id = l.loan_id) hkzh
+		  from tb_loan_info    l,
+		       tb_loan_summary s,
+		       v_csm_party     v
+		 where l.loan_id = s.loan_id
+		       and l.party_id = v.party_id
+		       and s.summary_status_cd = '03'
+		       and v.PARTY_TYPE_CD = '02'
+			   and (nvl(s.dft_itr, 0) + nvl(s.jjyqbj, 0)) > 0
+				and l.org_num in (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		  	  	<isNotNull property="partyNum">  AND v.party_num = #partyNum# </isNotNull>
+		  	  	<isNotNull property="partyName">  AND v.party_name LIKE '%$partyName$%' </isNotNull>
+		  	  	<isNotNull property="productType">    AND l.product_type = #productType# </isNotNull>
+		  	  	<isNotNull property="summaryNum">    AND s.SUMMARY_NUM = #summaryNum# </isNotNull>
+		  	  	<isNotNull property="beginDate1"> <![CDATA[   AND s.begin_date &gt;= to_date(#beginDate1# ,'yyyy-mm-dd hh24:mi:ss') ]]> </isNotNull>
+			  	<isNotNull property="beginDate2"> <![CDATA[   AND s.begin_date &lt;= to_date(#beginDate2# ,'yyyy-mm-dd hh24:mi:ss') ]]> </isNotNull>
+			  	<isNotNull property="userNum">  AND l.user_num = #userNum# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="birthday" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="birthday" column="BIRTHDAY"/>
+			<result property="phoneNumber" column="PHONE_NUMBER"/>
+	</resultMap>
+
+    <select id="birthday" parameterClass="java.util.HashMap" resultMap="birthday">
+		SELECT P.PARTY_NUM,
+		       P.PARTY_NAME,
+		       p.party_id,
+		       N.PHONE_NUMBER,
+		       to_char(N.BIRTHDAY,'yyyy-mm-dd') BIRTHDAY,
+		       MT.ORG_NUM,
+		       MT.USER_NUM
+		  FROM TB_CSM_PARTY P, TB_CSM_NATURAL_PERSON N, TB_CSM_MANAGEMENT_TEAM MT
+		 WHERE P.PARTY_ID = N.PARTY_ID
+		   AND MT.PARTY_ID = P.PARTY_ID
+		   AND MT.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="userNum">  AND MT.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="birthday1"> <![CDATA[   AND to_number(substr(to_char(n.birthday,'yyyymmdd'),5,2)) &gt;= #birthday1# ]]> </isNotNull>
+		   <isNotNull property="birthday2"> <![CDATA[   AND to_number(substr(to_char(n.birthday,'yyyymmdd'),5,2)) &lt;= #birthday2# ]]> </isNotNull>
+	 </select>
+	 
+	 <resultMap id="gdbn" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="orgName" column="ORGNAME"/>
+    		<result property="orgSeq" column="ORGSEQ"/>
+			<result property="zchs" column="ZCHS"/>
+			<result property="zcbs" column="ZCBS"/>
+			<result property="zcye" column="ZCYE"/>
+			<result property="gzhs" column="GZHS"/>
+			<result property="gzbs" column="GZBS"/>
+			<result property="gzye" column="GZYE"/>
+			<result property="cjhs" column="CJHS"/>
+			<result property="cjbs" column="CJBS"/>
+			<result property="cjye" column="CJYE"/>
+			<result property="kyhs" column="KYHS"/>
+			<result property="kybs" column="KYBS"/>
+			<result property="kyye" column="KYYE"/>
+			<result property="sshs" column="SSHS"/>
+			<result property="ssbs" column="SSBS"/>
+			<result property="ssye" column="SSYE"/>
+			<result property="hjhs" column="HJHS"/>
+			<result property="hjbs" column="HJBS"/>
+			<result property="hjye" column="HJYE"/>
+	</resultMap>
+
+    <select id="gdbn" parameterClass="java.util.HashMap" resultMap="gdbn">
+		
+		SELECT ORG_NUM,ORGNAME ,ORGSEQ ,
+			SUM(CASE WHEN KK='1' THEN PARTY_ID ELSE 0 END ) AS ZCHS,
+			SUM(CASE WHEN KK='1' THEN SUMMARY_NUM ELSE 0 END )AS ZCBS,
+			SUM(CASE WHEN KK='1' THEN JJYE ELSE 0 END) AS ZCYE,
+			SUM(CASE WHEN KK='2' THEN PARTY_ID ELSE 0 END) AS GZHS,
+			SUM(CASE WHEN KK='2' THEN SUMMARY_NUM ELSE 0 END) AS GZBS,
+			SUM(CASE WHEN KK='2' THEN JJYE ELSE 0 END) AS GZYE,
+			SUM(CASE WHEN KK='3' THEN PARTY_ID ELSE 0 END) AS CJHS,
+			SUM(CASE WHEN KK='3' THEN SUMMARY_NUM ELSE 0 END) AS CJBS,
+			SUM(CASE WHEN KK='3' THEN JJYE ELSE 0 END) AS CJYE,
+			SUM(CASE WHEN KK='4' THEN PARTY_ID ELSE 0 END) AS KYHS,
+			SUM(CASE WHEN KK='4' THEN SUMMARY_NUM ELSE 0 END) AS KYBS,
+			SUM(CASE WHEN KK='4' THEN JJYE ELSE 0 END) AS KYYE,
+			SUM(CASE WHEN KK='5' THEN PARTY_ID ELSE 0 END) AS SSHS,
+			SUM(CASE WHEN KK='5' THEN SUMMARY_NUM ELSE 0 END) AS SSBS,
+			SUM(CASE WHEN KK='5' THEN JJYE ELSE 0 END) AS SSYE,
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN PARTY_ID ELSE 0 END) AS HJHS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN SUMMARY_NUM ELSE 0 END) AS HJBS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN JJYE ELSE 0 END) AS HJYE 
+		FROM (
+			SELECT S.ORG_NUM,OM.ORGNAME,OM.ORGSEQ,
+				CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+				WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+				WHEN S.FLJG IN ('0301','0301') THEN '3' 
+				WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END KK,
+				COUNT(DISTINCT S.PARTY_ID) PARTY_ID,
+				COUNT(S.SUMMARY_NUM) SUMMARY_NUM,
+				SUM(S.JJYE) JJYE 
+			FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L ,OM_ORGANIZATION OM ,TB_SYS_PRODUCT P ,SN_SUP_LOAN_INFO SU  
+				WHERE S.LOAN_ID=L.LOAN_ID 
+				AND S.SUMMARY_NUM = SU.DUE_NUM 
+				AND S.ORG_NUM=OM.ORGCODE 
+				AND L.PRODUCT_TYPE = P.PRODUCT_CD
+				AND P.PRODUCT_TYPE = '1' 
+				AND SU.DEVA_STS = '0' 
+				AND S.SUMMARY_STATUS_CD IN ('02','03') 
+				AND NVL(S.JJYE,0) > 0 
+				AND S.FLJG IS NOT NULL 
+				AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%') 
+				<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull>
+				GROUP BY S.ORG_NUM,OM.ORGNAME,OM.ORGSEQ,
+					CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+					WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+					WHEN S.FLJG IN ('0301','0301') THEN '3' 
+					WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END 
+				) WHERE KK IN ('1','2','3','4','5') GROUP BY ORG_NUM ,ORGNAME,ORGSEQ
+		UNION ALL
+		SELECT '99999' AS ORG_NUM,'合计' AS ORGNAME ,'.10000.99.99.' AS ORGSEQ,
+			SUM(CASE WHEN KK='1' THEN PARTY_ID ELSE 0 END ) AS ZCHS,
+			SUM(CASE WHEN KK='1' THEN SUMMARY_NUM ELSE 0 END )AS ZCBS,
+			SUM(CASE WHEN KK='1' THEN JJYE ELSE 0 END) AS ZCYE,
+			SUM(CASE WHEN KK='2' THEN PARTY_ID ELSE 0 END) AS GZHS,
+			SUM(CASE WHEN KK='2' THEN SUMMARY_NUM ELSE 0 END) AS GZBS,
+			SUM(CASE WHEN KK='2' THEN JJYE ELSE 0 END) AS GZYE,
+			SUM(CASE WHEN KK='3' THEN PARTY_ID ELSE 0 END) AS CJHS,
+			SUM(CASE WHEN KK='3' THEN SUMMARY_NUM ELSE 0 END) AS CJBS,
+			SUM(CASE WHEN KK='3' THEN JJYE ELSE 0 END) AS CJYE,
+			SUM(CASE WHEN KK='4' THEN PARTY_ID ELSE 0 END) AS KYHS,
+			SUM(CASE WHEN KK='4' THEN SUMMARY_NUM ELSE 0 END) AS KYBS,
+			SUM(CASE WHEN KK='4' THEN JJYE ELSE 0 END) AS KYYE,
+			SUM(CASE WHEN KK='5' THEN PARTY_ID ELSE 0 END) AS SSHS,
+			SUM(CASE WHEN KK='5' THEN SUMMARY_NUM ELSE 0 END) AS SSBS,
+			SUM(CASE WHEN KK='5' THEN JJYE ELSE 0 END) AS SSYE,
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN PARTY_ID ELSE 0 END) AS HJHS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN SUMMARY_NUM ELSE 0 END) AS HJBS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN JJYE ELSE 0 END) AS HJYE 
+		FROM (
+			SELECT 
+				CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+				WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+				WHEN S.FLJG IN ('0301','0301') THEN '3' 
+				WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END KK,
+				COUNT(DISTINCT S.PARTY_ID) PARTY_ID,COUNT(S.SUMMARY_NUM) SUMMARY_NUM,SUM(S.JJYE) JJYE 
+			FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L ,TB_SYS_PRODUCT P ,SN_SUP_LOAN_INFO SU  
+				WHERE S.LOAN_ID=L.LOAN_ID 
+				AND L.PRODUCT_TYPE = P.PRODUCT_CD 
+				AND S.SUMMARY_NUM = SU.DUE_NUM 
+				AND P.PRODUCT_TYPE = '1' 
+				AND SU.DEVA_STS = '0'
+				AND S.SUMMARY_STATUS_CD IN ('02','03') 
+				AND NVL(S.JJYE,0) > 0 
+				AND S.FLJG IS NOT NULL 
+				AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%') 
+				<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull>
+				GROUP BY S.ORG_NUM,
+					CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+					WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+					WHEN S.FLJG IN ('0301','0301') THEN '3' 
+					WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END 
+				) WHERE KK IN ('1','2','3','4','5')  ORDER BY ORGSEQ 
+		
+	</select>
+	
+	<resultMap id="gdbw" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="orgName" column="ORGNAME"/>
+    		<result property="orgSeq" column="ORGSEQ"/>
+			<result property="zchs" column="ZCHS"/>
+			<result property="zcbs" column="ZCBS"/>
+			<result property="zcye" column="ZCYE"/>
+			<result property="gzhs" column="GZHS"/>
+			<result property="gzbs" column="GZBS"/>
+			<result property="gzdk" column="GZDK"/>
+			<result property="gzye" column="GZYE"/>
+			<result property="cjhs" column="CJHS"/>
+			<result property="cjbs" column="CJBS"/>
+			<result property="cjdk" column="CJDK"/>
+			<result property="cjye" column="CJYE"/>
+			<result property="kyhs" column="KYHS"/>
+			<result property="kybs" column="KYBS"/>
+			<result property="kydk" column="KYDK"/>
+			<result property="kyye" column="KYYE"/>
+			<result property="sshs" column="SSHS"/>
+			<result property="ssbs" column="SSBS"/>
+			<result property="ssdk" column="SSDK"/>
+			<result property="ssye" column="SSYE"/>
+			<result property="hjhs" column="HJHS"/>
+			<result property="hjbs" column="HJBS"/>
+			<result property="hjdk" column="HJDK"/>
+			<result property="hjye" column="HJYE"/>
+	</resultMap>
+
+    <select id="gdbw" parameterClass="java.util.HashMap" resultMap="gdbw">
+		
+		SELECT ORG_NUM,ORGNAME ,ORGSEQ ,
+			SUM(CASE WHEN KK='1' THEN PARTY_ID ELSE 0 END ) AS ZCHS,
+			SUM(CASE WHEN KK='1' THEN SUMMARY_NUM ELSE 0 END )AS ZCBS,
+			SUM(CASE WHEN KK='1' THEN DKYE+JJYE ELSE 0 END) AS ZCYE,
+			SUM(CASE WHEN KK='2' THEN PARTY_ID ELSE 0 END) AS GZHS,
+			SUM(CASE WHEN KK='2' THEN SUMMARY_NUM ELSE 0 END) AS GZBS,
+			SUM(CASE WHEN KK='2' THEN DKYE ELSE 0 END) AS GZDK,
+			SUM(CASE WHEN KK='2' THEN JJYE ELSE 0 END) AS GZYE,
+			SUM(CASE WHEN KK='3' THEN PARTY_ID ELSE 0 END) AS CJHS,
+			SUM(CASE WHEN KK='3' THEN SUMMARY_NUM ELSE 0 END) AS CJBS,
+			SUM(CASE WHEN KK='3' THEN DKYE ELSE 0 END) AS CJDK,
+			SUM(CASE WHEN KK='3' THEN JJYE ELSE 0 END) AS CJYE,
+			SUM(CASE WHEN KK='4' THEN PARTY_ID ELSE 0 END) AS KYHS,
+			SUM(CASE WHEN KK='4' THEN SUMMARY_NUM ELSE 0 END) AS KYBS,
+			SUM(CASE WHEN KK='4' THEN DKYE ELSE 0 END) AS KYDK,
+			SUM(CASE WHEN KK='4' THEN JJYE ELSE 0 END) AS KYYE,
+			SUM(CASE WHEN KK='5' THEN PARTY_ID ELSE 0 END) AS SSHS,
+			SUM(CASE WHEN KK='5' THEN SUMMARY_NUM ELSE 0 END) AS SSBS,
+			SUM(CASE WHEN KK='5' THEN DKYE ELSE 0 END) AS SSDK,
+			SUM(CASE WHEN KK='5' THEN JJYE ELSE 0 END) AS SSYE,
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN PARTY_ID ELSE 0 END) AS HJHS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN SUMMARY_NUM ELSE 0 END) AS HJBS, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN DKYE ELSE 0 END) AS HJDK, 
+			SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN JJYE ELSE 0 END) AS HJYE 
+		FROM (
+			SELECT S.ORG_NUM,OM.ORGNAME,OM.ORGSEQ,
+				CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+				WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+				WHEN S.FLJG IN ('0301','0301') THEN '3' 
+				WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END KK,
+				COUNT(DISTINCT S.PARTY_ID) PARTY_ID,
+				COUNT(S.SUMMARY_NUM) SUMMARY_NUM,
+				SUM(CASE WHEN S.SUMMARY_STATUS_CD='03' THEN S.JJYE ELSE 0 END) DKYE, 
+        		SUM(CASE WHEN S.SUMMARY_STATUS_CD='02' THEN S.JJYE ELSE 0 END) JJYE 
+			FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L ,OM_ORGANIZATION OM  
+				WHERE S.LOAN_ID=L.LOAN_ID 
+				AND S.ORG_NUM=OM.ORGCODE 
+				AND S.SUMMARY_STATUS_CD IN ('02','03') 
+				AND S.FLJG IS NOT NULL 
+				AND exists(
+					SELECT DISTINCT SUMMARY_NUM FROM (
+						SELECT S.SUMMARY_NUM FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L,TB_SYS_PRODUCT P  
+						WHERE S.LOAN_ID=L.LOAN_ID AND L.PRODUCT_TYPE=P.PRODUCT_CD  
+						AND P.PRODUCT_TYPE='2' AND S.SUMMARY_STATUS_CD = '02'  
+						AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%') 
+						<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull>
+					UNION ALL
+						SELECT S.SUMMARY_NUM FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L,TB_SYS_PRODUCT P ,SN_SUP_LOAN_INFO SU 
+						WHERE S.LOAN_ID=L.LOAN_ID AND L.PRODUCT_TYPE=P.PRODUCT_CD AND S.SUMMARY_NUM = SU.DUE_NUM 
+						AND P.PRODUCT_TYPE='1' AND SU.DEVA_STS = '1' AND NVL(S.JJYE,0)>0 
+						AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%') 
+						<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull> ) 
+				where S.Summary_Num = SUMMARY_NUM )
+			GROUP BY S.ORG_NUM,OM.ORGNAME,OM.ORGSEQ,
+				CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+					WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+					WHEN S.FLJG IN ('0301','0301') THEN '3' 
+					WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END 
+				) WHERE KK IN ('1','2','3','4','5') GROUP BY ORG_NUM ,ORGNAME,ORGSEQ
+			UNION ALL
+				SELECT '99999' AS ORG_NUM,'合计' AS ORGNAME ,'.10000.99.99.' AS ORGSEQ,
+					SUM(CASE WHEN KK='1' THEN PARTY_ID ELSE 0 END ) AS ZCHS,
+					SUM(CASE WHEN KK='1' THEN SUMMARY_NUM ELSE 0 END )AS ZCBS,
+					SUM(CASE WHEN KK='1' THEN DKYE+JJYE ELSE 0 END) AS ZCYE,
+					SUM(CASE WHEN KK='2' THEN PARTY_ID ELSE 0 END) AS GZHS,
+					SUM(CASE WHEN KK='2' THEN SUMMARY_NUM ELSE 0 END) AS GZBS,
+					SUM(CASE WHEN KK='2' THEN DKYE ELSE 0 END) AS GZDK,
+					SUM(CASE WHEN KK='2' THEN JJYE ELSE 0 END) AS GZYE,
+					SUM(CASE WHEN KK='3' THEN PARTY_ID ELSE 0 END) AS CJHS,
+					SUM(CASE WHEN KK='3' THEN SUMMARY_NUM ELSE 0 END) AS CJBS,
+					SUM(CASE WHEN KK='3' THEN DKYE ELSE 0 END) AS CJDK,
+					SUM(CASE WHEN KK='3' THEN JJYE ELSE 0 END) AS CJYE,
+					SUM(CASE WHEN KK='4' THEN PARTY_ID ELSE 0 END) AS KYHS,
+					SUM(CASE WHEN KK='4' THEN SUMMARY_NUM ELSE 0 END) AS KYBS,
+					SUM(CASE WHEN KK='4' THEN DKYE ELSE 0 END) AS KYDK,
+					SUM(CASE WHEN KK='4' THEN JJYE ELSE 0 END) AS KYYE,
+					SUM(CASE WHEN KK='5' THEN PARTY_ID ELSE 0 END) AS SSHS,
+					SUM(CASE WHEN KK='5' THEN SUMMARY_NUM ELSE 0 END) AS SSBS,
+					SUM(CASE WHEN KK='5' THEN DKYE ELSE 0 END) AS SSDK,
+					SUM(CASE WHEN KK='5' THEN JJYE ELSE 0 END) AS SSYE,
+					SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN PARTY_ID ELSE 0 END) AS HJHS, 
+					SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN SUMMARY_NUM ELSE 0 END) AS HJBS, 
+					SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN DKYE ELSE 0 END) AS HJDK,
+					SUM(CASE WHEN KK IN ('1','2','3','4','5') THEN JJYE ELSE 0 END) AS HJYE  
+			FROM (
+				SELECT 
+					CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+					WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+					WHEN S.FLJG IN ('0301','0301') THEN '3' 
+					WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END KK,
+					COUNT(DISTINCT S.PARTY_ID) PARTY_ID,COUNT(S.SUMMARY_NUM) SUMMARY_NUM,
+					SUM(CASE WHEN S.SUMMARY_STATUS_CD='03' THEN S.JJYE ELSE 0 END) DKYE, 
+          			SUM(CASE WHEN S.SUMMARY_STATUS_CD='02' THEN S.JJYE ELSE 0 END) JJYE  
+				FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L 
+				WHERE S.LOAN_ID=L.LOAN_ID 
+				AND S.SUMMARY_STATUS_CD IN ('02','03') 
+				AND S.FLJG IS NOT NULL 
+				AND exists(
+					SELECT DISTINCT SUMMARY_NUM FROM (
+						SELECT S.SUMMARY_NUM FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L,TB_SYS_PRODUCT P  
+						WHERE S.LOAN_ID=L.LOAN_ID AND L.PRODUCT_TYPE=P.PRODUCT_CD  
+						AND P.PRODUCT_TYPE='2' AND S.SUMMARY_STATUS_CD = '02'  
+						AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+						<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull> 
+					UNION ALL
+						SELECT S.SUMMARY_NUM FROM TB_LOAN_SUMMARY S,TB_LOAN_INFO L,TB_SYS_PRODUCT P ,SN_SUP_LOAN_INFO SU 
+						WHERE S.LOAN_ID=L.LOAN_ID AND L.PRODUCT_TYPE=P.PRODUCT_CD AND S.SUMMARY_NUM = SU.DUE_NUM 
+						AND P.PRODUCT_TYPE='1' AND SU.DEVA_STS = '1' AND NVL(S.JJYE,0)>0 
+						AND S.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+						<isNotNull property="userNum"> AND S.USER_NUM = #userNum# </isNotNull> ) 
+					where S.SUMMARY_NUM = SUMMARY_NUM )
+					GROUP BY S.ORG_NUM,
+						CASE WHEN S.FLJG IN ('0101','0102','0103') THEN '1' 
+							WHEN S.FLJG IN ('0201','0202','0203') THEN '2' 
+							WHEN S.FLJG IN ('0301','0301') THEN '3' 
+							WHEN S.FLJG='0401' THEN '4' WHEN S.FLJG='0501' THEN '5' ELSE 'X' END 
+					) WHERE KK IN ('1','2','3','4','5')  ORDER BY ORGSEQ  
+		
+	</select>
+	
+	
+</sqlMap>

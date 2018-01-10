@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>
+	<!-- 根据操作员userid更改密码 -->
+    <update id="resetOperatorPwd0" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		update ac_operator o set o.password=#password# , o.status='init' 
+    		where o.userid=#userid#
+    		
+    	]]>
+    </update>
+    <!-- 根据操作员userid更改操作员状态  -->
+
+    <update id="updateOperatorStatus" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		update ac_operator o set o.status=#status# where o.userid=#userid#
+    	]]>
+    </update>
+    <!-- 根据营销团队id删除营销团队和客户经理的关系 -->
+    <delete id="delMarkTeamRelByTeamId" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete f_pty_c_team_rel_mgr m where m.camp_teamid=#campteamid#
+    	]]>
+    </delete>
+    <!-- 根据营销团队id获取客户经理列表 -->
+    <select id="queryEmployeeByMarkTeamId" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.OmEmployee">
+    	<![CDATA[
+    		select e.empid as empid,
+    		       e.empcode as empcode,
+    		       e.operatorid as operatorid,
+    		       e.empname as empname,
+    		       e.gender as gender,
+    		       e.birthdate as birthdate,
+    		       e.position as position
+    	    from ac_operator o left join om_employee e on o.userid=e.userid
+           where o.userid in(select m.cust_mngr_id from f_pty_c_team_rel_mgr m where m.camp_teamid=#campteamid#) and o.status != #del#;
+    	]]>
+    </select>
+     <select id="queryEmployeeByEmpCode" parameterClass="java.util.HashMap" resultClass="com.bos.utp.dataset.organization.OmEmployee">
+    	<![CDATA[
+    		select e.empid as empid,
+			       e.empcode as empcode,
+			       e.empname as empname,
+			       e.gender as gender,
+			       e.birthdate as birthdate,
+			       e.oemail as oemail,
+			       e.mobileno as mobileno,
+			       e.licenseno as licenseno,
+			       e.intotradedate as intotradedate,
+			       e.runmarkdate as runmarkdate,
+			       e.emplevel as emplevel,
+			       e.education as education,
+			       e.position as position,
+			       e.otel as otel,
+			       e.empstatus as empstatus
+ 			from om_employee e where e.empcode=#empcode#
+    	]]>
+    </select>
+    
+    <!-- 根据营操作员id删除角色关联表 ac_operatorrole 对应信息 -->
+    <delete id="delOprRoleByOperatorid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete ac_operatorrole where operatorid = #operatorid#
+    	]]>
+    </delete>
+    <!-- 根据empid删除机构关联表 om_emporg 对应信息 -->
+    <delete id="delEmpOrgByEmpid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete om_emporg where empid=#empid#
+    	]]>
+    </delete>
+    
+    <!-- 根据机构id删除操作员表 ac_operator 对应信息 -->
+    <delete id="delOprByOrgid" parameterClass="java.util.HashMap" >
+    	<![CDATA[
+    		delete ac_operator where operatorid in (select operatorid from om_employee where orgid=#orgid#)
+    	]]>
+    </delete>
+
+</sqlMap>

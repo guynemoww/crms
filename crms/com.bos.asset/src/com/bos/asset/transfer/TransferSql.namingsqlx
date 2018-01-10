@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:WangHui -->
+<sqlMap>
+
+    <resultMap id="transferListMap" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="conStatus" column="CON_STATUS"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="contractAmt" column="CONTRACT_AMT"/>
+    		<result property="conYuE" column="con_yu_e"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="contractId" column="CONTRACT_ID"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="dft_itr_in" column="dft_itr_in"/>
+    		<result property="dft_itr_out" column="dft_itr_out"/>
+    		<result property="fljg" column="FLJG"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+    		<result property="partyType" column="PARTY_TYPE_CD"/>
+    		<result property="certType" column="CERT_TYPE"/>
+    		<result property="certNum" column="CERT_NUM"/>
+	</resultMap>
+    <select id="transferList" parameterClass="java.util.HashMap" resultMap="transferListMap">
+SELECT c.ORG_NUM,
+       c.USER_NUM,
+       c.CONTRACT_NUM,
+       c.CON_STATUS,
+       c.PRODUCT_TYPE,
+       c.CURRENCY_CD,
+       c.CONTRACT_AMT,
+       nvl(c.con_yu_e,0) con_yu_e,
+       c.MAIN_GUARANTY_TYPE,
+       TO_CHAR(c.BEGIN_DATE, 'YYYY-MM-DD') AS BEGIN_DATE,
+       TO_CHAR(c.END_DATE, 'YYYY-MM-DD') AS END_DATE,
+       cl.YEAR_RATE,
+       c.CONTRACT_ID,
+       p.PARTY_ID,
+       p.PARTY_NUM,
+       p.PARTY_NAME,
+       p.CERT_TYPE,
+	   p.CERT_NUM,
+	   p.PARTY_TYPE_CD,
+       c.CLS_RESULT FLJG,
+       l.*
+FROM TB_CON_CONTRACT_INFO c
+LEFT JOIN V_CSM_PARTY p ON c.PARTY_ID = p.PARTY_ID
+LEFT JOIN TB_CON_LOANRATE cl ON c.CONTRACT_ID = cl.CONTRACT_ID
+LEFT JOIN (
+SELECT li.CONTRACT_ID,
+      max(nvl(ls.Yqts,0)) yqts,
+      sum(nvl(ls.dft_itr_in,0)) dft_itr_in,
+      sum(nvl(ls.dft_itr_out,0)) dft_itr_out
+FROM TB_LOAN_SUMMARY ls, TB_LOAN_INFO li
+WHERE ls.LOAN_ID = li.LOAN_ID
+GROUP BY li.CONTRACT_ID) l ON l.CONTRACT_ID=c.CONTRACT_ID
+WHERE 1=1
+<isNotNull property="contractNum"> AND c.CONTRACT_NUM=#contractNum#</isNotNull>
+<isNotNull property="userNum"> AND c.USER_NUM = #userNum#</isNotNull>
+<isNotNull property="orgNum"> AND c.ORG_NUM = #orgNum#</isNotNull>
+<isNotNull property="certType"> AND p.CERT_TYPE= #certType#</isNotNull>
+<isNotNull property="certNum"> AND p.CERT_NUM= #certNum#</isNotNull>
+AND c.CON_STATUS IN ('03','05')
+AND c.CLS_RESULT IN ('0301','0302','0401','0501')
+<isNotNull property="partyName"> AND  p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+	 </select>
+
+	<resultMap id="conInfoMap" class="java.util.HashMap">
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="certType" column="CERT_TYPE"/>
+    		<result property="certNum" column="CERT_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="contractAmt" column="CONTRACT_AMT"/>
+    		<result property="conYuE" column="CON_YU_E"/>
+	</resultMap>
+    <select id="conInfo" parameterClass="java.lang.String" resultMap="conInfoMap">
+SELECT p.PARTY_NAME,p.CERT_TYPE,p.CERT_NUM,c.CONTRACT_NUM,c.CONTRACT_AMT,c.CON_YU_E FROM TB_CON_CONTRACT_INFO c
+LEFT JOIN V_CSM_PARTY p ON c.PARTY_ID=p.PARTY_ID
+WHERE CONTRACT_ID=#contractId#
+	 </select>
+	 <select id="transferCreateValid" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+SELECT ID FROM TB_ASSET_TRANSFER t WHERE t.CONTRACT_ID=#contractId# AND STATUS &lt;&gt; '40'
+AND NOT EXISTS (SELECT * FROM TB_ASSET_RETRANSFER WHERE TRANSFER_ID =t.ID)
+	 </select>
+	 <select id="transferLog" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT 
+tr.TRANSFER_NUM,
+to_char(tr.TAS_DATE,'yyyy-MM-dd') TAS_DATE,
+ci.CONTRACT_NUM,
+p.PARTY_ID,
+p.PARTY_NAME,
+p.CERT_TYPE,
+p.CERT_NUM,
+tr.CON_ORG_NUM,
+tr.CON_USER_NUM,
+tr.TAS_ORG_NUM,
+tr.TAS_USER_NUM
+FROM TB_ASSET_TRANSFER TR
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=tr.CONTRACT_ID
+INNER JOIN V_CSM_PARTY p ON p.PARTY_ID = ci.PARTY_ID
+WHERE 1=1
+	    <isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+	    <isNotNull property="userNum"> AND tr.USER_NUM = #userNum#</isNotNull>
+	    <isNotNull property="orgNum"> AND tr.ORG_NUM = #orgNum#</isNotNull>
+	    <isNotNull property="certType"> AND p.CERT_TYPE = #certType#</isNotNull>
+	    <isNotNull property="certNum"> AND p.CERT_NUM = #certNum#</isNotNull>
+	    <isNotNull property="partyName"> AND p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+	 </select>
+	 
+</sqlMap>

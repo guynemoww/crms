@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--是否含有信用-->
+    <select id="get1" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as xy  from tb_biz_amount_apply t where t.GUARANTY_TYPE like '%01%' 
+		and t.APPLY_ID =#applyId#
+    </select>
+    <!--获取该业务申请中所有的抵质押物，用于循环判断是否优质担保-->
+    <select id="get2" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    select t6.surety_id as sui,t6.surety_no as sn,decode(t6.coll_type,'03','000000',t6.sort_type) as st,t6.party_id as pi,nvl(t6.mortgage_value/decode(t6.assess_value,0,1,t6.assess_value),0) as sjbl  from tb_biz_grt_rel t5,tb_grt_mortgage_basic t6 
+	    where t5.surety_id=t6.surety_id and t5.apply_id=#applyId#
+	    union 
+	    select t4.surety_id as sui,t4.surety_no as sn,decode(t4.sort_type,'03','000000',t4.sort_type) as st,t4.party_id as pi,nvl(t4.mortgage_value/decode(t4.assess_value,0,1,t4.assess_value),0) as sjbl  from tb_biz_grt_maxloancon_apply t1,tb_con_subcontract t2,tb_con_sub_grt_rel t3,tb_grt_mortgage_basic t4 
+		where t1.subcontract_id=t2.subcontract_id and t2.subcontract_id=t3.subcontract_id and t3.surety_id =t4.surety_id and t1.apply_id=#applyId#
+    </select>
+    <!--获取判断是否自有时的关系人ID 借款人、借款人配偶、及双方亲属（父母子女兄弟姐妹及其配偶）-->
+    <select id="get3" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select count(*) as c from (
+			<!--借款人-->
+			select #conPartyId# as rpi from dual 
+			union
+			<!--配偶-->
+			select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation ='30101' and t1.party_id=#conPartyId#
+			union
+			<!--借款人 的  父母子女兄弟姐妹-->
+			select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation in ('30102','30103','30104') and t1.party_id=#conPartyId#
+			union 
+			<!--配偶 的  父母子女兄弟姐妹-->
+			select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation in ('30102','30103','30104') and t1.party_id in(
+			       select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation ='30101' and t1.party_id=#conPartyId#
+			)
+			union
+			<!--借款人及其配偶 的 父母子女兄弟姐妹 的配偶-->
+			select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation ='30101' and t1.party_id in (
+			       select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation in ('30102','30103','30104') and t1.party_id=#conPartyId#
+			       union
+			       select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation in ('30102','30103','30104') and t1.party_id in(
+			              select t1.relativeid_party_id as rpi from tb_csm_natural_relative t1 where t1.appellation ='30101' and t1.party_id=#conPartyId#
+			       )
+			)
+		) where rpi = #partyId# <!--抵质押人-->
+    </select>
+    <!--是否保证-->
+    <select id="get4" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as bz from tb_biz_amount_apply t where t.GUARANTY_TYPE like '%04%'  and t.APPLY_ID =#applyId#
+    </select>
+    <!--获取房产权利价值/年租金倍数是否超过20   1超过，0不超过-->
+    <select id="get5" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select count(*) as c from tb_grt_mortgage_basic t,tb_grt_house ta where t.surety_id=ta.surety_id 
+       		and nvl(t.mortgage_value,0)> nvl(ta.rent_amt,0)*20 and ta.House_Is_Rent = '1' and t.surety_id=#suretyId#
+    </select>
+    <!--在建工程   不得超过其工程预算造价的50%(省会分行在建工程权利价值不得超过其成本价值的70%)-->
+    <select id="get6" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (nvl(t.mortgage_value,0)/(nvl(ta.BUILD_BUDGET_COST,1))) as ys,t.org_num from tb_grt_mortgage_basic t,TB_GRT_BUILDING ta where t.surety_id=ta.surety_id
+			and  t.surety_id=#suretyId#
+    </select>
+    <!--是否上市公司股权-->
+    <select id="get7" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select count(*) as c from tb_grt_mortgage_basic t,TB_GRT_INMARKETSTOCK ta where t.surety_id=ta.surety_id and ta.is_public_company ='1' and t.surety_id=#suretyId#
+    </select>
+    <!--存单是否定期-->
+    <select id="get8" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select count(*) as c from tb_grt_mortgage_basic t,TB_GRT_DEPOSIT ta where t.surety_id=ta.surety_id and ta.deposit_type='01' and t.surety_id=#suretyId#
+    </select>
+	<!--集团-->
+	<!--是否含有信用-->
+    <select id="get1Jt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as xy  from tb_biz_amount_apply t where t.GUARANTY_TYPE like '%01%' 
+		and t.APPLY_ID in (
+            select ty.apply_id from (
+                select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                and th.PARTY_ID=t.GROUP_PARTY_ID
+                and th.STATUS='03'
+                and t.GROUP_PARTY_ID = #partyId#
+                and ta.PARTY_ID=te.PARTY_ID
+                and te.USER_PLACING_CD ='01'
+                and te.USER_NUM=tf.USERID
+                and te.ORG_NUM=tg.ORGCODE
+                ) tz left join 
+                (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                    where tb.APPLY_ID=td.APPLY_ID
+                    and tb.biz_type in('02','05','04','06')
+                    and tb.STATUS_TYPE in ('01','03','09')
+                    and tb.APPLY_ID not in
+                    (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                    where tb.APPLY_ID=td.APPLY_ID
+                    and tb.biz_type in('02','05','04','06')
+                    and tb.OLD_APPLY_ID is not null) 
+                    and tb.apply_id not in(
+                        select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                    )
+                ) ty 
+                on tz.PARTY_ID=ty.PARTY_ID
+        )
+    </select>
+    <!--是否优质担保   把本次业务申请中不属于优质担保的拿出来  返回0 则证明都是优质担保-->
+    <select id="get2Jt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		
+    </select>
+    <!--是否普通担保-->
+    <select id="get3Jt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as db from tb_biz_amount_apply t where (t.GUARANTY_TYPE like '%02%' or t.GUARANTY_TYPE like '%03%') and t.APPLY_ID 
+			in(
+			    select ty.apply_id from (
+			        select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+			        where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+			        and th.PARTY_ID=t.GROUP_PARTY_ID
+			        and th.STATUS='03'
+			        and t.GROUP_PARTY_ID = #partyId#
+			        and ta.PARTY_ID=te.PARTY_ID
+			        and te.USER_PLACING_CD ='01'
+			        and te.USER_NUM=tf.USERID
+			        and te.ORG_NUM=tg.ORGCODE
+			        ) tz left join 
+			        (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			            where tb.APPLY_ID=td.APPLY_ID
+			            and tb.biz_type in('02','05','04','06')
+			            and tb.STATUS_TYPE in ('01','03','09')
+			            and tb.APPLY_ID not in
+			            (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			            where tb.APPLY_ID=td.APPLY_ID
+			            and tb.biz_type in('02','05','04','06')
+			            and tb.OLD_APPLY_ID is not null) 
+			            and tb.apply_id not in(
+			                select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+			            )
+			        ) ty 
+			        on tz.PARTY_ID=ty.PARTY_ID
+			)
+    </select>
+    <!--是否保证-->
+    <select id="get4Jt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as bz from tb_biz_amount_apply t where t.GUARANTY_TYPE like '%04%'  and t.APPLY_ID 
+			in(
+			    select ty.apply_id from (
+			        select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+			        where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+			        and th.PARTY_ID=t.GROUP_PARTY_ID
+			        and th.STATUS='03'
+			        and t.GROUP_PARTY_ID = #partyId#
+			        and ta.PARTY_ID=te.PARTY_ID
+			        and te.USER_PLACING_CD ='01'
+			        and te.USER_NUM=tf.USERID
+			        and te.ORG_NUM=tg.ORGCODE
+			        ) tz left join 
+			        (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			            where tb.APPLY_ID=td.APPLY_ID
+			            and tb.biz_type in('02','05','04','06')
+			            and tb.STATUS_TYPE in ('01','03','09')
+			            and tb.APPLY_ID not in
+			            (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			            where tb.APPLY_ID=td.APPLY_ID
+			            and tb.biz_type in('02','05','04','06')
+			            and tb.OLD_APPLY_ID is not null) 
+			            and tb.apply_id not in(
+			                select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+			            )
+			        ) ty 
+			        on tz.PARTY_ID=ty.PARTY_ID
+			)
+    </select>
+
+    <!--获取授信品种-->
+    <select id="getProductType" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select 	decode(t.BIZ_TYPE,'02','99999','03','99999','05','99999',(select PRODUCT_TYPE from tb_biz_amount_detail_apply where AMOUNT_ID = (
+			                select AMOUNT_ID from tb_biz_amount_apply  where APPLY_ID =#applyId#))
+			) as PRODUCT_TYPE from tb_biz_apply t where t.APPLY_ID =#applyId#
+    </select>
+    <!--获取监管数据  是否高-->
+    <select id="getJgFlag" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),1,'0','1') as jgFlag from tb_biz_yesOrNo_apply t where t.apply_id=#applyId#
+			and nvl(t.IS_STEEL_TRADE,0) = '0'
+			and nvl(t.IS_CEMENT,0) = '0'
+			and nvl(t.IS_SHIPBUILDING,0) = '0'
+			and nvl(t.IS_PHOTOVOLTAIC,0) = '0'
+			and nvl(t.IS_FZ,0) = '0'
+			and nvl(t.IS_CAPACITOR,0) = '0'
+    </select>
+    <!--集团获取监管数据  是否高-->
+    <select id="getJgFlagJt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select decode(count(*),0,'0','1') as jgFlag from tb_biz_yesOrNo_apply t where  (t.IS_STEEL_TRADE = '1' 
+						or t.IS_CEMENT = '1'
+						or t.IS_SHIPBUILDING = '1'
+						or t.IS_PHOTOVOLTAIC = '1'
+						or t.IS_FZ = '1'
+						or t.IS_CAPACITOR = '1')
+			            and t.apply_id in (
+			                select ty.apply_id from (
+			                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+			                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+			                    and th.PARTY_ID=t.GROUP_PARTY_ID
+			                    and th.STATUS='03'
+			                    and t.GROUP_PARTY_ID = #partyId#
+			                    and ta.PARTY_ID=te.PARTY_ID
+			                    and te.USER_PLACING_CD ='01'
+			                    and te.USER_NUM=tf.USERID
+			                    and te.ORG_NUM=tg.ORGCODE
+			                    ) tz left join 
+			                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			                        where tb.APPLY_ID=td.APPLY_ID
+			                        and tb.biz_type in('02','05','04','06')
+			                        and tb.STATUS_TYPE in ('01','03','09')
+			                        and tb.APPLY_ID not in
+			                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+			                        where tb.APPLY_ID=td.APPLY_ID
+			                        and tb.biz_type in('02','05','04','06')
+			                        and tb.OLD_APPLY_ID is not null) 
+			                        and tb.apply_id not in(
+			                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+			                        )
+			                    ) ty 
+			                    on tz.PARTY_ID=ty.PARTY_ID
+             			)
+    </select>
+    <!--是否含有国结业务  业务中只要有一个分项为国结 就返回为 是-->
+    <select id="getIsInternational" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as isInternational from tb_biz_amount_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta 
+			where t.AMOUNT_ID=ta.AMOUNT_ID
+			and ta.PRODUCT_TYPE like '010070%'
+			and t.APPLY_ID=#applyId#
+    </select>
+        <!--集团是否含有国结业务  业务中只要有一个分项为国结 就返回为 是-->
+    <select id="getIsInternationalJt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select decode(count(*),0,'0','1') as isInternational from tb_biz_amount_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta 
+			where t.AMOUNT_ID=ta.AMOUNT_ID
+			and ta.PRODUCT_TYPE like '010070%'
+			and t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05','04','06')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05','04','06')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )
+    </select>
+    <!--是否异地-->
+    <select id="getIsYd" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  decode(count(1),0,'0','1') as isYd from tb_biz_yesorno_apply where IS_OFF_SITE ='1' and  apply_id = #applyId#
+    </select>
+    <!--是否异地 集团-->
+    <select id="getIsYdJt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select  decode(count(1),0,'0','1') as isYd from tb_biz_yesorno_apply where IS_OFF_SITE ='1' and  apply_id in  (
+		   select ty.apply_id from (
+                select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                and th.PARTY_ID=t.GROUP_PARTY_ID
+                and th.STATUS='03'
+                and t.GROUP_PARTY_ID = #partyId#
+                and ta.PARTY_ID=te.PARTY_ID
+                and te.USER_PLACING_CD ='01'
+                and te.USER_NUM=tf.USERID
+                and te.ORG_NUM=tg.ORGCODE
+                ) tz left join 
+                (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                    where tb.APPLY_ID=td.APPLY_ID
+                    and tb.biz_type in('02','05','04','06')
+                    and tb.STATUS_TYPE in ('01','03','09')
+                    and tb.APPLY_ID not in
+                    (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                    where tb.APPLY_ID=td.APPLY_ID
+                    and tb.biz_type in('02','05','04','06')
+                    and tb.OLD_APPLY_ID is not null) 
+                    and tb.apply_id not in(
+                        select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                    )
+                ) ty 
+                on tz.PARTY_ID=ty.PARTY_ID
+		)
+    </select>
+    
+   	<select id="sumAuthAmt_tz" parameterClass="java.lang.String" resultClass="java.math.BigDecimal">
+SELECT SUM(NVL(d.RMB_AMT,NVL(d.DETAIL_AMT,0)) - NVL(od.RMB_AMT,NVL(od.DETAIL_AMT,0))) amt
+FROM TB_BIZ_APPLY a
+INNER JOIN TB_BIZ_AMOUNT_APPLY aa ON a.APPLY_ID=aa.APPLY_ID 
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPLY d ON aa.AMOUNT_ID=d.AMOUNT_ID
+LEFT JOIN TB_BIZ_AMOUNT_DETAIL_APPLY od ON d.OLD_DETAIL_ID=od.AMOUNT_DETAIL_ID
+WHERE a.APPLY_ID=#applyId#
+AND a.BIZ_TYPE='02'
+AND d.PRODUCT_TYPE in ('01001001','01008001')  
+    </select>
+</sqlMap>

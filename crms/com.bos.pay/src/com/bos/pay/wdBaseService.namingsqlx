@@ -1,0 +1,1189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ww -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap">sql statement</select>
+	
+	<select id="queryTbBizApply" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select * from tb_biz_apply where apply_id = #applyId# 
+	</select>
+	
+	<!--1.1保存tb_biz_apply业务申请表信息-->
+	<insert id="saveTbBizApply" parameterClass="java.util.HashMap">
+		insert into tb_biz_apply
+			  (apply_id,
+			  biz_num,
+			  biz_type,
+			  status_type,
+			  low_risk_biz_type,
+			  biz_happen_type,
+			  org_num,
+			  user_num,
+			  create_time,
+			  update_time,
+			  is_bank_team_loan,
+			  old_apply_id,
+			  if_data_move,
+			  apply_date,
+			  apply_mode_type,
+			  party_id,
+			  biz_happen_nature,
+			  product_type,
+			  is_green_loan,
+			  loan_type,
+			  busi_partner,
+			  biz_type_flag)
+			  (select 
+			   #applyId#      as  APPLY_ID,
+			   #bizNum#       as  BIZ_NUM,
+			   '04'           as  BIZ_TYPE,
+			   '03'       	  as  STATUS_TYPE,
+			   ''             as  LOW_RISK_BIZ_TYPE,
+			   '01'           as  BIZ_HAPPEN_TYPE,
+			   #orgNum#       as  ORG_NUM,
+			   #userNum#      as  USER_NUM,
+			   ''             as  CREATE_TIME,
+			   ''             as  UPDATE_TIME,
+			   ''             as  IS_BANK_TEAM_LOAN,
+			   ''             as  OLD_APPLY_ID,
+			   ''             as  IF_DATA_MOVE,
+			   to_date(to_char(sysdate-90,'yyyy-mm-dd'),'yyyy/mm/dd')        as  APPLY_DATE,
+			   '01'           as  APPLY_MODE_TYPE,
+			   tc.party_id    as  PARTY_ID,
+			   '02'           as  BIZ_HAPPEN_NATURE,
+			   #productType#  as  PRODUCT_TYPE,
+			   '0'            as  IS_GREEN_LOAN,
+			   '0'            as  LOAN_TYPE,
+			   ''             as  BUSI_PARTNER,
+			   '04'           as  BIZ_TYPE_FLAG
+			   from tb_csm_party tc 
+			   where tc.ecif_party_num = #ecifPartNum#
+		)	
+	</insert>
+	
+	<!--1.2保存tb_biz_amount_apply业务申请基本表信息-->
+	<insert id="saveTbBizAmountApply" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_apply 
+		    (AMOUNT_ID,
+			 GUARANTY_TYPE,
+			 PARTY_ID,
+			 AMOUNT_CLASSIFY,
+			 CREDIT_TYPE,
+			 CREDIT_AMOUNT,
+			 CREDIT_TERM,
+			 APPLY_DESC,
+			 APPLY_ID,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 CYCLE_UNIT,
+			 STATUS_CD,
+			 CURRENCY_CD,
+			 MAIN_GUARANTY_TYPE,
+			 FIRST_REPAY_TERM  )
+		   (select sys_guid()  	   as  AMOUNT_ID,
+			   #guarantyType#  as  GUARANTY_TYPE,
+			   party_id        as  PARTY_ID,
+			   ''              as  AMOUNT_CLASSIFY,
+			   ''              as  CREDIT_TYPE,
+			   #creditAmount#  as  CREDIT_AMOUNT,
+			   null            as  CREDIT_TERM,
+			   ''              as  APPLY_DESC,
+			   apply_id        as  APPLY_ID,
+			   sysdate         as  CREATE_TIME,
+			   ''              as  UPDATE_TIME,
+			   ''              as  CYCLE_UNIT,
+			   ''              as  STATUS_CD,
+			   'CNY'           as  CURRENCY_CD,
+			   ''              as  MAIN_GUARANTY_TYPE,
+			   ''              as  FIRST_REPAY_TERM
+			   from tb_biz_apply where apply_id = #applyId#
+		)
+	</insert>
+	
+	<!--1.3保存tb_biz_amount_Detail_apply业务申请详细表信息-->
+	<insert id="saveTbBizAmountDetailApply" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_detail_apply
+		        (PRODUCT_TYPE,
+				 CURRENCY_CD,
+				 EXCHANGE_RATE,
+				 CYCLE_UNIT,
+				 CREDIT_TERM,
+				 LOAN_USE,
+				 REPAYMENT_TYPE,
+				 CYCLE_IND,
+				 BROAD_CYCLE,
+				 BROAD_CYCLE_UNIT,
+				 CREATE_TIME,
+				 UPDATE_TIME,
+				 AMOUNT_DETAIL_ID,
+				 EXCHANGE_RATE_DATE,
+				 OLD_DETAIL_ID,
+				 DETAIL_AMT,
+				 AMOUNT_ID,
+				 PAYMENT,
+				 PREPAYMENT_PENALTY,
+				 RMB_AMT,
+				 CYCLE_IND_CON,
+				 OLD_APPLY_ID,
+				 HOLIDAY_FLG,
+				 FIRST_REPAY_TERM,
+				 END_DATE)
+		     (select 
+			     ta.product_type    as PRODUCT_TYPE,
+			     'CNY'              as CURRENCY_CD,
+			     '1'                as EXCHANGE_RATE,
+			     ''              	as CYCLE_UNIT,
+			     null               as CREDIT_TERM,
+			     #loanUse#  	    as LOAN_USE,
+			     #repaymentType#    as REPAYMENT_TYPE,
+			     '1'                as CYCLE_IND,
+			     ''                 as BROAD_CYCLE,
+			     ''                 as BROAD_CYCLE_UNIT,
+			     sysdate            as CREATE_TIME,
+			     sysdate            as UPDATE_TIME,
+			     sys_guid()         as AMOUNT_DETAIL_ID,
+			     ''                 as EXCHANGE_RATE_DATE,
+			     ''                 as OLD_DETAIL_ID,
+			     tp.credit_amount   as DETAIL_AMT,
+			     tp.amount_id       as AMOUNT_ID,
+			     #payment#          as PAYMENT,
+			     ''                 as PREPAYMENT_PENALTY,
+			     tp.credit_amount   as RMB_AMT,
+			     '1'                as CYCLE_IND_CON,
+			     ''                 as OLD_APPLY_ID,
+			     ''                 as HOLIDAY_FLG,
+			     ''                 as FIRST_REPAY_TERM,
+			     add_months(sysdate,#applyXwTerm#) as END_DATE
+			     from  tb_biz_apply ta ,
+			           tb_biz_amount_apply tp
+			     where ta.apply_id = tp.apply_id
+			       and ta.apply_id = #applyId#    
+			)
+	</insert>
+	
+	<!--1.4保存tb_biz_xw_apply小微业务申请表信息-->
+	<insert id="saveTbBizXwApply" parameterClass="java.util.HashMap">
+		insert into tb_biz_xw_apply
+		    (APPLY_DETAIL_ID,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 AMOUNT_DETAIL_ID,
+			 GTJKR,
+			 APPLY_XW_AMT,
+			 APPLY_XW_TERM,
+			 CYCLE_UNIT_XW,
+			 WTR,
+			 WTRLX,
+			 WTDKXZ,
+			 WTXM_ID,
+			 APPLY_DATE)
+		  (select 
+			   sys_guid()            as   APPLY_DETAIL_ID,
+			   sysdate               as   CREATE_TIME,
+			   sysdate               as   UPDATE_TIME,
+			   td.amount_detail_id   as   AMOUNT_DETAIL_ID,
+			   ''                    as   GTJKR,
+			   tp.credit_amount      as   APPLY_XW_AMT,
+			   #applyXwTerm#         as   APPLY_XW_TERM,
+			   '04'                  as   CYCLE_UNIT_XW,
+			   ''                    as   WTR,
+			   ''                    as   WTRLX,
+			   ''                    as   WTDKXZ,
+			   ''                    as   WTXM_ID,
+			   sysdate               as   APPLY_DATE
+			   from  tb_biz_apply ta,
+			         tb_biz_amount_apply tp,
+			         tb_biz_amount_detail_apply td
+			   where ta.apply_id = tp.apply_id
+			     and tp.amount_id = td.amount_id
+			     and ta.apply_id = #applyId#          
+		 )
+	</insert>
+	
+	<!--1.5保存tb_biz_amount_loanRate_apply详细利率表信息-->
+	<insert id="saveTbBizAmountLoanRateApply" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_loanrate_apply
+			(LOANRATE_ID,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 RATE_TYPE,
+			 INTEREST_COLLECT_TYPE,
+			 RATE_FLOAT_PROPORTION,
+			 IR_UPDATE_FREQUENCY,
+			 BASE_RATE_VALUE,
+			 RATE_FLOAT_MEMBER,
+			 OVERDUE_RATE_UP_PROPORTION,
+			 YEAR_RATE,
+			 AMOUNT_DETAIL_ID,
+			 FLOAT_TYPE,
+			 FLOAT_WAY,
+			 GRACE_PERIOD_DAY,
+			 GRACE_PERIOD_TYPE,
+			 GRACE_COUNT_INT_FLAG,
+			 HOLIDAY_FLG,
+			 HOLIDAY_INT_FLG,
+			 FEE_FLAG,
+			 DISC_FLAG)
+		  (select 
+			   sys_guid()                 as    LOANRATE_ID,
+			   sysdate                    as    CREATE_TIME,
+			   sysdate                    as    UPDATE_TIME,
+			   '1'                        as    RATE_TYPE,
+			   '1'                        as    INTEREST_COLLECT_TYPE,
+			   ''                         as    RATE_FLOAT_PROPORTION,
+			   '05'                       as    IR_UPDATE_FREQUENCY,
+			   ''                         as    BASE_RATE_VALUE,
+			   ''                         as    RATE_FLOAT_MEMBER,
+			   '50'                       as    OVERDUE_RATE_UP_PROPORTION,
+			   #yearRate#                 as    YEAR_RATE,
+			   td.amount_detail_id        as    AMOUNT_DETAIL_ID,
+			   ''                         as    FLOAT_TYPE,
+			   ''                         as    FLOAT_WAY,
+			   ''                         as    GRACE_PERIOD_DAY,
+			   '0'                        as    GRACE_PERIOD_TYPE,
+			   ''                         as    GRACE_COUNT_INT_FLAG,
+			   '0'                        as    HOLIDAY_FLG,
+			   ''                         as    HOLIDAY_INT_FLG,
+			   ''                         as    FEE_FLAG,
+			   ''                         as    DISC_FLAG
+			   from  tb_biz_apply ta,
+			         tb_biz_amount_apply tp,
+			         tb_biz_amount_detail_apply td
+			   where ta.apply_id = tp.apply_id
+			     and tp.amount_id = td.amount_id
+			     and ta.apply_id = #applyId#       
+			)
+	</insert>
+	
+	<!--2.1保存tb_biz_approve业务批复表信息-->
+	<insert id="saveTbBizApprove" parameterClass="java.util.HashMap">
+	   insert into tb_biz_approve
+	        (APPROVE_ID,
+			 BIZ_NUM,
+			 BIZ_TYPE,
+			 LOW_RISK_BIZ_TYPE,
+			 APPLY_MODE_TYPE,
+			 BIZ_HAPPEN_TYPE,
+			 ORG_NUM,
+			 USER_NUM,
+			 PARTY_ID,
+			 BUSINESS_PRODUCT,
+			 PRODUCT_TYPE,
+			 APPLY_DATE,
+			 HANDING_DATE,
+			 AMOUNT_TYPE,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 CUSTOMER_CREDIT_LEVEL,
+			 APPROVAL_NUM,
+			 BECOME_EFFECTIVE_MARK,
+			 ORIGINAL_APPROVE_ID,
+			 IS_BANK_TEAM_LOAN,
+			 LOAN_INSPECTION_FRE,
+			 POLICY_DECISION_IDEA,
+			 VALID_DATE,
+			 POLICY_DECISION_NUM,
+			 APPLY_TYPE_MARK,
+			 APPROVE_CONCLUSION,
+			 END_ORG_NUM,
+			 END_DATE,
+			 IF_DATA_MOVE,
+			 APPLY_ID,
+			 BIZ_HAPPEN_NATURE,
+			 IS_GREEN_LOAN,
+			 LOAN_TYPE,
+			 BIZ_TYPE_FLAG)
+	      (select 
+			   sys_guid()             as    APPROVE_ID,
+			   ta.biz_num             as    BIZ_NUM,
+			   ta.biz_type            as    BIZ_TYPE,
+			   ta.low_risk_biz_type   as    LOW_RISK_BIZ_TYPE,
+			   ta.apply_mode_type     as    APPLY_MODE_TYPE,
+			   ta.biz_happen_type     as    BIZ_HAPPEN_TYPE,
+			   ta.org_num             as    ORG_NUM,
+			   ta.user_num            as    USER_NUM,
+			   ta.party_id            as    PARTY_ID,
+			   ''                     as    BUSINESS_PRODUCT,
+			   ta.product_type        as    PRODUCT_TYPE,
+			   ta.apply_date          as    APPLY_DATE,
+			   ''                     as    HANDING_DATE,
+			   ''                     as    AMOUNT_TYPE,
+			   sysdate		          as    CREATE_TIME,
+			   ''                     as    UPDATE_TIME,
+			   ''                     as    CUSTOMER_CREDIT_LEVEL,
+			   ta.biz_num             as    APPROVAL_NUM,
+			   '03'                   as    BECOME_EFFECTIVE_MARK,
+			   ''                     as    ORIGINAL_APPROVE_ID,
+			   ''                     as    IS_BANK_TEAM_LOAN,
+			   ''                     as    LOAN_INSPECTION_FRE,
+			   ''                     as    POLICY_DECISION_IDEA,
+			   ta.apply_date          as    VALID_DATE,
+			   ''                     as    POLICY_DECISION_NUM,
+			   ''                     as    APPLY_TYPE_MARK,
+			   '1'                    as    APPROVE_CONCLUSION,
+			   ''                     as    END_ORG_NUM,
+			   td.end_date            as    END_DATE,
+			   ''                     as    IF_DATA_MOVE,
+			   ta.apply_id            as    APPLY_ID,
+			   ta.biz_happen_nature   as    BIZ_HAPPEN_NATURE,
+			   ta.is_green_loan       as    IS_GREEN_LOAN,
+			   ta.loan_type           as    LOAN_TYPE,
+			   ta.biz_type_flag       as    BIZ_TYPE_FLAG
+			   from tb_biz_apply ta,
+			        tb_biz_amount_apply tp,
+			        tb_biz_amount_detail_apply td
+			   where ta.apply_id = tp.apply_id
+			     and tp.amount_id = td.amount_id
+			     and ta.apply_id = #applyId#  
+		)
+	</insert>
+	
+	<!--2.2保存tb_biz_amount_approve业务批复基本表信息-->
+	<insert id="saveTbBizAmountApprove" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_approve
+		      	(AMOUNT_ID,
+				 GUARANTY_TYPE,
+				 PARTY_ID,
+				 AMOUNT_CLASSIFY,
+				 CREDIT_TYPE,
+				 CREDIT_AMOUNT,
+				 CREDIT_TERM,
+				 APPLY_DESC,
+				 CREATE_TIME,
+				 UPDATE_TIME,
+				 CYCLE_UNIT,
+				 STATUS_CD,
+				 CURRENCY_CD,
+				 MAIN_GUARANTY_TYPE,
+				 APPROVE_ID,
+				 CREDIT_AVI,
+				 CREDIT_USED,
+				 FRZ_NUM,
+				 FRZ_AMT,
+				 OPER_FLAG,
+				 FRZ_END_DATE,
+				 FRZ_TYPE,
+				 FRZ_STATUS,
+				 FRZ_REASON)
+		   (select 
+			   tp.amount_id               as         AMOUNT_ID,
+			   tp.guaranty_type           as         GUARANTY_TYPE,
+			   tp.party_id                as         PARTY_ID,
+			   tp.amount_classify         as         AMOUNT_CLASSIFY,
+			   tp.credit_type             as         CREDIT_TYPE,
+			   tp.credit_amount           as         CREDIT_AMOUNT,
+			   tp.credit_term             as         CREDIT_TERM,
+			   tp.apply_desc              as         APPLY_DESC,
+			   tp.create_time             as         CREATE_TIME,
+			   tp.update_time             as         UPDATE_TIME,
+			   tp.cycle_unit              as         CYCLE_UNIT,
+			   tp.status_cd               as         STATUS_CD,
+			   tp.currency_cd             as         CURRENCY_CD,
+			   tp.main_guaranty_type      as         MAIN_GUARANTY_TYPE,
+			   tar.approve_id             as         APPROVE_ID,
+			   tp.credit_amount           as         CREDIT_AVI,
+			   '0'                        as         CREDIT_USED,
+			   ''                         as         FRZ_NUM,
+			   ''                         as         FRZ_AMT,
+			   ''                         as         OPER_FLAG,
+			   ''                         as         FRZ_END_DATE,
+			   ''                         as         FRZ_TYPE,
+			   ''                         as         FRZ_STATUS,
+			   ''                         as         FRZ_REASON
+			   from  tb_biz_apply ta,
+		         	 tb_biz_amount_apply tp,
+		             tb_biz_approve tar
+			   where ta.apply_id = tp.apply_id
+			     and ta.apply_id = tar.apply_id
+			     and ta.apply_id = #applyId#
+		)
+	</insert>
+	
+	<!--2.3保存tb_biz_amount_detail_approve业务批复详细表信息-->
+	<insert id="saveTbBizAmountDetailApprove" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_detail_approve
+		    (PRODUCT_TYPE,
+			 CURRENCY_CD,
+			 EXCHANGE_RATE,
+			 CYCLE_UNIT,
+			 CREDIT_TERM,
+			 LOAN_USE,
+			 REPAYMENT_TYPE,
+			 CYCLE_IND,
+			 BROAD_CYCLE,
+			 BROAD_CYCLE_UNIT,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 AMOUNT_DETAIL_ID,
+			 EXCHANGE_RATE_DATE,
+			 OLD_DETAIL_ID,
+			 DETAIL_AMT,
+			 AMOUNT_ID,
+			 PAYMENT,
+			 PREPAYMENT_PENALTY,
+			 RMB_AMT,
+			 CYCLE_IND_CON,
+			 HOLIDAY_FLG,
+			 FIRST_REPAY_TERM,
+			 DETAIL_BALANCE,
+			 DETAIL_USED,
+			 END_DATE)
+		    (select 
+			   td.product_type       as  PRODUCT_TYPE,
+			   td.currency_cd        as  CURRENCY_CD,
+			   td.exchange_rate      as  EXCHANGE_RATE,
+			   td.cycle_unit         as  CYCLE_UNIT,
+			   td.credit_term        as  CREDIT_TERM,
+			   td.loan_use           as  LOAN_USE,
+			   td.repayment_type     as  REPAYMENT_TYPE,
+			   td.cycle_ind          as  CYCLE_IND,
+			   td.broad_cycle        as  BROAD_CYCLE,
+			   td.broad_cycle_unit   as  BROAD_CYCLE_UNIT,
+			   td.create_time        as  CREATE_TIME,
+			   td.update_time        as  UPDATE_TIME,
+			   td.amount_detail_id   as  AMOUNT_DETAIL_ID,
+			   td.exchange_rate_date as  EXCHANGE_RATE_DATE,
+			   td.old_detail_id      as  OLD_DETAIL_ID,
+			   td.detail_amt         as  DETAIL_AMT,
+			   td.amount_id          as  AMOUNT_ID,
+			   td.payment            as  PAYMENT,
+			   td.prepayment_penalty as  PREPAYMENT_PENALTY,
+			   td.rmb_amt            as  RMB_AMT,
+			   td.cycle_ind_con      as  CYCLE_IND_CON,
+			   td.holiday_flg        as  HOLIDAY_FLG,
+			   td.first_repay_term   as  FIRST_REPAY_TERM,
+			   td.detail_amt         as  DETAIL_BALANCE,
+			   '0'                   as  DETAIL_USED,
+			   td.end_date           as  END_DATE
+			from  tb_biz_apply ta,
+			      tb_biz_amount_apply tp,
+			      tb_biz_amount_detail_apply td
+			where ta.apply_id = tp.apply_id
+			  and tp.amount_id = td.amount_id
+			  and ta.apply_id = #applyId# 
+		)
+	</insert>
+	
+	<!--2.4保存tb_biz_xw_approve小微企业批复信息-->
+	<insert id="saveTbBizxwApprove" parameterClass="java.util.HashMap">
+	    insert into tb_biz_xw_approve
+	        (APPLY_DETAIL_ID,
+	         CREATE_TIME,
+	         UPDATE_TIME,
+	         AMOUNT_DETAIL_ID,
+	         GTJKR,
+	         APPLY_XW_AMT,
+	         APPLY_XW_TERM,
+	         CYCLE_UNIT_XW,
+	         WTR,
+	         WTRLX,
+	         WTDKXZ,
+	         WTXM_ID,
+	         APPLY_DATE)
+	      	(select          
+	            txa.apply_detail_id  as APPLY_DETAIL_ID,
+	            txa.create_time      as CREATE_TIME,
+	            txa.update_time      as UPDATE_TIME,
+	            txa.amount_detail_id as AMOUNT_DETAIL_ID,
+	            txa.gtjkr            as GTJKR,
+	            txa.apply_xw_amt     as APPLY_XW_AMT,
+	            txa.apply_xw_term    as APPLY_XW_TERM,
+	            txa.cycle_unit_xw    as CYCLE_UNIT_XW,
+	            txa.wtr              as WTR,
+	            txa.wtrlx            as WTRLX,
+	            txa.wtdkxz           as WTDKXZ,
+	            txa.wtxm_id          as WTXM_ID,
+	            txa.apply_date       as APPLY_DATE
+	         from 
+	            tb_biz_apply ta,
+	            tb_biz_amount_apply tp,
+	            tb_biz_amount_detail_apply td,
+	            tb_biz_xw_apply txa
+	        where ta.apply_id = tp.apply_id
+	         and tp.amount_id = td.amount_id
+	         and td.amount_detail_id = txa.amount_detail_id
+	         and ta.apply_id = #applyId#     
+			)
+	</insert>
+	
+	<!--2.5保存tb_biz_amount_loanrate_approve利率明细信息-->
+	<insert id="saveTbBizLoanrateApprove" parameterClass="java.util.HashMap">
+		insert into tb_biz_amount_loanrate_approve
+            (LOANRATE_ID,
+             CREATE_TIME,
+             UPDATE_TIME,
+             RATE_TYPE,
+             INTEREST_COLLECT_TYPE,
+             RATE_FLOAT_PROPORTION,
+             IR_UPDATE_FREQUENCY,
+             BASE_RATE_VALUE,
+             RATE_FLOAT_MEMBER,
+             OVERDUE_RATE_UP_PROPORTION,
+             YEAR_RATE,
+             AMOUNT_DETAIL_ID,
+             FLOAT_TYPE,
+             FLOAT_WAY,
+             GRACE_PERIOD_DAY,
+             GRACE_PERIOD_TYPE,
+             GRACE_COUNT_INT_FLAG,
+             HOLIDAY_FLG,
+             HOLIDAY_INT_FLG,
+             FEE_FLAG,
+             DISC_FLAG)
+    	(select 
+	            tl.loanrate_id                as   LOANRATE_ID,
+	            tl.create_time                as   CREATE_TIME,
+	            tl.update_time                as   UPDATE_TIME,
+	            tl.rate_type                  as   RATE_TYPE,
+	            tl.interest_collect_type      as   INTEREST_COLLECT_TYPE,
+	            tl.rate_float_proportion      as   RATE_FLOAT_PROPORTION,
+	            tl.ir_update_frequency        as   IR_UPDATE_FREQUENCY,
+	            tl.base_rate_value            as   BASE_RATE_VALUE,
+	            tl.rate_float_member          as   RATE_FLOAT_MEMBER,
+	            tl.overdue_rate_up_proportion as   OVERDUE_RATE_UP_PROPORTION,
+	            tl.year_rate                  as   YEAR_RATE,
+	            tl.amount_detail_id           as   AMOUNT_DETAIL_ID,
+	            tl.float_type                 as   FLOAT_TYPE,
+	            tl.float_way                  as   FLOAT_WAY,
+	            tl.grace_period_day           as   GRACE_PERIOD_DAY,
+	            tl.grace_period_type          as   GRACE_PERIOD_TYPE,
+	            tl.grace_count_int_flag       as   GRACE_COUNT_INT_FLAG,
+	            tl.holiday_flg                as   HOLIDAY_FLG,
+	            tl.holiday_int_flg            as   HOLIDAY_INT_FLG,
+	            tl.fee_flag                   as   FEE_FLAG,
+	            tl.disc_flag                  as   DISC_FLAG
+          from 
+               tb_biz_apply ta,
+               tb_biz_amount_apply tp,
+               tb_biz_amount_detail_apply td,
+               tb_biz_amount_loanrate_apply tl
+	        where ta.apply_id = tp.apply_id
+             and tp.amount_id = td.amount_id
+             and td.amount_detail_id = tl.amount_detail_id
+             and ta.apply_id = #applyId#
+    	)	
+	</insert>
+	
+	<!--3.1保存tb_con_contract_info主合同信息-->
+	<insert id="saveTbConContractInfo" parameterClass="java.util.HashMap">
+		insert into tb_con_contract_info
+			(CONTRACT_ID,AMOUNT_DETAIL_ID,CONTRACT_NUM,CONTRACT_ADDRESS,
+			 PARTY_ID,OLD_CONTRACT_ID,CURRENCY_CD,CONTRACT_AMT,CONTRACT_TERM,
+			 CYCLE_UNIT,BEGIN_DATE,END_DATE,CONTRACT_DATE,LOAN_USE,GUARANTY_TYPE,LOAN_TURN,
+			 USER_NUM,ORG_NUM,CREATE_TIME,UPDATE_TIME,PRODUCT_TYPE,CON_STATUS,
+			 TRUS_TO_PAY_FLG,STOP_PAY_FLG,SPEC_PAYMENT_DATE,EXCHANGE_RATE,RMB_AMT,
+			 CON_BALANCE,CYCLE_IND_CON,REPAYMENT_TYPE,TK_DATE,HOLIDAY_FLG,MAIN_GUARANTY_TYPE,
+			 XY_ID,PAPER_CON_NUM,INTERNAL_DAYS,CLS_RESULT,IF_DATA_MOVE,FIRST_REPAY_TERM,
+			 CON_YU_E,PAY_WAY,PAY_DEPEND1,PAY_DEPEND2,PAY_DEPEND3,PREPAYMENT_PENALTY,
+			 PREPAY_MAKEUP_RATE,LEAST_PREPAY_AMOUNT,PREPAY_JS,BZJBL,CRD_CENT,
+			 APPLY_MODE_TYPE,LOW_RISK_BIZ_TYPE,AGRICUL_LOANS)
+		 (select 
+			   sys_guid()                         as CONTRACT_ID,
+			   tdr.amount_detail_id               as AMOUNT_DETAIL_ID,
+			   #contractNum#                      as CONTRACT_NUM,
+			   #signPlace#                        as CONTRACT_ADDRESS,
+			   tpr.party_id                       as PARTY_ID,
+			   ''                                 as OLD_CONTRACT_ID,
+			   'CNY'                              as CURRENCY_CD,
+			   tdr.detail_amt                     as CONTRACT_AMT,
+			   txr.apply_xw_term                  as CONTRACT_TERM,
+			   '04'                               as CYCLE_UNIT,
+			   tar.valid_date                     as BEGIN_DATE,
+			   tdr.end_date                       as END_DATE,
+			   tar.valid_date                     as CONTRACT_DATE,
+			   tdr.loan_use                       as LOAN_USE,
+			   tpr.guaranty_type                  as GUARANTY_TYPE,
+			   ''                                 as LOAN_TURN,
+			   tar.user_num                       as USER_NUM,
+			   tar.org_num                        as ORG_NUM,
+			   tdr.create_time                    as CREATE_TIME,
+			   tdr.update_time                    as UPDATE_TIME,
+			   tdr.product_type                   as PRODUCT_TYPE,
+			   '03'                               as CON_STATUS,
+			   '0'                                as TRUS_TO_PAY_FLG,
+			   '0'                                as STOP_PAY_FLG,
+			   '21'                               as SPEC_PAYMENT_DATE,
+			   '1'                                as EXCHANGE_RATE,
+			   tdr.rmb_amt                        as RMB_AMT,
+			   tdr.detail_amt                     as CON_BALANCE,
+			   '1'                                as CYCLE_IND_CON,
+			   tdr.repayment_type                 as REPAYMENT_TYPE,
+			    to_date(to_char(sysdate+30,'yyyy-mm-dd'),'yyyy/mm/dd')        as TK_DATE,
+			   ''                                 as HOLIDAY_FLG,
+			   tpr.guaranty_type                  as MAIN_GUARANTY_TYPE,
+			   ''                                 as XY_ID,
+			   #contractNum#                      as PAPER_CON_NUM,
+			   '7'                                as INTERNAL_DAYS,
+			   ''                                 as CLS_RESULT,
+			   ''                                 as IF_DATA_MOVE,
+			   ''                                 as FIRST_REPAY_TERM,
+			   '0'                                as CON_YU_E,
+			   #payWay#                           as PAY_WAY,
+			   ''                                 as PAY_DEPEND1,
+			   ''                                 as PAY_DEPEND2,
+			   ''                                 as PAY_DEPEND3,
+			   '0'                                as PREPAYMENT_PENALTY,
+			   ''                                 as PREPAY_MAKEUP_RATE,
+			   ''                                 as LEAST_PREPAY_AMOUNT,
+			   ''                                 as PREPAY_JS,
+			   ''                                 as BZJBL,
+			   ''                                 as CRD_CENT,
+			   ''                                 as APPLY_MODE_TYPE,
+			   ''                                 as LOW_RISK_BIZ_TYPE,
+			   ''                                 as AGRICUL_LOANS
+			   from  tb_biz_approve tar,
+			         tb_biz_amount_approve tpr,
+			         tb_biz_amount_detail_approve tdr,
+			         tb_biz_xw_approve txr
+			   where tar.approve_id = tpr.approve_id
+			     and tpr.amount_id = tdr.amount_id
+			     and tdr.amount_detail_id = txr.amount_detail_id
+			     and tar.apply_id = #applyId#     
+		  )
+	</insert>
+	
+	<!--3.2保存tb_con_Flag_info合同业务标志信息-->
+	<insert id="saveTbConFlagInfo" parameterClass="java.util.HashMap">
+		insert into tb_con_flag_info
+		  (FLAG_ID,
+		   CONTRACT_ID,
+		   LOAN_TURN,
+		   GREEN_LOAN,
+		   EMPHASIS_TURN,
+		   RHBZFFL,
+		   YJBZFFL,
+		   RISK_INFO,
+		   ACT,
+		   SERVICE_TYPE,
+		   REDUCE_AMOUNT,
+		   FOCUS_TYPE,
+		   AJUST_TYPE,
+		   UPGRADE_TYPE,
+		   NEW_PRODUCT_TYPE)
+		  (select 
+		  		  sys_guid() as FLAG_ID,
+		          tf.contract_id as CONTRACT_ID,
+		          #loanTurn# as LOAN_TURN,
+		          '' as GREEN_LOAN,
+		          '' as EMPHASIS_TURN,
+		          '' as RHBZFFL,
+		          '' as YJBZFFL,
+		          '' as RISK_INFO,
+		          '' as ACT,
+		          '' as SERVICE_TYPE,
+		          '' as REDUCE_AMOUNT,
+		          '' as FOCUS_TYPE,
+		          '' as AJUST_TYPE,
+		          '' as UPGRADE_TYPE,
+		          '' as NEW_PRODUCT_TYPE
+		     from tb_biz_approve               tar,
+		          tb_biz_amount_approve        tpr,
+		          tb_biz_amount_detail_approve tdr,
+		          tb_con_contract_info         tf
+		    where tar.approve_id = tpr.approve_id
+		      and tpr.amount_id = tdr.amount_id
+		      and tdr.amount_detail_id = tf.amount_detail_id
+		      and tar.apply_id = #applyId#)
+	</insert>
+	
+	<!--3.3保存tb_con_loanrate合同利率信息-->
+	<insert id="saveTbConLoanRate" parameterClass="java.util.HashMap">
+		insert into tb_con_loanrate
+				(LOANRATE_ID,
+				 CREATE_TIME,
+				 UPDATE_TIME,
+				 RATE_TYPE,
+				 INTEREST_COLLECT_TYPE,
+				 RATE_FLOAT_PROPORTION,
+				 IR_UPDATE_FREQUENCY,
+				 BASE_RATE_VALUE,
+				 RATE_FLOAT_MEMBER,
+				 OVERDUE_RATE_UP_PROPORTION,
+				 YEAR_RATE,
+				 FLOAT_TYPE,
+				 FLOAT_WAY,
+				 GRACE_PERIOD_DAY,
+				 GRACE_PERIOD_TYPE,
+				 GRACE_COUNT_INT_FLAG,
+				 CONTRACT_ID,
+				 HOLIDAY_FLG,
+				 HOLIDAY_INT_FLG,
+				 FEE_FLAG,
+				 DISC_FLAG)
+			(select
+				   sys_guid()                 as LOANRATE_ID,
+				   tlr.create_time            as CREATE_TIME,
+				   tlr.update_time            as UPDATE_TIME,
+				   tlr.rate_type              as RATE_TYPE,
+				   tlr.interest_collect_type  as INTEREST_COLLECT_TYPE,
+				   tlr.rate_float_proportion  as RATE_FLOAT_PROPORTION,
+				   tlr.ir_update_frequency    as IR_UPDATE_FREQUENCY,
+				   tlr.base_rate_value        as BASE_RATE_VALUE,
+				   tlr.rate_float_member      as RATE_FLOAT_MEMBER,
+				   tlr.overdue_rate_up_proportion   as    OVERDUE_RATE_UP_PROPORTION,
+				   tlr.year_rate              as YEAR_RATE,
+				   tlr.float_type             as FLOAT_TYPE,
+				   tlr.float_way              as FLOAT_WAY,
+				   tlr.grace_period_day       as GRACE_PERIOD_DAY,
+				   tlr.grace_period_type      as GRACE_PERIOD_TYPE,
+				   tlr.grace_count_int_flag   as GRACE_COUNT_INT_FLAG,
+				   tf.contract_id             as CONTRACT_ID,
+				   tlr.holiday_flg            as HOLIDAY_FLG,
+				   tlr.holiday_int_flg        as HOLIDAY_INT_FLG,
+				   tlr.fee_flag               as FEE_FLAG,
+				   tlr.disc_flag              as DISC_FLAG
+				   from  tb_biz_approve tar,
+				         tb_biz_amount_approve tpr,
+				         tb_biz_amount_detail_approve tdr,
+				         tb_biz_amount_loanrate_approve tlr,
+				         tb_con_contract_info tf
+				   where tar.approve_id = tpr.approve_id
+				     and tpr.amount_id = tdr.amount_id
+				     and tdr.amount_detail_id = tlr.amount_detail_id
+				     and tdr.amount_detail_id = tf.amount_detail_id
+				     and tar.apply_id = #applyId#    
+		)
+	</insert>
+	
+	<!--3.4保存tb_con_notice_addrs合同通知书信息-->
+	<insert id="saveTbConNoticeAddrs" parameterClass="java.util.HashMap">
+		insert into tb_con_notice_addrs
+			(UUID,
+			 CONTRACT_ID,
+			 A_SEND_ADDR,
+			 A_POSTCODE,
+			 A_RECEIVER,
+			 A_PHONE,
+			 A_EMAIL,
+			 A_OTHER,
+			 B_SEND_ADDR,
+			 B_POSTCODE,
+			 B_RECEIVER,
+			 B_PHONE,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 B_EMAIL)
+		(select 
+			   sys_guid()      as   UUID,
+			   tf.contract_id  as   CONTRACT_ID,
+			   ''              as   A_SEND_ADDR,
+			   ''              as   A_POSTCODE,
+			   ''              as   A_RECEIVER,
+			   ''              as   A_PHONE,
+			   ''              as   A_EMAIL,
+			   ''              as   A_OTHER,
+			   ''              as   B_SEND_ADDR,
+			   ''              as   B_POSTCODE,
+			   ''              as   B_RECEIVER,
+			   ''              as   B_PHONE,
+			   sysdate         as   CREATE_TIME,
+			   sysdate         as   UPDATE_TIME,
+			   ''              as   B_EMAIL
+			   from  tb_biz_approve tar,
+			         tb_biz_amount_approve tpr,
+			         tb_biz_amount_detail_approve tdr,
+			         tb_con_contract_info tf
+			   where tar.approve_id = tpr.approve_id 
+			     and tpr.amount_id = tdr.amount_id
+			     and tdr.amount_detail_id = tf.amount_detail_id
+			     and tar.apply_id = #applyId#
+		)
+	</insert>
+	
+	
+	<!--3.5保存tb_con_attached_info合同通知书信息-->
+	<insert id="saveTbConAttachedInfo" parameterClass="java.util.HashMap">
+		insert into tb_con_attached_info
+			(ATTACHED,
+			 CONTRACT_ID,
+			 ARBITRATE_TYPE,
+			 ARBITRATE_NAME,
+			 ARBITRATE_ADDRESS,
+			 OTHER,
+			 A_HOLD_COUNT,
+			 B_HOLD_COUNT,
+			 C_TYPE,
+			 C_HOLD_COUNT,
+			 TOTAL_COUNT,
+			 ADD_CLAUSE,
+			 CONSTRAINT_INDEX)
+		  (select
+			   sys_guid()      as ATTACHED,
+			   tf.contract_id  as CONTRACT_ID,
+			   '01'            as ARBITRATE_TYPE,
+			   ''              as ARBITRATE_NAME,
+			   ''              as ARBITRATE_ADDRESS,
+			   ''              as OTHER,
+			   ''              as A_HOLD_COUNT,
+			   ''              as B_HOLD_COUNT,
+			   ''              as C_TYPE,
+			   ''              as C_HOLD_COUNT,
+			   '3'             as TOTAL_COUNT,
+			   '个人网络贷款'      as ADD_CLAUSE,
+			   ''              as CONSTRAINT_INDEX
+			   from tb_biz_approve tar,
+			        tb_biz_amount_approve tpr,
+			        tb_biz_amount_detail_approve tdr,
+			        tb_con_contract_info tf
+			   where tar.approve_id = tpr.approve_id 
+			     and tpr.amount_id = tdr.amount_id
+			     and tdr.amount_detail_id = tf.amount_detail_id
+			     and tar.apply_id = #applyId#
+		    )
+	</insert>
+	<!--3.6保存tb_con_zh合同账户信息-->
+	<insert id="saveTbConZh" parameterClass="java.util.HashMap">
+		insert into tb_con_zh
+			(ID, 
+			 ZHBS, 
+			 ZHLX, 
+			 KZBS, 
+			 ZH, 
+			 ZHKHJG, 
+			 ZHMC, 
+			 CONTRACT_ID,  
+			 ACC_STATUS)
+		  (select
+			    sys_guid()      as ID, 
+			    #zhbs#          as ZHBS, 
+			    #zhlx#          as ZHLX, 
+			    #kzbs#          as KZBS, 
+			    #zh#            as ZH, 
+			    #zhkhjg#        as ZHKHJG, 
+			    #zhmc#          as ZHMC, 
+			    tf.contract_id  as CONTRACT_ID,  
+			    #accStatus#     as ACC_STATUS
+			   from  tb_biz_approve tar,
+			         tb_biz_amount_approve tpr,
+			         tb_biz_amount_detail_approve tdr,
+			         tb_con_contract_info tf
+			   where tar.approve_id = tpr.approve_id
+			    and  tpr.amount_id = tdr.amount_id
+			    and  tdr.amount_detail_id = tf.amount_detail_id
+			    and  tar.apply_id = #applyId#
+		)
+	</insert>
+	
+	<!--4.1保存tb_loan_info出账信息-->
+	<insert id="saveTbLoanInfo" parameterClass="java.util.HashMap">
+		insert into tb_loan_info
+			(LOAN_ID,
+			 CONTRACT_ID,
+			 LOAN_NUM,
+			 LOAN_SUBJECT1,
+			 LOAN_AMT,
+			 CURRENCY_CD,
+			 LOAN_TERM,
+			 CYCLE_UNIT,
+			 BEGIN_DATE,
+			 END_DATE,
+			 LOAN_ORG,
+			 USER_NUM,
+			 ORG_NUM,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 PRODUCT_TYPE,
+			 PARTY_ID,
+			 LOAN_STATUS,
+			 SPEC_PAYMENT_DATE,
+			 HOLIDAY_FLG,
+			 HOLIDAY_ITR_WAY,
+			 COUNTER_FLG,
+			 BAT_FLG,
+			 TRUS_TO_PAY_FLG,
+			 STOP_PAY_FLG,
+			 REPAY_TYPE,
+			 SUMMARY_NUM,
+			 EXCHANGE_RATE,
+			 RMB_AMT,
+			 IF_DATA_MOVE,
+			 FIRST_REPAY_TERM,
+			 HPZS,
+			 HPBH,
+			 PJZL,
+			 DRWE_BNK_NM,
+			 DRWE_BNK_NO,
+			 DRWE_BNK_ADR,
+			 TXZQ,
+			 COM_AMT,
+			 TERM,
+			 UNIT,
+			 PAY_OUT_FLAG)
+		(select   
+			   #loanId#                   as LOAN_ID,
+			   tf.contract_id             as CONTRACT_ID,
+			   #payNum#                   as LOAN_NUM,
+			   ''              			  as LOAN_SUBJECT1,
+			   #loanAmt#            	  as LOAN_AMT,
+			   tf.currency_cd             as CURRENCY_CD,
+			   to_date(to_char(tf.end_date,'yyyy/mm/dd'),'yyyy/mm/dd')-to_date(to_char(tf.begin_date,'yyyy/mm/dd'),'yyyy/mm/dd')  as LOAN_TERM,
+			   '05'                       as CYCLE_UNIT,
+			   #beginDate#    			  as BEGIN_DATE,
+			   add_months(#beginDate#,#loanTerm#)    as END_DATE,
+			   tf.org_num                 as LOAN_ORG,
+			   tf.user_num                as USER_NUM,
+			   tf.org_num                 as ORG_NUM,
+			   tf.create_time             as CREATE_TIME,
+			   tf.update_time             as UPDATE_TIME,
+			   tf.product_type            as PRODUCT_TYPE,
+			   tf.party_id                as PARTY_ID,
+			   '01'                       as LOAN_STATUS,
+			   tf.spec_payment_date       as SPEC_PAYMENT_DATE,
+			   tf.holiday_flg             as HOLIDAY_FLG,
+			   ''                         as HOLIDAY_ITR_WAY,
+			   ''                         as COUNTER_FLG,
+			   '1'                        as BAT_FLG,
+			   tf.pay_way                 as TRUS_TO_PAY_FLG,
+			   tf.stop_pay_flg            as STOP_PAY_FLG,
+			   tf.repayment_type          as REPAY_TYPE,
+			   #payNum#                   as SUMMARY_NUM,
+			   tf.exchange_rate           as EXCHANGE_RATE,
+			   #loanAmt#                  as RMB_AMT,
+			   tf.if_data_move            as IF_DATA_MOVE,
+			   tf.first_repay_term        as FIRST_REPAY_TERM,
+			   ''                         as HPZS,
+			   ''                         as HPBH,
+			   ''                         as PJZL,
+			   ''                         as DRWE_BNK_NM,
+			   ''                         as DRWE_BNK_NO,
+			   ''                         as DRWE_BNK_ADR,
+			   ''                         as TXZQ,
+			   ''                         as COM_AMT,
+			   #loanTerm#          		  as TERM,
+			   tf.cycle_unit              as UNIT,
+			   ''                         as PAY_OUT_FLAG
+			   from tb_con_contract_info tf where tf.contract_num=#contractNum#
+		)
+	</insert>
+	
+	<!--4.2更新tb_loan_info出账信息获取业务别-->
+	<update id="updateTbLoanInfo" parameterClass="java.util.HashMap">
+			update  tb_loan_info tfo set 
+             		tfo.loan_subject1 = #loanSubject#
+      		where tfo.loan_id = #loanId#	  
+	</update>
+	
+	<!--4.3更新tb_loan_zh放款账户信息-->
+	<insert id="saveTbLoanZh" parameterClass="java.util.HashMap">
+		insert into tb_loan_zh
+			(ID, 
+			 ZHBS, 
+			 ZHLX, 
+			 KZBS, 
+			 ZH, 
+			 ZHKHJG, 
+			 ZHMC, 
+			 LOAN_ID)
+		 (select
+			  sys_guid()      as ID, 
+			  tcz.zhbs        as ZHBS, 
+			  tcz.zhlx        as ZHLX, 
+			  tcz.kzbs        as KZBS, 
+			  tcz.zh          as ZH, 
+			  tcz.zhkhjg      as ZHKHJG, 
+			  tcz.zhmc        as ZHMC, 
+			  #loanId#        as LOAN_ID
+			  from  tb_con_contract_info tf,
+			        tb_con_zh tcz
+			  where tf.contract_id = tcz.contract_id
+			    and tf.contract_num = #contractNum#
+	     )
+	</insert>
+	
+	<!--4.4更新tb_loan_loanRate放款利率信息-->
+	<insert id="saveTbLoanLoanRate" parameterClass="java.util.HashMap">
+		insert into tb_loan_loanrate 
+		    (LOANRATE_ID, CREATE_TIME, UPDATE_TIME, RATE_TYPE, INTEREST_COLLECT_TYPE, RATE_FLOAT_PROPORTION, IR_UPDATE_FREQUENCY, 
+			   BASE_RATE_VALUE, RATE_FLOAT_MEMBER, OVERDUE_RATE_UP_PROPORTION, YEAR_RATE, FLOAT_TYPE, FLOAT_WAY, GRACE_PERIOD_DAY, 
+			   GRACE_PERIOD_TYPE, GRACE_COUNT_INT_FLAG, CONTRACT_ID, LOAN_ID, SUMMARY_ID, HOLIDAY_FLG, HOLIDAY_INT_FLG, FEE_FLAG, 
+			   DISC_FLAG, NEW_BASE_RATE_VALUE, NEW_YEAR_RATE, VALID_DATE) 
+			(select  
+			   LOANRATE_ID, CREATE_TIME, UPDATE_TIME, RATE_TYPE, INTEREST_COLLECT_TYPE, RATE_FLOAT_PROPORTION, IR_UPDATE_FREQUENCY, 
+			   intRate, RATE_FLOAT_MEMBER, OVERDUE_RATE_UP_PROPORTION, YEAR_RATE, FLOAT_TYPE, FLOAT_WAY, GRACE_PERIOD_DAY, 
+			   GRACE_PERIOD_TYPE, GRACE_COUNT_INT_FLAG, CONTRACT_ID, LOAN_ID, SUMMARY_ID, HOLIDAY_FLG, HOLIDAY_INT_FLG, FEE_FLAG, 
+			   DISC_FLAG, NEW_BASE_RATE_VALUE, NEW_YEAR_RATE, VALID_DATE
+			  from 
+			     (
+			     with t1 as(
+			          select   
+			               sys_guid()                     as LOANRATE_ID,
+			               tcl.create_time                as CREATE_TIME,
+			               tcl.update_time                as UPDATE_TIME,
+			               tcl.rate_type                  as RATE_TYPE,
+			               tcl.interest_collect_type      as INTEREST_COLLECT_TYPE,
+			               tcl.rate_float_proportion      as RATE_FLOAT_PROPORTION,
+			               tcl.ir_update_frequency        as IR_UPDATE_FREQUENCY,
+			               ''                			  as BASE_RATE_VALUE,
+			               tcl.rate_float_member          as RATE_FLOAT_MEMBER,
+			               tcl.overdue_rate_up_proportion as OVERDUE_RATE_UP_PROPORTION,
+			               tcl.year_rate                  as YEAR_RATE,
+			               tcl.float_type                 as FLOAT_TYPE,
+			               tcl.float_way                  as FLOAT_WAY,
+			               tcl.grace_period_day           as GRACE_PERIOD_DAY,
+			               tcl.grace_period_type          as GRACE_PERIOD_TYPE,
+			               tcl.grace_count_int_flag       as GRACE_COUNT_INT_FLAG,
+			               tcl.contract_id                as CONTRACT_ID,
+			               tlf.loan_id                    as LOAN_ID,
+			               ''                             as SUMMARY_ID,
+			               tcl.holiday_flg                as HOLIDAY_FLG,
+			               tcl.holiday_int_flg            as HOLIDAY_INT_FLG,
+			               tcl.fee_flag                   as FEE_FLAG,
+			               tcl.disc_flag                  as DISC_FLAG,
+			               ''                             as NEW_BASE_RATE_VALUE,
+			               ''                             as NEW_YEAR_RATE,
+			               ''                             as VALID_DATE
+			               from  tb_con_loanrate tcl,
+			                     tb_loan_info tlf
+			               where tcl.contract_id = tlf.contract_id
+			                 and tlf.loan_id = #loanId#
+			     ) ,
+			     t2 as (select int_rate intRate from tb_sys_basic_rate tb where tb.int_rate_cd=#intRateCd#)
+			     select * from t1,t2       
+		  ) )
+	</insert>
+	
+	<!--4.5更新tb_loan_Xw小企业贷款放款-->
+	<insert id="saveTbLoanXw" parameterClass="java.util.HashMap">
+		insert into TB_LOAN_XW
+			(APPLY_DETAIL_ID,
+			 CREATE_TIME,
+			 UPDATE_TIME,
+			 AMOUNT_DETAIL_ID,
+			 GTJKR,
+			 PAY_WAY,
+			 CAPITAL_PAY_CONDITION1,
+			 CAPITAL_PAY_CONDITION2,
+			 CAPITAL_PAY_CONDITION3,
+			 SFNHDK,
+			 SFCZTX,
+			 CONTRACT_ID,
+			 LOAN_ID)
+		(select
+		   sys_guid()          as    APPLY_DETAIL_ID,
+		   ''                  as    CREATE_TIME,
+		   ''                  as    UPDATE_TIME,
+		   ''                  as    AMOUNT_DETAIL_ID,
+		   ''                  as    GTJKR,
+		   ''                  as    PAY_WAY,
+		   ''                  as    CAPITAL_PAY_CONDITION1,
+		   ''                  as    CAPITAL_PAY_CONDITION2,
+		   ''                  as    CAPITAL_PAY_CONDITION3,
+		   ''                  as    SFNHDK,
+		   ''                  as    SFCZTX,
+		   tlf.contract_id     as    CONTRACT_ID,
+		   tlf.loan_id         as    LOAN_ID
+		   from  tb_loan_info tlf
+		   where tlf.loan_id = #loanId#
+		  )
+	</insert>
+	
+	<!--5.1查询中间表是否有正在处理的业务-->
+	<select id="queryApplyMiddle" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizApplyMiddle">
+		select * from tb_biz_apply_middle tm 
+			where tm.ecif_party_num=#ecifPartyNum# 
+			and tm.apply_status in ('01','03','08')
+	</select>
+	<!--5.2查询中间表客户征信信息是否有拒绝受理的情况-->
+	<select id="queryApplyMiddleCredit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	     select case
+	              when add_months(max(tm.creat_time), #months#) > sysdate then
+	               1
+	              else
+	               0
+	            end countCredit
+	       from tb_biz_apply_middle tm
+	      where tm.apply_status = '03'
+	        and tm.ecif_party_num = #ecifPartyNum#
+	</select>
+	
+	<!--5.3查询白名单信息-->
+	<select id="queryWhiteCustomer" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.csm.TbCsmWhiteCustomer">
+		 select
+			  customer_id    as csutomerId,
+			  cus_name       as cusName,
+			  cert_num       as certNum,
+			  cert_type      as certType,
+			  gender         as gender,
+			  total_limit    as totalLimit,
+			  phone_num      as phoneNum,
+			  ecif_party_num as ecifPartyNum,
+			  cus_status     as cusStatus,
+			  rate           as rate,
+			  remark         as remark,
+			  user_num       as userNum,
+			  org_num        as orgNum,
+			  create_time    as createTime,
+			  update_time    as updateTime,
+			  job_rank       as jobRank,
+			  income         as income,
+			  manage_org     as manageOrg,
+			  manage_user    as manageUser,
+			  party_id       as partyId
+		 from TB_CSM_WHITE_CUSTOMER tcw 
+		where tcw.cus_status = '02'
+		  and tcw.ecif_party_num = #ecifPartyNum#
+	</select>
+	
+	<!--5.4查询白名单客户的额度信息-->
+	<select id="getWhiteCustomerInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		with t1 as
+		 (select twc.rate as rate,
+		         nvl(twc.total_limit, 0) as totalLimit,
+		         twc.manage_user as userId,
+		         twc.manage_org as orgCode,
+		         twc.ecif_party_num as ecifPartyNum,
+		         twc.cus_name as cusName,
+		         twc.cert_num as cerNum,
+		         twc.cert_type as cerType
+		    from tb_csm_white_customer twc
+		   where twc.ecif_party_num = #ecifPartyNum#
+		     and twc.cert_num = #cerNum#),
+		t2 as
+		 (select nvl(sum(tf.con_yu_e), 0) usedLimit
+		    from tb_csm_white_customer twc, 
+		         tb_con_contract_info tf
+		   where twc.party_id = tf.party_id
+		     and tf.con_status = '03'
+		     and tf.product_type = '02003013'
+		     and twc.ecif_party_num = #ecifPartyNum#
+		     and twc.cert_num = #cerNum#)
+		select * from t1, t2
+	</select>
+	
+	<!--5.5客户申请状态查询-->
+	<select id="queryWhiteApplyStatusInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select 
+			tcw.ecif_party_num  as  ecifPartyNum,
+			tam.apply_id        as  applyId,
+			tam.user_num        as  userName,
+			tam.org_num         as  orgName,
+			to_char(tam.apply_date,'yyyy-mm-dd')      as  applyDate,
+			tam.apply_rate      as  applyRate,
+			tam.apply_xw_term   as  applyXwTerm,
+			tam.amt             as  applyAmt,
+			tam.repayment_type  as  repaymentType,
+			tam.zhzh            as  zhzh,
+			tam.first_zh_zh     as  firstPayBackZhzh,
+			tam.second_zh_zh    as  secondPayBackZhzh,
+			tam.third_zh_zh     as  thirdPayBackZhzh,
+			tam.phone_num       as  phoneNum,
+			tam.loan_use        as  loanUse,
+			tam.payment         as  payment,
+			tam.apply_status    as  applyStatus,
+			tam.error_msg       as  errorMsg
+			from  tb_csm_white_customer tcw,
+			      tb_biz_apply_middle   tam
+		where tcw.party_id = tam.party_id
+		  and tcw.ecif_party_num = #ecifPartyNum#
+		<isNotNull property="applyStatus"> 
+ 		 	and tam.apply_status in ($applyStatus$)
+ 		</isNotNull>
+ 		    order by applydate desc	  
+	</select>
+
+</sqlMap>

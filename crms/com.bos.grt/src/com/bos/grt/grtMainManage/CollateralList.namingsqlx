@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:钟辉 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="getCollateraList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select basic.ORG_NUM,basic.surety_id,basic.SURETY_NO,basic.ownership_num,
+		rel.relation_id,t.PARTY_NAME,basic.sort_type,basic.ASSESS_VALUE,basic.coll_type,
+		basic.MORTGAGE_VALUE,basic.total_amt,basic.SURETY_NO,basic.ASSESS_VALUE,
+		basic.MORTGAGE_VALUE,(basic.MORTGAGE_VALUE-basic.AVI_AMT) as used_amt
+			from TB_GRT_MORTGAGE_BASIC basic,tb_biz_grt_rel rel,tb_csm_party t
+			where basic.surety_id=rel.surety_id
+			and basic.PARTY_ID=t.PARTY_ID
+			and rel.SURETY_TYPE=#collType#
+			and basic.mortgage_status!='06'
+			and rel.APPLY_ID=#applyId#
+			<isNotNull property="partyId">  and basic.party_Id = '$partyId$' </isNotNull>
+			<isNotNull property="sortType">  and basic.sort_type = '$sortType$' </isNotNull>
+    </select>
+    
+    <select id="getOuteGrtList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select basic.ORG_NUM,basic.SURETY_ID,p.PARTY_NAME,basic.COLL_TYPE,basic.SORT_TYPE,basic.ASSESS_VALUE,basic.MORTGAGE_VALUE,basic.TOTAL_AMT,basic.SURETY_NO
+			from TB_GRT_MORTGAGE_BASIC  basic,TB_CSM_PARTY p
+			where basic.PARTY_ID=p.PARTY_ID
+			and basic.mortgage_status='03'
+			and basic.sort_type = #sortType#
+			<!--and basic.coll_type=#collType#-->
+			and basic.party_id=#partyId#
+    </select>
+    
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+</sqlMap>

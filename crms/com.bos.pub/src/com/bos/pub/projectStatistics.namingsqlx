@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+<!--
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+     -->
+    <select id="projectStatistics" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.ProjectStatisticsEntity">
+
+SELECT  sp.PROJECT_NAME, sum(case when to_char(time,'MM')='01' then om.should_the_scoring else 0 end )as oneMonth,
+          sum(case when to_char(time,'MM')='02' then om.should_the_scoring else 0 end) as twoMonth,
+          sum(case when to_char(time,'MM')='03' then om.should_the_scoring else 0 end) as threeMonth,
+          sum(case when to_char(time,'MM')='04' then om.should_the_scoring else 0 end) as fourMonth,
+          sum(case when to_char(time,'MM')='05' then om.should_the_scoring else 0 end) as fiveMonth,
+          sum(case when to_char(time,'MM')='06' then om.should_the_scoring else 0 end) as sixMonth,
+          sum(case when to_char(time,'MM')='07' then om.should_the_scoring else 0 end) as sevenMonth,
+          sum(case when to_char(time,'MM')='08' then om.should_the_scoring else 0 end) as eightMonth,
+          sum(case when to_char(time,'MM')='09' then om.should_the_scoring else 0 end) as nineMonth,
+          sum(case when to_char(time,'MM')='10' then om.should_the_scoring else 0 end) as tenMonth,
+          sum(case when to_char(time,'MM')='11' then om.should_the_scoring else 0 end) as elevenMonth,
+          sum(case when to_char(time,'MM')='12' then om.should_the_scoring else 0 end) as twelveMonth         
+FROM tb_order_message om 
+RIGHT JOIN tb_score_project_message sp
+ON  om.score_project_number=sp.project_number
+where 1=1
+				<isNotNull prepend="AND" property="scoreOrgNumber">
+				  om.score_Org_Number  =#scoreOrgNumber#
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreDepartment">
+				   om.score_Department =#scoreDepartment#
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreNumber">
+				   om.score_Number  like '%$scoreNumber$%'
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreName">
+				   om.score_Name like '%$scoreName$%'
+			     </isNotNull>
+group by sp.PROJECT_NAME
+
+</select>
+
+<select id="punishStatistics" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.PunishStatisticsEntity">
+
+select PUN.PUNISH_ID,PUN.ORG_PEOPLE_NAME,PUN.USER_NUM,PUN.ORG_TIME,PUN.ORDER_MESSAGE_NUMBER,
+PUN.PUNISH_MEASURE,PUN.PUNISH_OPINION,PUN.ORG_PEOPLE_NUMBER,om.score_org_name,om.score_number,om.score_name ,om.org_num
+FROM tb_punish_message PUN
+inner join tb_order_message om
+on pun.ORDER_MESSAGE_NUMBER=om.score_message_id
+where 1=1
+				<isNotNull prepend="AND" property="scoreOrgNumber">
+				  om.score_Org_Number  =#scoreOrgNumber#
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="punishMeasure">
+				   pun.punish_Measure like '%$punishMeasure$%'
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreNumber">
+				   om.score_Number  like '%$scoreNumber$%'
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreName">
+				   om.score_Name like '%$scoreName$%'
+			     </isNotNull>
+
+</select>
+
+<select id="scorerStatistics" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.ScorerStatisticsEntity">
+    select om.score_number,om.score_name,
+        (select count(om1.score_number) as orderNum from tb_order_message om1 where om1.score_number=om.score_number ),
+        (select sum(om2.real_scoring) as realScoring from tb_order_message om2 where om2.score_number=om.score_number ),
+        (select sum(om3.should_the_scoring)as shouldScoring from tb_order_message om3 where om3.score_number=om.score_number)
+        from tb_order_message om
+        where 1=1
+        
+        <isNotNull prepend="AND" property="scoreNumber">
+				   om.score_Number  like '%$scoreNumber$%'
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="scoreName">
+				   om.score_Name like '%$scoreName$%'
+			     </isNotNull>
+			     <isNotNull prepend="AND" property="startTime">
+					om.time &gt;=#startTime#
+				</isNotNull>
+				<isNotNull prepend="AND" property="endTime">
+					om.time &lt;=#endTime#
+				</isNotNull>
+				
+        group by  om.score_number,om.score_name
+
+</select>
+<select id="projectOrgStatistics" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.ProOrgStatisticsEntity">
+          select om.score_org_number,om.score_org_name,
+        (select count(om1.score_org_number) as orderNum from tb_order_message om1 where om1.score_org_number=om.score_org_number ),
+        (select sum(om2.real_scoring) from tb_order_message om2 where om2.score_org_number=om.score_org_number ) as realScoring,
+        (select sum(om3.should_the_scoring) from tb_order_message om3 where om3.score_org_number=om.score_org_number)as shouldScoring ,
+        ( select  count(om4.score_number) as peoNum  from tb_order_message om4 where om4.score_org_number=om.score_org_number)
+        from tb_order_message om
+        where 1=1
+        <isNotNull prepend="AND" property="scoreOrgNumber">
+				   om.SCORE_ORG_NUMBER = #scoreOrgNumber#
+			     </isNotNull>
+			      <isNotNull prepend="AND" property="orgNum">
+				   om.org_Num  =#orgNum#
+			     </isNotNull>
+			     <isNotNull prepend="AND" property="scoreProjectName">
+					om.score_Project_Name  like '%$scoreProjectName$%'
+				</isNotNull>
+				<isNotNull prepend="AND" property="scoreMatter">
+					om.score_Matter  like '%$scoreMatter$%'
+				</isNotNull>
+ 		group by  om.score_org_number,om.score_org_name
+
+</select>
+
+<select id="orgStatistics" parameterClass="java.util.HashMap" resultClass="com.bos.pub.sys.OrgStatisticsEntity">
+SELECT  om.score_org_number,score_org_name, sum(case when to_char(time,'MM')='01' then om.should_the_scoring else 0 end )as oneMonth,
+         sum(case when to_char(time,'MM')='02' then om.should_the_scoring else 0 end) as twoMonth,
+          sum(case when to_char(time,'MM')='03' then om.should_the_scoring else 0 end) as threeMonth,
+          sum(case when to_char(time,'MM')='04' then om.should_the_scoring else 0 end) as fourMonth,
+          sum(case when to_char(time,'MM')='05' then om.should_the_scoring else 0 end) as fiveMonth,
+          sum(case when to_char(time,'MM')='06' then om.should_the_scoring else 0 end) as sixMonth,
+          sum(case when to_char(time,'MM')='07' then om.should_the_scoring else 0 end) as sevenMonth,
+          sum(case when to_char(time,'MM')='08' then om.should_the_scoring else 0 end) as eightMonth,
+          sum(case when to_char(time,'MM')='09' then om.should_the_scoring else 0 end) as nineMonth,
+          sum(case when to_char(time,'MM')='10' then om.should_the_scoring else 0 end) as tenMonth,
+          sum(case when to_char(time,'MM')='11' then om.should_the_scoring else 0 end) as elevenMonth,
+          sum(case when to_char(time,'MM')='12' then om.should_the_scoring else 0 end) as twelveMonth         
+FROM tb_order_message om 
+where 1=1
+				<isNotNull prepend="AND" property="scoreProjectName">
+					om.score_Project_Name  like '%$scoreProjectName$%'
+				</isNotNull>
+				<isNotNull prepend="AND" property="scoreMatter">
+					om.score_Matter  like '%$scoreMatter$%'
+				</isNotNull>
+				<isNotNull prepend="AND" property="time">
+					om.time like '%$time$%'
+				</isNotNull>
+group by om.score_org_number,om.score_org_name
+
+</select>
+</sqlMap>

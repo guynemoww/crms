@@ -1,0 +1,769 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process:tBusinessLogic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:model="http://com.primeton.emf.core" xmlns:process="http://primeton.com/emf/core/process"
+	name="queryPfInspectReportData.bizx" detailDescription=""
+	demonstration="" urls="" gridVisibility="false" rulerVisibility="true"
+	snapToGeometry="true" productVersion="6.3">
+	<nodes xsi:type="process:tStart" id="start0" name="开始"
+		displayName="开始" nodeType="common" type="start">
+		<sourceConnections xsi:type="process:tLink" id="link3"
+			name="link3" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>start0</sourceNode>
+			<targetNode>assign0</targetNode>
+		</sourceConnections>
+		<location x="344" y="-300" />
+		<size height="28" width="28" />
+		<nodeLabel>start0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="process:tEnd" id="end0" name="结束" displayName="结束"
+		nodeType="common" type="end">
+		<targetConnections>link12</targetConnections>
+		<targetConnections>link11</targetConnections>
+		<location x="345" y="1110" />
+		<size height="28" width="28" />
+		<nodeLabel>end0label</nodeLabel>
+		<process:returns>
+			<process:return id="0"
+				language="com.bos.utp.dataset.organization.OmOrganization" name="report"
+				type="query" valueType="DataObject">report</process:return>
+			<process:return id="1" language="String" name="reportName"
+				type="query" valueType="Primitive">reportName</process:return>
+		</process:returns>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="start0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="346" y="-264" />
+		<figSize height="17" width="25" />
+		<node>start0</node>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="end0label" name="label"
+		displayName="label" nodeType="label">
+		<location x="347" y="1146" />
+		<figSize height="17" width="25" />
+		<node>end0</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo0"
+		name="查询平台客户" displayName="查询平台客户" collapsed="false" nodeType="common"
+		type="invoke" index="3" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link1"
+			name="link1" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo0</sourceNode>
+			<targetNode>subprocess0</targetNode>
+		</sourceConnections>
+		<targetConnections>link0</targetConnections>
+		<location x="348" y="-165" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo0label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.database.DatabaseExt.queryByNamedSql</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="dsName"
+				type="literal" value="java.lang.String" valueType="Java" pattern="value">default</process:inputVariable>
+			<process:inputVariable id="1" name="nameSqlId"
+				type="literal" value="java.lang.String" valueType="Java" pattern="value">com.bos.aft.pfCorpInfo.querypfCorpInfo</process:inputVariable>
+			<process:inputVariable id="2" name="parameterObject"
+				type="query" value="java.lang.Object" valueType="Java" pattern="reference">map</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables>
+			<process:outputVariable id="0" name="out0"
+				type="query" value="java.lang.Object[]" valueType="Java">pfcorpInfos</process:outputVariable>
+		</process:outputVariables>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo0label"
+		name="label" nodeType="label">
+		<location x="323" y="-129" />
+		<figSize height="17" width="73" />
+		<node>invokePojo0</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign0"
+		name="查询平台客户条件" displayName="赋值" collapsed="false" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link0"
+			name="link0" displayName="link1" isDefault="true" type="transition">
+			<sourceNode>assign0</sourceNode>
+			<targetNode>invokePojo0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link3</targetConnections>
+		<location x="344" y="-234" />
+		<size height="28" width="28" />
+		<nodeLabel>assign0label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">param/partyId</process:from>
+			<process:to type="query">map/partyId</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">param/pfId</process:from>
+			<process:to type="query">map/pfId</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign0label" name="label"
+		nodeType="label">
+		<location x="310" y="-198" />
+		<figSize height="17" width="97" />
+		<node>assign0</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess0"
+		name="查询平台相关信息" displayName="queryPfCorpInspect" type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link2"
+			name="link2" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>subprocess0</sourceNode>
+			<targetNode>loopstart1</targetNode>
+		</sourceConnections>
+		<targetConnections>link1</targetConnections>
+		<location x="346" y="-96" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess0label</nodeLabel>
+		<process:flow index="1" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">this.queryPfCorpInspect</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="param"
+					type="query" value="commonj.sdo.DataObject" valueType="Java"
+					pattern="reference">param</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="pfCorpInspect"
+					type="query" value="com.bos.dataset.aft.TbAftPfcorpinfo" valueType="DataObject">pfCorpInspect</process:outputVariable>
+				<process:outputVariable id="1" name="pfCorpCons"
+					type="query" value="com.bos.dataset.aft.TbAftPfcorpinfoCondition[]"
+					valueType="DataObject">pfCorpCons</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess0label"
+		name="label" nodeType="label">
+		<location x="311" y="-61" />
+		<figSize height="17" width="97" />
+		<node>subprocess0</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess1"
+		name="查询平台成员信息" displayName="queryPfCorpInspectDetail" type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link7"
+			name="link7" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>subprocess1</sourceNode>
+			<targetNode>subprocess2</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link20</targetConnections>
+		<location x="344" y="285" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess1label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">this.queryPfCorpInspectDetail</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="param"
+					type="query" value="commonj.sdo.DataObject" valueType="Java"
+					pattern="reference">param</process:inputVariable>
+				<process:inputVariable id="1" name="isCo"
+					type="query" value="String" valueType="Primitive" pattern="reference">var1</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="pfCorpDetailInfo"
+					type="query" value="com.bos.dataset.aft.TbAftPfcorpinfodetail[]"
+					valueType="DataObject">pfCorpDetailInfos</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess1label"
+		name="label" nodeType="label">
+		<location x="309" y="320" />
+		<figSize height="17" width="97" />
+		<node>subprocess1</node>
+	</nodes>
+	<nodes xsi:type="process:tLoopStart" description="" id="loopstart0"
+		name="循环" displayName="循环" grouped="true" type="loopstart"
+		matchedName="loopend0" loopType="iterate">
+		<sourceConnections xsi:type="process:tLink" id="link10"
+			name="link10" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>loopstart0</sourceNode>
+			<targetNode>subprocess12</targetNode>
+		</sourceConnections>
+		<targetConnections>link26</targetConnections>
+		<location x="343" y="405" />
+		<size height="24" width="24" />
+		<nodeLabel>loopstart0label</nodeLabel>
+		<process:condition />
+		<process:iterate iterable="pfCorpDetailInfos"
+			iterableElement="pfCorpDetailInfo" />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="loopstart0label"
+		name="label" nodeType="label">
+		<location x="343" y="437" />
+		<figSize height="17" width="25" />
+		<node>loopstart0</node>
+	</nodes>
+	<nodes xsi:type="process:tLoopEnd" id="loopend0" name="循环结束"
+		displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart0">
+		<sourceConnections xsi:type="process:tLink" id="link8"
+			name="link8" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>loopend0</sourceNode>
+			<targetNode>assign2</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link6</targetConnections>
+		<location x="343" y="857" />
+		<size height="24" width="24" />
+		<nodeLabel>loopend0label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="loopend0label" name="label"
+		nodeType="label">
+		<location x="331" y="889" />
+		<figSize height="17" width="49" />
+		<node>loopend0</node>
+	</nodes>
+	<nodes xsi:type="model:GroupNode" id="group0" name="group"
+		grouped="true" gstart="loopstart0" gend="loopend0">
+		<location x="252" y="405" />
+		<size height="476" width="207" />
+		<chidren>loopend0</chidren>
+		<chidren>loopstart0</chidren>
+		<chidren>subprocess13</chidren>
+		<chidren>subprocess16</chidren>
+		<chidren>subprocess12</chidren>
+		<chidren>subprocess14</chidren>
+		<chidren>subprocess15</chidren>
+		<chidren>invokePojo2</chidren>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo2"
+		name="添加单户信息到数组" displayName="appendObject" grouped="true" nodeType="common"
+		type="invoke" index="3" invokeType="invoke_pojo" varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link6"
+			name="link6" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo2</sourceNode>
+			<targetNode>loopend0</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link25</targetConnections>
+		<location x="349" y="795" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo2label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.data.DataContextUtil.appendObject</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="xpath"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">pfDetails</process:inputVariable>
+			<process:inputVariable id="1" name="dataObject"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">pfCorpDetailInfo</process:inputVariable>
+			<process:inputVariable id="2" name="isCheckEntityType"
+				type="literal" value="boolean" valueType="Java" pattern="reference">false</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo2label"
+		name="label" nodeType="label">
+		<location x="306" y="831" />
+		<figSize height="17" width="109" />
+		<node>invokePojo2</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign2"
+		name="赋值" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link9"
+			name="link9" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign2</sourceNode>
+			<targetNode>assign3</targetNode>
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link12" name="link12" displayName="连接线" type="transition">
+			<bendPoint heightToEnd="-165" heightToStart="0" widthToEnd="78"
+				widthToStart="79" />
+			<bendPoint heightToEnd="0" heightToStart="165" widthToEnd="80"
+				widthToStart="81" />
+			<sourceNode>assign2</sourceNode>
+			<targetNode>end0</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="NULLOREMPTY">
+					<process:leftOperand type="query">pfcorpInfos</process:leftOperand>
+					<process:rightOperand type="literal">1</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<targetConnections>link8</targetConnections>
+		<location x="344" y="945" />
+		<size height="28" width="28" />
+		<nodeLabel>assign2label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">pfCorpInspect</process:from>
+			<process:to type="query">report/pfCorpInspect</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">pfCorpConData</process:from>
+			<process:to type="query">report/pfCorpConData</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">pfDetails</process:from>
+			<process:to type="query">report/pfDetails</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="literal" pattern="reference">aftInspectReport/platform_check.docx</process:from>
+			<process:to type="query">reportName</process:to>
+		</process:copy>
+		<process:copy>
+			<process:from type="query" pattern="reference">pfCorpMemConsData</process:from>
+			<process:to type="query">report/pfCorpMemConsData</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign2label" name="label"
+		nodeType="label">
+		<location x="346" y="981" />
+		<figSize height="17" width="25" />
+		<node>assign2</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign3"
+		name="赋值2" displayName="赋值" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link11"
+			name="link11" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign3</sourceNode>
+			<targetNode>end0</targetNode>
+		</sourceConnections>
+		<targetConnections>link9</targetConnections>
+		<location x="345" y="1020" />
+		<size height="28" width="28" />
+		<nodeLabel>assign3label</nodeLabel>
+		<process:copy>
+			<process:from type="query" pattern="reference">pfcorpInfos[1]</process:from>
+			<process:to type="query">report/pfcorpInfo</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign3label" name="label"
+		nodeType="label">
+		<location x="343" y="1056" />
+		<figSize height="17" width="32" />
+		<node>assign3</node>
+	</nodes>
+	<nodes xsi:type="process:tLoopStart" description="" id="loopstart1"
+		name="循环1" displayName="循环" grouped="true" type="loopstart"
+		matchedName="loopend1" loopType="iterate">
+		<sourceConnections xsi:type="process:tLink" id="link13"
+			name="link13" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>loopstart1</sourceNode>
+			<targetNode>assign4</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link14" name="link14" displayName="连接线" type="transition">
+			<sourceNode>loopstart1</sourceNode>
+			<targetNode>assign5</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="EQ">
+					<process:leftOperand type="query">pfCorpCon/isImp</process:leftOperand>
+					<process:rightOperand type="literal">y</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<sourceConnections xsi:type="process:tLink"
+			description="" id="link15" name="link15" displayName="连接线" type="transition">
+			<sourceNode>loopstart1</sourceNode>
+			<targetNode>assign6</targetNode>
+			<process:transitionCondition>
+				<process:simpleCondition operator="EQ">
+					<process:leftOperand type="query">pfCorpCon/isImp</process:leftOperand>
+					<process:rightOperand type="literal">n</process:rightOperand>
+				</process:simpleCondition>
+			</process:transitionCondition>
+		</sourceConnections>
+		<targetConnections>link2</targetConnections>
+		<location x="346" y="-15" />
+		<size height="24" width="24" />
+		<nodeLabel>loopstart1label</nodeLabel>
+		<process:condition />
+		<process:iterate iterable="pfCorpCons"
+			iterableElement="pfCorpCon" />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="loopstart1label"
+		name="label" nodeType="label">
+		<location x="342" y="17" />
+		<figSize height="17" width="32" />
+		<node>loopstart1</node>
+	</nodes>
+	<nodes xsi:type="process:tLoopEnd" id="loopend1" name="循环结束1"
+		displayName="循环结束" grouped="true" type="loopend" matchedName="loopstart1">
+		<sourceConnections xsi:type="process:tLink" id="link20"
+			name="link20" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>loopend1</sourceNode>
+			<targetNode>subprocess1</targetNode>
+		</sourceConnections>
+		<targetConnections>link19</targetConnections>
+		<location x="346" y="217" />
+		<size height="24" width="24" />
+		<nodeLabel>loopend1label</nodeLabel>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="loopend1label" name="label"
+		nodeType="label">
+		<location x="330" y="249" />
+		<figSize height="17" width="56" />
+		<node>loopend1</node>
+	</nodes>
+	<nodes xsi:type="model:GroupNode" id="group1" name="group1"
+		grouped="true" gstart="loopstart1" gend="loopend1">
+		<location x="275" y="-15" />
+		<size height="256" width="166" />
+		<chidren>loopend1</chidren>
+		<chidren>loopstart1</chidren>
+		<chidren>assign4</chidren>
+		<chidren>assign5</chidren>
+		<chidren>assign6</chidren>
+		<chidren>invokePojo3</chidren>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign4"
+		name="赋值3" displayName="赋值" grouped="true" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link16"
+			name="link16" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign4</sourceNode>
+			<targetNode>invokePojo3</targetNode>
+		</sourceConnections>
+		<targetConnections>link13</targetConnections>
+		<location x="290" y="54" />
+		<size height="28" width="28" />
+		<nodeLabel>assign4label</nodeLabel>
+		<process:copy>
+			<process:from type="literal" pattern="reference">
+			</process:from>
+			<process:to type="query">pfCorpCon/isImpValue</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign4label" name="label"
+		nodeType="label">
+		<location x="288" y="90" />
+		<figSize height="17" width="32" />
+		<node>assign4</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign5"
+		name="赋值4" displayName="赋值" grouped="true" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link17"
+			name="link17" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign5</sourceNode>
+			<targetNode>invokePojo3</targetNode>
+		</sourceConnections>
+		<targetConnections>link14</targetConnections>
+		<location x="344" y="54" />
+		<size height="28" width="28" />
+		<nodeLabel>assign5label</nodeLabel>
+		<process:copy>
+			<process:from type="literal" pattern="reference">是</process:from>
+			<process:to type="query">pfCorpCon/isImpValue</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign5label" name="label"
+		nodeType="label">
+		<location x="342" y="90" />
+		<figSize height="17" width="32" />
+		<node>assign5</node>
+	</nodes>
+	<nodes xsi:type="process:tAssign" description="" id="assign6"
+		name="赋值5" displayName="赋值" grouped="true" type="assign">
+		<sourceConnections xsi:type="process:tLink" id="link18"
+			name="link18" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>assign6</sourceNode>
+			<targetNode>invokePojo3</targetNode>
+		</sourceConnections>
+		<targetConnections>link15</targetConnections>
+		<location x="397" y="54" />
+		<size height="28" width="28" />
+		<nodeLabel>assign6label</nodeLabel>
+		<process:copy>
+			<process:from type="literal" pattern="reference">否</process:from>
+			<process:to type="query">pfCorpCon/isImpValue</process:to>
+		</process:copy>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="assign6label" name="label"
+		nodeType="label">
+		<location x="395" y="90" />
+		<figSize height="17" width="32" />
+		<node>assign6</node>
+	</nodes>
+	<nodes xsi:type="process:tInvoke" description="" id="invokePojo3"
+		name="添加单户信息到数组1" displayName="添加单户信息到数组" collapsed="false" grouped="true"
+		nodeType="common" type="invoke" index="3" invokeType="invoke_pojo"
+		varArgs="false">
+		<sourceConnections xsi:type="process:tLink" id="link19"
+			name="link19" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>invokePojo3</sourceNode>
+			<targetNode>loopend1</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link16</targetConnections>
+		<targetConnections>link17</targetConnections>
+		<targetConnections>link18</targetConnections>
+		<location x="347" y="144" />
+		<size height="28" width="22" />
+		<nodeLabel>invokePojo3label</nodeLabel>
+		<process:pojo methodType="instance" synchronization="true"
+			transactionType="join">
+			<process:partner type="literal">com.eos.foundation.data.DataContextUtil.appendObject</process:partner>
+			<process:instance instanceName="" />
+		</process:pojo>
+		<process:inputVariables>
+			<process:inputVariable id="0" name="xpath"
+				type="literal" value="java.lang.String" valueType="Java" pattern="reference">pfCorpConData</process:inputVariable>
+			<process:inputVariable id="1" name="dataObject"
+				type="query" value="commonj.sdo.DataObject" valueType="Java"
+				pattern="reference">pfCorpCon</process:inputVariable>
+			<process:inputVariable id="2" name="isCheckEntityType"
+				type="literal" value="boolean" valueType="Java" pattern="reference">false</process:inputVariable>
+		</process:inputVariables>
+		<process:outputVariables />
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="invokePojo3label"
+		name="label" nodeType="label">
+		<location x="300" y="180" />
+		<figSize height="17" width="116" />
+		<node>invokePojo3</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess12"
+		name="履约能力综合评价" displayName="getDictName" collapsed="false" grouped="true"
+		type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link22"
+			name="link22" displayName="link11" isDefault="true" type="transition">
+			<sourceNode>subprocess12</sourceNode>
+			<targetNode>subprocess13</targetNode>
+		</sourceConnections>
+		<targetConnections>link10</targetConnections>
+		<location x="347" y="480" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess12label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.aft.aft_small_inspect.getDictName</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="dictTypeId"
+					type="literal" value="String" valueType="Primitive" pattern="reference">XD_DHLXNL</process:inputVariable>
+				<process:inputVariable id="1" name="dictId"
+					type="query" value="String" valueType="Primitive" pattern="reference">pfCorpDetailInfo/pfAbility</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="out0"
+					type="query" value="String" valueType="Primitive">pfCorpDetailInfo/pfAbilityValue</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess12label"
+		name="label" nodeType="label">
+		<location x="312" y="515" />
+		<figSize height="17" width="97" />
+		<node>subprocess12</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess15"
+		name="调整分类类型" displayName="getDictName" collapsed="false" grouped="true"
+		type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link24"
+			name="link24" displayName="link14" isDefault="true" type="transition">
+			<sourceNode>subprocess15</sourceNode>
+			<targetNode>subprocess16</targetNode>
+			<process:transitionCondition />
+		</sourceConnections>
+		<targetConnections>link23</targetConnections>
+		<location x="345" y="660" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess15label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.aft.aft_small_inspect.getDictName</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="dictTypeId"
+					type="literal" value="String" valueType="Primitive" pattern="reference">XD_DHCD4001</process:inputVariable>
+				<process:inputVariable id="1" name="dictId"
+					type="query" value="String" valueType="Primitive" pattern="reference">pfCorpDetailInfo/pfAdjustType</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="out0"
+					type="query" value="String" valueType="Primitive">pfCorpDetailInfo/pfAdjustTypeValue</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess15label"
+		name="label" nodeType="label">
+		<location x="322" y="695" />
+		<figSize height="17" width="73" />
+		<node>subprocess15</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess14"
+		name="是否调整分类" displayName="getDictName" collapsed="false" grouped="true"
+		type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link23"
+			name="link23" displayName="link13" isDefault="true" type="transition">
+			<sourceNode>subprocess14</sourceNode>
+			<targetNode>subprocess15</targetNode>
+		</sourceConnections>
+		<targetConnections>link21</targetConnections>
+		<location x="346" y="606" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess14label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.aft.aft_small_inspect.getDictName</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="dictTypeId"
+					type="literal" value="String" valueType="Primitive" pattern="reference">YesOrNo</process:inputVariable>
+				<process:inputVariable id="1" name="dictId"
+					type="query" value="String" valueType="Primitive" pattern="reference">pfCorpDetailInfo/pfPropertyAdjust</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="out0"
+					type="query" value="String" valueType="Primitive">pfCorpDetailInfo/pfPropertyAdjustValue</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess14label"
+		name="label" nodeType="label">
+		<location x="323" y="641" />
+		<figSize height="17" width="73" />
+		<node>subprocess14</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess16"
+		name="控制措施" displayName="getDictName" collapsed="false" grouped="true"
+		type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link25"
+			name="link25" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>subprocess16</sourceNode>
+			<targetNode>invokePojo2</targetNode>
+		</sourceConnections>
+		<targetConnections>link24</targetConnections>
+		<location x="345" y="711" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess16label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.aft.aft_small_inspect.getDictName</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="dictTypeId"
+					type="literal" value="String" valueType="Primitive" pattern="reference">XD_DHFXKZ</process:inputVariable>
+				<process:inputVariable id="1" name="dictId"
+					type="query" value="String" valueType="Primitive" pattern="reference">pfCorpDetailInfo/pfRiskcontrol</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="out0"
+					type="query" value="String" valueType="Primitive">pfCorpDetailInfo/pfRiskcontrolValue</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess16label"
+		name="label" nodeType="label">
+		<location x="322" y="746" />
+		<figSize height="17" width="73" />
+		<node>subprocess16</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess13"
+		name="检查结论" displayName="getDictName" collapsed="false" grouped="true"
+		type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link21"
+			name="link21" displayName="link12" isDefault="true" type="transition">
+			<sourceNode>subprocess13</sourceNode>
+			<targetNode>subprocess14</targetNode>
+		</sourceConnections>
+		<targetConnections>link22</targetConnections>
+		<location x="347" y="549" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess13label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">com.bos.aft.aft_small_inspect.getDictName</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="dictTypeId"
+					type="literal" value="String" valueType="Primitive" pattern="reference">XD_DHJCJL</process:inputVariable>
+				<process:inputVariable id="1" name="dictId"
+					type="query" value="String" valueType="Primitive" pattern="reference">pfCorpDetailInfo/pfConclusion</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0" name="out0"
+					type="query" value="String" valueType="Primitive">pfCorpDetailInfo/pfConclusionValue</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess13label"
+		name="label" nodeType="label">
+		<location x="336" y="584" />
+		<figSize height="17" width="49" />
+		<node>subprocess13</node>
+	</nodes>
+	<nodes xsi:type="process:tSubprocess" description="" id="subprocess2"
+		name="getPfMemConsData" displayName="getPfMemConsData" type="subprocess">
+		<sourceConnections xsi:type="process:tLink" id="link26"
+			name="link26" displayName="连接线" isDefault="true" type="transition">
+			<sourceNode>subprocess2</sourceNode>
+			<targetNode>loopstart0</targetNode>
+		</sourceConnections>
+		<targetConnections>link7</targetConnections>
+		<location x="341" y="336" />
+		<size height="27" width="27" />
+		<nodeLabel>subprocess2label</nodeLabel>
+		<process:flow index="0" synchronization="true"
+			transactionType="join" varArgs="false">
+			<process:partner type="literal">this.getPfMemConsData</process:partner>
+			<process:inputVariables>
+				<process:inputVariable id="0" name="pfCorpDetailInfos"
+					type="query" value="commonj.sdo.DataObject[]" valueType="Java"
+					pattern="reference">pfCorpDetailInfos</process:inputVariable>
+				<process:inputVariable id="1" name="param"
+					type="query" value="commonj.sdo.DataObject" valueType="Java"
+					pattern="reference">param</process:inputVariable>
+			</process:inputVariables>
+			<process:outputVariables>
+				<process:outputVariable id="0"
+					name="pfCorpMemConsData" type="query" value="commonj.sdo.DataObject[]"
+					valueType="Java">pfCorpMemConsData</process:outputVariable>
+			</process:outputVariables>
+		</process:flow>
+	</nodes>
+	<nodes xsi:type="model:NodeElementLabel" id="subprocess2label"
+		name="label" nodeType="label">
+		<location x="296" y="371" />
+		<figSize height="17" width="117" />
+		<node>subprocess2</node>
+	</nodes>
+	<topRuler />
+	<leftRuler />
+	<process:info author="fjh" createTime="2014-04-30 10:10:20"
+		date="2014-04-30Z" description="" name="查询平台报告数据" version="6.3" />
+	<process:variables>
+		<process:variable anyType="java.util.HashMap"
+			description="" historyStateLocation="client" isArray="false" name="map" />
+		<process:variable anyType="commonj.sdo.DataObject"
+			description="" historyStateLocation="client" isArray="true" name="pfcorpInfos" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false"
+			modelType="com.bos.dataset.aft.TbAftPfcorpinfo" name="pfCorpInspect" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="true"
+			modelType="com.bos.dataset.aft.TbAftPfcorpinfoCondition" name="pfCorpCons" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="true"
+			modelType="com.bos.dataset.aft.TbAftPfcorpinfodetail" name="pfCorpDetailInfos" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false"
+			modelType="com.bos.dataset.aft.TbAftPfcorpinfodetail" name="pfCorpDetailInfo" />
+		<process:variable anyType="java.util.HashMap"
+			description="" historyStateLocation="client" isArray="false" name="detailMap" />
+		<process:variable anyType="commonj.sdo.DataObject"
+			description="" historyStateLocation="client" isArray="true" name="pfDetails" />
+		<process:variable anyType="commonj.sdo.DataObject"
+			description="" historyStateLocation="client" isArray="false" name="pfCorpCon" />
+		<process:variable anyType="commonj.sdo.DataObject"
+			description="" historyStateLocation="client" isArray="true" name="pfCorpConData" />
+		<process:variable anyType="commonj.sdo.DataObject"
+			description="" historyStateLocation="client" isArray="true"
+			name="pfCorpMemConsData" />
+		<process:variable description=""
+			historyStateLocation="client" isArray="false" name="var1"
+			primitiveType="String" />
+	</process:variables>
+	<process:inputs varArgs="false">
+		<process:input anyType="commonj.sdo.DataObject"
+			description="" isArray="false" name="param" />
+	</process:inputs>
+	<process:outputs>
+		<process:output description="" isArray="false"
+			modelType="com.bos.utp.dataset.organization.OmOrganization" name="report" />
+		<process:output description="" isArray="false" name="reportName"
+			primitiveType="String" />
+	</process:outputs>
+	<process:extAttribute1>public</process:extAttribute1>
+	<process:transactionType>true</process:transactionType>
+</process:tBusinessLogic>

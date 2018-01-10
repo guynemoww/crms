@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:洪文弟 -->
+<sqlMap>     
+    <resultMap class="com.eos.workflow.omservice.WFParticipant" id="resultMap" >
+        <result column="ID" property="id"/>
+        <result column="NAME" property="name"/>
+        <result column="EMAIL" property="email"/>
+        <result column="TYPECODE" property="typeCode"/>      
+    </resultMap>    
+    <!--                                                                    单个参与者查询                                                                -->
+    <!-- 机构查询语句  -->
+    <select id="query_organization" resultMap="resultMap" parameterClass="java.util.HashMap" >
+    <![CDATA[
+     SELECT ORGID AS ID,ORGNAME AS NAME,EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION WHERE ORGID=#id#
+     ]]>
+    </select>
+    <!-- 工作组查询语句  -->
+    <select id="query_workgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE GROUPID=#id#
+     ]]>
+    </select>
+    <!-- 岗位查询语句  -->
+    <select id="query_position" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE POSITIONID=#id#
+     ]]>
+    </select>
+    <!-- 角色查询语句  -->
+    <select id="query_role" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT ROLEID AS ID,ROLENAME AS NAME,'' AS EMAIL,'role' AS TYPECODE  FROM AC_ROLE WHERE ROLEID=#id#
+     ]]>
+    </select>
+    <!-- 人员查询语句  -->
+    <select id="query_person" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT USERID AS ID,OPERATORNAME AS NAME,EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATOR WHERE USERID=#id#
+     ]]>
+    </select>
+    <!-- 职务查询语句  -->
+    <select id="query_duty" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT DUTYID AS ID,DUTYNAME AS NAME,'' AS EMAIL,'duty' AS TYPECODE FROM OM_DUTY WHERE DUTYID=#id#
+     ]]>
+    </select>
+    <!-- 业务机构查询语句  -->
+    <select id="query_busiorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE BUSIORGID=#id#
+     ]]>
+    </select>
+    <!--                                                                    全部参与者查询                                                                    -->
+    <!-- 所有机构查询语句  -->
+    <select id="query_allorganizations" resultMap="resultMap" >
+    <![CDATA[
+     SELECT ORGID AS ID,ORGNAME AS NAME,EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION 
+     ]]>
+    </select>
+    <!-- 所有工作组查询语句  -->
+    <select id="query_allworkgroups" resultMap="resultMap" >
+    <![CDATA[
+     SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE  FROM OM_GROUP 
+     ]]>
+    </select>
+    <!-- 所有岗位查询语句  -->
+    <select id="query_allpositions" resultMap="resultMap" >
+    <![CDATA[
+     SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE  FROM OM_POSITION 
+     ]]>
+    </select>
+    <!-- 所有角色查询语句  -->
+    <select id="query_allroles" resultMap="resultMap" >
+    <![CDATA[
+     SELECT ROLEID AS ID,ROLENAME AS NAME,'' AS EMAIL,'role' AS TYPECODE  FROM AC_ROLE 
+     ]]>
+    </select>
+    <!-- 所有人员查询语句  -->
+    <select id="query_allpersons" resultMap="resultMap">
+    <![CDATA[
+     SELECT USERID AS ID,OPERATORNAME AS NAME,EMAIL AS EMAIL,'person' AS TYPECODE  FROM AC_OPERATOR 
+     ]]>
+    </select>
+    <!-- 所有职务查询语句  -->
+    <select id="query_alldutys" resultMap="resultMap">
+    <![CDATA[
+     SELECT DUTYID AS ID,DUTYNAME AS NAME,'' AS EMALL,'duty' AS TYPECODE FROM OM_DUTY
+     ]]>
+    </select>
+    <!-- 所有业务机构查询语句  -->
+    <select id="query_allbusiorgs" resultMap="resultMap">
+    <![CDATA[
+     SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG
+     ]]>
+    </select>
+    <!--                                                                    全部子参与者查询                                                                    -->
+    <!-- 机构所有子节点查询语句  -->
+    <select id="query_allorgsub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT CAST(ORGID AS VARCHAR(128))  AS ID,ORGNAME AS NAME,EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION WHERE PARENTORGID=#id#
+     UNION
+     SELECT CAST(GROUPID AS VARCHAR(128)) AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE ORGID=#id#
+     UNION
+     SELECT CAST(POSITIONID AS VARCHAR(128)) AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE ORGID=#id# AND POSITYPE='OrgOrganization'
+     UNION
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPORG EO,AC_OPERATOR O  WHERE E.OPERATORID=O.OPERATORID AND E.EMPID = EO.EMPID AND EO.ORGID=#id#  
+     ]]>
+    </select>
+    <!-- 工作组所有子节点查询语句  -->
+    <select id="query_allgroupsub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+      SELECT CAST(GROUPID AS VARCHAR(128)) AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE PARENTGROUPID=#id#
+     UNION 
+      SELECT CAST(POSITIONID AS VARCHAR(128)) AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE ORGID=#id# AND POSITYPE='workgroup'
+     UNION
+      SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPGROUP EO,AC_OPERATOR O  WHERE E.OPERATORID=O.OPERATORID AND E.EMPID = EO.EMPID AND EO.GROUPID=#id# 
+     ]]>
+    </select>
+    <!-- 岗位所有子节点查询语句  -->
+    <select id="query_allpositionsub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT CAST(POSITIONID AS VARCHAR(128)) AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE  FROM OM_POSITION WHERE MANAPOSI=#id#
+	 UNION
+	 SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE  FROM OM_EMPLOYEE E,OM_EMPPOSITION EP ,AC_OPERATOR O  WHERE E.OPERATORID=O.OPERATORID AND EP.EMPID= E.EMPID AND EP.POSITIONID=#id#
+     ]]>
+    </select>
+    <!-- 角色所有子节点查询语句  -->
+    <select id="query_allrolesub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATORROLE OPR,AC_OPERATOR O  WHERE OPR.OPERATORID=O.OPERATORID AND OPR.ROLEID=#id#
+     ]]>
+    </select>
+     <!-- 职务所有子节点查询语句  -->
+    <select id="query_alldutysub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT CAST(DUTYID AS VARCHAR(128)) AS ID,DUTYNAME AS NAME,'' AS EMAIL,'duty' AS TYPECODE FROM OM_DUTY WHERE PARENTDUTY=#id#
+	 UNION
+	 SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPPOSITION EP ,AC_OPERATOR O,OM_POSITION P WHERE E.OPERATORID=O.OPERATORID AND EP.EMPID= E.EMPID AND EP.POSITIONID =P.POSITIONID AND P.DUTYID=#id#	 
+     ]]>
+    </select>
+    <!-- 业务机构所有子节点查询语句  -->
+    <select id="query_allbusiorgsub" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+    SELECT CAST(BUSIORGID AS VARCHAR(128)) AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE PARENTID=#id#
+	UNION
+	SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPPOSITION EP,OM_BUSIORG B WHERE O.OPERATORID=E.OPERATORID AND E.EMPID=EP.EMPID AND EP.POSITIONID=B.MANAPOS AND B.BUSIORGID = #id#
+	UNION
+	SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPORG EO,OM_BUSIORG B WHERE O.OPERATORID=E.OPERATORID AND E.EMPID=EO.EMPID AND EO.ORGID=B.ORGID AND B.BUSIORGID=#id#
+     ]]>
+    </select>
+    
+    <!--                                                                    全部父参与者查询                                                                    -->
+    <!-- 机构所有父节点查询语句  -->
+    <select id="query_allorgparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ORGID AS ID,P.ORGNAME AS NAME,P.EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION P,OM_ORGANIZATION C WHERE C.PARENTORGID=P.ORGID AND C.ORGID=#id#
+     UNION
+     SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE ORGID = #id#
+    ]]>
+    </select>
+    <!-- 工作组所有父节点查询语句  -->
+    <select id="query_allgroupparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE GROUPID=#id#
+     UNION
+     SELECT P.ORGID AS ID, P.ORGNAME AS NAME,P.EMAIL AS EMAIL ,'organization' AS TYPECODE FROM OM_GROUP C,OM_ORGANIZATION P WHERE C.ORGID = P.ORGID AND C.GROUPID =#id#
+     ]]>
+    </select>
+    <!-- 岗位所有父节点查询语句  -->
+    <select id="query_allpositionparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+    SELECT P.POSITIONID  AS ID,P.POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION C,OM_POSITION P WHERE C.MANAPOSI=P.POSITIONID AND C.POSITIONID=#id#
+	UNION 
+	SELECT P.ORGID AS ID, P.ORGNAME AS NAME,'' AS EMAIL ,'organization' AS TYPECODE FROM OM_POSITION C,OM_ORGANIZATION P WHERE C.ORGID = P.ORGID AND C.POSITYPE='OrgOrganization' AND C.POSITIONID=#id#
+	UNION
+	SELECT P.GROUPID  AS ID,P.GROUPNAME AS NAME,P.EMAIL AS EMAIL,'workgroup' AS TYPECODE FROM OM_POSITION C,OM_GROUP P WHERE C.ORGID=P.GROUPID AND C.POSITYPE='workgroup' AND C.POSITIONID=#id#
+	UNION
+	SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE MANAPOS = #id#
+	<!--UNION
+	SELECT DUTYID AS ID,DUTYNAME AS NAME,'' AS EMALL,'duty' AS TYPECODE FROM OM_POSITION C,OM_DUTY P WHERE P.DUTYID = C.DUTYID AND C.POSITIONID=#id#-->
+     ]]>
+    </select>
+    <!-- 人员所有父节点查询语句  -->
+    <select id="query_allpersonparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ORGID AS ID,P.ORGNAME AS NAME, P.EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_EMPORG C,OM_ORGANIZATION P,OM_EMPLOYEE E,AC_OPERATOR O  WHERE C.ORGID=P.ORGID AND C.EMPID=E.EMPID AND E.OPERATORID=O.OPERATORID AND O.USERID =#id#  
+	  UNION
+	 SELECT P.POSITIONID AS ID,P.POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_EMPPOSITION C,OM_POSITION P,OM_EMPLOYEE E,AC_OPERATOR O  WHERE C.POSITIONID=P.POSITIONID AND C.EMPID=E.EMPID AND E.OPERATORID=O.OPERATORID AND O.USERID =#id#
+      UNION
+	 SELECT P.GROUPID  AS ID,P.GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_EMPGROUP C,OM_GROUP P,OM_EMPLOYEE E,AC_OPERATOR O  WHERE C.GROUPID=P.GROUPID AND C.EMPID=E.EMPID AND E.OPERATORID=O.OPERATORID AND O.USERID =#id#
+     ]]>
+    </select>
+    <select id="query_allpersonparents1" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ROLEID AS ID,P.ROLENAME AS NAME,'' AS EMAIL,'role' AS TYPECODE FROM AC_OPERATORROLE C,AC_ROLE P ,AC_OPERATOR O  WHERE O.OPERATORID = C.OPERATORID AND C.ROLEID=P.ROLEID AND O.USERID=#id#     
+     ]]>
+    </select>
+    <select id="query_allpersonparents2" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT D.DUTYID AS ID,D.DUTYNAME AS NAME,'' AS EMAIL,'duty' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPPOSITION EP,OM_POSITION P,OM_DUTY D WHERE D.DUTYID=P.DUTYID AND P.POSITIONID=EP.POSITIONID AND EP.EMPID=E.EMPID AND E.OPERATORID=O.OPERATORID AND O.USERID=#id#
+     ]]>
+    </select>
+    <select id="query_allpersonparents3" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT B.BUSIORGID AS ID,B.ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPORG EO,OM_BUSIORG B WHERE B.ORGID = EO.ORGID AND EO.EMPID = E.EMPID AND E.OPERATORID= O.OPERATORID AND O.USERID=#id#
+     UNION
+     SELECT B.BUSIORGID AS ID,B.ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPPOSITION EP,OM_BUSIORG B WHERE B.MANAPOS = EP.POSITIONID AND EP.EMPID=E.EMPID AND E.OPERATORID=O.OPERATORID AND O.USERID=#id#
+     ]]>
+    </select>
+    <!-- 职务所有父节点查询语句  -->
+    <select id="query_alldutyparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.DUTYID AS ID,P.DUTYNAME AS NAME,'' AS EMAIL,'duty' AS TYPECODE FROM OM_DUTY P,OM_DUTY C WHERE C.PARENTDUTY=P.DUTYID AND C.DUTYID=#id#
+    ]]>
+    </select>  
+    <!-- 业务机构所有父节点查询语句  -->
+    <select id="query_allbusiorgparents" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+    SELECT A.BUSIORGID AS ID,A.ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG A,OM_BUSIORG B WHERE A.PARENTID = B.BUSIORGID AND A.BUSIORGID = #id#
+    ]]>
+    </select>   
+    <!--                                                                    单个子参与者查询                                                                    -->     
+    <!-- 机构子节点查询语句  -->
+    <select id="query_orgsuborg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+      SELECT ORGID AS ID,ORGNAME AS NAME,EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION WHERE PARENTORGID=#id#
+     ]]>
+    </select>
+    <select id="query_orgsubgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+     <![CDATA[
+       SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE ORGID=#id#
+     ]]>
+     </select>
+    <select id="query_orgsubposi" resultMap="resultMap" parameterClass="java.util.HashMap">
+     <![CDATA[
+         SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE ORGID=#id# AND POSITYPE='OrgOrganization'
+     ]]>
+     </select>
+    <select id="query_orgsubperson" resultMap="resultMap" parameterClass="java.util.HashMap">
+     <![CDATA[
+      SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPORG EO,AC_OPERATOR O  WHERE E.OPERATORID = O.OPERATORID AND E.EMPID = EO.EMPID AND EO.ORGID=#id#  
+     ]]>
+     </select>
+    <!-- 工作组子节点查询语句  -->
+    <select id="query_groupsubgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+      SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE PARENTGROUPID=#id#
+     ]]>
+    </select>
+    <select id="query_groupsubposi" resultMap="resultMap" parameterClass="java.util.HashMap">
+      <![CDATA[
+       SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE ORGID=#id# AND POSITYPE='workgroup'
+      ]]>
+     </select>
+    <select id="query_groupsubperson" resultMap="resultMap" parameterClass="java.util.HashMap">
+      <![CDATA[
+       SELECT O.USERID AS ID,O.OPEATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPGROUP EO,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND E.EMPID = EO.EMPID AND EO.GROUPID=#id# 
+      ]]>
+     </select>
+    <!-- 岗位子节点查询语句  -->
+    <select id="query_positionsubposi" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE  FROM OM_POSITION WHERE MANAPOSI=#id#
+     ]]>
+    </select>
+    <select id="query_positionsubperson" resultMap="resultMap" parameterClass="java.util.HashMap">
+      <![CDATA[
+      SELECT O.USERID AS ID,O.OPEATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE  FROM OM_EMPLOYEE E,OM_EMPPOSITION EP ,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND EP.EMPID= E.EMPID AND EP.POSITIONID=#id#
+      ]]>
+     </select>
+    <!-- 职务子节点查询语句  -->
+    <select id="query_dutysubperson" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPPOSITION EP ,AC_OPERATOR O,OM_POSITION P WHERE E.OPERATORID=O.OPERATORID AND EP.EMPID= E.EMPID AND EP.POSITIONID =P.POSITIONID AND P.DUTYID=#id#
+     ]]>
+    </select>
+    <select id="query_duytsubduty" resultMap="resultMap" parameterClass="java.util.HashMap">
+      <![CDATA[
+      SELECT DUTYID AS ID,DUTYNAME AS NAME,'' AS EMALL,'duty' AS TYPECODE FROM OM_DUTY WHERE PARENTDUTY=#id#
+      ]]>
+    </select>
+    <!-- 业务机构子节点查询语句  -->
+    <select id="query_busiorgsubperson" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPPOSITION EP ,AC_OPERATOR O,OM_BUSIORG B WHERE E.OPERATORID=O.OPERATORID AND EP.EMPID= E.EMPID AND EP.POSITIONID =B.MANAPOS AND B.BUSIORGID=#id#
+	 UNION
+	 SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM OM_EMPLOYEE E,OM_EMPORG EO ,AC_OPERATOR O,OM_BUSIORG B WHERE E.OPERATORID=O.OPERATORID AND EO.EMPID= E.EMPID AND EO.ORGID =B.ORGID AND B.BUSIORGID=#id#
+     ]]>
+    </select>
+    <select id="query_busiorgsubbusiorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+      <![CDATA[
+      SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE PARENTID = #id#
+      ]]>
+    </select>
+    
+    <!--                                                                    单个父参与者查询                                                                    -->
+    <!-- 机构父节点查询语句 -->
+    <select id="query_orgparentsorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ORGID AS ID,P.ORGNAME AS NAME,P.EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_ORGANIZATION P,OM_ORGANIZATION C WHERE C.ORGID=#id# AND C.PARENTORGID=P.ORGID
+     ]]>
+    </select>
+    <select id="query_orgparentsbizorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+       SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG P WHERE P.ORGID=#id# 
+     ]]>
+    </select>    
+    <!-- 岗位父节点查询语句  -->
+    <select id="query_positionparentsposi" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+    SELECT P.POSITIONID AS ID,P.POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION C,OM_POSITION P WHERE C.MANAPOSI=P.POSITIONID AND C.POSITIONID=#id#
+    ]]>
+    </select>
+     <select id="query_positionparentsorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+	SELECT P.ORGID AS ID, P.ORGNAME AS NAME,P.EMAIL AS EMAIL ,'organization' AS TYPECODE FROM OM_POSITION C,OM_ORGANIZATION P WHERE C.ORGID = P.ORGID AND C.POSITYPE='OrgOrganization' AND C.POSITIONID=#id#
+     ]]>
+     </select>
+     <select id="query_positionparentsgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+ 	SELECT P.GROUPID AS ID,P.GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_POSITION C,OM_GROUP P WHERE C.ORGID=P.GROUPID AND C.POSITYPE='workgroup' AND C.POSITIONID=#id#
+     ]]>
+    </select>
+    <!-- 人员父节点查询语句  -->
+    <select id="query_personparentsorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ORGID AS ID,P.ORGNAME AS NAME,P.EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_EMPORG C,OM_ORGANIZATION P,OM_EMPLOYEE E,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND C.ORGID=P.ORGID AND C.EMPID=E.EMPID AND O.USERID =#id#  
+     ]]>
+    </select>
+    <select id="query_personparentsposi" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+ 	 SELECT P.POSITIONID AS ID,P.POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_EMPPOSITION C,OM_POSITION P,OM_EMPLOYEE E,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND C.POSITIONID=P.POSITIONID AND C.EMPID=E.EMPID AND O.USERID=#id#
+      ]]>
+    </select>
+     <select id="query_personparentsgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+ 	 SELECT P.GROUPID AS ID,P.GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_EMPGROUP C,OM_GROUP P,OM_EMPLOYEE E ,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND C.GROUPID=P.GROUPID AND C.EMPID=E.EMPID AND O.USERID=#id#
+     ]]>
+    </select>
+    <select id="query_personparentsrole" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ROLEID AS ID,P.ROLENAME AS NAME,P.ROLENAME AS EMAIL,'role' AS TYPECODE FROM AC_OPERATORROLE C,AC_ROLE P ,AC_OPERATOR O  WHERE O.OPERATORID = C.OPERATORID AND C.ROLEID=P.ROLEID AND O.USERID=#id#     
+     ]]>
+    </select>
+    <!-- 工作组父节点查询语句  -->
+    <select id="query_groupparentsgroup" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE GROUPID=(SELECT PARENTGROUPID FROM OM_GROUP WHERE GROUPID =  #id#)
+     ]]>
+    </select>
+    <select id="query_groupparentsorg" resultMap="resultMap" parameterClass="java.util.HashMap">
+    <![CDATA[
+     SELECT P.ORGID AS ID, P.ORGNAME AS NAME,P.EMAIL AS EMAIL ,'organization' AS TYPECODE FROM OM_GROUP C,OM_ORGANIZATION P WHERE C.ORGID = P.ORGID AND C.GROUPID =#id#
+     ]]>
+    </select>
+
+    <!--                                                                    根参与者查询                                                                    -->
+    <!-- 根工作组查询语句  -->
+    <select id="query_rootgroups" resultMap="resultMap" >
+    <![CDATA[
+     SELECT GROUPID AS ID,GROUPNAME AS NAME,'' AS EMAIL,'workgroup' AS TYPECODE FROM OM_GROUP WHERE PARENTGROUPID IS NULL
+     ]]>
+    </select>
+    <!-- 根机构查询语句  -->
+    <select id="query_rootorganizations" resultMap="resultMap" >
+    <![CDATA[
+     SELECT ORGID AS ID,ORGNAME AS NAME,EMAIL AS EMAIL,'organization' AS TYPECODE  FROM OM_ORGANIZATION WHERE PARENTORGID IS NULL
+     ]]>
+    </select>
+    <!-- 根岗位查询语句  -->
+    <select id="query_rootpositions" resultMap="resultMap" >
+    <![CDATA[
+     SELECT POSITIONID AS ID,POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_POSITION WHERE MANAPOSI IS NULL
+     ]]>
+    </select>
+    <!-- 根角色查询语句  -->
+    <select id="query_rootroles" resultMap="resultMap" >
+    <![CDATA[
+     SELECT ROLEID AS ID,ROLENAME AS NAME,'' AS EMAIL,'role' AS TYPECODE FROM AC_ROLE
+     ]]>
+    </select>
+    <!-- 根职务查询语句  -->
+    <select id="query_rootdutys" resultMap="resultMap" >
+    <![CDATA[
+     SELECT DUTYID AS ID,DUTYNAME AS NAME,'' AS EMAIL,'duty' AS TYPECODE FROM OM_DUTY WHERE PARENTDUTY IS NULL
+     ]]>
+    </select>
+    <!-- 根业务机构查询语句  -->
+    <select id="query_rootbusiorgs" resultMap="resultMap" >
+    <![CDATA[
+     SELECT BUSIORGID AS ID,ORGNAME AS NAME,'' AS EMAIL,'busiorg' AS TYPECODE FROM OM_BUSIORG WHERE PARENTID IS NULL
+     ]]>
+    </select>
+    
+    <!--                                                                    交集                                                                    -->
+    <!-- 交集参与者查询语句  -->
+    <select id="query_orgrole" resultMap="resultMap" >
+    <![CDATA[
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,AC_OPERATORROLE OL,OM_EMPORG EO WHERE O.OPERATORID = E.OPERATORID AND E.OPERATORID = OL.OPERATORID AND E.EMPID = EO.EMPID AND EO.ORGID=#id1# AND OL.ROLEID=#id2#
+     ]]>
+    </select>
+    <select id="query_orgduty" resultMap="resultMap" >
+    <![CDATA[
+     SELECT O.USERID AS ID,O.OPERATORNAME AS NAME,O.EMAIL AS EMAIL,'person' AS TYPECODE FROM AC_OPERATOR O,OM_EMPLOYEE E,OM_EMPORG EO,OM_EMPPOSITION EP,OM_POSITION P WHERE O.OPERATORID = E.OPERATORID AND E.EMPID=EO.EMPID AND E.EMPID=EP.EMPID AND EP.POSITIONID=P.POSITIONID AND EO.ORGID=#id1# AND P.DUTYID=#id2#
+     ]]>
+    </select>
+    
+    <!--                                                                    范围                                                                    -->
+    <!-- 人员参与者范围查询语句  -->
+    <select id="query_personscoperole" resultMap="resultMap" >
+    <![CDATA[
+     SELECT P.ROLEID AS ID,P.ROLENAME AS NAME,P.ROLENAME AS EMAIL,'role' AS TYPECODE FROM AC_OPERATORROLE C,AC_ROLE P,AC_OPERATOR O  WHERE O.OPERATORID = C.OPERATORID AND C.ROLEID=P.ROLEID AND O.USERID=#id#     
+     ]]>
+    </select>
+    <select id="query_personscopeposi" resultMap="resultMap" >
+    <![CDATA[
+     SELECT P.POSITIONID AS ID,P.POSINAME AS NAME,'' AS EMAIL,'position' AS TYPECODE FROM OM_EMPPOSITION C,OM_POSITION P,OM_EMPLOYEE E  ,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND C.POSITIONID=P.POSITIONID AND C.EMPID=E.EMPID AND O.USERID=#id#     
+     ]]>
+    </select>
+    <select id="query_personscopeorg" resultMap="resultMap" >
+    <![CDATA[
+     SELECT P.ORGID AS ID,P.ORGNAME AS NAME,P.EMAIL AS EMAIL,'organization' AS TYPECODE FROM OM_EMPORG C,OM_ORGANIZATION P,OM_EMPLOYEE E  ,AC_OPERATOR O  WHERE O.OPERATORID = E.OPERATORID AND C.ORGID=P.ORGID AND C.EMPID=E.EMPID AND O.USERID=#id#     
+     ]]>
+    </select>   
+    
+     <!--                                                                    业务权限                                                                    -->
+    <!-- 人员参与者范围查询语句  -->
+    <select id="query_personhasrole" resultClass="java.lang.String" >
+    <![CDATA[
+     SELECT C.ROLEID AS ID  FROM AC_OPERATORROLE C,AC_OPERATOR O  WHERE O.OPERATORID = C.OPERATORID AND O.USERID=#id# AND C.ROLEID=#roleid#    
+     ]]>
+    </select>
+    <!-- 人员参与者范围查询语句  -->
+    <select id="query_personbpsrole" resultClass="java.lang.String" >
+    <![CDATA[
+      SELECT C.ROLEID AS ID  FROM AC_OPERATORROLE C,AC_OPERATOR O  WHERE O.OPERATORID = C.OPERATORID AND O.USERID=#id#
+     ]]>
+    </select>
+    
+    <select id="query_canaction" resultClass="java.lang.String" parameterClass="java.util.HashMap" >
+    <![CDATA[
+SELECT w.PROCESSINSTID FROM WFWORKITEM w
+INNER JOIN WFWIPARTICIPANT wp ON w.WORKITEMID=wp.WORKITEMID
+WHERE w.PROCESSINSTID=#processId# AND w.CURRENTSTATE NOT IN ('12','13') AND wp.PARTICIPANTID=#userNum#
+     ]]>
+    </select>
+    
+</sqlMap>

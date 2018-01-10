@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:sca="http://www.springframework.org/schema/sca"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd   http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd   http://www.springframework.org/schema/sca http://www.osoa.org/xmlns/sca/1.0/spring-sca.xsd">
+	<bean id="OrgOrganizationBean"
+		parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgOrganizationService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgOrganizationService"/>
+	</bean>
+	<bean id="OrgPositionBean" parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgPositionService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgPositionService">
+		</property>
+	</bean>
+	<bean id="OrgEmployeeBean" parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgEmployeeService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgEmployeeService">
+		</property>
+	</bean>
+	<bean id="OrgEmporgBean" parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgEmporgService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgEmporgService">
+		</property>
+	</bean>
+	<bean id="OrgEmppositionBean"
+		parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgEmppositionService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgEmppositionService" >
+		</property>
+	</bean>
+	<bean id="OrgTreeBean"
+		parent="DefaultBaseTransactionProxy">
+		<property name="proxyInterfaces">
+			<list>
+				<value>
+					com.bos.utp.org.IOrgTreeService
+				</value>
+			</list>
+		</property>
+		<property name="target" ref="OrgTreeService" >
+		</property>
+	</bean>
+
+	<bean id="OrgPositionService"
+		class="com.bos.utp.org.OrgPositionService">
+		<property name="dataSource" ref="DefaultDataSource" />
+		<property name="empPositionService" ref="OrgEmppositionBean" />
+	</bean>
+
+	<bean id="OrgOrganizationService"
+		class="com.bos.utp.org.OrgOrganizationService">
+		<property name="dataSource" ref="DefaultDataSource" />
+		<property name="positionService" ref="OrgPositionBean" />
+		<property name="employeeService" ref="OrgEmployeeBean" />
+	</bean>
+
+	<bean id="OrgEmployeeService"
+		class="com.bos.utp.org.OrgEmployeeService">
+		<property name="dataSource" ref="DefaultDataSource" />
+		<property name="userService" ref="CapUserBean" />
+		<property name="emporgService" ref="OrgEmporgBean" />
+		<property name="empPositionService" ref="OrgEmppositionBean" />
+	</bean>
+
+	<bean id="OrgEmporgService"
+		class="com.bos.utp.org.OrgEmporgService">
+		<property name="dataSource" ref="DefaultDataSource" />
+		<property name="empPositionService" ref="OrgEmppositionBean" />
+	</bean>
+
+	<bean id="OrgEmppositionService"
+		class="com.bos.utp.org.OrgEmppositionService">
+		<property name="dataSource" ref="DefaultDataSource" />
+	</bean>
+	
+	<bean id="OrgTreeService"
+		class="com.bos.utp.org.OrgTreeService">
+		<property name="dataSource" ref="DefaultDataSource" />
+		<property name="organizationService" ref="OrgOrganizationBean" />
+		<property name="positionService" ref="OrgPositionBean" />
+	</bean>
+
+	<bean
+		class="com.bos.utp.org.util.OrgTreeNodeHelper"
+		id="OrgTreeNodeHelperBean" />
+		
+	<bean
+		class="com.bos.utp.org.util.OrgTreeNodeConvertor"
+		id="OrgTreeNodeConvertorBean" />
+
+	<!-- Party实现相关的Bean -->
+	<bean id="DefaultOrgManagerBean" parent="DefaultBaseTransactionProxy">
+        <property name="proxyInterfaces">
+            <list/>
+        </property>
+        <property name="target">
+            <bean class="com.bos.utp.org.party.manager.DefaultOrgManager">
+                <property name="dataSource" ref="DefaultDataSource"/>
+            </bean>
+        </property>
+    </bean>
+    <bean id="DefaultPositionManagerBean" parent="DefaultBaseTransactionProxy">
+        <property name="proxyInterfaces">
+            <list/>
+        </property>
+        <property name="target">
+            <bean class="com.bos.utp.org.party.manager.DefaultPositionManager">
+                <property name="dataSource" ref="DefaultDataSource"/>
+            </bean>
+        </property>
+    </bean>
+    <bean id="DefaultEmpManagerBean" parent="DefaultBaseTransactionProxy">
+        <property name="proxyInterfaces">
+            <list/>
+        </property>
+        <property name="target">
+            <bean class="com.bos.utp.org.party.manager.DefaultEmpManager">
+                <property name="dataSource" ref="DefaultDataSource"/>
+            </bean>
+        </property>
+    </bean>
+
+<bean class="com.bos.utp.org.QueryRolesByOrgIdsService" id="QueryRolesByOrgIdsServiceBean">
+        <property name="dataSource" ref="DefaultDataSource"/>
+    </bean>
+ 
+
+ 
+	
+</beans>

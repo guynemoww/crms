@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <select id="getGrtCon" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (nvl(t.SUBCONTRACT_AMT,t.zgbjxe)-tz.SURETY_AMT) as avi_amt,t.SUBCONTRACT_ID from TB_CON_SUBCONTRACT t,(
+		    select sum(ta.SURETY_AMT) as SURETY_AMT,ta.SUBCONTRACT_ID from TB_CON_SUBCONTRACT_REL ta,tb_con_contract_info tb
+		    where ta.CONTRACT_ID=tb.CONTRACT_ID
+		    and tb.CON_STATUS ='03'
+		    group by ta.SUBCONTRACT_ID
+		) tz
+		where t.SUBCONTRACT_ID=tz.SUBCONTRACT_ID
+		and t.SUBCONTRACT_ID in(
+		    select SUBCONTRACT_ID from TB_CON_SUBCONTRACT_REL  where CONTRACT_ID =#contractId#
+		)
+    </select>
+    <select id="getGrt" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (tz.MORTGAGE_VALUE-ty.SURETY_AMT) as avi_amt,tz.SURETY_ID
+			from TB_GRT_MORTGAGE_BASIC tz,
+			(
+			select t.SURETY_ID,sum(t.SURETY_AMT) as SURETY_AMT from TB_CON_SUB_GRT_REL t,TB_CON_SUBCONTRACT_REL ta,TB_CON_CONTRACT_INFO tb
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.CONTRACT_ID=tb.CONTRACT_ID
+			and tb.CON_STATUS='03'
+			group by t.SURETY_ID
+			)ty
+			where tz.SURETY_ID=ty.SURETY_ID
+			and tz.SURETY_ID in (
+			select tx.SURETY_ID from TB_CON_SUBCONTRACT_REL tw,TB_CON_SUB_GRT_REL tx where tw.SUBCONTRACT_ID=tx.SUBCONTRACT_ID and tw.CONTRACT_ID=#contractId#
+			)
+    </select>
+    <select id="getGrtBzr" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (nvl(t.SURETY_AMT,0)-nvl(ta.SURETY_AMT,(select RMB_AMT from tb_con_contract_info where CONTRACT_ID=#contractId#))) as avi_amt,t.SURETY_ID
+			from TB_GRT_GUARANTEE_BASIC t,TB_CON_SUB_GRT_REL ta,TB_CON_SUBCONTRACT tb,TB_CON_SUBCONTRACT_REL tc,tb_con_contract_info td
+			where t.SURETY_ID=ta.SURETY_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID
+			and tc.CONTRACT_ID=td.CONTRACT_ID
+			and tb.SUBCONTRACT_STATUS='03'
+			and td.CON_STATUS='03'
+			and td.CONTRACT_ID=#contractId#
+    </select>
+    <!--综合授信协议-->
+    <select id="getGrtConCredit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+			select SUBCONTRACT_ID from TB_CON_SUBCONTRACT_REL  where CONTRACT_ID =  #contractId#
+    </select>
+    <select id="getGrtCredit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (tz.MORTGAGE_VALUE-ty.SURETY_AMT) as avi_amt,tz.SURETY_ID
+			from TB_GRT_MORTGAGE_BASIC tz,
+			(
+			select t.SURETY_ID,sum(t.SURETY_AMT) as SURETY_AMT from TB_CON_SUB_GRT_REL t,TB_CON_SUBCONTRACT_REL ta,TB_CON_Credit_INFO tb
+			where t.SUBCONTRACT_ID=ta.SUBCONTRACT_ID
+			and ta.CONTRACT_ID=tb.CONTRACT_ID
+			and tb.CON_STATUS='03'
+			group by t.SURETY_ID
+			)ty
+			where tz.SURETY_ID=ty.SURETY_ID
+			and tz.SURETY_ID in (
+			select tx.SURETY_ID from TB_CON_SUBCONTRACT_REL tw,TB_CON_SUB_GRT_REL tx where tw.SUBCONTRACT_ID=tx.SUBCONTRACT_ID and tw.CONTRACT_ID=#contractId#
+			)
+    </select>
+    <select id="getGrtBzrCredit" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select (nvl(t.SURETY_AMT,0)-nvl(ta.SURETY_AMT,0)) as avi_amt,t.SURETY_ID
+			from TB_GRT_GUARANTEE_BASIC t,TB_CON_SUB_GRT_REL ta,TB_CON_SUBCONTRACT tb,TB_CON_SUBCONTRACT_REL tc,tb_con_credit_info td
+			where t.SURETY_ID=ta.SURETY_ID
+			and ta.SUBCONTRACT_ID=tb.SUBCONTRACT_ID
+			and tb.SUBCONTRACT_ID=tc.SUBCONTRACT_ID
+			and tc.CONTRACT_ID=td.CONTRACT_ID
+			and tb.SUBCONTRACT_STATUS='03'
+			and td.CON_STATUS='03'
+			and td.CONTRACT_ID=#contractId#
+    </select>
+</sqlMap>

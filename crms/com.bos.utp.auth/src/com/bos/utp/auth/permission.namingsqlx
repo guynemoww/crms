@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:翁增仁 -->
+<sqlMap>
+    <parameterMap class="java.util.HashMap" id="parameterMap">
+        <parameter javaType="string" jdbcType="VARCHAR" property="roleid"/>
+        <parameter javaType="string" jdbcType="number" property="operatorid"/>
+        <parameter javaType="string" jdbcType="VARCHAR" property="roles"/>
+        <parameter javaType="string" jdbcType="VARCHAR" property="username"/>
+        <parameter javaType="string" jdbcType="VARCHAR" property="funccode"/>
+
+    </parameterMap>
+
+
+    <resultMap class="com.bos.utp.auth.permission.model.RoleFunction" id="rolePermissionResult">
+        <result column="ROLEID" javaType="string" property="roleid"/>
+        <result column="APPID" javaType="string" property="appid"/>
+        <result column="FUNCCODE" javaType="string" property="funccode"/>
+        <result column="ISMENU" javaType="string" property="ismenu"/>
+        <result column="FUNCTYPE" javaType="string" property="functype"/>
+        <result column="ISCHECK" javaType="string" property="ischeck"/>
+        <result column="FUNCACTION" javaType="string" property="funcaction"/>
+        <result column="FUNCGROUPID" javaType="string" property="funcgroupid"/>
+        <result column="RESTYPE" javaType="string" property="restype"/>
+        <result column="RESPATH" javaType="string" property="respath"/>
+        <result column="RESID" javaType="string" property="resid"/>
+    </resultMap>
+
+    <resultMap class="com.bos.utp.auth.permission.model.OperatorFunction" id="operatorPermissionResult">
+        <result column="OPERATORID" javaType="string" property="operatorid"/>
+        <result column="APPID" javaType="string" property="appid"/>
+        <result column="FUNCCODE" javaType="string" property="funccode"/>
+        <result column="AUTHTYPE" javaType="string" property="authtype"/>
+        <result column="STARTDATE" javaType="java.sql.Date" property="startdate"/>
+        <result column="ENDDATE" javaType="java.sql.Date" property="enddate"/>
+        <result column="ISMENU" javaType="string" property="ismenu"/>
+        <result column="FUNCTYPE" javaType="string" property="functype"/>
+        <result column="ISCHECK" javaType="string" property="ischeck"/>
+        <result column="FUNCACTION" javaType="string" property="funcaction"/>
+        <result column="FUNCGROUPID" javaType="string" property="funcgroupid"/>
+        <result column="RESTYPE" javaType="string" property="restype"/>
+        <result column="RESPATH" javaType="string" property="respath"/>
+        <result column="RESID" javaType="string" property="resid"/>
+    </resultMap>
+
+    <resultMap class="java.util.HashMap" id="portalMap">
+         <result column="PORTALID" javaType="String" property="PORTALID"/>
+         <result column="URL" javaType="String" property="URL"/>
+    </resultMap>
+
+    <resultMap class="com.bos.utp.auth.handler.LogConfig" id="logResult">
+         <result column="FUNCCODE" javaType="String" property="funccode"/>
+         <result column="FUNCACTION" javaType="String" property="funcaction"/>
+         <result column="LOGEVENT" javaType="String" property="logevent"/>
+         <result column="OUTPUTTYPE" javaType="String" property="outputtype"/>
+         <result column="LOGTYPE" javaType="String" property="logtype"/>
+    </resultMap>
+
+
+    <!-- 加载所有角色的所有功能权限-->
+    <select id="loadRolePermissionAll" parameterMap="parameterMap" resultMap="rolePermissionResult">
+    SELECT A.ROLEID,A.APPID,A.FUNCCODE,B.ISMENU,B.FUNCTYPE,B.ISCHECK,B.FUNCACTION,B.FUNCGROUPID,C.RESTYPE,C.RESPATH,C.RESID
+  FROM AC_ROLEFUNC A
+  LEFT OUTER JOIN AC_FUNCTION B ON A.FUNCCODE = B.FUNCCODE
+  LEFT OUTER JOIN AC_FUNCRESOURCE C ON B.FUNCCODE = C.FUNCCODE
+
+  <isNotNull property="roleid">
+        WHERE A.ROLEID = #roleid#
+  </isNotNull>
+
+  </select>
+
+
+    <!-- 加载所有操作员的所有功能-->
+  <select id="loadOperatorFunctionAll" parameterMap="parameterMap" resultMap="operatorPermissionResult">
+    SELECT A.OPERATORID,A.APPID,A.FUNCCODE,A.AUTHTYPE,A.STARTDATE,A.ENDDATE,B.ISMENU,B.FUNCTYPE,B.ISCHECK,B.FUNCACTION,B.FUNCGROUPID,C.RESTYPE,C.RESPATH,C.RESID
+  FROM AC_OPERFUNC A
+  LEFT OUTER JOIN AC_FUNCTION B ON A.FUNCCODE = B.FUNCCODE
+  LEFT OUTER JOIN AC_FUNCRESOURCE C ON B.FUNCCODE = C.FUNCCODE
+
+  <isNotNull property="operatorid">
+        WHERE A.OPERATORID = #operatorid#
+  </isNotNull>
+
+  </select>
+
+
+  <!-- 加载所有Portal资源信息 -->
+  <select id="loadPortalResourceAll" parameterClass="java.util.HashMap" resultMap="portalMap">
+	SELECT A.PORTALID,B.FUNCACTION AS URL
+	 FROM AT_PORTALRESLIST  A
+	 JOIN AC_FUNCTION B ON A. RESID= B.FUNCCODE
+	WHERE B.FUNCACTION IS NOT NULL
+	<isNotNull property="url">
+        AND B.FUNCACTION = #url#
+    </isNotNull>
+	UNION
+	SELECT A.PORTALID,A.RESID AS URL
+	FROM AT_PORTALRESLIST A
+	WHERE A.RESTYPE='0'
+	AND A.RESID IS NOT NULL
+	<isNotNull property="url">
+        AND A.RESID = #url#
+    </isNotNull>
+  </select>
+
+
+  <!-- 获取业务日志的配置信息-->
+  <select id="loadBusinessLogInfo" parameterMap="parameterMap"  resultMap="logResult">
+	SELECT a.FUNCCODE,b.FUNCACTION,a.LOGEVENT ,a.OUTPUTTYPE,a.LOGTYPE 
+	FROM AT_OPERLOGCONFIG a
+	JOIN AC_FUNCTION b ON b.FUNCCODE=a.FUNCCODE 
+	WHERE a.ISLOG='1' 
+
+    <isNotNull property="funccode">
+        and b.FUNCACTION = #funccode#
+    </isNotNull>
+
+  </select>
+  
+  <select id="loadFunctionCache" parameterClass="java.util.HashMap" resultClass="java.util.HashMap" >
+     SELECT FUNCACTION FROM 
+     (SELECT FUNCACTION AS FUNCACTION FROM AC_FUNCTION
+     <isNotNull property="url">
+        WHERE FUNCACTION = #url#
+    </isNotNull>
+       UNION 
+	SELECT RESPATH AS FUNCACTION  FROM AC_FUNCRESOURCE 
+	<isNotNull property="url">
+	        WHERE RESPATH = #url#
+	</isNotNull>
+	) A
+  </select>
+  
+  <select id="queryOperator" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+  	SELECT * FROM AC_OPERATOR T WHERE T.USERID=#userid#
+  </select>
+
+</sqlMap>

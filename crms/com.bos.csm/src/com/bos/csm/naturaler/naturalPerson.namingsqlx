@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cc -->
+<sqlMap>
+<resultMap class="java.util.HashMap" id="resultMap">
+    <result column="PARTY_ID" javaType="string" property="partyId"/>
+    <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+    <result column="PARTY_NAME" javaType="string" property="partyName"/>
+    <result column="CERT_TYPE" javaType="string" property="certType"/>
+    <result column="CERT_NUM" javaType="string" property="certNum"/>
+    <result column="MIDDLE_CODE" javaType="string" property="middelCode"/>
+    <result column="XF_CREDIT_RATING_CD" javaType="string" property="xfCreditRatingCd"/>
+    <result column="JY_CREDIT_RATING_CD" javaType="string" property="jyCreditRatingCd"/>
+    <result column="PARTY_TYPE_CD" javaType="string" property="partyTypeCd"/>
+    <result column="USER_NUM" javaType="string" property="mainUserNum"/>
+    <result column="ORG_NUM" javaType="string" property="mainOrgNum"/>
+    <result column="PF_AMT" javaType="string" property="pfAmt"/>
+    <result column="PF_BALANCE" javaType="string" property="pfBalance"/>
+</resultMap>
+
+<!--我的客户：自然人客户-->
+<select id="queryNaturalForDesk" parameterClass="java.util.HashMap" resultMap="resultMap">
+SELECT t1.PARTY_ID,
+         t1.PARTY_NUM,
+         t1.PARTY_NAME,
+         np.CERT_TYPE,
+         np.CERT_NUM,
+         np.MIDDLE_CODE,
+         t5.GENERAL_ADJUST_RATING_CD XF_CREDIT_RATING_CD,
+         t6.GENERAL_ADJUST_RATING_CD JY_CREDIT_RATING_CD,
+         t1.PARTY_TYPE_CD,
+         t1.USER_NUM,
+         t1.org_num,
+         biz.credit_amt pf_amt,
+       	biz.used_amt_real pf_balance
+    FROM TB_CSM_NATURAL_PERSON np
+      left join TB_IRM_INTERNAL_RATING_APPLY t5 on np.party_id = t5.party_id and t5.RATING_STATE = '03' and t5.rating_type='1'
+      left join TB_IRM_INTERNAL_RATING_APPLY t6 on np.party_id = t6.party_id and t6.RATING_STATE = '03' and t6.rating_type='2'
+      left join v_crd_party_limit biz on biz.party_id=np.party_id and biz.limit_type='02'
+      left join TB_LST_INFO T  on np.party_id = T.party_id
+      left join V_CSM_PARTY t1 on np.party_id = t1.party_id
+      left join tb_csm_management_team t3 on t1.party_id=t3.party_id
+    where 
+       t3.user_num=#curUserNum# 
+       and t3.org_num=#orgcode#
+       and t1.examine_state='3'
+       and t1.is_potential_cust = '1'  
+      <isNotNull property="certType"> and np.CERT_TYPE =#certType#</isNotNull>
+	  <isNotNull property="certNum"> and np.CERT_NUM =#certNum#</isNotNull>
+	  <isNotNull property="middelCode"> and np.MIDDLE_CODE =#middelCode#</isNotNull>
+       and( T.LIST_STATUS != '2' or T.LIST_STATUS is null)
+	  <isNotNull property="partyName"> and t1.PARTY_NAME like '%$partyName$%'</isNotNull>
+ </select>
+ 
+ <!--我的客户：获取自然人客户业务权列表-->
+ <select id="acquireNaturalList" parameterClass="java.util.HashMap" resultMap="resultMap">
+ SELECT distinct t1.PARTY_ID,
+         t1.PARTY_NUM,
+         t1.PARTY_NAME,
+         np.CERT_TYPE,
+         np.CERT_NUM,
+         np.MIDDLE_CODE,
+         t5.GENERAL_ADJUST_RATING_CD as XF_CREDIT_RATING_CD,
+         t6.GENERAL_ADJUST_RATING_CD as JY_CREDIT_RATING_CD,
+         t1.PARTY_TYPE_CD,
+         t1.USER_NUM,
+         t1.org_num,
+         biz.credit_amt  as pf_amt,
+         biz.used_amt_real as pf_balance,
+         oo.leg_org
+    FROM TB_CSM_NATURAL_PERSON np
+      left join TB_IRM_INTERNAL_RATING_APPLY t5 on np.party_id = t5.party_id and t5.RATING_STATE = '03' and t5.rating_type='1'
+      left join TB_IRM_INTERNAL_RATING_APPLY t6 on np.party_id = t6.party_id and t6.RATING_STATE = '03' and t6.rating_type='2'
+      left join v_crd_party_limit biz on biz.party_id=np.party_id
+      , V_CSM_PARTY t1,om_organization oo
+    where t1.party_id = np.party_id 
+       and t1.is_potential_cust = '1' 
+       and t1.examine_state='3' 
+       and t1.party_id not in (select t.party_id from tb_csm_management_team t where t.user_num =#userNum#  and t.org_num=#orgNum#)
+       and oo.leg_org = ( select  leg_org  from om_organization where orgcode=#orgNum#)
+	  <isNotNull property="partyName">  	and t1.PARTY_NAME like '%$partyName$%'</isNotNull>
+	  <isNotNull property="certType">  and np.CERT_TYPE =#certType#</isNotNull>
+	  <isNotNull property="certNum">and np.CERT_NUM =#certNum#</isNotNull>
+	  <isNotNull property="middelCode">and np.CERT_NUM =#middelCode#</isNotNull>
+ </select>
+ 
+ <select id="queryPrivateForDesk" parameterClass="java.util.HashMap" resultMap="resultMap">
+SELECT t1.PARTY_ID,
+         t1.PARTY_NUM,
+         t1.PARTY_NAME,
+         np.CERT_TYPE,
+         np.CERT_NUM,
+         np.MIDDLE_CODE,
+         t5.GENERAL_ADJUST_RATING_CD as CREDIT_RATING_CD,
+         t1.PARTY_TYPE_CD,
+         ct.USER_NUM,
+         biz.pf_amt,
+       biz.pf_balance
+    FROM TB_CSM_NATURAL_PERSON np
+      left join TB_IRM_INTERNAL_RATING_APPLY t5 on np.party_id = t5.party_id and t5.RATING_STATE = '03'
+      left join tb_csm_management_team ct on np.party_id = ct.party_id and ct.user_placing_cd='01' 
+       left join (select tb.party_id,
+       sum(tb.CREDIT_AMOUNT) as pf_amt, 
+       sum(tb.CREDIT_AVI) as pf_balance 
+  	from
+       tb_biz_approve  ta,
+       tb_biz_amount_approve tb
+ where
+    ta.APPROVE_ID = tb.APPROVE_ID
+   and ta.become_effective_mark in ('03', '05')
+   and ta.approve_conclusion in ('1', '3')
+   group by tb.party_id)biz on biz.party_id=np.party_id
+      , TB_CSM_PARTY t1
+    where t1.party_id = np.party_id 
+       and np.natural_person_type_cd in ('2', '3')
+       and t1.is_potential_cust = '1' 
+       and t1.examine_state='3' 
+      <isNotNull property="curUserNum">  and t1.PARTY_ID in 
+		(  select party_id from tb_csm_management_team where user_num=#curUserNum# and org_num=#orgcode# ) 
+	  </isNotNull>
+	  <isNotNull property="partyName">  
+	  	and t1.PARTY_NAME like '%$partyName$%'
+	  </isNotNull>
+	  <isNotNull property="certType">  
+	  	and np.CERT_TYPE =#certType#
+	  </isNotNull>
+	  <isNotNull property="certNum">
+		and np.CERT_NUM =#certNum#
+	  </isNotNull>
+	  <isNotNull property="middelCode">
+		and np.CERT_NUM =#middelCode#
+	  </isNotNull>
+
+ </select>
+
+<select id="queryNaturalTeamPage" parameterClass="java.util.HashMap" resultClass="com.bos.csm.naturaler.naturalperson.TbCsmNaturalTeamView">
+  Select
+           p.party_id as partyId,
+	       p.party_num as partyNum,
+	       p.party_name as partyName,
+	        
+	       n.certificate_type_cd as certificateTypeCd,
+	       n.certificate_num as certificateNum    
+  From tb_csm_natural_person n left
+  Join tb_csm_party p on p.party_id = n.party_id
+		
+	   <isNotNull property="partyName">
+	    	and p.party_name like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.party_num = #partyNum#
+	   </isNotNull>
+	   <isNotNull property="corePartyNum">
+	    	and p.core_party_num = #corePartyNum#
+	   </isNotNull>             
+</select>
+    
+    
+<select id="queryNaturalContactPage" parameterClass="java.util.HashMap" resultClass="com.bos.csm.naturaler.naturalperson.TbCsmNaturalContactView">
+  select 
+    p.party_id as partyId,     
+    p.party_name as partyName,
+    a.address_type_cd as addressTypeCd,
+    a.nationality_cd as nationalityCd,
+    a.telephone as telephone,
+    a.email as email,
+    a.mobile_phone as mobilePhone,
+    a.update_time as updateTime,
+  a.address_id as addressId,
+   a.linkman_name as linkmanName
+from tb_csm_natural_person p
+join tb_csm_address a ON p.party_id = a.party_id	   
+	   <isNotNull property="partyId">
+	    	and p.party_id = #partyId#
+	   </isNotNull>
+             
+</select>
+    
+</sqlMap>

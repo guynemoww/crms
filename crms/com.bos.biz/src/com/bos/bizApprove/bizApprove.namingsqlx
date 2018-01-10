@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zhonghui -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    
+    <select id="getApproveInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	
+select * from (
+select t.end_date,apply.credit_amount, p.PARTY_NAME,p.CERT_NUM,tb.AMOUNT_DETAIL_ID,ta.APPROVE_ID,t.BIZ_NUM,o.ORGNAME,to_char(t.APPLY_DATE,'yyyy-MM-dd') as APPLY_DATE,p.PRODUCT_NAME,t.APPROVAL_NUM,t.BIZ_TYPE,t.APPROVE_CONCLUSION,
+      to_char(t.VALID_DATE,'yyyy-MM-dd') VALID_DATE,tb.DETAIL_AMT,tb.CREDIT_TERM,tb.CYCLE_UNIT,tb.EXCHANGE_RATE,ta.GUARANTY_TYPE,tb.LOAN_USE,tb.REPAYMENT_TYPE,rate.YEAR_RATE,
+      decode(t.biz_type,'01',30,'04',30,90) SX_DAYS
+      from tb_biz_approve t, tb_biz_amount_approve ta,tb_biz_amount_detail_approve tb,OM_ORGANIZATION o,TB_SYS_PRODUCT p,
+                 TB_BIZ_AMOUNT_LOANRATE_APPROVE rate,V_CSM_PARTY p,tb_biz_amount_apply apply
+      where t.APPROVE_ID=ta.APPROVE_ID
+      and p.PARTY_ID=t.PARTY_ID
+      and apply.amount_id=tb.amount_id
+      and  ta.AMOUNT_ID=tb.AMOUNT_ID
+            and rate.AMOUNT_DETAIL_ID=tb.AMOUNT_DETAIL_ID
+      and p.PRODUCT_ID=tb.PRODUCT_TYPE
+      and t.ORG_NUM=o.ORGCODE
+		    <isNotNull prepend="" property="applyId"> 
+	    		and t.APPLY_ID=#applyId#
+	    	</isNotNull>
+	    	<isNotNull prepend="" property="approveId"> 
+	    		and ta.APPROVE_ID=#approveId#
+	    	</isNotNull>)a
+				left join (select bzjblbdy,amount_detail_id from tb_biz_bh_apply
+				union
+				select bzjblbdy,amount_detail_id  from tb_biz_gnxyz_apply
+				union
+				select bzjblbdy,amount_detail_id  from tb_biz_jkbh_apply
+				union
+				select bzjblbdy,amount_detail_id  from tb_biz_jkxyz_apply
+				union
+				select bzjblbdy,amount_detail_id  from tb_biz_klyhcdhp_apply) b
+				on a.AMOUNT_DETAIL_ID=b.AMOUNT_DETAIL_ID
+    </select>
+    
+    
+    <select id="getSXApproveInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select a.biz_num,p.party_name,o.orgname,b.credit_amount,b.guaranty_type,
+			       add_months(r.valid_date,1) as valid_date
+			from tb_biz_apply a,tb_biz_amount_apply b,tb_csm_party p,om_organization o,tb_biz_approve r
+			where a.apply_id=b.apply_id
+			and a.apply_id=r.apply_id
+			and a.party_id=p.party_id
+			and a.org_num=o.orgcode
+			and a.apply_id=#applyId#
+    </select>
+    
+    <!-- modi by shangmf:20171005:增加查询surety_id的字段 -->
+     <select id="getSXMortgageBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select p.party_name,decode(m.coll_type,'01','抵押','02','质押') coll_type,m.sort_type
+		      ,m.assess_value,m.mortgage_value,m.surety_no,r.surety_id from tb_biz_grt_rel  r,tb_grt_mortgage_basic m,tb_csm_party p
+		      where r.surety_id=m.surety_id
+		      and p.party_id=m.party_id
+		      and r.surety_type in('01','02')
+		      and r.apply_id=#applyId#
+    </select>
+    <select id="getSXDYMortgageBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select party_name,coll_type,assess_value,mortgage_value,surety_no,surety_id,en.dictname as sort_type from (
+    	select p.party_name,decode(m.coll_type,'01','抵押','02','质押') coll_type,m.sort_type
+		      ,m.assess_value,m.mortgage_value,m.surety_no,r.surety_id from tb_biz_grt_rel  r,tb_grt_mortgage_basic m,tb_csm_party p
+		      where r.surety_id=m.surety_id
+		      and p.party_id=m.party_id
+		      and r.surety_type in('01','02')
+		      and r.apply_id=#applyId#
+		                union
+ select cpp.party_name,decode(gmb.coll_type,'01','抵押','02','质押') coll_type,gmb.sort_type
+          ,gmb.assess_value,gmb.mortgage_value,gmb.surety_no,gmb.surety_id
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_mortgage_basic gmb , tb_csm_party cpp 
+ where gma.subcontract_id = css.subcontract_id and sgr.subcontract_id = css.subcontract_id and gmb.surety_id = sgr.surety_id 
+  and   gmb.party_id=cpp.party_id    and gma.re_type in ('01','02')
+        and gma.apply_id=#applyId#
+         ) al left join eos_dict_entry en on al.sort_type = en.dictid 
+        where en.dicttypeid = 'XD_YPZL01'
+    </select>
+    
+     <select id="getSXGuaranteeBasic" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select p.party_name,m.surety_amt
+				from tb_biz_grt_rel  r,tb_grt_guarantee_basic m,tb_csm_party p
+				where r.surety_id=m.surety_id
+				and p.party_id=m.party_id
+				and r.surety_type ='04'
+				and r.apply_id=#applyId#
+				 union 
+        select cpp.party_name,gmb.surety_amt
+           from tb_biz_grt_maxloancon_apply gma,tb_con_subcontract css,tb_con_sub_grt_rel sgr ,tb_grt_guarantee_basic gmb , tb_csm_party cpp 
+ where gma.subcontract_id = css.subcontract_id and sgr.subcontract_id = css.subcontract_id and gmb.surety_id = sgr.surety_id 
+  and   gmb.party_id=cpp.party_id    and gma.re_type = '04'
+       and gma.apply_id=#applyId#
+    </select>
+    
+    <select id="getFlowInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+    	select  to_char(ta.PERFORMTIME,'yyyy-MM-dd') as PERFORMTIME,ta.ACTIVITY_NAME,ta.USER_NAME,ta.ORG_NAME,ta.OPINION
+	    from tb_wfm_processinstance t,tb_wfm_workiteminstance ta
+	    where t.PROCESS_ID=ta.PROCESS_ID
+	    and t.PROCESS_ID=#processInstId#
+	    order by ta.PERFORMTIME desc
+    </select>
+    
+	<!-- modi by shangmf:20171120:增加根据合同id查询业务申请ID和押品编号的SQL语句 -->
+    <select id="getBizGrtRel" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select distinct th.surety_id,th.surety_no,tb.apply_id 
+	from tb_biz_approve tb,TB_BIZ_AMOUNT_APPROVE tc,TB_BIZ_AMOUNT_DETAIL_APPROVE td,tb_con_contract_info con,
+         tb_con_subcontract_rel tf,tb_con_subcontract te,TB_CON_SUB_GRT_REL tg,tb_grt_mortgage_basic th
+    where tb.APPROVE_ID=tc.APPROVE_ID
+    	and tc.AMOUNT_ID=td.AMOUNT_ID
+    	and td.amount_detail_id=con.amount_detail_id
+    	and con.contract_id=tf.contract_id and tf.subcontract_id=te.subcontract_id
+    	and te.subcontract_id = tg.subcontract_id and tg.surety_id = th.surety_id
+    	and con.contract_id = #contractId#
+    </select>
+</sqlMap>

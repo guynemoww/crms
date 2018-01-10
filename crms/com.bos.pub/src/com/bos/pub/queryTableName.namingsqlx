@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zhouxu -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TABLE_NAME" javaType="string" property="tableName"/>
+        <result column="COLUMN_NAME" javaType="string" property="columnName"/>
+        <result column="DATA_TYPE" javaType="string" property="dataType"/>
+    </resultMap>
+    <select id="queryTabAndCol" parameterClass="java.util.HashMap" resultMap="resultMap">
+	SELECT TABLE_NAME, COLUMN_NAME,DATA_TYPE  FROM USER_TAB_COLS WHERE COLUMN_NAME ='$columnName$' 
+	AND TABLE_NAME IN('TB_BIZ_AMOUNT_LOANRATE_APPLY','TB_BIZ_AMOUNT_DETAIL_APPLY','TB_BIZ_AMOUNT_APPLY','$tableName$')
+    </select>
+    
+    <select id="querySysParam" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	SELECT * FROM TB_SYS_PRODUCT_PARAM tp WHERE tp.PRODUCT_ID='$productType$' AND AUTH_ORG_NUM IN (SELECT oo.ORGCODE FROM OM_ORGANIZATION oo WHERE oo.ORGSEQ LIKE  
+(SELECT og.ORGSEQ||'%' FROM OM_ORGANIZATION og WHERE og.ORGCODE='$orgId$'))
+    </select>
+</sqlMap>

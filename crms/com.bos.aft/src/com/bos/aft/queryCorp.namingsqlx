@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:zengfang -->
+<!-- 查询客户基本信息、评级、授信金额、余额。 -->
+<sqlMap>
+<resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="PARTY_NUM" property="partyNum"/>
+        <result column="PARTY_NAME" property="partyName"/>
+        <result column="REGISTRATION_TYPE" property="enterpriseNatureCd"/>
+        <result column="CLASSIFICATION_RESULT_CD" property="classificationResultCd"/>
+         <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+    </resultMap>
+    <select id="queryCrop" parameterClass="java.util.HashMap" resultMap="resultMap">
+		SELECT
+		    tp.PARTY_ID,
+		    tp.PARTY_NUM,
+		    tp.PARTY_NAME,
+		    trc.WARNING_LEVEL_CD,
+		    t1.CLASSIFICATION_RESULT_CD,
+		    c.REGISTRATION_TYPE
+		FROM
+		    TB_CSM_PARTY tp
+		LEFT JOIN
+		    TB_CSM_CORPORATION c
+		ON
+		    tp.party_id=c.party_id
+		LEFT JOIN 
+		    TB_REW_CSM_EARLY_WARNING trc
+		ON tp.PARTY_ID = trc.PARTY_ID
+		LEFT JOIN
+		         (
+		          select  
+		               PARTY_ID,
+		               max(CLASSIFICATION_RESULT_CD) CLASSIFICATION_RESULT_CD
+		         from 
+		               TB_LOAN_SUMMARY
+		         where 
+		               LOAN_STATUS='02'
+		               group by PARTY_ID
+		         )t1
+		ON     
+		     tp.PARTY_ID=t1.PARTY_ID
+		WHERE
+		    1=1
+		<isNotNull property="partyId">
+		AND tp.PARTY_ID = #partyId# 
+		</isNotNull>
+    </select>
+    
+    <resultMap class="commonj.sdo.DataObject" id="queryMonitorCsmCorp">
+        <result column="PARTY_ID" property="partyId"/><!-- -->
+        <result column="PARTY_NUM" property="partyNum"/><!--客户编号 -->
+        <result column="PARTY_NAME" property="partyName"/><!--客户名称 -->
+        <result column="PARTY_TYPE_CD" property="partyTypeCd"/><!--客户类型 -->
+    	<result column="ORG_NUM" property="orgNum"/><!--组织机构代码 -->
+    	<result column="USER_NUM" property="userNum"/><!--组织机构代码 -->
+    	
+    </resultMap>
+    <select id="queryMonitorCsmCorp" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryMonitorCsmCorp">
+
+		
+		SELECT
+		      distinct
+			 p.PARTY_ID,
+			 p.PARTY_NUM,
+			 p.PARTY_NAME,
+			 p.PARTY_TYPE_CD,
+			 m.ORG_NUM,
+			 m.USER_NUM
+			 
+		FROM
+			TB_CSM_PARTY p
+		inner join
+   			TB_CSM_MANAGEMENT_TEAM m  
+   		on  
+   		    p.party_id=m.party_id and m.USER_PLACING_CD='01'
+   		LEFT JOIN
+            V_OM_ORGANIZATION voo 
+        ON
+            m.ORG_NUM = voo.ORGCODE
+   		where p.PARTY_ID  IN(
+   		SELECT a.PARTY_ID FROM TB_AFT_LOAN_INSPECT a where a.INSPECT_STATE='4'
+   		)
+   		
+   		<isNotNull property="orgCode">
+   			and		voo.parentorgcode = #orgCode#
+   		</isNotNull>
+   		
+   		<isNotNull property="partyName">
+	    	and p.PARTY_NAME like '%$partyName$%'
+	   </isNotNull>
+	   <isNotNull property="partyNum">
+	    	and p.PARTY_NUM like '%$partyNum$%'
+	   </isNotNull>
+	   <isNotNull property="partyTypeCd">
+	    	and p.PARTY_TYPE_CD = #partyTypeCd#
+	   </isNotNull>
+  
+    </select>
+</sqlMap>

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cp -->
+<sqlMap>
+	<!--查询期供信息-->
+    <select id="queryPeroidInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    select t.due_num,             
+		       t.curr_peri,           
+		       t.beg_date,            
+		       t.end_date,            
+		       t.pay_date,            
+		       t.next_prov_date,      
+		       t.rcv_prn,             
+		       t.pad_up_prn,          
+		       t.rcv_nor_itr_in,      
+		       t.pad_up_nor_itr_in,   
+		       t.rcv_dft_itr_in,      
+		       t.pad_up_dft_itr_in,   
+		       t.rcv_pns_itr_in,      
+		       t.pad_up_pns_itr_in,   
+		       t.rcv_cpd_itr_in,      
+		       t.pad_up_cpd_itr_in,   
+		       t.rcv_nor_itr_out,     
+		       t.pad_up_nor_itr_out,   
+		       t.rcv_dft_itr_out,     
+		       t.pad_up_dft_itr_out,  
+		       t.rcv_pns_itr_out,     
+		       t.pad_up_pns_itr_out,  
+		       t.rcv_cpd_itr_out,     
+		       t.pad_up_cpd_itr_out,  
+		       t.rcv_pad_up_prn,      
+		       t.dft_prn_otd_itr,     
+		       t.nor_itr_in_otd_itr,  
+		       t.nor_itr_out_otd_itr, 
+		       t.dft_itr_in_otd_itr,  
+		       t.dft_itr_out_otd_itr, 
+		       t.pns_itr_in_otd_itr,  
+		       t.pns_itr_out_otd_itr, 
+		       t.cpd_itr_in_otd_itr,  
+		       t.cpd_itr_out_otd_itr, 
+		       t.gra_prn_date,        
+		       t.gra_itr_date         
+		 from
+		       (select n.due_num                     due_num,               
+		       n.curr_peri                           curr_peri,               
+		       n.beg_date                            beg_date,               
+		       n.end_date                            end_date,               
+		       n.pay_date                            pay_date,               
+		       lo.next_prov_date                     next_prov_date,               
+		       n.rcv_prn                             rcv_prn,               
+		       n.pad_up_prn                          pad_up_prn,               
+		       n.rcv_nor_itr_in                      rcv_nor_itr_in,               
+		       n.pad_up_nor_itr_in                   pad_up_nor_itr_in,               
+		       n.rcv_dft_itr_in                      rcv_dft_itr_in,               
+		       n.pad_up_dft_itr_in                   pad_up_dft_itr_in,               
+		       n.rcv_pns_itr_in                      rcv_pns_itr_in,               
+		       n.pad_up_pns_itr_in                   pad_up_pns_itr_in,               
+		       n.rcv_cpd_itr_in                      rcv_cpd_itr_in,               
+		       n.pad_up_cpd_itr_in                   pad_up_cpd_itr_in,               
+		       n.rcv_nor_itr_out                     rcv_nor_itr_out,               
+		       n.pad_up_nor_itr_out                   pad_up_nor_itr_out,               
+		       n.rcv_dft_itr_out                     rcv_dft_itr_out,               
+		       n.pad_up_dft_itr_out                  pad_up_dft_itr_out,               
+		       n.rcv_pns_itr_out                     rcv_pns_itr_out,               
+		       n.pad_up_pns_itr_out                  pad_up_pns_itr_out,               
+		       n.rcv_cpd_itr_out                     rcv_cpd_itr_out,               
+		       n.pad_up_cpd_itr_out                  pad_up_cpd_itr_out,               
+		       n.rcv_prn-n.pad_up_prn                rcv_pad_up_prn,               
+		       round(n.dft_prn_otd_itr, 2)           dft_prn_otd_itr,               
+		       round(n.nor_itr_in_otd_itr, 2)        nor_itr_in_otd_itr,               
+		       round(n.nor_itr_out_otd_itr, 2)       nor_itr_out_otd_itr,               
+		       round(n.dft_itr_in_otd_itr, 2)        dft_itr_in_otd_itr,               
+		       round(n.dft_itr_out_otd_itr, 2)       dft_itr_out_otd_itr,               
+		       round(n.pns_itr_in_otd_itr, 2)        pns_itr_in_otd_itr,               
+		       round(n.pns_itr_out_otd_itr, 2)       pns_itr_out_otd_itr,               
+		       round(n.cpd_itr_in_otd_itr, 2)        cpd_itr_in_otd_itr,               
+		       round(n.cpd_itr_out_otd_itr, 2)       cpd_itr_out_otd_itr,               
+		       n.gra_prn_date                        gra_prn_date,               
+		       n.gra_itr_date                        gra_itr_date                   
+		  from tb_sup_loan_info lo,
+		  tb_sup_debt_info_n_bkh n
+		 where
+		 lo.due_num = n.due_num
+		union
+		 select n.due_num                         due_num,                              
+		       n.curr_peri                        curr_peri,                              
+		       n.beg_date                         beg_date,                              
+		       n.end_date                         end_date,                              
+		       n.pay_date                         pay_date,                              
+		       lo.next_prov_date                  next_prov_date,                              
+		       n.rcv_prn                          rcv_prn,                              
+		       n.pad_up_prn                       pad_up_prn,                              
+		       n.rcv_nor_itr_in                   rcv_nor_itr_in,                              
+		       n.pad_up_nor_itr_in                pad_up_nor_itr_in,                              
+		       n.rcv_dft_itr_in                   rcv_dft_itr_in,                              
+		       n.pad_up_dft_itr_in                pad_up_dft_itr_in,                              
+		       n.rcv_pns_itr_in                   rcv_pns_itr_in,                              
+		       n.pad_up_pns_itr_in                 pad_up_pns_itr_in,                              
+		       n.rcv_cpd_itr_in                   rcv_cpd_itr_in,                              
+		       n.pad_up_cpd_itr_in                 pad_up_cpd_itr_in,                              
+		       n.rcv_nor_itr_out                   rcv_nor_itr_out,                              
+		       n.pad_up_nor_itr_out                 pad_up_nor_itr_out,                              
+		       n.rcv_dft_itr_out                   rcv_dft_itr_out,                              
+		       n.pad_up_dft_itr_out               pad_up_dft_itr_out,                              
+		       n.rcv_pns_itr_out                   rcv_pns_itr_out,                              
+		       n.pad_up_pns_itr_out               pad_up_pns_itr_out,                              
+		       n.rcv_cpd_itr_out                   rcv_cpd_itr_out,                              
+		       n.pad_up_cpd_itr_out               pad_up_cpd_itr_out,                              
+		       n.rcv_prn-n.pad_up_prn             rcv_pad_up_prn,                              
+		       round(n.dft_prn_otd_itr, 2)        dft_prn_otd_itr,                              
+		       round(n.nor_itr_in_otd_itr, 2)     nor_itr_in_otd_itr,                              
+		       round(n.nor_itr_out_otd_itr, 2)     nor_itr_out_otd_itr,                              
+		       round(n.dft_itr_in_otd_itr, 2)     dft_itr_in_otd_itr,                              
+		       round(n.dft_itr_out_otd_itr, 2)     dft_itr_out_otd_itr,                              
+		       round(n.pns_itr_in_otd_itr, 2)     pns_itr_in_otd_itr,                              
+		       round(n.pns_itr_out_otd_itr, 2)     pns_itr_out_otd_itr,                              
+		       round(n.cpd_itr_in_otd_itr, 2)      cpd_itr_in_otd_itr,                              
+		       round(n.cpd_itr_out_otd_itr, 2)     cpd_itr_out_otd_itr,                              
+		       n.gra_prn_date                     gra_prn_date,                        
+		       n.gra_itr_date                     gra_itr_date                                                           
+		       
+		  from tb_sup_loan_info lo,
+		  tb_sup_debt_info_n n
+		 where
+		 lo.due_num = n.due_num
+		 union
+		select p.due_num                         due_num,                               
+		       p.curr_peri                       curr_peri,                               
+		       p.beg_date                       beg_date,                               
+		       p.end_date                       end_date,                               
+		       null                             pay_date,                               
+		       p.end_date                       next_prov_date,                               
+		       p.curr_prj_prn                   rcv_prn,                               
+		       null                             pad_up_prn,                               
+		       p.curr_prj_itr+p.spec_amt         rcv_nor_itr_in,                               
+		       null                             pad_up_nor_itr_in,                               
+		       null                             rcv_dft_itr_in,                               
+		       null                             pad_up_dft_itr_in,                               
+		       null                             rcv_pns_itr_in,                               
+		       null                              pad_up_pns_itr_in,                               
+		       null                             rcv_cpd_itr_in,                               
+		       null                             pad_up_cpd_itr_in,                               
+		       null                             rcv_nor_itr_out,                               
+		       null                             pad_up_nor_itr_out,                               
+		       null                             rcv_dft_itr_out,                               
+		       null                             pad_up_dft_itr_out,                               
+		       null                             rcv_pns_itr_out,                               
+		       null                             pad_up_pns_itr_out,                               
+		       null                             rcv_cpd_itr_out,                               
+		       null                             pad_up_cpd_itr_out,                               
+		       null                             rcv_pad_up_prn,                               
+		       null                             dft_prn_otd_itr,                               
+		       case when i.curr_cod='27' then trunc(acc.res_nor*(to_date((select tran_date from tc_sup_sys_date d where d.leg_per_cod = '9999'),'yyyyMMdd') -to_date(p.prov_date,'yyyyMMdd'))*i.nor_itr_rate/
+		         case when i.itr_rate_way = '0' then 36000
+		              when i.itr_rate_way = '1' then 36500
+		                end)
+		        else round(acc.res_nor*(to_date((select tran_date from tc_sup_sys_date d where d.leg_per_cod = '9999'),'yyyyMMdd') -to_date(p.prov_date,'yyyyMMdd'))*i.nor_itr_rate/
+		         case when i.itr_rate_way = '0' then 36000
+		              when i.itr_rate_way = '1' then 36500
+		                end,2) 
+		        end                             nor_itr_in_otd_itr,  
+		       null                             nor_itr_out_otd_itr,  
+		       null                             dft_itr_in_otd_itr,  
+		       null                             dft_itr_out_otd_itr,  
+		       null                             pns_itr_in_otd_itr,  
+		       null                             pns_itr_out_otd_itr,  
+		       null                             cpd_itr_in_otd_itr,  
+		       null                             cpd_itr_out_otd_itr,                                              
+		       null                             gra_prn_date,  
+		       null                             gra_itr_date     
+		  from tb_sup_repayment_plan p,tb_sup_loan_info i,tb_sup_account_info acc
+		  where p.due_num=i.due_num and p.due_num=acc.due_num and i.sts != '9') t where t.due_num=#dueNum#
+    </select>
+    <!--查询统计信息-->
+    <select id="allPeroidInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+				select t.due_num,
+					 t.tot_num_base,
+					 t.yq,
+					 t.yyq,
+					 t.tot_curr_peri,
+					 t.pad_up_prn,
+					 t.pad_up_itr,
+					 t.rcv_up_prn,
+					 t.rcv_up_itr,
+					 t.nor_dvl_bal,
+					 t.oft_prn_bal,
+					 t.oft_itr_bal,
+					 t.fre_icm_bal
+		from(select acc.due_num  due_num,
+		       p.tot_num_base tot_num_base,
+		       d.yq  yq,
+		       d.tot-d.yq yyq,
+		       p.tot_num_base - p.curr_peri tot_curr_peri,
+		       d.pad_up_prn pad_up_prn,
+		       d.pad_up_itr pad_up_itr,
+		       d.rcv_prn-d.pad_up_prn rcv_up_prn,
+		       d.rcv_itr-d.pad_up_itr rcv_up_itr,
+		       acc.nor_bal_101+acc.dvl_bal_102 nor_dvl_bal,
+		       acc.oft_prn_bal_112 oft_prn_bal,
+		       acc.oft_itr_bal_213+acc.oft_itr_bal_214 oft_itr_bal,
+		       acc.fre_icm_bal_817 fre_icm_bal
+		  from (select sum(s.rcv_prn) rcv_prn,
+		       sum(s.pad_up_prn) pad_up_prn,
+		       sum(s.rcv_nor_itr_in + s.rcv_dft_itr_in + s.rcv_pns_itr_in +
+		           s.rcv_cpd_itr_in + s.rcv_nor_itr_out +
+		           s.rcv_dft_itr_out + s.rcv_pns_itr_out +
+		           s.rcv_cpd_itr_out + round(s.dft_prn_otd_itr, 2) + 
+		           round(s.nor_itr_in_otd_itr, 2) + round(s.nor_itr_out_otd_itr, 2) +
+		           round(s.dft_itr_in_otd_itr, 2) + round(s.dft_itr_out_otd_itr, 2) +
+		           round(s.pns_itr_in_otd_itr, 2) + round(s.pns_itr_out_otd_itr, 2) +
+		           round(s.cpd_itr_in_otd_itr, 2) + round(s.cpd_itr_out_otd_itr, 2)) rcv_itr,
+		       sum(s.pad_up_nor_itr_in + s.pad_up_dft_itr_in + s.pad_up_pns_itr_in +
+		           s.pad_up_cpd_itr_in + s.pad_up_nor_itr_out +
+		           s.pad_up_dft_itr_out + s.pad_up_pns_itr_out +
+		           s.pad_up_cpd_itr_out) pad_up_itr,
+		       count(s.due_num) tot,
+		       sum(decode(s.rcv_prn-s.pad_up_prn,0,decode(s.rcv_nor_itr_in-s.pad_up_nor_itr_in,0,decode(s.rcv_dft_itr_in-s.pad_up_dft_itr_in,0,
+		           decode(s.rcv_pns_itr_in-s.pad_up_pns_itr_in,0,decode(s.rcv_cpd_itr_in-s.pad_up_cpd_itr_in,0,decode(s.rcv_nor_itr_out-s.pad_up_nor_itr_out,0,
+		           decode(s.rcv_dft_itr_out-s.pad_up_dft_itr_out,0,decode(s.rcv_pns_itr_out-s.pad_up_pns_itr_out,0,decode(s.rcv_cpd_itr_out-s.pad_up_cpd_itr_out,0,0,1),1),1),1),1),1),1),1),1))yq,
+		       s.due_num
+		  from (select n.*, ''
+		          from tb_sup_debt_info_n n
+		        union
+		        select *
+		          from tb_sup_debt_info_n_bkh) s
+		 group by s.due_num) d,
+		 tb_sup_loan_info_cal_pay_plan p,
+		 tb_sup_account_info acc
+		 where acc.due_num=d.due_num(+) and acc.due_num = p.due_num(+)) t where t.due_num=#dueNum#
+    </select>
+    <!--查询交易明细信息-->
+    <select id="detailPeroidInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	    select m.tran_date tran_date,
+	       m.opn_dep   opn_dep,
+	       m.due_num  due_num,
+	       m.tran_cod  tran_cod,
+	       m.rcn_stan rcn_stan,
+	       m.pad_up_amt pad_up_amt,
+	       m.prim_acct prim_acct,
+	       m.pay_prim_acct pay_prim_acct,
+	       to_date(m.trn_tm,'yyyy-MM-dd hh24:mi:ss')   trn_tm,
+	       m.opr      opr
+	  from tb_sup_message_info m where m.due_num=#dueNum#
+	  order by m.due_num,m.tran_date,m.rcn_stan,m.tran_times
+     </select>
+     <!--查询会计分录信息-->
+    <select id="accPeroidInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		    	select  
+					bk.rcv_date,
+					bk.due_num,
+					bk.tran_cod,
+					bk.tal_dep,
+					bk.opn_dep,
+					bk.brw_name,
+					bk.bus_cod,
+					bk.curr_cod,
+					bk.acc_cls,
+					bk.brw_lgo,
+					bk.pay_amt,
+					bk.rel_tim_b,
+					bk.bal_dirt,
+					bk.std_cod,
+					bk.recall,
+					bk.host_tm,
+					bk.sup_stan,
+					bk.rcn_stan,
+					bk.seq_no
+		from (
+		select a.rcv_date        rcv_date,   
+				a.due_num            due_num,      
+				a.tran_cod           tran_cod,   
+				a.tal_dep            tal_dep,   
+				a.opn_dep            opn_dep,   
+				a.brw_name           brw_name,   
+				a.bus_cod            bus_cod,   
+				a.curr_cod           curr_cod,   
+				a.acc_cls            acc_cls,   
+				a.brw_lgo            brw_lgo,   
+				a.pay_amt            pay_amt,   
+				a.rel_tim_bal        rel_tim_b,   
+				a.bal_dirt           bal_dirt,   
+				a.std_cod            std_cod,   
+				a.recall             recall,   
+				a.host_tm            host_tm,   
+		    a.sup_stan           sup_stan,   
+		    a.rcn_stan           rcn_stan,   
+		    a.seq_no             seq_no       
+		  from tb_sup_water_a a
+		  union
+		select c.rcv_date          rcv_date, 
+		       c.due_num           due_num, 
+		       c.tran_cod          tran_cod, 
+		       c.tal_dep           tal_dep, 
+		       c.opn_dep           opn_dep, 
+		       c.brw_name          brw_name, 
+		       c.bus_cod           bus_cod, 
+		       c.curr_cod          curr_cod, 
+		       c.acc_cls           acc_cls, 
+		       c.brw_lgo           brw_lgo, 
+		       c.pay_amt           pay_amt, 
+		       c.rel_tim_bal       rel_tim_b, 
+		       c.bal_dirt          bal_dirt, 
+		       c.std_cod           std_cod, 
+		       c.recall            recall, 
+		       c.host_tm           host_tm, 
+		       c.sup_stan          sup_stan,        
+		       c.rcn_stan          rcn_stan,        
+		       c.seq_no            seq_no             
+		  from tb_sup_water_c c         
+		    union                       
+		select cb.rcv_date          rcv_date,      
+		       cb.due_num           due_num,      
+		       cb.tran_cod          tran_cod,      
+		       cb.tal_dep           tal_dep,      
+		       cb.opn_dep           opn_dep,      
+		       cb.brw_name          brw_name,      
+		       cb.bus_cod           bus_cod,      
+		       cb.curr_cod          curr_cod,      
+		       cb.acc_cls           acc_cls,  
+		       cb.brw_lgo           brw_lgo,  
+		       cb.pay_amt           pay_amt,  
+		       cb.rel_tim_bal       rel_tim_b,      
+		       cb.bal_dirt          bal_dirt,      
+		       cb.std_cod           std_cod,      
+		       cb.recall            recall,  
+		       cb.host_tm           host_tm,  
+		       cb.sup_stan          sup_stan,  
+		       cb.rcn_stan          rcn_stan,  
+		       cb.seq_no            seq_no     
+		  from tb_sup_water_c_bkh cb）bk where bk.due_num=#dueNum#
+		 order by bk.due_num,bk.rcv_date,bk.sup_stan,bk.seq_no 
+     </select>
+</sqlMap>

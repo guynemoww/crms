@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:miaolf -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultRateMap">
+        <result column="ira_apply_id" property="applyId"/>
+    </resultMap>
+    <select id="queryApplyId1" parameterClass="java.util.HashMap" resultMap="resultRateMap">
+    	select ira_apply_id from tb_irm_internal_rating_apply
+    	where 1=1
+    	<isNotNull property="partyId">
+	    	and party_id = #partyId#
+	    </isNotNull>
+	    	and rating_state != '4'
+	    	and rating_state != '7'
+	    	and project_id is null
+    </select>
+    <select id="queryApplyId3" parameterClass="java.util.HashMap" resultMap="resultRateMap">
+    	select ira_apply_id from tb_irm_internal_rating_apply
+    	where 1=1
+    	<isNotNull property="partyId">
+	    	and party_id = #partyId#
+	    </isNotNull>
+	    	and project_id is null
+	    	and rating_state != '7'
+    </select>
+    <select id="queryApplyId4" parameterClass="java.util.HashMap" resultMap="resultRateMap">
+    	select ira_apply_id from tb_irm_internal_rating_apply
+    	where 1=1
+    	<isNotNull property="partyId">
+	    	and party_id = #partyId#
+	    </isNotNull>
+	    <isNotNull property="porjectId">
+	    	and porject_id = #porjectId#
+	    </isNotNull>
+	    and rating_state != '7'
+    </select>
+    <select id="queryApplyId2" parameterClass="java.util.HashMap" resultMap="resultRateMap">
+    	select ira_apply_id from tb_irm_internal_rating_apply
+    	where 1=1
+    	<isNotNull property="partyId">
+	    	and party_id = #partyId#
+	    </isNotNull>
+	    	and rating_state != '4' 
+	    	and rating_state != '7'
+	    <isNotNull property="projectId">
+	    	and project_id = #projectId#
+	    </isNotNull>
+    </select>
+    <resultMap class="commonj.sdo.DataObject" id="ratingResultMap">
+        <result column="after_grade" property="afterGrade"/>
+    </resultMap>
+    <select id="queryAfterGrade" parameterClass="java.util.HashMap" resultMap="ratingResultMap">
+    	select after_grade from TB_IRM_OVERTHROW_RECORD
+    	where 1=1
+    	<isNotNull property="applyId">
+	    	and IRA_APPLY_ID = #applyId#
+	    </isNotNull>
+	    	order by OVERTHROW_DT desc
+    </select>
+    <select id="queryAfterGrade1" parameterClass="java.util.HashMap" resultMap="ratingResultMap">
+    	select after_grade from TB_IRM_OVERTHROW_RECORD
+    	where 1=1
+    	<isNotNull property="applyId">
+	    	and IRA_APPLY_ID = #applyId#
+	    </isNotNull>
+	    	order by OVERTHROW_DT desc
+    </select>    
+    <resultMap class="commonj.sdo.DataObject" id="lastRatingResultMap">
+        <result column="IRR_RESULT_ID" property="irrResultId"/>
+    </resultMap>
+    <select id="queryLastResult" parameterClass="java.util.HashMap" resultMap="lastRatingResultMap">
+    	select IRR_RESULT_ID from TB_IRM_INTERNAL_RATING_RESULT 
+	    	where 1=1
+		    	<isNotNull property="partyId">
+		    		and	PARTY_ID= #partyId#
+		    	</isNotNull> 
+			    	and IS_PROFESSIONAL = 0 
+			    	and RATING_STATE = 1
+    </select>
+    
+</sqlMap>

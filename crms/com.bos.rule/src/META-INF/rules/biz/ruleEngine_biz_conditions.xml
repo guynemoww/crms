@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 前置条件集 -->
+<checkconditions>
+    <condition id="CBIZ0001" name="担保方式选择了保证" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择保证">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_apply r where r.guaranty_type like '%04%' and r.apply_id = @applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0002" name="担保方式选择了抵押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择抵押">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_apply r where r.guaranty_type like '%02%' and r.apply_id = @applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0003" name="担保方式选择了质押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择质押">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_apply r where r.guaranty_type like '%03%' and r.apply_id = @applyId]]></sql>
+    </condition>
+    
+    <condition id="CBIZ0005" name="担保方式选择了保证金" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择了保证金">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_apply r where r.guaranty_type like '%05%' and r.apply_id = @applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0006" name="是否是需要贴息信息的贷种" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="是否是需要贴息信息的贷种">
+        <sql><![CDATA[select count(*) c from tb_biz_amount_detail_apply r ,tb_biz_amount_apply t , tb_sys_product_param d
+			              where r.amount_id = t.amount_id 
+			              and r.product_type = d.product_id
+			              and d.para_colunm_name = '贴息标志'
+			              and d.para_contrl_rigthval = '1'
+			              and d.para_status = '1'
+			              and t.apply_id =@applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0007" name="是否有流动资金的贷种" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否有流动资金的贷种">
+        <sql><![CDATA[select count(*) c from tb_biz_amount_detail_apply r ,tb_biz_amount_apply t
+							where r.amount_id = t.amount_id 
+							and r.product_type like '01001%'
+							and t.apply_id =@applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0008" name="是否是内部银团贷款" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否内部银团">
+        <sql><![CDATA[select count(*) c
+					  from tb_biz_apply r, tb_biz_bank_struct_apply t
+					 where r.is_bank_team_loan = '1'
+					 and r.apply_id = t.apply_id
+					 and t.syndicated_object_cd = '02'
+					   and r.apply_id  =@applyId]]></sql>
+    </condition>
+    <condition id="CBIZ0009" name="需要添加协办客户经理" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="是否需要添加协办客户经理">
+        <sql><![CDATA[   select count(1) c
+						     from tb_biz_apply r
+						    where r.apply_id = @applyId
+      						  and r.biz_type in ('01','02','04','05','06')
+						      and nvl(r.product_type, '1111') not in
+						          ('01013001', '02005001','01013010', '02005010', '02005002', '02005003')
+		]]></sql>
+    </condition>
+    <condition id="CBIZ0010" name="不是统一授信" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="是否统一授信">
+        <sql><![CDATA[select count(*) c
+						  from tb_biz_apply r
+						 where r.biz_type != '03'
+						   and r.apply_id = @applyId
+						   and (r.product_type is null or r.product_type like '03%' or
+						       r.product_type like '02002%' or r.product_type like '02001%')]]></sql>
+    </condition>
+    <condition id="CBIZ0011" name="是否借新还旧业务" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="是否借新还旧业务">
+        <sql><![CDATA[select count(*) c from tb_biz_apply where BIZ_HAPPEN_TYPE = '06' and apply_id = @applyId]]></sql>
+    </condition>
+    
+    
+    
+    
+    <condition id="CCON0001" name="批复不可循环" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="批复不可循环">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_detail_approve r where r.cycle_ind ='0' and r.amount_detail_id = @amountDetailId]]></sql>
+    </condition>
+    <condition id="CCON0002" name="还款方式选择14" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择质押">
+        <sql><![CDATA[select count(1) c from tb_biz_amount_detail_approve r where r.repayment_type like '14%' and r.amount_detail_id = @amountDetailId]]></sql>
+    </condition>
+   
+	<condition id="CCON0003" name="担保方式选择了保证" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择保证">
+        <sql><![CDATA[select count(1) c from tb_con_contract_info r where r.guaranty_type like '%04%' and r.contract_id = @contractId]]></sql>
+    </condition>
+    <condition id="CCON0004" name="担保方式选择了抵押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择抵押">
+        <sql><![CDATA[select count(1) c from tb_con_contract_info r where r.guaranty_type like '%02%' and r.contract_id = @contractId]]></sql>
+    </condition>
+    <condition id="CCON0005" name="担保方式选择了质押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择质押">
+        <sql><![CDATA[select count(1) c from tb_con_contract_info r where r.guaranty_type like '%03%' and r.contract_id = @contractId]]></sql>
+    </condition>
+    <condition id="CCON0006" name="担保方式选择了保证金" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择了保证金">
+        <sql><![CDATA[select count(1) c from tb_con_contract_info r where r.guaranty_type like '%05%' and r.contract_id = @contractId]]></sql>
+    </condition>
+	<condition id="CCON0007" name="担保方式只有信用" checktype="ineqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式只有信用或有保证">
+        <sql><![CDATA[select count(1) c from tb_con_contract_info r where (r.guaranty_type like '%01%' or r.guaranty_type is null) and r.contract_id = @contractId]]></sql>
+    </condition>
+	
+	<condition id="CCON0008" name="担保方式选择了保证" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择保证">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_credit_info r, tb_biz_approve t, tb_biz_amount_approve w
+					 where r.apply_id = t.apply_id
+					   and w.approve_id = t.approve_id
+					   and w.guaranty_type like '%04%'
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0009" name="担保方式选择了抵押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择抵押">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_credit_info r, tb_biz_approve t, tb_biz_amount_approve w
+					 where r.apply_id = t.apply_id
+					   and w.approve_id = t.approve_id
+					   and w.guaranty_type like '%02%'
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0010" name="担保方式选择了质押" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="担保方式选择质押">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_credit_info r, tb_biz_approve t, tb_biz_amount_approve w
+					 where r.apply_id = t.apply_id
+					   and w.approve_id = t.approve_id
+					   and w.guaranty_type like '%03%'
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0011" name="必须填放款账户的贷种" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="一般贷款和委托贷款">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_contract_info r
+					 where (r.product_type  like '01001%'  or r.product_type  like '01002%'  or r.product_type  like '01003%'   or r.product_type = '01006001' or r.product_type = '01006002' or r.product_type = '01006010'
+						  or r.product_type = '01013001'  or r.product_type = '01005001' 
+						   or r.product_type = '01013010'  or r.product_type = '01005010'
+						    or r.product_type like '03%'  or r.product_type like '02%'
+						  or r.product_type = '01007001' or r.product_type = '01007003' or r.product_type = '01007004' or r.product_type = '01007005' 
+						  or r.product_type = '01007006' or r.product_type = '01007009' or r.product_type = '01007011' or r.product_type = '01007012' )
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0012" name="必须填还款账户的贷种" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="一般贷款和委托贷款">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_contract_info r
+					 where (r.product_type  like '01001%'  or r.product_type  like '01002%'  or r.product_type  like '01003%'  or r.product_type = '01006001' or r.product_type = '01006002' or r.product_type = '01006010'
+						  or r.product_type = '01013001'  or r.product_type = '01005001' 
+						  or r.product_type = '01013010'  or r.product_type = '01005010'
+						    or r.product_type like '03%'  or r.product_type like '02%'
+						  or r.product_type = '01007001' or r.product_type = '01007003' or r.product_type = '01007004' or r.product_type = '01007005' 
+						  or r.product_type = '01007006' or r.product_type = '01007009' or r.product_type = '01007011' or r.product_type = '01007012')
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0013" name="必须填结算账户的贷种" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="结算账户">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_contract_info r
+					 where ( r.product_type = '01008001'  or r.product_type = '01008002' or r.product_type = '01008010'  or r.product_type  like '01009%'  or r.product_type = '01004001' or r.product_type = '01006001' or r.product_type = '01006002' OR r.product_type = '01006010' or r.product_type = '01011001' or r.product_type = '01012001')
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0014" name="必须填应收账款回款专户的贷种" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="必须填应收账款回款专户的贷种">
+        <sql><![CDATA[select count(*) c
+					  from tb_con_contract_info r
+					 where  r.product_type = '01004001'
+					   and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0015" name="是否有最高额保证合同" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否有最高额保证合同">
+        <sql><![CDATA[select count(1) c from TB_CON_CONTRACT_INFO r , TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL d
+						where r.contract_id = d.contract_id and d.subcontract_id = t.subcontract_id
+						and t.if_top_subcon = '1' and t.subcontract_type = '04'
+						and r.contract_id =  @contractId]]></sql>
+    </condition>
+    <condition id="CCON0016" name="是否有抵押合同" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否有抵押合同">
+        <sql><![CDATA[select count(1) c from TB_CON_CONTRACT_INFO r , TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL d
+						where r.contract_id = d.contract_id 
+						and d.subcontract_id = t.subcontract_id
+						and t.subcontract_type = '01'
+						and r.contract_id = @contractId]]></sql>
+    </condition>
+    <condition id="CCON0017" name="是否有质押合同" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否有质押合同">
+        <sql><![CDATA[select count(1) c from TB_CON_CONTRACT_INFO r , TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL d
+						where r.contract_id = d.contract_id 
+						and d.subcontract_id = t.subcontract_id
+						and t.subcontract_type = '02'
+						and r.contract_id = @contractId]]></sql>
+    </condition>
+    <condition id="CCON0018" name="是否有保证金协议" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2101015-011" errMsg="是否有质押合同">
+        <sql><![CDATA[select count(1) c from TB_CON_CONTRACT_INFO r , TB_CON_SUBCONTRACT t,TB_CON_SUBCONTRACT_REL d
+						where r.contract_id = d.contract_id 
+						and d.subcontract_id = t.subcontract_id
+						and t.subcontract_type = '03'
+						and r.contract_id = @contractId]]></sql>
+    </condition>
+    
+    
+    
+    
+    <condition id="CLON0001" name="合同循环" checktype="eqn" checkedFieldName="$c" targetDataList="1" errCode="2101015-011" errMsg="合同循环">
+        <sql><![CDATA[select count(*) c
+						  from tb_con_contract_info r, tb_loan_info t
+						 where r.contract_id = t.contract_id
+						   and r.cycle_ind_con = '1'
+						   and t.loan_id  =  @loanId]]></sql>
+    </condition>
+</checkconditions>

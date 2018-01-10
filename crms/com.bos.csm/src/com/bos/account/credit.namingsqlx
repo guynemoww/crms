@@ -1,0 +1,1179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="danbao" class="java.util.HashMap">
+    		<result property="orgNum" column="org_num"/>
+    		<result property="userNum" column="user_num"/>
+    		<result property="partyId" column="party_id"/>
+    		<result property="partyName" column="party_name"/>
+    		<result property="fdbs" column="fdbs"/>
+    		<result property="guarantOrgReal" column="guarant_org_real"/>
+    		<result property="ydbje" column="ydbje"/>
+    		<result property="dealDate" column="deal_date"/>
+    		<result property="endDate" column="end_date"/>
+    		<result property="zhzh" column="zhzh"/>
+    		<result property="contractId" column="contract_id"/>
+    		<result property="unifySocietyCreditNum" column="UNIFY_SOCIETY_CREDIT_NUM"/>
+	</resultMap>
+    <select id="danbao" parameterClass="java.util.HashMap" resultMap="danbao">
+		select 	l.org_num,
+				l.user_num,
+				v.party_id,
+				v.party_name,
+				g.fdbs,
+				l.guarant_org_real,
+				<!--
+				(select sum(surety_amt) from tb_grt_guarantee_basic where party_id=v.party_id) ydbje,
+				-->
+				
+				(select sum(nvl(a.SURETY_AMT, 0)) as useAmt
+				  from tb_grt_guarantee_basic a, tb_biz_grt_rel b, tb_biz_approve c
+				 where a.surety_id = b.surety_id
+				   and b.apply_id = c.apply_id
+				   and c.become_effective_mark in ('03', '07')
+				   and c.approve_conclusion in ('1', '3')
+				   and a.PARTY_ID= v.party_id 
+				   ) ydbje,
+				
+				to_char(l.deal_date,'yyyy-mm-dd') deal_date,
+				to_char(add_months(l.deal_date,l.guarant_term),'yyyy-mm-dd') end_date,
+				g.zhzh,
+				v.UNIFY_SOCIETY_CREDIT_NUM ,
+				g.contract_id 
+		from v_csm_party v,tb_crd_third_party_limit l,tb_con_guarant_org_info g
+		where 	v.party_id=l.party_id 
+			and v.party_id=g.party_id 
+			and l.status_cd='03' 
+			and g.status_cd='03'
+			and l.org_num in (SELECT O.ORGCODE FROM OM_ORGANIZATION O WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+			<isNotNull property="userNum">    AND l.user_num = #userNum# </isNotNull>
+			<isNotNull property="partyName">  AND v.party_name LIKE '%$partyName$%' </isNotNull>
+			<isNotNull property="registrCd">  AND v.REGISTR_CD = #registrCd# </isNotNull>
+			<isNotNull property="orgRegisterCd">  AND v.ORG_REGISTER_CD = #orgRegisterCd# </isNotNull>
+			<isNotNull property="middleCode">  AND v.MIDDLE_CODE = #middleCode# </isNotNull>
+			<isNotNull property="unifySocietyCreditNum">  AND v.UNIFY_SOCIETY_CREDIT_NUM = #unifySocietyCreditNum# </isNotNull>
+			 
+	 </select>
+	 
+	 <resultMap id="customerSelect" class="java.util.HashMap">
+    		<result property="empId" column="EMP_ID"/>
+    		<result property="userId" column="USER_ID"/>
+    		<result property="empName" column="EMP_NAME"/>
+    		<result property="orgCode" column="ORG_CODE"/>
+    		<result property="post" column="POST"/>
+	</resultMap>
+    <select id="customerSelect" parameterClass="java.util.HashMap" resultMap="customerSelect">
+					select distinct e.empid     as emp_id,
+				                e.userid    as user_id,
+				                e.empname   as emp_name,
+				                om.orgcode  as org_code,
+				                ox.posiname as post
+				  from om_employee e,
+				       om_emporg eo,
+				       om_organization om,
+				       (select b.empid,
+				               listagg(a.posiname, ',') within group(order by a.posiname)posiname
+				          from om_position a, om_empposition b
+				         where a.positionid = b.positionid
+				         group by b.empid) ox
+				 where e.empid = eo.empid
+				   and eo.orgid = om.orgid
+				   and ox.empid = e.empid
+				   and om.orgcode in
+				       (select o.orgcode
+				          from om_organization o
+				         where o.orgseq like
+				               '%.' ||
+				               (select orgid from om_organization where orgcode = #orgCode#) || '.%')					
+		    <isNotNull property="empName">  AND E.EMPNAME LIKE '%$empName$%' </isNotNull>
+		    order by  om.orgcode
+	 </select>
+	 
+	 <resultMap id="edu" class="java.util.HashMap">
+	 		<result property="orgNum" column="ORG_NUM"/>
+	 		<result property="partyId" column="PARTY_ID"/>
+	 		<result property="partyName" column="PARTY_NAME"/>
+	 		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="creditAmt" column="CREDIT_AMT"/>
+    		<result property="availableAmt" column="AVAILABLE_AMT"/>
+    		<result property="startDate" column="START_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="userNum" column="USER_NUM"/>
+	</resultMap>
+    <select id="edu" parameterClass="java.util.HashMap" resultMap="edu">
+		SELECT T.ORG_NUM,
+		       V.PARTY_ID,
+		       V.PARTY_NAME,
+		       'CNY' CURRENCY_CD,
+		       T.CREDIT_AMT,
+		       T.AVAILABLE_AMT,
+		       to_char(T.BEGIN_DATE,'yyyy-mm-dd') START_DATE,
+		       to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+		       T.USER_NUM
+		  FROM V_CRD_PARTY_LIMIT T, V_CSM_PARTY V
+		 WHERE T.PARTY_ID = V.PARTY_ID
+		       AND T.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		       AND T.BEGIN_DATE is not null 
+		   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">    AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="userNum">    AND T.USER_NUM = #userNum# </isNotNull>
+	 </select>
+	 
+	 <resultMap id="edulist" class="java.util.HashMap">
+	 		<result property="orgNum" column="ORG_NUM"/>
+	 		<result property="partyId" column="PARTY_ID"/>
+	 		<result property="partyName" column="PARTY_NAME"/>
+	 		<result property="bizType" column="BIZ_TYPE"/>
+	 		<result property="approvalNum" column="APPROVAL_NUM"/>
+	 		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="creditAmt" column="CREDIT_AMOUNT"/>
+    		<result property="availableAmt" column="AVAILABLE_AMT"/>
+    		<result property="validDate" column="VALID_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="approveConclusion" column="APPROVE_CONCLUSION"/>
+    		<result property="usedAmt" column="used_amt"/>
+	</resultMap>
+    <select id="edulist" parameterClass="java.util.HashMap" resultMap="edulist">
+		SELECT
+		      b.PARTY_ID,
+		      b.PARTY_NAME,
+		      a.BIZ_TYPE,
+		      a.APPROVAL_NUM,
+		      c.CREDIT_AMOUNT,
+		      c.CURRENCY_CD,
+		      TO_CHAR(a.VALID_DATE, 'YYYY-MM-DD') AS VALID_DATE,
+		      TO_CHAR(a.END_DATE, 'YYYY-MM-DD') AS END_DATE,
+		      a.APPROVE_CONCLUSION,
+		      a.USER_NUM,
+		      a.ORG_NUM ,
+		      c.CREDIT_AVI as available_amt,
+		      (c.CREDIT_AMOUNT-c.CREDIT_AVI) as used_amt
+		    FROM
+		      tb_biz_approve a ,
+		      TB_CSM_PARTY b ,
+		      TB_BIZ_AMOUNT_APPROVE c
+		    WHERE
+		      a.PARTY_ID = b.PARTY_ID AND
+		      a.APPROVE_ID = c.APPROVE_ID
+		      and a.approve_conclusion = '1'
+		      and a.become_effective_mark = '03'
+   			  and b.PARTY_ID = #partyId#
+	 </select>
+	 
+	 
+    <select id="pifuGroup" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT TA.ORG_NUM,
+	TA.USER_NUM,
+	T.PARTY_ID,
+	T.PARTY_NUM,
+	T.PARTY_NAME,
+	TA.APPROVAL_NUM,
+	TA.BIZ_TYPE ,
+	TA.BIZ_TYPE_FLAG ,
+	'CNY' as CURRENCY_CD ,
+	TA.VALID_DATE START_DATE,
+	TA.END_DATE END_DATE ,
+	TA.APPROVE_ID,
+	xx.*
+FROM TB_CSM_GROUP_COMPANY th
+INNER JOIN TB_BIZ_APPROVE ta ON TA.PARTY_ID=th.PARTY_ID
+LEFT JOIN TB_CSM_PARTY T ON t.PARTY_ID= th.PARTY_ID
+LEFT JOIN(
+SELECT T.GROUP_PARTY_ID,
+	SUM(TB.CREDIT_AMOUNT) AS SUM1,
+	SUM(TB.CREDIT_AVI) AS SUM2,
+	SUM(TB.CREDIT_USED) AS SUM3  
+FROM TB_CSM_GROUP_MEMBER T
+LEFT JOIN TB_BIZ_APPROVE TA ON T.CORPORATION_PARTY_ID=TA.PARTY_ID
+LEFT JOIN TB_BIZ_AMOUNT_APPROVE TB ON TA.APPROVE_ID=TB.APPROVE_ID
+WHERE TA.BECOME_EFFECTIVE_MARK='03'
+AND TA.APPROVE_CONCLUSION IN ('1','3')
+AND TA.BIZ_TYPE in('05','06','02','04','01')
+GROUP BY T.GROUP_PARTY_ID
+)xx ON xx.GROUP_PARTY_ID = TA.PARTY_ID
+WHERE th.STATUS='03' 
+AND TA.BIZ_TYPE='03'
+AND TA.BECOME_EFFECTIVE_MARK='03'
+AND TA.APPROVE_CONCLUSION IN ('1','3') 
+<isNotNull property="userNum"> AND TA.USER_NUM = #userNum# </isNotNull>
+<isNotNull property="orgNum"> AND TA.ORG_NUM =#orgNum# </isNotNull>
+<isNotNull property="approvalNum"> AND TA.APPROVAL_NUM = #approvalNum# </isNotNull>
+<isNotNull property="partyName"> AND T.PARTY_NAME LIKE '%'||#partyName#||'%' </isNotNull>
+<isNotNull property="memberInfo">
+AND T.PARTY_ID IN(
+	SELECT GROUP_PARTY_ID FROM TB_CSM_GROUP_MEMBER cgm
+	LEFT JOIN V_CSM_PARTY cp ON cgm.CORPORATION_PARTY_ID=cp.PARTY_ID
+	WHERE 1=1
+	<isNotNull property="mCertNum"> AND cp.CERT_NUM=#mCertNum# </isNotNull>
+	<isNotNull property="mCertType"> AND cp.CERT_TYPE=#mCertType# </isNotNull>
+)
+</isNotNull>
+	 </select>
+	 
+	 <resultMap id="pifu" class="java.util.HashMap">
+    		<result property="partyNum" column="PARTY_NUM"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="approvalNum" column="APPROVAL_NUM"/>
+    		<result property="bizType" column="BIZ_TYPE"/>
+    		<result property="bz" column="BZ"/>
+    		<result property="creditAmt" column="CREDIT_AMT"/>
+    		<result property="creditAvi" column="CREDIT_AVI"/>
+    		<result property="creditUsed" column="CREDIT_USED"/>
+    		<result property="pfye" column="pfye"/>
+    		<result property="startDate" column="START_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="firstName" column="FIRST_RESPONSE_NAME"/>
+	</resultMap>
+    <select id="pifu" parameterClass="java.util.HashMap" resultMap="pifu">
+	SELECT * FROM (	
+		SELECT  V.PARTY_ID,
+		   V.PARTY_NUM,
+	       V.PARTY_NAME,
+	       T.APPROVAL_NUM,
+	       T.BIZ_TYPE,
+	       'CNY' AS BZ,
+	       nvl(TA.CREDIT_AMOUNT,0) as CREDIT_AMT,
+	       nvl(TA.CREDIT_AVI,0) as CREDIT_AVI,
+           nvl(TA.CREDIT_USED,0) as CREDIT_USED,
+	       (nvl(TA.CREDIT_AMOUNT,0)-nvl(TA.CREDIT_AVI,0)) pfye,
+	       to_char(T.VALID_DATE,'yyyy-mm-dd') START_DATE,
+	       to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+	       T.USER_NUM,
+           T.ORG_NUM,T.APPROVE_ID
+	  FROM TB_BIZ_APPROVE T, tb_biz_amount_approve TA, V_CSM_PARTY V
+	 WHERE T.APPROVE_ID = TA.APPROVE_ID
+	   AND T.PARTY_ID = V.PARTY_ID
+	   AND T.BECOME_EFFECTIVE_MARK = '03'
+	   AND T.BIZ_TYPE not in ('03','05') 
+	   AND T.ORG_NUM IN (SELECT O.ORGCODE
+		                           FROM OM_ORGANIZATION O
+		                          WHERE O.ORGSEQ LIKE '%.$orgId$.%')
+		   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">    AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="approvalNum">    AND T.APPROVAL_NUM = #approvalNum# </isNotNull>
+		   <isNotNull property="userNum">    AND T.USER_NUM = #userNum# </isNotNull>
+	  ) Y  
+     	LEFT JOIN (
+	      SELECT TA.APPROVE_ID ,
+	        X.FIRST_RESPONSE_NAME 
+	      FROM TB_BIZ_XB X, TB_BIZ_APPROVE TA 
+	      WHERE X.BIZ_ID = TA.APPLY_ID 
+	    ) TT ON Y.APPROVE_ID = TT.APPROVE_ID 
+	 </select>
+	 
+	 <resultMap id="corporationContract" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="xyContractNum" column="XY_CONTRACT_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="conStatus" column="CON_STATUS"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="contractAmt" column="CONTRACT_AMT"/>
+    		<result property="conYuE" column="con_yu_e"/>
+    		<result property="mainGuarantyType" column="MAIN_GUARANTY_TYPE"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="xyId" column="XY_ID"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="dft_itr_in" column="dft_itr_in"/>
+    		<result property="dft_itr_out" column="dft_itr_out"/>
+    		<result property="fljg" column="FLJG"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="corpCustomerTypeCd" column="CORP_CUSTOMER_TYPE_CD"/>
+	</resultMap>
+    <select id="corporationContract" parameterClass="java.util.HashMap" resultMap="corporationContract">
+	   SELECT TX.*, nvl(TW.CONTRACT_NUM,' ') AS XY_CONTRACT_NUM
+	      FROM (SELECT *
+	              FROM (SELECT T.ORG_NUM,
+	                           T.USER_NUM,
+	                           T.CONTRACT_NUM,
+	                           T.CON_STATUS,
+	                           T.PRODUCT_TYPE,
+	                           T.CURRENCY_CD,
+	                           T.CONTRACT_AMT,
+	                           nvl(T.con_yu_e,0) con_yu_e,
+	                           T.MAIN_GUARANTY_TYPE,
+	                           TO_CHAR(T.BEGIN_DATE, 'YYYY-MM-DD') AS BEGIN_DATE,
+	                           TO_CHAR(T.END_DATE, 'YYYY-MM-DD') AS END_DATE,
+	                           TB.YEAR_RATE,
+	                           T.XY_ID,
+	                           T.CONTRACT_ID,
+	                           V.PARTY_ID,
+	                           V.PARTY_NAME,
+	                           T.CLS_RESULT FLJG,
+	                           C.CORP_CUSTOMER_TYPE_CD
+	                      FROM TB_CON_CONTRACT_INFO T,
+	                           V_CSM_PARTY          V,
+	                           TB_CON_LOANRATE      TB,
+	                           TB_CSM_CORPORATION   C
+	                     WHERE T.PARTY_ID = V.PARTY_ID
+	                       AND T.CONTRACT_ID = TB.CONTRACT_ID
+	                       AND V.PARTY_TYPE_CD = '01'
+	                       AND V.PARTY_ID = C.PARTY_ID) TZ
+	              LEFT JOIN (SELECT TI.CONTRACT_ID,
+                                  nvl(max(TH.Yqts),0) yqts,
+                                  sum(nvl(th.dft_itr_in,0)) dft_itr_in,
+                                  sum(nvl(th.dft_itr_out,0)) dft_itr_out
+                            FROM TB_LOAN_SUMMARY TH, TB_LOAN_INFO TI
+                            WHERE TH.LOAN_ID = TI.LOAN_ID
+                            GROUP BY TI.CONTRACT_ID) TY
+	                ON TZ.CONTRACT_ID = TY.CONTRACT_ID) TX
+	      LEFT JOIN TB_CON_CREDIT_INFO TW
+	        ON TX.XY_ID = TW.CONTRACT_ID
+	        WHERE TX.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		          AND TX.CON_STATUS IN ('03','05')
+		   <isNotNull property="partyName">  AND TX.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="corpCustomerTypeCd">  AND TX.CORP_CUSTOMER_TYPE_CD = #corpCustomerTypeCd# </isNotNull>
+		   <isNotNull property="xyContractNum">  AND TW.CONTRACT_NUM LIKE '%$xyContractNum$%' </isNotNull>
+		   <isNotNull property="contractNum">  AND TX.CONTRACT_NUM LIKE '%$contractNum$%' </isNotNull>
+		   <isNotNull property="mainGuarantyType">  AND TX.MAIN_GUARANTY_TYPE = #mainGuarantyType# </isNotNull>
+		   <isNotNull property="conStatus">  AND TX.CON_STATUS = #conStatus# </isNotNull>
+		   <isNotNull property="userNum">  AND TX.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="productType">  AND TX.PRODUCT_TYPE = #productType# </isNotNull>
+		   <isNotNull property="minAmt">  AND TX.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND TX.$amtType$ &lt;= #maxAmt#</isNotNull>
+	 </select>
+	 
+	 <resultMap id="corporationLoan" class="java.util.HashMap">
+	 		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="summaryNum" column="SUMMARY_NUM"/>
+    		<result property="summaryNum2" column="SUMMARY_NUM2"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="summaryAmt" column="SUMMARY_AMT"/>
+    		<result property="jjye" column="JJYE"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="extendEndDate" column="EXTEND_END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="normalItr" column="NORMAL_ITR"/>
+    		<result property="arrearItr" column="ARREAR_ITR"/>
+    		<result property="punishItr" column="PUNISH_ITR"/>
+    		<result property="newFlItr" column="NEW_FL_ITR"/>
+    		<result property="newPnsItr" column="NEW_PNS_ITR"/>
+    		<result property="summaryStatusCd" column="SUMMARY_STATUS_CD"/>
+    		<result property="loanSubject1" column="loan_subject1"/>
+    		<result property="periodFlag" column="PERIOD_FLAG"/>
+    		<result property="periodNum" column="PERIOD_NUM"/>
+    		<result property="periodState" column="PERIOD_STATE"/>
+	</resultMap>
+    <select id="corporationLoan" parameterClass="java.util.HashMap" resultMap="corporationLoan">
+		 SELECT DISTINCT TA.ORG_NUM,
+		        TA.USER_NUM,
+		        V.PARTY_NAME,
+		        V.PARTY_ID,
+		        TB.CONTRACT_NUM,
+		        T.SUMMARY_NUM SUMMARY_NUM2,
+		        T.SUMMARY_NUM,
+		        TA.PRODUCT_TYPE,
+		        TB.CURRENCY_CD,
+		        T.SUMMARY_AMT,
+		        T.JJYE,
+		        to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		        to_char(T.END_DATE,'yyyy-mm-dd') END_DATE,
+		        '' EXTEND_END_DATE,
+		        nvl(TD.YEAR_RATE,0) YEAR_RATE,
+		        nvl(T.YQTS,0) YQTS,
+		        nvl(T.NORMAL_ITR,0) NORMAL_ITR,
+		        nvl(T.ARREAR_ITR,0) ARREAR_ITR,
+		        nvl(T.PUNISH_ITR,0) PUNISH_ITR,
+		        T.SUMMARY_STATUS_CD,
+		        TA.loan_subject1,
+		        (case when T.PERIOD_FLAG ='1' then '1' 
+       			 else '0' end ) PERIOD_FLAG,
+		        TA.USER_NUM,
+		        '' PERIOD_NUM,
+		         (case when T.EXEXT_FLG ='03' then '03' 
+        			else '' end ) PERIOD_STATE,
+        		t.NEW_FL_ITR,
+        		t.NEW_PNS_ITR
+		   FROM TB_LOAN_SUMMARY      T,
+		        TB_LOAN_INFO         TA,
+		        TB_CON_CONTRACT_INFO TB,
+		        TB_CSM_PARTY         TC,
+		        TB_LOAN_LOANRATE     TD,
+		        V_CSM_PARTY V,
+		        TB_CSM_CORPORATION C
+		  WHERE T.LOAN_ID = TA.LOAN_ID
+		    AND TA.CONTRACT_ID = TB.CONTRACT_ID
+		    AND TA.PARTY_ID = TC.PARTY_ID
+		    AND TA.LOAN_ID = TD.LOAN_ID
+		    AND TC.PARTY_ID = V.PARTY_ID
+		    AND C.PARTY_ID = V.PARTY_ID
+		    AND V.PARTY_TYPE_CD = '01'
+		    AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		    AND TA.ORG_NUM in (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="contractNum">  AND TB.CONTRACT_NUM LIKE '%$contractNum$%' </isNotNull>
+		   <isNotNull property="summaryNum">  AND T.SUMMARY_NUM LIKE '%$summaryNum$%' </isNotNull>
+		   
+		   <isEqual property="summaryStatusCd" compareValue="02" >
+		   		AND T.SUMMARY_STATUS_CD = '02'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="03" >
+		   		AND T.SUMMARY_STATUS_CD = '03'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="04" >
+		   		AND T.SUMMARY_STATUS_CD = '04'  
+		   </isEqual>
+		   
+		    <!--页面新增了一个数据字典没有的码值  发现不给值是null  给了这个码值就是undefined 所以用undefined来作了判断-->
+		   <isEqual property="summaryStatusCd" compareValue="undefined" >
+		   		AND T.SUMMARY_STATUS_CD in ('02','03')
+		   </isEqual>
+		   <isNull property="summaryStatusCd">
+		     	AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		   </isNull>
+		   
+		   <isNotNull property="productType">  AND TA.PRODUCT_TYPE = #productType# </isNotNull>
+		   <isNotNull property="userNum">  AND TA.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="beginDate">  AND TO_CHAR(T.BEGIN_DATE,'YYYY-MM-DD HH24:MI:SS') &gt;= '$beginDate$' </isNotNull>
+		   <isNotNull property="endDate">  AND TO_CHAR(T.END_DATE,'YYYY-MM-DD HH24:MI:SS') &lt;= '$endDate$' </isNotNull>
+		   <isNotNull property="minAmt">  AND T.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND T.$amtType$ &lt;= #maxAmt#</isNotNull>
+		   union all
+		   
+		    SELECT DISTINCT TA.ORG_NUM,
+		        TA.USER_NUM,
+		        V.PARTY_NAME,
+		        V.PARTY_ID,
+		        TB.CONTRACT_NUM,
+		        T.SUMMARY_NUM SUMMARY_NUM2,
+		        T.SUMMARY_NUM,
+		        TA.PRODUCT_TYPE,
+		        TB.CURRENCY_CD,
+		        T.SUMMARY_AMT,
+		        T.JJYE,
+		        to_char(T.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,
+		        to_char(TE.OLD_END_DATE,'yyyy-mm-dd') END_DATE,
+		        TO_CHAR(TE.NEW_END_DATE, 'yyyy-mm-dd' ) EXTEND_END_DATE,
+		        nvl(TD.YEAR_RATE,0) YEAR_RATE,
+		        nvl(T.YQTS,0) YQTS,
+		        nvl(T.NORMAL_ITR,0) NORMAL_ITR,
+		        nvl(T.ARREAR_ITR,0) ARREAR_ITR,
+		        nvl(T.PUNISH_ITR,0) PUNISH_ITR,
+		        T.SUMMARY_STATUS_CD,
+		        TA.loan_subject1,
+		        (case when T.PERIOD_FLAG ='1' then '1' 
+       			 else '0' end ) PERIOD_FLAG,
+		        TA.USER_NUM,
+		        TE.PERIOD_NUM,
+		        TE.PERIOD_STATE,
+		        t.NEW_FL_ITR,
+		        t.NEW_PNS_ITR
+		   FROM TB_LOAN_SUMMARY      T,
+		        TB_LOAN_INFO         TA,
+		        TB_CON_CONTRACT_INFO TB,
+		        TB_CSM_PARTY         TC,
+		        TB_LOAN_LOANRATE     TD,
+		        V_CSM_PARTY V,
+		        TB_CSM_CORPORATION C,
+		        TB_CON_LOAN_CHANGE TE
+		  WHERE T.LOAN_ID = TA.LOAN_ID
+		  	AND T.SUMMARY_ID = TE.SUMMARY_ID
+		    AND TA.CONTRACT_ID = TB.CONTRACT_ID
+		    AND TA.PARTY_ID = TC.PARTY_ID
+		    AND TA.LOAN_ID = TD.LOAN_ID
+		    AND TC.PARTY_ID = V.PARTY_ID
+		    AND C.PARTY_ID = V.PARTY_ID
+		    AND TE.LOAN_CHANGE_TYPE IN ('06','19')
+		    AND TE.CHANGE_STATUS !='04'
+		    AND V.PARTY_TYPE_CD = '01'
+		    AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		    AND TA.ORG_NUM in (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="contractNum">  AND TB.CONTRACT_NUM LIKE '%$contractNum$%' </isNotNull>
+		   <isNotNull property="summaryNum">  AND T.SUMMARY_NUM LIKE '%$summaryNum$%' </isNotNull>
+		   
+		   <isEqual property="summaryStatusCd" compareValue="02" >
+		   		AND T.SUMMARY_STATUS_CD = '02'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="03" >
+		   		AND T.SUMMARY_STATUS_CD = '03'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="04" >
+		   		AND T.SUMMARY_STATUS_CD = '04'  
+		   </isEqual>
+		   
+		    <!--页面新增了一个数据字典没有的码值  发现不给值是null  给了这个码值就是undefined 所以用undefined来作了判断-->
+		   <isEqual property="summaryStatusCd" compareValue="undefined" >
+		   		AND T.SUMMARY_STATUS_CD in ('02','03')
+		   </isEqual>
+		   <isNull property="summaryStatusCd">
+		     	AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		   </isNull>
+		   
+		   <isNotNull property="productType">  AND TA.PRODUCT_TYPE = #productType# </isNotNull>
+		   <isNotNull property="userNum">  AND TA.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="beginDate">  AND TO_CHAR(T.BEGIN_DATE,'YYYY-MM-DD HH24:MI:SS') &gt;= '$beginDate$' </isNotNull>
+		   <isNotNull property="endDate">  AND TO_CHAR(T.END_DATE,'YYYY-MM-DD HH24:MI:SS') &lt;= '$endDate$' </isNotNull>
+		   <isNotNull property="minAmt">  AND T.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND T.$amtType$ &lt;= #maxAmt#</isNotNull>
+	 </select>
+	 
+	 <select id="accLoanList" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		 SELECT 
+           a.SUP_DATE,
+           a.CUS_NO,
+           a.DUE_NUM,
+           a.BRW_NAME,
+           a.ACC_TYP,
+           a.TRN_COD,
+           b.EVT_COD,
+           b.EVT_DESC,
+           a.CURR_COD,
+           a.BRW_LGO,
+           a.AMT_INCUR,
+           a.REL_TIM_BAL
+      	FROM 
+      	   TB_SUP_WATER_C a,
+           TC_SUP_TRAN_EVT_JOUR_ENT b
+		WHERE 
+			a.JOUR_ENT_COD = b.EVT_COD
+		 	AND a.DUE_NUM = #dueNum# 
+		ORDER BY a.SUP_DATE desc,a.SUP_STAN desc,a.REC_SEQ asc
+	 </select>
+	 
+	 <resultMap id="indvcustomerContract" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="conStatus" column="CON_STATUS"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="contractAmt" column="CONTRACT_AMT"/>
+    		<result property="conYuE" column="con_yu_e"/>
+    		<result property="mainGuarantyType" column="MAIN_GUARANTY_TYPE"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="dft_itr_in" column="dft_itr_in"/>
+    		<result property="dft_itr_out" column="dft_itr_out"/>
+    		<result property="fljg" column="FLJG"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="certType" column="CERT_TYPE"/>
+    		<result property="certNum" column="CERT_NUM"/>
+    		<result property="corpCustomerTypeCd" column="CORP_CUSTOMER_TYPE_CD"/>
+	</resultMap>
+    <select id="indvcustomerContract" parameterClass="java.util.HashMap" resultMap="indvcustomerContract">
+SELECT * FROM
+	(SELECT
+			T.ORG_NUM,
+			T.USER_NUM,
+			T.CONTRACT_NUM,
+			T.CON_STATUS,
+			T.PRODUCT_TYPE,
+			T.CURRENCY_CD,
+			T.CONTRACT_AMT,
+			NVL( T.con_yu_e, 0 ) con_yu_e,
+			T.MAIN_GUARANTY_TYPE,
+			TO_CHAR( T.BEGIN_DATE, 'YYYY-MM-DD' ) AS BEGIN_DATE,
+			TO_CHAR( T.END_DATE, 'YYYY-MM-DD' ) AS END_DATE,
+			TB.YEAR_RATE,
+			T.CONTRACT_ID,
+			V.PARTY_ID,
+			V.PARTY_NAME,
+			V.CERT_TYPE,
+			V.CERT_NUM,
+			T.CLS_RESULT FLJG,
+			'自然人' CORP_CUSTOMER_TYPE_CD
+		FROM
+			TB_CON_CONTRACT_INFO T,
+			V_CSM_PARTY V,
+			TB_CON_LOANRATE TB
+		WHERE
+			T.PARTY_ID = V.PARTY_ID
+			AND T.CONTRACT_ID = TB.CONTRACT_ID
+			AND V.PARTY_TYPE_CD = '02'
+	) TZ
+LEFT JOIN(
+		SELECT
+			TI.CONTRACT_ID,
+			MAX( NVL( TH.Yqts, 0 )) yqts,
+			SUM( NVL( th.dft_itr_in, 0 )) dft_itr_in,
+			SUM( NVL( th.dft_itr_out, 0 )) dft_itr_out
+		FROM
+			TB_LOAN_SUMMARY TH,
+			TB_LOAN_INFO TI
+		WHERE
+			TH.LOAN_ID = TI.LOAN_ID
+		GROUP BY
+			TI.CONTRACT_ID
+	) TY ON
+	TZ.CONTRACT_ID = TY.CONTRACT_ID
+WHERE TZ.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+	LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+ 	AND TZ.CON_STATUS IN ('03','05')
+		   <isNotNull property="partyName">  AND TZ.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		   <isNotNull property="certType">  AND TZ.CERT_TYPE = #certType# </isNotNull>
+		   <isNotNull property="certNum">  AND TZ.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="contractNum">  AND TZ.CONTRACT_NUM LIKE '%$contractNum$%' </isNotNull>
+		   <isNotNull property="mainGuarantyType">  AND TZ.MAIN_GUARANTY_TYPE = #mainGuarantyType# </isNotNull>
+		   <isNotNull property="userNum">  AND TZ.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="productType">  AND TZ.PRODUCT_TYPE = #productType# </isNotNull>
+		   <isNotNull property="conStatus">  AND TZ.CON_STATUS = #conStatus# </isNotNull>
+		   <isNotNull property="minAmt">  AND TZ.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND TZ.$amtType$ &lt;= #maxAmt#</isNotNull>
+	 </select>
+	 
+	 <resultMap id="indvcustomerLoan" class="java.util.HashMap">
+	 		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="certType" column="CERT_TYPE"/>
+    		<result property="certNum" column="CERT_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="summaryNum" column="SUMMARY_NUM"/>
+    		<result property="summaryNum2" column="SUMMARY_NUM2"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="summaryAmt" column="SUMMARY_AMT"/>
+    		<result property="jjye" column="JJYE"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="extendEndDate" column="EXTEND_END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="normalItr" column="NORMAL_ITR"/>
+    		<result property="arrearItr" column="ARREAR_ITR"/>
+    		<result property="punishItr" column="PUNISH_ITR"/>
+    		<result property="newFlItr" column="NEW_FL_ITR"/>
+    		<result property="newPnsItr" column="NEW_PNS_ITR"/>
+    		<result property="summaryStatusCd" column="SUMMARY_STATUS_CD"/>
+    		<result property="loanSubject1" column="loan_subject1"/>
+    		<result property="jjyqbj" column="JJYQBJ"/>
+    		<result property="periodFlag" column="PERIOD_FLAG"/>
+    		<result property="periodNum" column="PERIOD_NUM"/>
+    		<result property="periodState" column="PERIOD_STATE"/>
+	</resultMap>
+    <select id="indvcustomerLoan" parameterClass="java.util.HashMap" resultMap="indvcustomerLoan">
+SELECT
+	TA.ORG_NUM,
+	TA.USER_NUM,
+	V.PARTY_NAME,
+	V.PARTY_ID,
+	V.CERT_TYPE,
+	V.CERT_NUM,
+	TB.CONTRACT_NUM,
+	T.SUMMARY_NUM,
+	T.SUMMARY_NUM SUMMARY_NUM2,
+	TA.PRODUCT_TYPE,
+	TB.CURRENCY_CD,
+	T.SUMMARY_AMT,
+	T.JJYE,
+	TO_CHAR( T.BEGIN_DATE, 'yyyy-mm-dd' ) BEGIN_DATE,
+	TO_CHAR( T.END_DATE, 'yyyy-mm-dd' ) END_DATE,
+	'' EXTEND_END_DATE,
+	TD.YEAR_RATE,
+	T.YQTS,
+	NVL( T.NORMAL_ITR, 0 ) NORMAL_ITR,
+	NVL( T.ARREAR_ITR, 0 ) ARREAR_ITR,
+	NVL( T.PUNISH_ITR, 0 ) PUNISH_ITR,
+	T.SUMMARY_STATUS_CD,
+	TA.loan_subject1,
+	TA.USER_NUM,
+	T.JJYQBJ,
+	DECODE(T.PERIOD_FLAG,'1','1','0')PERIOD_FLAG,
+    '' PERIOD_NUM,
+    DECODE(T.EXEXT_FLG,'03','03','') PERIOD_STATE,
+    t.NEW_FL_ITR,
+    t.NEW_PNS_ITR
+FROM
+	TB_LOAN_INFO TA
+INNER JOIN TB_LOAN_SUMMARY T ON TA.LOAN_ID = T.LOAN_ID
+INNER JOIN TB_LOAN_LOANRATE TD ON TA.LOAN_ID = TD.LOAN_ID
+INNER JOIN TB_CON_CONTRACT_INFO TB ON TA.CONTRACT_ID = TB.CONTRACT_ID
+INNER JOIN TB_CSM_NATURAL_PERSON V ON TA.PARTY_ID = V.PARTY_ID
+WHERE 1=1 
+		   <isNotNull property="summaryNum">  AND T.SUMMARY_NUM = #summaryNum# </isNotNull>
+		   <isNotNull property="contractNum">  AND TB.CONTRACT_NUM = #contractNum# </isNotNull>
+		   <isNotNull property="userNum">  AND TA.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="productType">  AND TA.PRODUCT_TYPE = #productType# </isNotNull>
+		    AND TA.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="beginDate">  AND TO_CHAR(T.BEGIN_DATE,'YYYY-MM-DD HH24:MI:SS') &gt;= '$beginDate$' </isNotNull>
+		   <isNotNull property="endDate">  AND TO_CHAR(T.END_DATE,'YYYY-MM-DD HH24:MI:SS') &lt;= '$endDate$' </isNotNull>
+		   <isNotNull property="certNum">  AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isEqual property="summaryStatusCd" compareValue="02" >
+		   		AND T.SUMMARY_STATUS_CD = '02'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="03" >
+		   		AND T.SUMMARY_STATUS_CD = '03'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="04" >
+		   		AND T.SUMMARY_STATUS_CD = '04'  
+		   </isEqual>
+		   <!--页面新增了一个数据字典没有的码值  发现不给值是null  给了这个码值就是undefined 所以用undefined来作了判断-->
+		   <isEqual property="summaryStatusCd" compareValue="undefined" >
+		   		AND T.SUMMARY_STATUS_CD in ('02','03')
+		   </isEqual>
+		   <isNull property="summaryStatusCd">
+		     	AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		   </isNull>
+	  	   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%'||#partyName#||'%' </isNotNull>
+	  	   <isNotNull property="minAmt">  AND T.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND T.$amtType$ &lt;= #maxAmt#</isNotNull>
+	  	   union all
+	  	   
+	  	   SELECT
+	TA.ORG_NUM,
+	TA.USER_NUM,
+	p.PARTY_NAME,
+	V.PARTY_ID,
+	V.CERT_TYPE,
+	V.CERT_NUM,
+	TB.CONTRACT_NUM,
+	T.SUMMARY_NUM,
+	T.SUMMARY_NUM SUMMARY_NUM2,
+	TA.PRODUCT_TYPE,
+	TB.CURRENCY_CD,
+	T.SUMMARY_AMT,
+	T.JJYE,
+	TO_CHAR( T.BEGIN_DATE, 'yyyy-mm-dd' ) BEGIN_DATE,
+	TO_CHAR( TE.OLD_END_DATE, 'yyyy-mm-dd' ) END_DATE,
+	TO_CHAR( TE.NEW_END_DATE, 'yyyy-mm-dd' ) EXTEND_END_DATE,
+	TD.YEAR_RATE,
+	T.YQTS,
+	NVL( T.NORMAL_ITR, 0 ) NORMAL_ITR,
+	NVL( T.ARREAR_ITR, 0 ) ARREAR_ITR,
+	NVL( T.PUNISH_ITR, 0 ) PUNISH_ITR,
+	T.SUMMARY_STATUS_CD,
+	TA.loan_subject1,
+	TA.USER_NUM,
+	T.JJYQBJ,
+	DECODE(T.PERIOD_FLAG,'1','1','0')PERIOD_FLAG,
+    TE.PERIOD_NUM,
+    TE.PERIOD_STATE,
+    t.NEW_FL_ITR,
+    t.NEW_PNS_ITR
+FROM
+	TB_LOAN_INFO TA,
+	TB_LOAN_SUMMARY T,
+	TB_LOAN_LOANRATE TD,
+	TB_CON_CONTRACT_INFO TB,
+	TB_CSM_NATURAL_PERSON V,
+	TB_CSM_PARTY p,
+	TB_CON_LOAN_CHANGE TE
+WHERE
+	TA.LOAN_ID = T.LOAN_ID
+	AND TA.LOAN_ID = TD.LOAN_ID
+	AND TE.SUMMARY_ID = T.SUMMARY_ID
+	AND TA.CONTRACT_ID = TB.CONTRACT_ID
+	AND TE.LOAN_CHANGE_TYPE IN ('06','19')
+	AND TA.PARTY_ID = V.PARTY_ID
+	AND TE.CHANGE_STATUS !='04'
+	AND p.PARTY_ID=v.PARTY_ID
+		   <isNotNull property="summaryNum">  AND T.SUMMARY_NUM = #summaryNum# </isNotNull>
+		   <isNotNull property="contractNum">  AND TB.CONTRACT_NUM = #contractNum# </isNotNull>
+		   <isNotNull property="userNum">  AND TA.USER_NUM = #userNum# </isNotNull>
+		   <isNotNull property="productType">  AND TA.PRODUCT_TYPE = #productType# </isNotNull>
+		    AND TA.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+		   <isNotNull property="beginDate">  AND TO_CHAR(T.BEGIN_DATE,'YYYY-MM-DD HH24:MI:SS') &gt;= '$beginDate$' </isNotNull>
+		   <isNotNull property="endDate">  AND TO_CHAR(T.END_DATE,'YYYY-MM-DD HH24:MI:SS') &lt;= '$endDate$' </isNotNull>
+		   <isNotNull property="certNum">  AND V.CERT_NUM = #certNum# </isNotNull>
+		   <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+		   <isEqual property="summaryStatusCd" compareValue="02" >
+		   		AND T.SUMMARY_STATUS_CD = '02'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="03" >
+		   		AND T.SUMMARY_STATUS_CD = '03'  
+		   </isEqual>
+		   <isEqual property="summaryStatusCd" compareValue="04" >
+		   		AND T.SUMMARY_STATUS_CD = '04'  
+		   </isEqual>
+		   <!--页面新增了一个数据字典没有的码值  发现不给值是null  给了这个码值就是undefined 所以用undefined来作了判断-->
+		   <isEqual property="summaryStatusCd" compareValue="undefined" >
+		   		AND T.SUMMARY_STATUS_CD in ('02','03')
+		   </isEqual>
+		   <isNull property="summaryStatusCd">
+		     	AND T.SUMMARY_STATUS_CD in ('02','03','04')
+		   </isNull>
+	  	   <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%'||#partyName#||'%' </isNotNull>
+	  	   <isNotNull property="minAmt">  AND T.$amtType$ &gt;= #minAmt#</isNotNull>
+		   <isNotNull property="maxAmt">  AND T.$amtType$ &lt;= #maxAmt#</isNotNull>
+	  </select>
+	  
+	  <resultMap id="thirdCustomerLoan" class="java.util.HashMap">
+	 		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="certType" column="CERT_TYPE"/>
+    		<result property="certNum" column="CERT_NUM"/>
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="summaryNum" column="SUMMARY_NUM"/>
+    		<result property="summaryNum2" column="SUMMARY_NUM2"/>
+    		<result property="productType" column="PRODUCT_TYPE"/>
+    		<result property="currencyCd" column="CURRENCY_CD"/>
+    		<result property="summaryAmt" column="SUMMARY_AMT"/>
+    		<result property="jjye" column="JJYE"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="yearRate" column="YEAR_RATE"/>
+    		<result property="yqts" column="YQTS"/>
+    		<result property="normalItr" column="NORMAL_ITR"/>
+    		<result property="arrearItr" column="ARREAR_ITR"/>
+    		<result property="punishItr" column="PUNISH_ITR"/>
+    		<result property="summaryStatusCd" column="SUMMARY_STATUS_CD"/>
+    		<result property="loanSubject1" column="loan_subject1"/>
+    		<result property="jjyqbj" column="JJYQBJ"/>
+    		<result property="partyName2" column="PARTY_NAME2"/>
+    		<result property="itemName" column="ITEM_NAME"/>
+	</resultMap>
+    <select id="thirdCustomerLoan" parameterClass="java.util.HashMap" resultMap="thirdCustomerLoan">
+    
+    
+    <!--
+			SELECT I.ORG_NUM,
+			       I.USER_NUM,
+			       K.PARTY_NAME PARTY_NAME2,
+			       F.ITEM_NAME,
+			       A.PARTY_NAME,
+			       A.PARTY_ID,
+			       A.CERT_TYPE,
+			       A.CERT_NUM,
+			       G.CONTRACT_NUM,
+			       I.SUMMARY_NUM,
+			       I.SUMMARY_NUM SUMMARY_NUM2,
+			       G.PRODUCT_TYPE,
+			       H.CURRENCY_CD,
+			       I.SUMMARY_AMT,
+			       I.JJYE,
+			       TO_CHAR(I.BEGIN_DATE, 'YYYY-MM-DD') BEGIN_DATE,
+			       TO_CHAR(I.END_DATE, 'YYYY-MM-DD') END_DATE,
+			       J.YEAR_RATE,
+			       NVL(I.YQTS,0) YQTS,
+			       NVL(I.NORMAL_ITR, 0) NORMAL_ITR,
+			       NVL(I.ARREAR_ITR, 0) ARREAR_ITR,
+			       NVL(I.PUNISH_ITR, 0) PUNISH_ITR,
+			       I.SUMMARY_STATUS_CD,
+			       H.LOAN_SUBJECT1,
+			       NVL(I.JJYQBJ,0) JJYQBJ
+			  FROM V_CSM_PARTY                A,
+			       TB_BIZ_APPLY               B,
+			       TB_BIZ_AMOUNT_APPLY        C,
+			       TB_BIZ_AMOUNT_DETAIL_APPLY D,
+			       TB_BIZ_XMXX_APPLY          E,
+			       TB_CRD_THIRD_PARTY_LIMIT   F,
+			       TB_CON_CONTRACT_INFO       G,
+			       TB_LOAN_INFO               H,
+			       TB_LOAN_SUMMARY            I,
+			       TB_LOAN_LOANRATE           J,
+			       TB_CSM_PARTY               K
+			 WHERE A.PARTY_ID = B.PARTY_ID
+			   AND B.APPLY_ID = C.APPLY_ID
+			   AND C.AMOUNT_ID = D.AMOUNT_ID
+			   AND E.AMOUNT_DETAIL_ID = B.APPLY_ID
+			   AND F.LIMIT_ID = E.PROJECT_ID
+			   AND G.AMOUNT_DETAIL_ID = D.AMOUNT_DETAIL_ID
+			   AND H.CONTRACT_ID = G.CONTRACT_ID
+			   AND I.LOAN_ID = H.LOAN_ID
+			   AND J.LOAN_ID = H.LOAN_ID
+			   AND K.PARTY_ID = F.PARTY_ID
+			   AND A.PARTY_TYPE_CD = '02'
+			   AND I.SUMMARY_STATUS_CD IN ('02', '03')
+		-->
+		
+		
+	 SELECT * FROM (	
+		
+	  SELECT I.ORG_NUM,
+		     I.USER_NUM,
+		     K.PARTY_NAME PARTY_NAME2,
+		     L.PROJECT_NAME ITEM_NAME,
+		     A.PARTY_NAME,
+             A.PARTY_ID,
+             A.CERT_TYPE,
+             A.CERT_NUM,
+             G.CONTRACT_NUM,
+             I.SUMMARY_NUM,
+             I.SUMMARY_NUM SUMMARY_NUM2,
+             G.PRODUCT_TYPE,
+             H.CURRENCY_CD,
+             I.SUMMARY_AMT,
+             I.JJYE,
+             TO_CHAR(I.BEGIN_DATE, 'YYYY-MM-DD') BEGIN_DATE,
+             TO_CHAR(I.END_DATE, 'YYYY-MM-DD') END_DATE,
+             J.YEAR_RATE,
+             NVL(I.YQTS,0) YQTS,
+             NVL(I.NORMAL_ITR, 0) NORMAL_ITR,
+             NVL(I.ARREAR_ITR, 0) ARREAR_ITR,
+             NVL(I.PUNISH_ITR, 0) PUNISH_ITR,
+             I.SUMMARY_STATUS_CD,
+             H.LOAN_SUBJECT1,
+             NVL(I.JJYQBJ,0) JJYQBJ
+        FROM V_CSM_PARTY                A,
+             TB_BIZ_AMOUNT_APPLY        C,
+             TB_BIZ_AMOUNT_DETAIL_APPLY D,
+             TB_BIZ_XMXX_APPLY          E,
+             TB_CRD_THIRD_PARTY_LIMIT   F,
+             TB_CON_CONTRACT_INFO       G,
+             TB_LOAN_INFO               H,
+             TB_LOAN_SUMMARY            I,
+             TB_LOAN_LOANRATE           J,
+             V_CSM_PARTY                K,
+             TB_CSM_PROJECT_INFO        L,
+             TB_CRD_PROJECT_REL         M         
+	       WHERE A.PARTY_ID = G.PARTY_ID
+	         AND C.AMOUNT_ID = D.AMOUNT_ID
+	         AND E.AMOUNT_DETAIL_ID = C.APPLY_ID
+	         AND F.LIMIT_ID = E.PROJECT_ID
+	         AND G.AMOUNT_DETAIL_ID = D.AMOUNT_DETAIL_ID
+	         AND H.CONTRACT_ID = G.CONTRACT_ID
+	         AND I.LOAN_ID = H.LOAN_ID
+	         AND J.LOAN_ID = H.LOAN_ID
+	         AND K.PARTY_ID = F.PARTY_ID 
+	         AND F.LIMIT_ID = M.LIMIT_ID 
+	         AND M.PROJECT_ID = L.PROJECT_ID 
+	         AND A.PARTY_TYPE_CD = '02'
+	         AND F.STATUS_CD = '03' 
+	         AND I.SUMMARY_STATUS_CD IN ('02', '03') 
+	         AND F.ITEM_TYPE = '1' 
+	         AND F.LIMIT_TYPE = '09'
+	         AND K.THIRD_CUST_TYPE_CD='2' 
+			 AND I.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+		    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+  
+		   UNION ALL 
+		   SELECT I.ORG_NUM,
+			     I.USER_NUM,
+			     K.PARTY_NAME PARTY_NAME2,
+			     L.PROJECT_NAME ITEM_NAME,
+			     A.PARTY_NAME,
+	             A.PARTY_ID,
+	             A.CERT_TYPE,
+	             A.CERT_NUM,
+	             G.CONTRACT_NUM,
+	             I.SUMMARY_NUM,
+	             I.SUMMARY_NUM SUMMARY_NUM2,
+	             G.PRODUCT_TYPE,
+	             H.CURRENCY_CD,
+	             I.SUMMARY_AMT,
+	             I.JJYE,
+	             TO_CHAR(I.BEGIN_DATE, 'YYYY-MM-DD') BEGIN_DATE,
+	             TO_CHAR(I.END_DATE, 'YYYY-MM-DD') END_DATE,
+	             J.YEAR_RATE,
+	             NVL(I.YQTS,0) YQTS,
+	             NVL(I.NORMAL_ITR, 0) NORMAL_ITR,
+	             NVL(I.ARREAR_ITR, 0) ARREAR_ITR,
+	             NVL(I.PUNISH_ITR, 0) PUNISH_ITR,
+	             I.SUMMARY_STATUS_CD,
+	             H.LOAN_SUBJECT1,
+	             NVL(I.JJYQBJ,0) JJYQBJ
+	        FROM V_CSM_PARTY                A,
+	             TB_BIZ_AMOUNT_APPLY        C,
+	             TB_BIZ_AMOUNT_DETAIL_APPLY D,
+	             TB_BIZ_XMXX_APPLY          E,
+	             TB_CRD_THIRD_PARTY_LIMIT   F 
+	             
+	             LEFT JOIN (SELECT I.PROJECT_TYPE, I.PROJECT_NAME, P.LIMIT_ID
+							FROM TB_CRD_PROJECT_REL P, TB_CSM_PROJECT_INFO I
+							WHERE P.PROJECT_ID = I.PROJECT_ID) L ON F.LIMIT_ID = L.LIMIT_ID ,
+	             
+	             TB_CON_CONTRACT_INFO       G,
+	             TB_LOAN_INFO               H,
+	             TB_LOAN_SUMMARY            I,
+	             TB_LOAN_LOANRATE           J,
+	             TB_CSM_PARTY               K      
+		       WHERE A.PARTY_ID = G.PARTY_ID
+		         AND C.AMOUNT_ID = D.AMOUNT_ID
+		         AND E.AMOUNT_DETAIL_ID = C.APPLY_ID
+		         AND F.LIMIT_ID = E.PROJECT_ID
+		         AND G.AMOUNT_DETAIL_ID = D.AMOUNT_DETAIL_ID
+		         AND H.CONTRACT_ID = G.CONTRACT_ID
+		         AND I.LOAN_ID = H.LOAN_ID
+		         AND J.LOAN_ID = H.LOAN_ID
+		         AND K.PARTY_ID = F.PARTY_ID 
+		         AND A.PARTY_TYPE_CD = '02' 
+		         AND F.STATUS_CD = '03' 
+		         AND I.SUMMARY_STATUS_CD IN ('02', '03') 
+		         AND F.ITEM_TYPE &lt;&gt; '1' 
+		         AND F.LIMIT_TYPE = '09'
+				 AND I.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+			    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%')
+ 
+		    
+		   UNION ALL 
+		   SELECT I.ORG_NUM,
+			     I.USER_NUM,
+			     K.PARTY_NAME PARTY_NAME2,
+			     L.PROJECT_NAME ITEM_NAME,
+			     A.PARTY_NAME,
+	             A.PARTY_ID,
+	             A.CERT_TYPE,
+	             A.CERT_NUM,
+	             G.CONTRACT_NUM,
+	             I.SUMMARY_NUM,
+	             I.SUMMARY_NUM SUMMARY_NUM2,
+	             G.PRODUCT_TYPE,
+	             H.CURRENCY_CD,
+	             I.SUMMARY_AMT,
+	             I.JJYE,
+	             TO_CHAR(I.BEGIN_DATE, 'YYYY-MM-DD') BEGIN_DATE,
+	             TO_CHAR(I.END_DATE, 'YYYY-MM-DD') END_DATE,
+	             J.YEAR_RATE,
+	             NVL(I.YQTS,0) YQTS,
+	             NVL(I.NORMAL_ITR, 0) NORMAL_ITR,
+	             NVL(I.ARREAR_ITR, 0) ARREAR_ITR,
+	             NVL(I.PUNISH_ITR, 0) PUNISH_ITR,
+	             I.SUMMARY_STATUS_CD,
+	             H.LOAN_SUBJECT1,
+	             NVL(I.JJYQBJ,0) JJYQBJ
+	        FROM V_CSM_PARTY                A,
+	             TB_BIZ_AMOUNT_APPLY        C,
+	             TB_BIZ_AMOUNT_DETAIL_APPLY D,
+	             TB_BIZ_XMXX_APPLY          E,
+	             TB_CRD_THIRD_PARTY_LIMIT   F 
+	             
+	             LEFT JOIN (SELECT I.PROJECT_TYPE, I.PROJECT_NAME, P.LIMIT_ID
+							FROM TB_CRD_PROJECT_REL P, TB_CSM_PROJECT_INFO I
+							WHERE P.PROJECT_ID = I.PROJECT_ID) L ON F.LIMIT_ID = L.LIMIT_ID ,
+	             
+	             TB_CON_CONTRACT_INFO       G,
+	             TB_LOAN_INFO               H,
+	             TB_LOAN_SUMMARY            I,
+	             TB_LOAN_LOANRATE           J,
+	             V_CSM_PARTY                K      
+		       WHERE A.PARTY_ID = G.PARTY_ID
+		         AND C.AMOUNT_ID = D.AMOUNT_ID
+		         AND E.AMOUNT_DETAIL_ID = C.APPLY_ID
+		         AND F.LIMIT_ID = E.PROJECT_ID
+		         AND G.AMOUNT_DETAIL_ID = D.AMOUNT_DETAIL_ID
+		         AND H.CONTRACT_ID = G.CONTRACT_ID
+		         AND I.LOAN_ID = H.LOAN_ID
+		         AND J.LOAN_ID = H.LOAN_ID
+		         AND K.PARTY_ID = F.PARTY_ID 
+		         AND A.PARTY_TYPE_CD = '02' 
+		         AND F.STATUS_CD = '03' 
+		         AND I.SUMMARY_STATUS_CD IN ('02', '03') 
+		         AND F.ITEM_TYPE = '1' 
+		         AND F.LIMIT_TYPE = '09'
+		         AND K.THIRD_CUST_TYPE_CD = '4' 
+				 AND I.ORG_NUM IN (SELECT O.ORGCODE FROM OM_ORGANIZATION O  WHERE O.ORGSEQ 
+			    					LIKE '%.'||(select orgid from om_organization where orgcode = #orgcode#)||'.%') 
+			     
+			    )
+			    WHERE 1=1 
+			   <isNotNull property="partyName">  AND PARTY_NAME2 LIKE '%$partyName$%' </isNotNull>
+			   <isNotNull property="hzName">  AND ITEM_NAME LIKE '%$hzName$%' </isNotNull>
+			   <isNotNull property="summaryStatusCd">  AND SUMMARY_STATUS_CD = #summaryStatusCd# </isNotNull>
+			   <isNotNull property="userNum">  AND USER_NUM = #userNum# </isNotNull>
+			   <isNotNull property="productType">  AND PRODUCT_TYPE = #productType# </isNotNull>
+		   
+	  </select>
+	  
+
+		<!--统一授信客户 成员批复信息-->  
+    <select id="groupCompanypifu" parameterClass="java.util.HashMap"  resultClass="commonj.sdo.DataObject">
+			select p.party_id,
+		       p.party_num,
+		       p.party_name,
+		       a.approval_num,
+		       biz.credit_amt,
+		       biz.credit_used,
+		       biz.available_amt,
+		       'CNY' as bz,
+		       a.valid_date,
+		       a.end_date 
+		  from tb_csm_party p,
+		       tb_biz_approve a,
+		       (select sum(credit_used) credit_used,
+		               sum(credit_amt) credit_amt,
+		               sum(available_amt) available_amt,
+		               group_party_id
+		          from v_crd_gm_party_limit
+		         group by group_party_id) biz
+		 where p.party_id = biz.group_party_id
+		   and a.party_id = p.party_id
+		   and a.party_id=#partyId#
+		   and a.become_effective_mark='03'
+		   and a.approve_conclusion in('1','3')
+	 </select>
+	 
+	 
+	 <resultMap id="guarGrouppifu" class="java.util.HashMap">
+    		<result property="partyNum" column="PARTY_NUM"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="approvalNum" column="APPROVAL_NUM"/>
+    		<result property="bizType" column="BIZ_TYPE"/>
+    		<result property="bz" column="BZ"/>
+    		<result property="creditAmt" column="CREDIT_AMT"/>
+    		<result property="pfye" column="pfye"/>
+    		<result property="startDate" column="START_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="userNum" column="USER_NUM"/>
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+	</resultMap>
+    <select id="guarGrouppifu" parameterClass="java.util.HashMap" resultMap="guarGrouppifu">
+	SELECT V.PARTY_ID,
+	       V.PARTY_NUM,
+	       V.PARTY_NAME,
+	       T.APPROVAL_NUM,
+	       T.BIZ_TYPE,
+	       'CNY' AS BZ,
+	       TA.CREDIT_AMOUNT as CREDIT_AMT,
+	       (nvl(TA.CREDIT_AMOUNT, 0) - nvl(TA.CREDIT_AVI, 0)) pfye,
+	       to_char(T.VALID_DATE, 'yyyy-mm-dd') START_DATE,
+	       to_char(T.END_DATE, 'yyyy-mm-dd') END_DATE,
+	       T.USER_NUM,
+	       T.ORG_NUM
+	  FROM TB_BIZ_APPROVE T, tb_biz_amount_approve TA, V_CSM_PARTY V
+	 WHERE T.APPROVE_ID = TA.APPROVE_ID
+	   AND T.PARTY_ID = V.PARTY_ID
+	   AND T.BECOME_EFFECTIVE_MARK = '03'
+	   AND T.PRODUCT_TYPE in('01001002','03001002','03001004','03001006','02001006','02001010')
+	   AND V.PARTY_ID IN (SELECT T.RELATED_CUST_PARTY_ID FROM TB_CSM_GUAR_MEMEBER T WHERE T.PARTY_ID = #partyId#)
+	 </select>
+	 
+	 
+	 
+	 <resultMap id="guarGroupContract" class="java.util.HashMap">
+    		<result property="contractNum" column="CONTRACT_NUM"/>
+    		<result property="contractAmt" column="CONTRACT_AMT"/>
+    		<result property="conYuE" column="con_yu_e"/>
+    		<result property="beginDate" column="BEGIN_DATE"/>
+    		<result property="endDate" column="END_DATE"/>
+    		<result property="partyName" column="PARTY_NAME"/>
+    		<result property="partyId" column="PARTY_ID"/>
+	</resultMap>
+	<!--联保小组本行业务信息-->
+    <select id="guarGroupContract" parameterClass="java.util.HashMap" resultMap="guarGroupContract">
+			  select v.party_name,
+			 	v.party_id,
+		        t.contract_num,
+		        t.contract_amt,
+		        t.con_yu_e,
+		        to_char(t.begin_date,'YYYY-MM-DD')begin_date,
+		        to_char(t.end_date,'YYYY-MM-DD')end_date
+		   from tb_con_contract_info t, v_csm_party v, TB_CSM_GUAR_MEMEBER m
+		  WHERE m.related_cust_party_id = v.party_id
+		    and t.party_id = m.related_cust_party_id
+		    AND T.CON_STATUS IN ('03', '05')
+		    AND T.PRODUCT_TYPE  in('01001002','03001002','03001004','03001006','02001006','02001010')
+		    and m.party_id=#partyId#
+	 </select>
+</sqlMap>

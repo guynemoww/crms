@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:Administrator -->
+<sqlMap>
+ 
+	<select id="handleListByLoan" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT ls.ORG_NUM,ci.PARTY_ID,p.PARTY_NAME,p.PARTY_TYPE_CD,cc.CORP_CUSTOMER_TYPE_CD,ci.PRODUCT_TYPE
+,ci.CONTRACT_NUM,ls.SUMMARY_NUM,ls.SUMMARY_AMT,ls.JJYE,ls.NORMAL_ITR,ls.ARREAR_ITR,ls.PUNISH_ITR ,ls.BEGIN_DATE,ls.END_DATE
+,ci.USER_NUM,ci.CONTRACT_ID,ls.LOAN_ID,ls.SUMMARY_ID
+FROM TB_ASSET_TRANSFER t
+INNER JOIN TB_CON_CONTRACT_INFO ci ON t.CONTRACT_ID=ci.CONTRACT_ID
+INNER JOIN TB_LOAN_SUMMARY ls ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN V_CSM_PARTY p ON p.PARTY_ID=ci.PARTY_ID
+LEFT JOIN TB_CSM_CORPORATION cc ON cc.PARTY_ID=p.PARTY_ID
+WHERE t.STATUS='30'
+<isNotNull property="summaryNum"> AND ls.SUMMARY_NUM = #summaryNum#</isNotNull>
+<isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+<isNotNull property="partyId"> AND ci.PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="userNum"> AND t.TAS_USER_NUM=#userNum#</isNotNull>
+<isNotNull property="orgNum"> AND t.TAS_ORG_NUM = #orgNum#</isNotNull>
+<isNotNull property="certNum"> AND p.CERT_NUM = #certNum#</isNotNull>
+<isNotNull property="certType"> AND p.CERT_TYPE =#certType#</isNotNull>
+<isNotNull property="searchMode"> 
+<isEqual property="searchMode" compareValue="notHavVerify">
+ AND NOT EXISTS (SELECT 1 FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_VERIFY_OFF v WHERE h.ID=v.ID AND h.STATUS &lt;&gt;'40' AND v.SUMMARY_ID=ls.SUMMARY_ID) 
+</isEqual>
+<isEqual property="searchMode" compareValue="30">
+ AND ci.CLS_RESULT = '0501'
+ AND NOT EXISTS (SELECT 1 FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_VERIFY_OFF v WHERE h.ID=v.ID AND h.STATUS &lt;&gt;'40' AND v.SUMMARY_ID=ls.SUMMARY_ID) 
+</isEqual>
+<isEqual property="searchMode" compareValue="10_10">
+ AND NOT EXISTS (SELECT 1 FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_CLEAN_TAKE_MONEY cm WHERE h.ID=cm.ID AND h.STATUS &lt;&gt;'40' AND cm.SUMMARY_ID=ls.SUMMARY_ID) 
+</isEqual>
+<isEqual property="searchMode" compareValue="10_20">
+ AND NOT EXISTS (SELECT 1 FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_CLEAN_TAKE_LAW_CON cm WHERE h.ID=cm.ID AND h.STATUS &lt;&gt;'40' AND cm.CONTRACT_ID=ci.CONTRACT_ID) 
+</isEqual>
+<isEqual property="searchMode" compareValue="10_30">
+ AND NOT EXISTS (SELECT 1 FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_CLEAN_TAKE_ENT_CON cm WHERE h.ID=cm.ID AND h.STATUS &lt;&gt;'40' AND cm.CONTRACT_ID=ci.CONTRACT_ID) 
+</isEqual>
+</isNotNull>
+<isNotNull property="partyName"> AND p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+AND ls.SUMMARY_STATUS_CD IN ('02','03')
+ORDER BY t.TAS_DATE DESC
+	 </select>
+	 
+	<select id="handleListByCon" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT ci.CONTRACT_ID,ci.CONTRACT_NUM,p.PARTY_NAME,ci.PRODUCT_TYPE,ci.CURRENCY_CD,ci.CONTRACT_AMT,ci.CON_BALANCE,to_char(ci.BEGIN_DATE,'yyyy-MM-dd') BEGIN_DATE,to_char(ci.END_DATE,'yyyy-MM-dd') END_DATE,ci.USER_NUM,ci.ORG_NUM
+,ci.CLS_RESULT,ci.PARTY_ID,ls.* 
+FROM TB_ASSET_TRANSFER t
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON t.CONTRACT_ID=ci.CONTRACT_ID
+LEFT JOIN (SELECT CONTRACT_ID,NVL(MAX(YQTS),0)YQTS,SUM(NVL(JJYQBJ,0))JJYQBJ,SUM(NVL(NORMAL_ITR,0))NORMAL_ITR,SUM(NVL(ARREAR_ITR,0))ARREAR_ITR,SUM(NVL(PUNISH_ITR,0))PUNISH_ITR,COUNT(1) loanNum FROM TB_LOAN_SUMMARY WHERE SUMMARY_STATUS_CD IN ('02','03') GROUP BY CONTRACT_ID) ls
+ON ls.CONTRACT_ID = ci.CONTRACT_ID
+LEFT JOIN V_CSM_PARTY p ON p.PARTY_ID=ci.PARTY_ID
+WHERE t.STATUS='30'
+<isNotNull property="contractId"> AND ci.CONTRACT_ID=#contractId#</isNotNull>
+<isNotNull property="contractNum"> AND ci.CONTRACT_NUM = #contractNum#</isNotNull>
+<isNotNull property="partyId"> AND ci.PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="userNum"> AND t.TAS_USER_NUM=#userNum#</isNotNull>
+<isNotNull property="orgNum"> AND t.TAS_ORG_NUM = #orgNum#</isNotNull>
+<isNotNull property="certNum"> AND p.CERT_NUM = #certNum# </isNotNull>
+<isNotNull property="certType"> AND p.CERT_TYPE = #certType#</isNotNull>
+<isNotNull property="searchMode"> 
+<isEqual property="searchMode" compareValue="20">
+ AND ci.CLS_RESULT = '0501'
+ AND ls.loanNum &gt; 0
+ AND ls.loanNum &gt; (SELECT COUNT(1) FROM TB_ASSET_HANDLE_PLAN h,TB_ASSET_WRITE_OFF_LOAN wl WHERE h.id=wl.ID AND wl.CONTRACT_NUM=ci.CONTRACT_NUM AND h.STATUS &lt;&gt; '40') 
+</isEqual>
+</isNotNull>
+<isNotNull property="partyName"> AND p.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+ORDER BY t.TAS_DATE DESC
+	</select>
+
+	 <select id="handleLog" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT ID,PLAN_NUM,PLAN_NAME,PLAN_TYPE,CLEAN_TAKE_TYPE,REG_USER_ID,REG_ORG_ID,to_char(REG_DATE,'yyyy-MM-dd') REG_DATE,REG_DATE RE_REG_DATE,STATUS,PARTY_ID,
+to_char(UPDATE_DATE,'yyyy-MM-dd hh24:mi:ss') UPDATE_DATE,UPDATE_USER_ID
+FROM TB_ASSET_HANDLE_PLAN
+ORDER BY RE_REG_DATE DESC
+	 </select>
+	 
+	 <select id="handleAcc" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT p.PLAN_NUM,cp.PARTY_NAME,cp.CERT_TYPE,cp.CERT_NUM,PLAN_TYPE,to_char(p.REG_DATE,'yyyy-mm-dd hh24:mi:ss')REG_DATE,p.REG_ORG_ID,p.REG_USER_ID,a.* FROM TB_ASSET_HANDLE_PLAN p
+INNER JOIN (
+SELECT ls.LOAN_ID,li.PRODUCT_TYPE,ls.PARTY_ID,ci.CONTRACT_ID,ci.CONTRACT_NUM,ls.SUMMARY_NUM,a.* FROM (
+SELECT ID,SUMMARY_ID,to_char(SUM_BEGIN_DATE,'yyyy-mm-dd')SUM_BEGIN_DATE,to_char(SUM_END_DATE,'yyyy-mm-dd')SUM_END_DATE,SUMMARY_AMT,SUMMARY_BAL FROM TB_ASSET_WRITE_OFF_LOAN
+UNION ALL
+SELECT ID,SUMMARY_ID,to_char(SUM_BEGIN_DATE,'yyyy-mm-dd')SUM_BEGIN_DATE,to_char(SUM_END_DATE,'yyyy-mm-dd')SUM_END_DATE,SUMMARY_AMT,SUMMARY_BAL FROM TB_ASSET_VERIFY_OFF
+UNION ALL
+SELECT ID,SUMMARY_ID,to_char(SUM_BEGIN_DATE,'yyyy-mm-dd')SUM_BEGIN_DATE,to_char(SUM_END_DATE,'yyyy-mm-dd')SUM_END_DATE,SUMMARY_BAL,SUMMARY_BAL FROM TB_ASSET_CLEAN_TAKE_MONEY
+)A
+LEFT JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=a.SUMMARY_ID
+LEFT JOIN TB_CON_CONTRACT_INFO ci ON ci.CONTRACT_ID=ls.CONTRACT_ID
+LEFT JOIN TB_LOAN_INFO li ON li.loan_id = ls.LOAN_ID
+UNION ALL
+SELECT ls.LOAN_ID,li.PRODUCT_TYPE,ls.PARTY_ID,a.id,a.CONTRACT_ID,CONTRACT_NUM,ls.SUMMARY_NUM,ls.SUMMARY_ID,to_char(ls.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,to_char(ls.END_DATE,'yyyy-mm-dd')END_DATE,ls.SUMMARY_AMT,ls.JJYE FROM (
+SELECT id,CONTRACT_ID,CONTRACT_NUM from TB_ASSET_CLEAN_TAKE_ENT_CON
+UNION ALL
+SELECT id,CONTRACT_ID,CONTRACT_NUM FROM TB_ASSET_CLEAN_TAKE_LAW_CON
+)a 
+LEFT JOIN TB_LOAN_SUMMARY ls ON ls.CONTRACT_ID=a.CONTRACT_ID
+LEFT JOIN TB_LOAN_INFO li ON li.loan_id = ls.LOAN_ID
+)a ON p.id = a.id
+LEFT JOIN V_CSM_PARTY cp ON cp.PARTY_ID=a.PARTY_ID
+WHERE 1=1
+<isNotNull property="summaryNum"> AND a.SUMMARY_NUM = #summaryNum#</isNotNull>
+<isNotNull property="contractNum"> AND a.CONTRACT_NUM = #contractNum#</isNotNull>
+<isNotNull property="planType"> AND p.PLAN_TYPE=#planType#</isNotNull>
+<isNotNull property="userNum"> AND p.REG_USER_ID=#userNum#</isNotNull>
+<isNotNull property="orgNum"> AND p.REG_ORG_ID = #orgNum#</isNotNull>
+<isNotNull property="certNum"> AND cp.CERT_NUM = #certNum# </isNotNull>
+<isNotNull property="certType"> AND cp.CERT_TYPE = #certType#</isNotNull>
+ AND (p.STATUS='30' OR p.PLAN_TYPE='10') 
+<isNotNull property="partyName"> AND cp.PARTY_NAME LIKE '%'||#partyName#||'%'</isNotNull>
+ORDER BY PLAN_NUM DESC,p.PLAN_NAME
+	 </select>
+
+	 <resultMap id="handleSimpMap" class="java.util.HashMap">
+     	<result property="planId" column="PLAN_ID"/>
+		<result property="planType" column="PLAN_TYPE"/>
+		<result property="cleanTakeType" column="CLEAN_TAKE_TYPE"/>
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="partyId" column="PARTY_ID"/>
+		<result property="status" column="STATUS"/>
+	</resultMap>
+	 <select id="handleSimp" parameterClass="java.util.Map" resultMap="handleSimpMap">
+SELECT ahp.ID PLAN_ID,ahp.PLAN_TYPE,ahp.PARTY_ID,ahp.CLEAN_TAKE_TYPE,wfmp.PROCESS_ID,ahp.STATUS
+FROM TB_ASSET_HANDLE_PLAN ahp
+LEFT JOIN TB_WFM_PROCESSINSTANCE wfmp ON wfmp.PRODUCT_ID=ahp.ID
+WHERE ahp.ID=#planId#
+	 </select>
+	<!--检查 -->
+	 <select id="createHandleValid" parameterClass="java.util.Map" resultClass="java.util.HashMap">
+SELECT ID FROM TB_ASSET_HANDLE_PLAN WHERE PARTY_ID=#partyId# AND PLAN_TYPE &lt;&gt; '10' AND STATUS NOT IN('10','20')
+	 </select>
+	 
+	 <select id="editHandleValid" parameterClass="java.lang.String" resultClass="java.util.HashMap">
+SELECT ID,STATUS FROM TB_ASSET_HANDLE_PLAN  WHERE ID=#planId#
+	 </select>
+</sqlMap>

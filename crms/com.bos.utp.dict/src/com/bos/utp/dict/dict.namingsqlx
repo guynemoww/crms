@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:谭凯 -->
+<sqlMap>
+	<!--  查询业务字典属性及子类 -->
+    <select id="queryDictForTree" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject"><![CDATA[
+		SELECT *
+			  FROM (SELECT T.DICTTYPEID ID, T.DICTTYPENAME NAME, '' PARENTID
+			          FROM EOS_DICT_TYPE T
+			        UNION ALL
+			        SELECT T.DICTID ID, T.DICTNAME NAME, T.DICTTYPEID PARENTID
+			          FROM EOS_DICT_ENTRY T) T
+			 WHERE T.ID = #dicttype#
+			    OR T.PARENTID = #dicttype#
+
+	]]></select>
+	<!-- select distinct * from (select t.dicttypeid,t.dictid,t.dictname,t.parentid, t.sortno from EOS_DICT_ENTRY t
+		where nvl(t.status,'1')='1' and dicttypeid=#dicttypeid#
+		start with t.parentid is null 
+		connect by t.parentid=prior t.dictid and t.dicttypeid=#dicttypeid# and nvl(t.status,'1')='1'
+		) where dicttypeid=#dicttypeid# order by sortno
+	-->
+    <select id="queryDictEntityForTree" parameterClass="java.util.Map" resultClass="commonj.sdo.DataObject"><![CDATA[
+with pa(dicttypeid,dictid,dictname,parentid,sortno) 
+as (select t.dicttypeid,t.dictid,t.dictname,t.parentid, t.sortno 
+from EOS_DICT_ENTRY t
+where nvl(t.status,'1')='1' and dicttypeid=#dicttype#
+and t.parentid is null
+union all
+select t.dicttypeid,t.dictid,t.dictname,t.parentid, t.sortno 
+from EOS_DICT_ENTRY t,pa p
+where t.parentid=p.dictid and t.dicttypeid=#dicttype# and nvl(t.status,'1')='1'
+)
+
+select * from pa order by sortno
+	]]></select>
+	
+	
+	<!--  查询业务字典属性 -->
+    <select id="queryDictEntity" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject"><![CDATA[
+		SELECT 
+		  T.DICTTYPEID ,
+	      T.DICTID ,
+	      T.DICTNAME ,
+	      T.SORTNO
+	    FROM EOS_DICT_ENTRY T  WHERE T.DICTTYPEID = #dicttypeid#
+	    ORDER BY T.SORTNO 
+	]]></select>
+	
+	
+	<delete id="deleteDictEntry" parameterClass="java.util.HashMap" >
+    <![CDATA[
+    	DELETE EOS_DICT_ENTRY T WHERE T.DICTTYPEID = #dicttypeid#
+     ]]>
+    </delete>   
+</sqlMap>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ljf -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="OTHER_RELATED_PARTY_ID" javaType="string" property="otherRelatedPartyId"/>
+        <result column="RELATED_CD" javaType="string" property="relatedCd"/>
+        <result column="REMARK" javaType="string" property="remark"/>
+        <result column="CREATE_TIME" javaType="string" property="createTime"/>
+        <result column="REL_FROM" javaType="string" property="relFrom"/>
+        <result column="CUST_TYPE" javaType="string" property="custType"/>
+        <result column="RELA_PARTY_ID" javaType="string" property="relaPartyId"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+         <result column="RELA_PARTY_NAME" javaType="string" property="relaPartyName"/>
+        <result column="ORG_REGISTER_CD" javaType="string" property="orgRegisterCd"/>
+        <result column="CERT_TYPE" javaType="string" property="certType"/>
+        <result column="CERT_NUM" javaType="string" property="certNum"/>
+        <result column="REGISTR_CD" javaType="string" property="registrCd"/>
+        <result column="MIDDEL_CODE" javaType="string" property="middelCode"/>
+    </resultMap>
+    <select id="select_all_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+		SELECT
+		    t2.PARTY_ID,
+		    t2.other_related_party_id,
+		    t2.related_cd,
+		    t2.remark,
+		    t2.create_time,
+		    t2.rel_from,
+		    t2.cust_type,
+		    t2.rela_party_id,
+		    t1.PARTY_NAME,
+		    cp.org_register_cd,
+		    cp.legal_cert_type as cert_type,
+		    cp.legal_certificate_no as cert_num,
+		    cp.registr_cd,
+		    cp.middel_code
+		FROM
+		    TB_CSM_OTHER_RELATED_PARTY t2,
+		    TB_CSM_PARTY t1,
+		    tb_csm_corporation cp
+		WHERE
+		    t1.PARTY_ID = t2.rela_party_id and t1.party_id=cp.party_id and t2.cust_type='01' and t2.party_id=#partyId#
+		    <isNotNull property="relatedCd">  and t2.related_cd in(10500,20120,20110,11002,20400,10701) </isNotNull>
+		union all    
+		SELECT
+		    t2.PARTY_ID,
+		    t2.other_related_party_id,
+		    t2.related_cd,
+		    t2.remark,
+		    t2.create_time,
+		    t2.rel_from,
+		    t2.cust_type,
+		    t2.rela_party_id,
+		    t1.PARTY_NAME,
+		    '' as org_register_cd,
+		    np.cert_type,
+		    np.cert_num,
+		    '' as registr_cd,
+		    np.MIDDLE_CODE as MIDDEL_CODE
+		FROM
+		    TB_CSM_OTHER_RELATED_PARTY t2,
+		    TB_CSM_PARTY t1,
+		    tb_csm_natural_person np
+		WHERE
+		    t1.PARTY_ID = t2.rela_party_id and t1.party_id=np.party_id and t2.cust_type='02' and t2.party_id=#partyId# 
+		    <isNotNull property="relatedCd">  and t2.related_cd in(10500,20120,20110,11002,20400,10701) </isNotNull>
+	</select>
+	<select id="select_corp_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+	 
+	 SELECT
+		    t2.PARTY_ID,
+		    t2.other_related_party_id,
+		    t2.related_cd,
+		    t2.remark,
+		    t2.create_time,
+		    t2.rel_from,
+		    t2.cust_type,
+		    t2.rela_party_id,
+		    t2.rela_PARTY_NAME ,
+		    t2.cert_type
+		FROM
+		    TB_CSM_OTHER_RELATED_PARTY t2
+		WHERE
+		     t2.other_related_party_id = #itemId#
+	 
+	</select>
+	<resultMap class="java.util.HashMap" id="otherRelatedParty">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="OTHER_RELATED_PARTY_ID" javaType="string" property="otherRelatedPartyId"/>
+        <result column="RELATED_CD" javaType="string" property="relatedCd"/>
+        <result column="CREATE_TIME" javaType="string" property="createTime"/>
+        <result column="REL_FROM" javaType="string" property="relFrom"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="CERT_TYPE" javaType="string" property="certType"/>
+        <result column="CERT_NUM" javaType="string" property="certNum"/>
+        <result column="CUST_TYPE" javaType="string" property="custType"/>
+        
+    </resultMap>
+	<select id="otherRelatedPartyList" parameterClass="java.util.HashMap" resultMap="otherRelatedParty">
+SELECT  ORP.PARTY_ID,
+        ORP.CERT_TYPE,
+        ORP.CERT_NUM,
+       ORP.RELA_PARTY_NAME as PARTY_NAME,
+       ORP.REL_FROM,
+       ORP.RELATED_CD,
+       ORP.BECOME_RELATED_TIME as CREATE_TIME,
+       ORP.OTHER_RELATED_PARTY_ID,
+       orp.cust_type
+  FROM TB_CSM_OTHER_RELATED_PARTY ORP
+ WHERE  ORP.PARTY_ID =#partyId# and orp.cust_type=#custType#
+
+   
+	</select>
+	
+		<select id="otherRelatedPartyListCorp" parameterClass="java.util.HashMap" resultMap="otherRelatedParty">
+SELECT  ORP.PARTY_ID,
+        ORP.CERT_TYPE,
+        ORP.CERT_NUM,
+       ORP.RELA_PARTY_NAME as PARTY_NAME,
+       ORP.REL_FROM,
+       ORP.RELATED_CD,
+       ORP.BECOME_RELATED_TIME as CREATE_TIME,
+       ORP.OTHER_RELATED_PARTY_ID,
+       orp.cust_type
+  FROM TB_CSM_OTHER_RELATED_PARTY ORP
+ WHERE  ORP.PARTY_ID =#partyId# and orp.cust_type!=#custType#
+   
+	</select>
+	
+	
+	<resultMap class="java.util.HashMap" id="findGDList">
+        <result column="RELATED_CD" javaType="string" property="relatedCd"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="CERT_TYPE" javaType="string" property="certType"/>
+        <result column="CERT_NUM" javaType="string" property="certNum"/>
+    </resultMap>
+	
+	<select id="findGDList" parameterClass="java.util.HashMap" resultMap="findGDList">
+				select v.party_name, v.cert_type, v.cert_num, '60300' as related_cd
+		      from tb_csm_control_info orp, v_csm_party v
+		     where orp.control_id = v.party_id
+		       and orp.party_id =#partyId#
+		    union all
+		    select v.party_name, v.cert_type, v.cert_num, '20103' as related_cd
+		      from tb_csm_registered_capital t1, v_csm_party v
+		     where t1.natural_party_id= v.party_id
+		       and t1.party_id = #partyId#
+		    union all
+		    select v.party_name, v.cert_type, v.cert_num, t1.related_cd
+		      from tb_csm_other_related_party t1, v_csm_party v
+		     where t1.rela_party_id= v.party_id
+		     and t1.related_cd in ('20203', '20206', '20207', '20208')
+		       and t1.party_id = #partyId#
+		    union all
+		    select t1.legal_name as party_name,
+		           t1.legal_cert_type as cert_type,
+		           t1.legal_certificate_no as cert_num,
+		           '20100' as related_cd
+		      from tb_csm_corporation t1
+		     where t1.legal_certificate_no is not null
+		     and t1.legal_name is not null
+		     and t1.legal_cert_type is not null
+		     and  t1.party_id =#partyId#
+	</select>
+	
+	<!--当客户类型为其他时获取关联关系-->
+	<resultMap class="java.util.HashMap" id="otherRelatedReltree">
+        <result column="DICTID" javaType="string" property="dictid"/>
+        <result column="DICTNAME" javaType="string" property="dictname"/>
+        <result column="STATUS" javaType="string" property="status"/>
+        <result column="SORTNO" javaType="string" property="sortno"/>
+        <result column="PARENTID" javaType="string" property="parentid"/>
+    </resultMap>
+    
+    <!--对公客户与法人关联关系	-->
+	<select id="otherRelatedReltree" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.dictid, t.dictname, t.status, t.sortno, t.parentid
+  	  from eos_dict_entry t
+     where t.dicttypeid = 'CDKH0008'
+       and t.PARENTID='10000'
+	</select>
+	
+	<!--对公客户与自然人关联关系	-->
+	<select id="otherRelatedReltreeN" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.dictid, t.dictname, t.status, t.sortno, t.parentid
+  	  from eos_dict_entry t
+     where t.dicttypeid = 'CDKH0008'
+       and t.PARENTID='20000'
+	</select>
+	
+	<select id="industryTree" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+	select t.dictid, t.dictname, t.status, t.sortno, t.parentid
+  	  from eos_dict_entry t
+     where t.dicttypeid = 'CDXY0300'
+     order by t.dictid
+	</select>
+	
+</sqlMap>

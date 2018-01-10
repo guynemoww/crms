@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:3231 -->
+<sqlMap>
+    <parameterMap class="commonj.sdo.DataObject" id="parameterMap">
+        <parameter javaType="date" jdbcType="DATE" property="dateType"/>
+    </parameterMap>
+    <resultMap class="commonj.sdo.DataObject" id="resultMap">
+        <result column="TYPEID" javaType="string" property="typeId"/>
+    </resultMap>
+    <select id="select_id" parameterMap="parameterMap" resultMap="resultMap"><![CDATA[sql statement]]></select>
+    <!--  获取所有分项额度之和     -->
+    <select id="getAmountAmt" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		SELECT SUM( NVL( T.RMB_AMT, NVL( T.DETAIL_AMT, 0 ))) CREDITAMT FROM TB_BIZ_AMOUNT_DETAIL_APPLY T, TB_BIZ_AMOUNT_APPLY TA
+			WHERE T.AMOUNT_ID=TA.AMOUNT_ID
+		<isNotNull property="applyId"> and ta.APPLY_ID = '$applyId$' </isNotNull>
+    </select>
+    <!--  获取所有敞口额度该扣减的额度     1：国债-凭证式、国债-记账式、国债-储蓄(电子)式     2：银行承兑汇票   3：本行本币存单 XD_YWDB0110码表 01定期 02其他   4：我行发行的保本型理财产品 -->
+    <select id="getKjAmt" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		select nvl(sum(amt),0) as amt from (
+		    select sum(a.BOND_VALUE) as amt from TB_GRT_BOND a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE in ('A01030101','A01030102','A01030103') and a.CURRENCY_CD ='CNY'  
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID = #applyId#)   
+		    union all
+		    select sum(a.BILL_VALUE) as amt from TB_GRT_BILL a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='A01040201' and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID = #applyId#) 
+		    union all
+		    select sum(a.EXPIRE_TOTAL_AMT) as amt from TB_GRT_DEPOSIT a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='A01010101' and a.DEPOSIT_TYPE='01'  and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID = #applyId#)  
+		    union all
+		    select sum(a.TOTAL_MONEY) as amt from TB_GRT_MANAGEMONEY a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='A01010301' and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID = #applyId#) 
+		    union all   
+		    select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from TB_BIZ_KLYHCDHP_APPLY t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID = #applyId#
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_bh_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID = #applyId#
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_gnxyz_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID = #applyId#
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_jkbh_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID = #applyId#
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_jkxyz_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID = #applyId#        
+		)
+    </select>
+    <!--  获取集团成员授信信息     -->
+    <select id="getGroupMemberBizInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from (
+			select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+			where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+			and th.PARTY_ID=t.GROUP_PARTY_ID
+            and th.STATUS='03'
+			and t.GROUP_PARTY_ID = #partyId#
+			and ta.PARTY_ID=te.PARTY_ID
+			and te.USER_PLACING_CD ='01'
+			and te.USER_NUM=tf.USERID
+			and te.ORG_NUM=tg.ORGCODE
+			) tz left join 
+			(select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                where tb.APPLY_ID=td.APPLY_ID
+                and tb.biz_type in('02','05')
+                and tb.STATUS_TYPE in ('01','03','09')
+                and tb.APPLY_ID not in
+                (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                where tb.APPLY_ID=td.APPLY_ID
+                and tb.biz_type in('02','05')
+                and tb.OLD_APPLY_ID is not null) 
+                and tb.apply_id not in(
+                	select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                )
+			) ty 
+			on tz.PARTY_ID=ty.PARTY_ID
+    </select>
+        <!--  获取集团成员授信信息     -->
+    <select id="getGroupCreditAmount" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		select nvl(sum(ty.CREDIT_AMOUNT),0) AS creditAmt from (
+			select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+			where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+			and th.PARTY_ID=t.GROUP_PARTY_ID
+            and th.STATUS='03'
+			and t.GROUP_PARTY_ID = #partyId#
+			and ta.PARTY_ID=te.PARTY_ID
+			and te.USER_PLACING_CD ='01'
+			and te.USER_NUM=tf.USERID
+			and te.ORG_NUM=tg.ORGCODE
+			) tz left join 
+			(select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb  left join tb_biz_approve s on s.apply_id = tb.apply_id ,TB_BIZ_AMOUNT_APPLY td
+                where tb.APPLY_ID=td.APPLY_ID
+                and nvl(s.approve_conclusion , '4')!= '2'
+                and nvl(tb.apply_mode_type,'01') = '01'
+                and tb.biz_type in('02','04','05','06')
+                and tb.STATUS_TYPE in ('01','03','09')
+                and tb.APPLY_ID not in
+                (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                where tb.APPLY_ID=td.APPLY_ID
+                and tb.status_type not in ('06')
+                and tb.biz_type in('02','04','05','06')
+                and tb.OLD_APPLY_ID is not null) 
+                and tb.apply_id not in(
+                	select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                )
+			) ty 
+			on tz.PARTY_ID=ty.PARTY_ID
+    </select>
+    <!--  获取集团成员授信信息从台账进     -->
+    <select id="getGroupCreditAmountForTz" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		select sum(nvl(a.credit_amount, 0)) AS creditAmt
+		  from tb_csm_group_member r, tb_biz_approve t, tb_biz_amount_approve a
+		 where r.group_party_id = #partyId#
+		   and r.corporation_party_id = t.party_id
+		   and t.approve_id = a.approve_id
+		   and t.become_effective_mark = '03'
+		   and t.approve_conclusion in ('1', '3')
+    </select>
+    
+    <!-- 小微不规则还款计划表初始化-->
+      <select id="getHkjhXw" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select * from tb_biz_xw_hkjh where amount_detail_id = '$amountDetailId$' order by qc
+    </select>
+    <!-- 小微不规则还款计划表获取最大期次-->
+      <select id="getHkjhMaxQc" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+		select nvl(max(qc),0) term from tb_biz_xw_hkjh where amount_detail_id = '$amountDetailId$' 
+    </select>
+    <!-- 根据amount_detail_id获取小微不规则还款计划表-->
+    <resultMap class="com.bos.dataset.biz.TbBizXwHkjh" id="getHkjhsByAdid.xwhkjh">
+        <result column="UUID" javaType="string" property="uuid"/>
+        <result column="QC" javaType="int" property="qc"/>
+        <result column="END_DATE" javaType="date" property="endDate"/>
+        <result column="AMT" javaType="double" property="amt"/>
+        <result column="BJ" javaType="double" property="bj"/>
+        <result column="LX" javaType="double" property="lx"/>
+        <result column="DAYS" javaType="double" property="days"/>
+        <result column="SYBJ" javaType="double" property="sybj"/>
+        <result column="AMOUNT_DETAIL_ID" javaType="string" property="amountDetailId"/>
+        <result column="BZ1" javaType="string" property="bz1"/>
+        <result column="BZ2" javaType="string" property="bz2"/>
+        <result column="BZ3" javaType="string" property="bz3"/>
+    </resultMap>
+      <select id="getHkjhsByAdid" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizXwHkjh">
+		select UUID,
+			   QC,
+			   to_date(to_char(END_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') as ENDDATE,
+			   AMT,
+			   BJ,
+			   LX,
+			   DAYS,
+			   SYBJ,
+			   AMOUNT_DETAIL_ID,
+			   BZ1,
+			   BZ2,
+			   BZ3
+ 		  from tb_biz_xw_hkjh 
+		 where amount_detail_id = '$amountDetailId$' order by qc
+    </select>
+    <!--集团敞口额度计算  方法同getKjAmt   将=applyId改为in(集团下所有成员的applyId)-->
+    <select id="getJtkjAmt" parameterClass="java.util.HashMap" resultClass="java.math.BigDecimal">
+		select nvl(sum(amt),0) as amt from (
+		    select sum(a.BOND_VALUE) as amt from TB_GRT_BOND a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE in ('090100','090200','090300') and a.CURRENCY_CD ='CNY'  
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            ))   
+		    union all
+		    select sum(a.BILL_VALUE) as amt from TB_GRT_BILL a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='140100' and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )) 
+		    union all
+		    select sum(a.BILL_VALUE) as amt from TB_GRT_BILL a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='140100' and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            ))
+		    union all
+		    select sum(a.DEPOSIT_AMT) as amt from TB_GRT_DEPOSIT a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='080100' and a.DEPOSIT_TYPE='01'  and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            ))  
+		    union all
+		    select sum(a.BUY_PRICE) as amt from TB_GRT_MANAGEMONEY a,TB_GRT_MORTGAGE_BASIC b where b.SURETY_ID=a.SURETY_ID and a.SORT_TYPE='130100' and a.CURRENCY_CD='CNY'
+		    and b.SURETY_ID in (select t.SURETY_ID from TB_BIZ_GRT_REL t where t.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )) 
+            union all   
+		    select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from TB_BIZ_KLYHCDHP_APPLY t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_bh_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_gnxyz_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_jkbh_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )
+			union all
+			select sum(ta.DETAIL_AMT*t.BZJBLBDY/100) as amt from tb_biz_jkxyz_apply t,TB_BIZ_AMOUNT_DETAIL_APPLY ta,TB_BIZ_AMOUNT_APPLY tb 
+			where t.AMOUNT_DETAIL_ID=ta.AMOUNT_DETAIL_ID and ta.AMOUNT_ID=tb.AMOUNT_ID and tb.APPLY_ID in(
+                select ty.apply_id from (
+                    select ta.PARTY_NAME,ta.PARTY_NUM,ta.PARTY_ID,te.USER_NUM,te.ORG_NUM,tf.EMPNAME,tg.ORGNAME  from tb_csm_group_member t,TB_CSM_PARTY ta,tb_csm_management_team te,om_employee tf,OM_ORGANIZATION tg,tb_csm_group_company th
+                    where t.CORPORATION_PARTY_ID=ta.PARTY_ID
+                    and th.PARTY_ID=t.GROUP_PARTY_ID
+                    and th.STATUS='03'
+                    and t.GROUP_PARTY_ID = #partyId#
+                    and ta.PARTY_ID=te.PARTY_ID
+                    and te.USER_PLACING_CD ='01'
+                    and te.USER_NUM=tf.USERID
+                    and te.ORG_NUM=tg.ORGCODE
+                    ) tz left join 
+                    (select tb.APPLY_ID,tb.BIZ_NUM,tb.STATUS_TYPE,tb.PARTY_ID,tb.APPLY_DATE,td.CREDIT_AMOUNT,td.CURRENCY_CD from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.STATUS_TYPE in ('01','03','09')
+                        and tb.APPLY_ID not in
+                        (select tb.OLD_APPLY_ID from tb_biz_apply tb,TB_BIZ_AMOUNT_APPLY td
+                        where tb.APPLY_ID=td.APPLY_ID
+                        and tb.biz_type in('02','05')
+                        and tb.OLD_APPLY_ID is not null) 
+                        and tb.apply_id not in(
+                            select apply_id from tb_biz_approve t where t.BECOME_EFFECTIVE_MARK in('04','05','06')
+                        )
+                    ) ty 
+                    on tz.PARTY_ID=ty.PARTY_ID
+            )            
+		)
+    </select>
+    <select id="getPjxxByLoanId" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizPjxxApply">
+		select p.* from tb_loan_info r, tb_con_contract_info t,tb_biz_pjxx_apply p
+		where r.contract_id = t.contract_id and t.amount_detail_id = p.amount_detail_id
+		and r.loan_id = #loanId#
+		<isNotNull property="pjhm"> and p.pjhm = '$pjhm$' </isNotNull>
+    </select>
+    <!-- 查询统一授信客户的所有成员-->
+    <select id="getAllMember" parameterClass="java.util.HashMap" resultClass="java.lang.String">
+		select r.corporation_party_id memeberid from tb_csm_group_member r where r.group_party_id = #partyId#
+    </select>
+</sqlMap>

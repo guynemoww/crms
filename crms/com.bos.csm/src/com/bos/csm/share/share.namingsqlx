@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ganquan -->
+<sqlMap>
+    <resultMap id="share" class="java.util.HashMap">
+   			<result property="busiId" column="BUSI_ID"/>
+			<result property="id" column="ID"/>
+			<result property="receiveShareUserNum" column="RECEIVE_SHARE_USER_NUM"/>
+			<result property="receiveShareOrgNum" column="RECEIVE_SHARE_ORG_NUM"/>
+			<result property="operaterUserNum" column="OPERATER_USER_NUM"/>
+			<result property="operaterOrgNum" column="Operater_Org_Num" />
+			<result property="createDate" column="CREATE_DATE" />
+			<result property="updateTime" column="UPDATE_TIME" />
+			<result property="operType" column="OPER_TYPE" />
+			<result property="appStatus" column="APP_STATUS" />
+			<result property="remark" column="REMARK" />
+			<result property="partyNum" column="PARTY_NUM" />
+			<result property="partyName" column="PARTY_NAME" />
+			<result property="partyId" column="PARTY_ID" />
+			<result property="certType" column="CERT_TYPE" />
+			<result property="certNum" column="CERT_NUM" />
+	</resultMap>
+	<!--客户历史共享记录-->
+    <select id="shareList" parameterClass="java.util.HashMap" resultMap="share">
+		 SELECT DISTINCT T1.BUSI_ID,
+		        T.ID,
+		        T.RECEIVE_SHARE_USER_NUM,
+		        T.RECEIVE_SHARE_ORG_NUM,
+		        T.OPERATER_USER_NUM,
+		        T.OPERATER_ORG_NUM,
+		        T.CREATE_DATE,
+		        T.UPDATE_TIME,
+		        T.OPER_TYPE,
+		        T.APP_STATUS,
+		        T.REMARK,
+		        V.PARTY_ID,
+		        V.PARTY_NUM,
+		        V.PARTY_NAME,
+		        V.CERT_TYPE,
+		        V.CERT_NUM
+		   FROM TB_CSM_SHARE_BUSI_LIST T1
+		   JOIN TB_CSM_SHARE T ON T1.ID = T.ID
+		   JOIN V_CSM_PARTY V ON V.PARTY_ID = T1.PARTY_ID
+		   JOIN TB_CSM_MANAGEMENT_TEAM MT ON MT.PARTY_ID = T1.PARTY_ID
+		   	join  OM_ORGANIZATION O  on o.orgcode=t.OPERATER_ORG_NUM
+		  WHERE T.OPER_TYPE = 1
+		    AND T1.STATUS IS NULL	
+    	<isNotNull property="userNum"> AND T.OPERATER_USER_NUM = #userNum# </isNotNull>
+	 	<isNotNull property="orgNum">  and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#)  </isNotNull>
+		<isNotNull property="id">  AND T.ID = #id# </isNotNull>
+	    <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  AND V.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+	    <isNotNull property="partyTypeCd">  AND V.PARTY_TYPE_CD LIKE '%$partyTypeCd$%' </isNotNull>
+	    <isNotNull property="certType">  AND V.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+	    <isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+	    <isNotNull property="middleCode">  AND V.MIDDLE_CODE LIKE '%$middleCode$%' </isNotNull>
+	    
+	    <isNotNull property="appStatus">  AND T.APP_STATUS = #appStatus# </isNotNull>
+	    <isNotNull property="date1">
+		<![CDATA[
+			AND T.CREATE_TIME >= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+		<isNotNull property="date2">
+		<![CDATA[
+			AND T.CREATE_TIME <= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+    </select>
+    <resultMap id="shareCancel" class="java.util.HashMap">
+   			<result property="cId" column="C_ID"/>
+   			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyTypeCd" column="PARTY_TYPE_CD"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM" />
+			<result property="chanelDate" column="CHANEL_DATE" />
+			<result property="userNum" column="USER_NUM" />
+			<result property="orgNum" column="ORG_NUM" />
+			<result property="typeCd" column="TYPE_CD" />
+	</resultMap>
+	
+	<!--取消共享客户历史记录-->
+	    <select id="shareCancelList" parameterClass="java.util.HashMap" resultMap="shareCancel">
+	SELECT T.C_ID,
+	       V.PARTY_ID,
+	       V.PARTY_NUM,
+	       V.PARTY_NAME,
+	       V.PARTY_TYPE_CD,
+	       V.CERT_TYPE,
+	       V.CERT_NUM,
+	       T.CHANEL_DATE,
+	       T.USER_NUM,
+	       T.ORG_NUM,
+	       T.TYPE_CD
+	  FROM TB_CSM_SHARE_CHANEL_LIST T, V_CSM_PARTY V
+	 WHERE T.PARTY_ID = V.PARTY_ID
+	    <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  AND V.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+	    <isNotNull property="partyTypeCd">
+	    	and V.PARTY_TYPE_CD like  '%$partyTypeCd$%'
+	   </isNotNull>
+	   <isNotNull property="certType">
+	    	and V.CERT_TYPE like  '%$certType$%'
+	   </isNotNull>
+	   <isNotNull property="certNum">
+	    	and V.CERT_NUM like  '%$certNum$%'
+	   </isNotNull>
+	   <isNotNull property="middleCode">
+	    	and V.MIDDLE_CODE like '%$middleCode$%'
+	   </isNotNull>
+	    <isNotNull property="date1">
+		<![CDATA[
+			AND T.CHANEL_DATE >= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+		<isNotNull property="date2">
+		<![CDATA[
+			AND T.CHANEL_DATE <= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+		<isNotNull property="userNum"> 
+			AND V.PARTY_ID IN (SELECT T.PARTY_ID
+		                         FROM TB_CSM_MANAGEMENT_TEAM T
+		                        WHERE T.USER_NUM = #userNum#
+		                          AND T.USER_PLACING_CD = '01')
+		</isNotNull>
+    </select>
+    
+    <resultMap id="business" class="java.util.HashMap">
+   			<result property="managementTeamId" column="MANAGEMENT_TEAM_ID"/>
+   			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="userNum" column="USER_NUM" />
+			<result property="orgNum" column="ORG_NUM" />
+			<result property="userPlacingCd" column="USER_PLACING_CD" />
+			<result property="partyTypeCd" column="PARTY_TYPE_CD" />
+			<result property="createTime" column="CREATE_TIME" />
+			<result property="middleCode" column="MIDDLE_CODE" />
+	</resultMap>
+	
+	<!--待取消共享的客户列表-->
+    <select id="businessList" parameterClass="java.util.HashMap" resultMap="business">
+		SELECT DISTINCT MT.MANAGEMENT_TEAM_ID,
+		         P.PARTY_ID,
+		           P.PARTY_NUM,
+		           P.PARTY_NAME,
+		           P.PARTY_TYPE_CD,
+		           P.CERT_TYPE,
+		           P.CERT_NUM,
+		           MT.USER_NUM,
+		           MT.ORG_NUM,
+		           MT.USER_PLACING_CD,
+		           MT.CREATE_TIME,
+		           P.MIDDLE_CODE
+		      FROM TB_CSM_MANAGEMENT_TEAM MT, V_CSM_PARTY P
+		 WHERE MT.PARTY_ID IN (SELECT T.PARTY_ID
+		                         FROM TB_CSM_MANAGEMENT_TEAM T
+		                        WHERE T.USER_NUM = #userNum#
+		                          AND T.USER_PLACING_CD = '01')
+		   AND MT.USER_PLACING_CD = '02'
+		   AND MT.PARTY_ID = P.PARTY_ID
+		<isNotNull property="partyName">  AND P.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  AND P.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+	    <isNotNull property="partyTypeCd">  AND P.PARTY_TYPE_CD = #partyTypeCd# </isNotNull>
+	    <isNotNull property="certType">  AND P.CERT_TYPE LIKE '%$certType$%' </isNotNull>
+	    <isNotNull property="certNum">  AND P.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+	    <isNotNull property="middleCode">  AND P.MIDDLE_CODE LIKE '%$middleCode$%' </isNotNull>
+    </select>
+</sqlMap>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE checkrules [
+        <!ELEMENT checkrules (rule)*>
+        <!ELEMENT rule (sql|condition|formula)*>
+        <!ATTLIST rule
+                checkLevel CDATA #REQUIRED
+                checkedFieldName CDATA #REQUIRED
+                checktype CDATA #REQUIRED
+                endValue CDATA #IMPLIED
+                errCode CDATA #REQUIRED
+                errMsg CDATA #REQUIRED
+                id CDATA #REQUIRED
+                name CDATA #REQUIRED
+                startValue CDATA #IMPLIED
+                targetDataList CDATA #IMPLIED>
+        <!ELEMENT sql (#PCDATA)>
+        <!ELEMENT condition (#PCDATA)>
+        <!ELEMENT formula (#PCDATA)>
+        ]>
+<checkrules>
+	<rule id="RNPL_0003" name="抵债资产冲销细信息未保存" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="抵债资产冲销细信息未保存" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_ASSET_WRITE_OFF WHERE ID=@id AND DEBTS_AMT IS NOT NULL AND EXISTS (SELECT ID FROM TB_ASSET_WRITE_OFF_LOAN WHERE ID=@id)]]></sql>
+	</rule>
+	<rule id="RNPL_0004" name="委外清收细信息未保存" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="委外清收细信息未保存" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_ASSET_CLEAN_TAKE_ENTRUST WHERE ID=@id AND ENTRUST_AMT IS NOT NULL AND EXISTS(SELECT ID FROM TB_ASSET_CLEAN_TAKE_ENT_CON WHERE ID=@id)]]></sql>
+	</rule>
+	<rule id="RNPL_0005" name="诉讼清收详细信息未保存" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="诉讼清收详细信息未保存" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_ASSET_CLEAN_TAKE_LAW WHERE ID=@id AND ACTION_TYPE IS NOT NULL AND EXISTS(SELECT ID FROM TB_ASSET_CLEAN_TAKE_LAW_CON WHERE ID=@id)]]></sql>
+	</rule>
+	<rule id="RNPL_0006" name="现金清收详细信息未保存" checktype="ineqn" checkedFieldName="$c" targetDataList="0" errCode="2015110-001" errMsg="现金清收详细信息未保存" checkLevel="err">
+		<sql><![CDATA[SELECT COUNT(*) c FROM TB_ASSET_CLEAN_TAKE_MONEY WHERE ID=@id AND REPAY_AMT IS NOT NULL]]></sql>
+	</rule>
+</checkrules>

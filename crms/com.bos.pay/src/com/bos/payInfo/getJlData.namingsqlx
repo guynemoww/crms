@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lipengcheng -->
+<sqlMap>
+    <select id="getTcSupLoanInfo" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupLoanInfo">
+		<![CDATA[
+		select 
+      to_char(ta.BEGIN_DATE,'yyyymmdd') as rcvDate,
+      '9999' as legPerCod,
+      ta.LOAN_ORG as depCod,
+      ta.LOAN_ORG trnDep,
+      ta.LOAN_ORG opnDep,
+      '11000' origFrom,
+      ta.product_type as prodCod,
+      '0' as crdCent,
+      tf.party_type_cd as certType,
+      tf.PARTY_NUM as certNum,
+      tf.PARTY_NUM as cusNo, 
+      tb.CONTRACT_NUM as conNo,
+      ta.LOAN_NUM as telNo,
+      ta.SUMMARY_NUM as dueNum, 
+      ta.SUMMARY_NUM as dueNumUn,
+       (case when tf.party_type_cd ='01' then '2' 
+       when tf.party_type_cd ='02' then '1' else '3' end ) dueType,
+        tf.PARTY_NAME as brwName,
+        ta.loan_amt as amt,
+        to_char(ta.BEGIN_DATE, 'yyyymmdd') as begDate,
+       to_char(ta.END_DATE, 'yyyymmdd') as endDate, 
+       to_char(ta.BEGIN_DATE, 'yyyymmdd') as begItrDate,
+       to_char(ta.END_DATE, 'yyyymmdd') as  prePayItrDate,
+       '1' clsFlg,
+       ta.currency_cd as currCod,
+        (case
+		         when substr(ta.product_type,1,5) in ('01013','02005') then
+		          '02'
+		         else
+		          '01'
+		       end) prmCls,
+        '000' astCls, 
+        ta.loan_subject1 busCod,
+        '' prmPayTyp,
+        '' astPayTyp,
+        subStr(ta.REPAY_TYPE, 0, 2) as curPrmPayTyp, 
+        nvl(subStr(ta.REPAY_TYPE, 3, 2), '00') as curAstPayTyp,
+        case when th.rate_type='1' then '0' else '1' end fixRateFlag,
+        '0' itrRateWay, 
+        th.YEAR_RATE as norItrRate, 
+         th.YEAR_RATE * (1 + th.OVERDUE_RATE_UP_PROPORTION / 100) as delItrRate,
+         th.YEAR_RATE * (1 + th.OVERDUE_RATE_UP_PROPORTION / 100) as cpdItrRate,
+         th.YEAR_RATE as relItrRate,
+         '0' cusPayPlanType,
+          th.INTEREST_COLLECT_TYPE as caspan,
+         ''calDays,
+       nvl(tb.spec_payment_date,'21') as payDate,
+       '0' distDays,
+       '1' itrCalRule,
+       '1' as afterCaspan, 
+        nvl(tb.spec_payment_date,'21') as afterPayDate, 
+        decode(ta.txzq,null,'0','','0','1') discFlag,
+        '0' as itrFreFlg, 
+        '0' as itrFreCyl,
+        '0' freeProcType,
+        '0' ceasDiscFlag,
+        '0' endDiscFlag,
+        '11' as hldFlg,
+        '11' hldPrnWay,
+        '11' hldItrWay,
+        '00' graPerdFlg,
+        '1' graPrdTyp,
+        '0' graPrnDays,
+        '0' gra_itr_days,
+        '00' graPrdPrnWay,
+        '00' graPrdItrWay,
+        '11111111001' calItrFlag,
+        (case
+		         when substr(ta.product_type,1,5) in ('01013','02005') then
+		          '00'
+		         else
+		          '10'
+		       end) acrItrFlg,
+        '00' acrItrTyp,
+        '0' ceasImpFlag,
+        '0' itrSettleType,
+        '1111111111' settPnsType,
+        '1' iprPvsbaseRule,
+        '11' itrChgFlg,
+        '00' payOrder,
+        '1' batFlg,
+        '1' batType,
+        to_char(ta.BEGIN_DATE, 'yyyymmdd') as  studPerd,
+        '1' clearFlg,
+        decode(nvl(sf.zh1,sf.zh2),'','0','1') trusToPayFlg,
+        '0' stopPayFlg,
+        case when te.biz_happen_type='06' then '1' else '0' end  byNewOldFlg,
+        ppp.summary_num as astDueNum,
+        '0' feeFlag,
+        '1' oftPrnItrTyp,
+		'1' firProvFlg,
+		'0' endTermNumDaysBetn,
+        '0' dealFlg
+      from tb_loan_info                 ta
+          left join tb_loan_stzf sf on ta.loan_id = sf.loan_id,
+           tb_biz_amount_detail_approve tc,
+           TB_BIZ_AMOUNT_APPROVE        td,
+           tb_biz_approve               te
+      left join (select p.apply_id, pp.summary_num
+                   from tb_biz_summary p, tb_loan_summary pp
+                  where p.summary_id = pp.summary_id) ppp
+        on te.apply_id = ppp.apply_id, 
+        TB_CSM_PARTY tf, 
+         tb_loan_loanrate th,
+        om_organization o, 
+        tb_con_contract_info tb
+     where ta.CONTRACT_ID = tb.CONTRACT_ID
+       and tb.AMOUNT_DETAIL_ID = tc.AMOUNT_DETAIL_ID
+       and tc.AMOUNT_ID = td.AMOUNT_ID
+       and td.APPROVE_ID = te.APPROVE_ID
+       and te.PARTY_ID = tf.PARTY_ID
+       and ta.LOAN_ID = th.LOAN_ID
+       and ta.ORG_NUM = o.orgcode
+       and ta.loan_id = #loanId#
+		    ]]>
+    </select>
+    <select id="getTcSupLoanInfoAcct" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupLoanInfoAcct">
+		<![CDATA[
+		select 
+		    to_char(tb.BEGIN_DATE,'yyyymmdd') as rcvDate,
+		   '9999' as legPerCod,
+		    tb.SUMMARY_NUM as dueNum, tb.SUMMARY_NUM as dueNumUn,
+		    (case
+		    when tc.ZHBS = '60' then '0'
+		    when tc.ZHBS = '12' then '2'
+		     when tc.ZHBS = '11' then '1'
+		    end) as primAcctTyp,
+		     (case
+		    when tc.KZBS = '11' then '1'
+		    when tc.KZBS = '20' then '0'
+		    end)  as primAcctFlg,
+		    tb.ZH as primAcct,
+		    tb.ZHKHJG as primOpenDep,
+		    '' as primAstAcct,
+		    tb.ZHMC as primAcctName,
+		    tc.ZHLX  as payPrimAcctTyp,
+		    (case
+		    when tc.KZBS = '11' then '1'
+		    when tc.KZBS = '20' then '0'
+		    end) as payPrimAcctFlg,
+		    tc.ZH as payPrimAcct,
+		    tc.ZHKHJG as payOpenDep,
+		    tc.ZHMC as payPrimName,
+		    '' as payPrimAcctTyp1,
+			'' as payPrimAcctFlg1,
+			'' as payPrimAcct1,
+			'' as payOpenDep1,
+			'' as payPrimName1,
+			'' as payPrimAcctTyp2,
+			'' as payPrimAcctFlg2,
+			'' as payPrimAcct2,
+			'' as payOpenDep2,
+			'' as payPrimName2
+		from om_organization o ,(
+		select t.*,ta.ZHBS,ta.ZHLX,ta.KZBS,ta.ZH,ta.ZHKHJG,ta.ZHMC from tb_loan_info t ,tb_loan_zh ta
+		where t.LOAN_ID=ta.LOAN_ID
+		and ta.ZHLX ='0' 
+		) tb
+		left join tb_loan_zh tc
+		on tb.LOAN_ID = tc.loan_id
+		and tc.ZHLX in('1','6','7')
+		where o.orgcode= tb.ORG_NUM
+		AND TB.LOAN_ID = #loanId#
+		order by payPrimAcctTyp
+		 ]]>
+    </select>
+    <select id="getTcSupLoanInfoCalPayPlan" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupLoanInfoCalPayPlan">
+		<![CDATA[
+		select 
+		    to_char(t.BEGIN_DATE,'yyyymmdd') as rcvDate,
+		    '9999' as legPerCod,
+		    t.SUMMARY_NUM as dueNum,
+		    t.SUMMARY_NUM as dueNumUn,
+		    '0' as nextPayPlanType,
+		    t.first_repay_term as stgFirstMon,
+		    '' as ballMthEndPerd,
+		    '' as frePayMethDay,
+		    '' as frePayMethPayAmt,
+		    '0' as entirePeriodItr,
+		    '1' as payCurrItrFlag,
+		    '0' as firstCalWays,
+		    '0' as itrPayTyp,
+		    '0' as midTermWay
+		from tb_loan_info t,om_organization o
+		where t.ORG_NUM = o.orgcode
+		AND t.LOAN_ID = #loanId#
+		 ]]>
+    </select>
+    <select id="getTcSupLoanInfoDiscInfo" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupLoanInfoDiscInfo">
+		         <!--所缺字段：协议号2-->
+		          <!--所缺字段：协议号3-->
+		           <!--所缺字段：协议号4-->
+		            <!--所缺字段：第一贴息率1-->
+				 <!--所缺字段：第二贴息率1-->
+				 <!--所缺字段：第三贴息率1-->
+				 <!--所缺字段：第四贴息率1-->
+				 <!--第一贴息主体固定贴息金额期初金额-->
+				 <!--第二贴息主体固定贴息金额期初金额-->
+				 <!--第三贴息主体固定贴息金额期初金额-->
+				 <!--第四贴息主体固定贴息金额期初金额-->
+		<![CDATA[
+		select  to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate,
+		       '9999' as legPerCod,
+		       '0' as discProcType,
+		       t.SUMMARY_NUM as dueNum,
+		       t.SUMMARY_NUM as dueNumUn,
+		       decode(b.txfs, '01', '11', '02', '12', '03', '13') as discType,
+		       to_char(t.BEGIN_DATE, 'yyyymmdd') as discBegDate, 
+		        to_char(t.txzq, 'yyyymmdd') as discEndDate, 
+		        '0.00' as discAdvExpAmt,
+		         b.ztxbl as totDiscRate,
+		         b.total as totDiscNum,
+		         x.xyh1 as protNum1,
+		         decode(x.ZHLX1, '60', '0', '12', '2','1') as discAccTyp1,
+		         decode(x.ZHLX2, '60', '0', '12', '2','1') as discAccTyp2,
+		         decode(x.ZHLX3, '60', '0', '12', '2','1') as discAccTyp3,
+		         decode(x.ZHLX4, '60', '0', '12', '2','1') as discAccTyp4,
+		        x.TXZH1 as discAcc1,
+		        x.TXZH2 as discAcc2,
+		        x.TXZH3 as discAcc3,
+		        x.TXZH4 as discAcc4,
+		        x.TXJG1 as discAccOpnDep1,
+		        x.TXJG2 as discAccOpnDep2,
+		        x.TXJG3 as discAccOpnDep3,
+		        x.TXJG4 as discAccOpnDep4,
+				x.TXZT1	as discAccNm1,
+				x.TXZT2	as discAccNm2,
+				x.TXZT3	as discAccNm3,
+				x.TXZT4	as discAccNm4
+		  from tb_loan_info t,
+		       om_organization o,
+		       (select r.tx_id,r.txfs,
+		               sum(nvl(r.txbl,0))/100 ztxbl,
+		               count(1) total,
+		               '11' as txxy,
+		               r.apply_id
+		          from tb_biz_tx r
+		         where r.apply_id = #applyId#
+		         group by r.apply_id, r.txfs,r.tx_id) b,
+		         tb_biz_tx x
+		 where t.ORG_NUM = o.orgcode
+		   and x.apply_id = #applyId#
+		   and t.LOAN_ID = #loanId#
+		    ]]>
+    </select>
+    <select id="getTxzt" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.biz.TbBizTx">
+		<![CDATA[
+		select  nvl(b.gdje,0)+nvl(b.xe,0) je,
+		        nvl(b.xe,0) xe,
+		        b.txzt1,
+		        b.txzh1,
+		        b.txjg1,
+		        b.zhlx1,
+		        nvl(b.txbl/100,0) TXBL
+		    from tb_biz_tx b
+		    where b.apply_id=#applyId#
+		     ]]>
+    </select>
+    <select id="getTcSupLoanInfoEntrInfo" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupLoanInfoEntrInfo">
+		<![CDATA[
+		select  to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate,
+           '9999' as legPerCod,
+           t.SUMMARY_NUM as dueNum,
+           t.SUMMARY_NUM as dueNumUn,
+           c.entrust_return_principal_acc as prnSettAcc, 
+           c.acc_name as prnSettAccName, 
+           '0' as prnSettAccTyp, 
+           c.entrust_return_interest_acc as itrSettAcc, 
+           c.acc_name as itrSettAccName, 
+           '0' as itrSettAccTyp,
+            c.entrust_loan_acc as agyBusAcc, 
+            c.acc_name as agyBusAccName, 
+            '' as agyBusAccDep,
+           c.entrust_return_acc as agyBusItrAcc, 
+             c.acc_name as agyBusItrAccName, 
+           '' as agyBusItrAccDep,
+           '1' as payFundType,
+           f.contract_num as agyBusNum,
+           '0' as agyBusTyp,
+           '0.003'agyBusprop
+        from tb_loan_info           t,
+             TB_LOAN_WTDK           ta,
+             om_organization        o,
+             tb_csm_entrust_account c,
+             tb_con_contract_info f
+       where t.LOAN_ID = ta.LOAN_ID
+         and ta.wtxm_id = c.acc_id
+         and t.ORG_NUM = o.orgcode
+         and t.contract_id = f.contract_id
+       and t.loan_id = #loanId#
+        union 
+       select  to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate,
+           '9999' as legPerCod,
+            t.SUMMARY_NUM as dueNum,
+        t.SUMMARY_NUM as dueNumUn,
+           c.entrust_return_principal_acc as prnSettAcc, 
+           c.acc_name as prnSettAccName, 
+           '0' as prnSettAccTyp, 
+           c.entrust_return_interest_acc as itrSettAcc, 
+           c.acc_name as itrSettAccName, 
+           '0' as itrSettAccTyp, 
+             c.entrust_loan_acc as agyBusAcc, 
+             c.acc_name as agyBusAccName, 
+             '' as agyBusAccDep,
+             c.entrust_return_acc as agyBusItrAcc, 
+             c.acc_name as agyBusItrAccName, 
+             '' as agyBusItrAccDep,
+            '1' as payFundType,
+            f.contract_num as agyBusNum,
+            '0' as agyBusTyp,
+            '0.003'agyBusprop
+        from tb_loan_info           t,
+             tb_con_contract_info   a,
+             tb_biz_xw_apply        xw,
+             om_organization        o,
+             tb_csm_entrust_account c,
+             tb_con_contract_info f
+       where t.contract_id = a.contract_id
+         and a.amount_detail_id = xw.amount_detail_id
+         and xw.wtxm_id = c.acc_id
+         and t.ORG_NUM = o.orgcode
+         and t.contract_id = f.contract_id
+       and t.loan_id = #loanId#
+		    ]]>
+    </select>
+    <select id="getTcSupPrinPlanNs" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupPrinPlanN">
+		<![CDATA[
+		select to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate, 
+		       '9999' as legPerCod, 
+		        t.SUMMARY_NUM as dueNum, 
+		        t.SUMMARY_NUM as dueNumUn, 
+		       p.periods_number as currPeri, 
+		        to_char(nvl(p2.repay_date,t.begin_date),'yyyymmdd') as begDate,
+		       to_char(p.repay_date,'yyyymmdd') as endDate, 
+		        p.repay_amt as rcvPrn,
+		        '0' as dealFlg
+		  from tb_loan_info t, om_organization o, tb_loan_repay_plan p
+		  left join tb_loan_repay_plan p2
+		    on p.loan_id = p2.loan_id
+		   and p.periods_number = p2.periods_number + 1
+		 where t.ORG_NUM = o.orgcode
+		   and t.loan_id = p.loan_id 
+		   and t.repay_type like '14%'
+		   and t.loan_id = #loanId#
+		   union
+		   select 
+		   		to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate, 
+		       '9999' as legPerCod, 
+		       t.SUMMARY_NUM as dueNum, 
+		        t.SUMMARY_NUM as dueNumUn, 
+		         x.qc as currPeri,
+		       to_char(nvl(x.end_date-x.days,t.begin_date),'yyyymmdd') as begDate,
+		       to_char(x.end_date,'yyyymmdd') as endDate, 
+		         x.bj as rcvPrn,
+		          '0' as dealFlg
+		  from tb_loan_info t, om_organization o, tb_con_contract_info r,tb_biz_xw_hkjh x
+		 where t.ORG_NUM = o.orgcode
+		   and t.contract_id = r.contract_id 
+		   and r.amount_detail_id = x.amount_detail_id
+		   and t.repay_type like '14%'
+		   and t.loan_id = #loanId#
+		    ]]>
+    </select>
+    
+    <select id="getTcSupTrustPayAcct" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupTrustPayAcct">
+		<![CDATA[
+		select to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate,
+		       '9999' as legPerCod,
+		       substr(t.LOAN_ORG, 0, 2) as prvCod,
+		       t.LOAN_ORG as opnDep,
+		       t.LOAN_ORG as talDep,
+		       t.SUMMARY_NUM as dueNum,
+		       p.zhm1 as payName,
+		       p.zh1 as payAcct,
+		       p.amt1 as payAmt,
+		       sysdate as createTime
+		  from tb_loan_info t, om_organization o, tb_loan_stzf p
+		 where t.ORG_NUM = o.orgcode
+		   and p.loan_id = t.loan_id
+       	   and nvl(p.zhm1,p.zhm2) is not null
+		   and t.trus_to_pay_flg = '1'
+		   and t.loan_id = #loanId#
+		    ]]>
+    </select>
+    <select id="getTcSupTrustPayAcct2" parameterClass="java.util.HashMap" resultClass="com.bos.dataset.lcs.TcSupTrustPayAcct">
+		<![CDATA[
+		select to_char(t.BEGIN_DATE, 'yyyymmdd') as rcvDate,
+		       '9999' as legPerCod,
+		       substr(t.LOAN_ORG, 0, 2) as prvCod,
+		       t.LOAN_ORG as opnDep,
+		       t.LOAN_ORG as talDep,
+		       t.SUMMARY_NUM as dueNum,
+		       p.zhm2 as payName,
+		       p.zh2 as payAcct,
+		       p.amt2 as payAmt,
+		       sysdate as createTime
+		  from tb_loan_info t, om_organization o, tb_loan_stzf p
+		 where t.ORG_NUM = o.orgcode
+		   and p.loan_id = t.loan_id
+       	   and nvl(p.zhm1,p.zhm2) is not null
+		   and t.trus_to_pay_flg = '1'
+		   and t.loan_id = #loanId#
+		    ]]>
+    </select>
+    
+    
+    <!--查询当日垫款信息-->
+    <select id="getTbCoreDiankuan" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+		select  * from tb_core_diankuan where dealflag in ('1','3') and tradedate=#tradeDate#
+    </select>
+    
+     <!--更新垫款信息表处理标志-->
+    <update id="updateCoreDiankuan" parameterClass="java.util.Map" >
+    	update tb_core_diankuan set dealflag=#dealFlag# , msg=#msg# where seqnum=#seqNum#
+	</update>
+	<!--垫款文件.i内容插入数据库表-->
+	<insert id="insertCoreDiankuan" parameterClass="java.util.Map" >
+		insert into tb_core_diankuan
+		(SEQNUM,TRADEDATE,TRADEORG,SUMMARY_NUM,ACCAGRNUM,YWBH,
+		 ADVACCNUM,ADVACCNAME,ADVORG,PAYACCNUM,PAYACCNAME,PAYACCTYPE,
+		 PAYORG,ADVAMT,CURRENCY,DEALFLAG,MSG,ADVFILENAME)
+		values
+		(#seqNum#,#tradeDate#,#tradeOrg#,#summaryNum#,#accagrNum#,#ywbh#,
+		 #advaccNum#,#advaccName#,#advOrg#,#payaccNum#,#payaccName#,#payaccType#,
+		 #payOrg#,#advAmt#,#currency#,#dealFlag#,#msg#,#advFileName#)
+	</insert>
+	<!--垫款文件.i.ok内容插入数据库表-->
+	<insert id="insertCoreDiankuanRec" parameterClass="java.util.Map" >
+		insert into tb_core_diankuan_rec(TOTNUM,TOTAMT,ADVFILENAME) values(#totNum#,#totAmt#,#advFileName#)
+	</insert>
+	<!--垫款出账前校验垫款文件.i和.i.ok文件内容是否一致-->
+	 <select id="checkDKData" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+		select  a.advfilename from 
+          (select t2.totnum as totalNum,t2.totamt as totalAmt ,t2.advfilename as advfilename 
+           from tb_core_diankuan_rec t2 
+           where advfilename=#advfilename#) a,
+          (select count(1) as numAll ,sum(t1.advamt) as advamtAll ,t1.advfilename as advfilename 
+           from tb_core_diankuan t1 
+           <!--where t1.dealFlag in('1','3') -->
+           where advfilename=#advfilename# 
+           group by t1.advfilename )b
+      	where a.totalNum != b.numAll or a.totalAmt != b.advamtAll
+   </select>
+   <!--垫款出账前校验垫一个借据是否做一次垫款-->
+   <select id="checkDKDataRepeatDk" parameterClass="java.lang.String" resultClass="java.lang.Integer">
+		select a.summary_num from  tb_core_diankuan a where a.summary_num = #summaryNum# and a.dealflag = '2'
+   </select>
+   <!--票据状态更新文件插入数据库表-->
+   <insert id="insertHuiPiaoData" parameterClass="java.util.Map" >
+		insert into TB_BIZ_HUIPIAO
+		(BILL_NO,BILL_STATUS,BILL_AMT,PRODUCT_TYPE,CONTRACT_ID,CONTRACT_STATUS,SUMMARY_ID,CREATE_TIME,FILE_NAME)
+		values
+		(#billNo#,#billStatus#,#billAmt#,#productType#,#contractNo#,#contractStatus#,
+		 #summaryId#,#createTime#,#fileName#)
+	</insert>
+	<!--ECIF客户归并文件插入数据库表-->
+	<insert id="insertECIFData" parameterClass="java.util.Map" >
+		insert into ECIF_RESC_MERGED_MAP
+		(CUST_TYPE,OLD_PARTY_ID,OLD_ECIF_CUST_NO,NEW_PARTY_ID,NEW_ECIF_CUST_NO,PARTY_NAME,CERT_TYPE,CERT_NO,STATUS,CREATE_TIME,MERGED_ORG,MERGED_EMP,MERGED_AUTH_EMP,FILE_NAME)
+		values
+		(#custType#,#oldPartyId#,#oldEcifCustNo#,#newPartyId#,#newEcifCustNo#,#partyName#,
+		 #certType#,#certNo#,#status#,to_timestamp(#createTime#,'yyyymmddhh24missff6'),#mergedOrg#,#mergedEmp#,#mergedAuthEmp#,#fileName#)
+	</insert>
+	
+</sqlMap>

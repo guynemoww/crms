@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:midaoliang -->
+<sqlMap>
+    <resultMap class="commonj.sdo.DataObject" id="queryWarningDictInfo">
+        
+        <result column="DICTTYPEID" property="dicttypeid"/>
+        <result column="DICTID" property="dictid"/>
+        <result column="DICTNAME" property="dictname"/>
+        <result column="PARENTID" property="parentid"/>
+   
+    </resultMap>
+    
+  <select id="queryWarningDictInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryWarningDictInfo">
+   SELECT
+     E.DICTTYPEID ,
+       E.DICTID ,
+         E.DICTNAME ,
+           E.PARENTID 
+             FROM EOS_DICT_ENTRY E  
+             WHERE 1=1
+                     
+                    <isNotNull property="double">
+	    	           and (E.DICTID like '$dictid$' or E.DICTID like '$dictid2$') 
+	                </isNotNull>
+	                
+	                <isNotNull property="one">
+	    	           and (E.DICTID like '$dictid$') 
+	                </isNotNull>
+	                
+                    <isNotNull property="dicttypeId">
+	    	           and E.DICTTYPEID = #dicttypeId#
+	                </isNotNull>
+	                
+	                <isNotNull property="partyId">
+	                  and E.DICTID not in(select CSM_SIGNAL_ID from TB_REW_CSM_SIGNAL_LIST  where SIGNAL_STATUS_CD !=3 and party_id=#partyId#) 
+	                </isNotNull>
+	                order by e.dictid
+  </select>
+ 
+    <resultMap class="commonj.sdo.DataObject" id="queryCsmWarnLevel">
+        
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="CONFIRM_DATE" property="confirmDate"/>
+        <result column="PARTY_NAME" property="partyName"/>
+        <result column="PARTY_ID" property="partyId"/>
+        <result column="PARTY_NUM" property="partyNum"/>
+   
+    </resultMap>
+       
+   <select id="queryCsmWarnLevel" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryCsmWarnLevel">
+     select w.WARNING_LEVEL_CD,
+             w.CONFIRM_DATE,
+              c.party_name,
+               c.party_num,
+                c.party_id 
+                 from tb_csm_party c 
+                   left join tb_rew_csm_early_warning w
+                      on c.party_id=w.party_id 
+                       where c.party_id=#partyId#
+                   
+   </select>
+   
+   <resultMap class="commonj.sdo.DataObject" id="queryCsmWarnInfo">
+        
+        <result column="party_Name" property="partyName"/>
+        <result column="cert_type" property="certType"/>
+        <result column="cert_num" property="certNum"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="CREDIT_RATING_CD" property="initialCredit"/>
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="confirm_date" property="confirmDate"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+   
+    </resultMap>
+   <!--非风险审核岗查询-->    
+   <select id="queryCsmWarnInfo" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmWarnInfo">
+		SELECT p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       p.cert_type,
+		       p.cert_num,
+		       '01' USER_PLACING_CD,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       p.USER_NUM,
+		       p.ORG_NUM
+		  FROM tb_rew_csm_early_warning w,
+		       v_csm_party              p
+		  LEFT JOIN (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from TB_IRM_INTERNAL_RATING_RESULT r
+		              group by r.party_id) a
+		    on a.party_id = p.party_id
+		 WHERE p.party_type_cd = '01'
+		       and w.party_id = p.party_id
+		      and p.user_num = #userNum#
+	        <isNotNull property="certNum">
+		    	and p.cert_num = #certNum#
+		    </isNotNull> 
+		    <isNotNull property="certType">
+		    	and p.cert_type = #certType#
+		    </isNotNull> 
+		    <isNotNull property="partyName">
+		    	and p.party_Name like '%$partyName$%'
+		    </isNotNull>
+   </select>
+   <!--风险审核岗查询-->
+   <select id="queryCsmWarnInfoBySH" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmWarnInfo">
+		SELECT p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       p.cert_type,
+		       p.cert_num,
+		       '01' USER_PLACING_CD,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       p.USER_NUM,
+		       p.ORG_NUM
+		  FROM tb_rew_csm_early_warning w,
+		       v_csm_party              p
+		  LEFT JOIN (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from TB_IRM_INTERNAL_RATING_RESULT r
+		              group by r.party_id) a
+		    on a.party_id = p.party_id
+		 WHERE p.party_type_cd = '01'
+		       and w.party_id = p.party_id
+		       <isNull property="orgid">
+		       and (p.user_num = #userNum# or
+		       p.org_num in (select a.orgcode
+		                            from om_organization a
+		                           start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgNum#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or p.org_num in (#orgNum#)
+         )
+         </isNull>
+	        <isNotNull property="certNum">
+		    	and p.cert_num = #certNum#
+		    </isNotNull> 
+		    <isNotNull property="certType">
+		    	and p.cert_type = #certType#
+		    </isNotNull> 
+		    <isNotNull property="partyName">
+		    	and p.party_Name like '%$partyName$%'
+		    </isNotNull>
+		   	<isNotNull property="orgid">
+           and (p.user_num=#userNum#
+		     or p.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgid#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or p.org_num in (select o.orgcode from om_organization o where o.orgid = #orgid#))
+		    </isNotNull>
+	   
+   </select>
+   <!--为queryCsmWarnInfo备份 供参考-->
+   <select id="queryCsmWarnInfoBackUp" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmWarnInfo">
+		SELECT p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       p.cert_type,
+		       p.cert_num,
+		       '01' USER_PLACING_CD,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       p.USER_NUM,
+		       p.ORG_NUM
+		  FROM tb_rew_csm_early_warning w,
+		       v_csm_party              p
+		  LEFT JOIN (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from TB_IRM_INTERNAL_RATING_RESULT r
+		              group by r.party_id) a
+		    on a.party_id = p.party_id
+		 WHERE p.party_type_cd = '01'
+		       and w.party_id = p.party_id
+		       and (p.user_num = #userNum# or
+		       p.org_num in (select a.orgcode
+		                            from om_organization a
+		                           start with a.orgid =
+		                                      (select d.orgid
+		                                         from om_empposition  a,
+		                                              om_position     b,
+		                                              om_employee     c,
+		                                              om_organization d
+		                                        where a.positionid = b.positionid
+		                                              and c.empid = a.empid
+		                                              and d.orgid = a.orgid
+		                                              and d.orgcode = #orgNum#
+		                                              and c.empcode = #userNum#
+		                                              and b.posicode = 'P1205')
+		                          connect by prior a.orgid = a.parentorgid))
+	        <isNotNull property="certNum">
+		    	and p.cert_num = #certNum#
+		    </isNotNull> 
+		    <isNotNull property="certType">
+		    	and p.cert_type = #certType#
+		    </isNotNull> 
+		    <isNotNull property="partyName">
+		    	and p.party_Name like '%$partyName$%'
+		    </isNotNull>
+		   	<isNotNull property="orgid">
+			    and p.org_num in (select o.orgcode from om_organization o where o.orgseq like '%$orgid$%')
+		    </isNotNull>
+	   
+   </select>
+ 
+   <resultMap class="commonj.sdo.DataObject" id="queryCsmGroupWarnInfo">
+        <result column="party_Name" property="partyName"/>
+        <result column="party_id" property="partyId"/>
+        <result column="party_num" property="partyNum"/>
+        <result column="CREDIT_RATING_CD" property="initialCredit"/>
+        <result column="WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="confirm_date" property="confirmDate"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+        <result column="group_manage_way_cd" property="groupManageWayCd"/>
+        <result column="status" property="status"/>
+    </resultMap>
+     <!--风险预警经理查询风险预警信息-->    
+   <select id="queryCsmGroupWarnInfo" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       t.USER_NUM,
+		       t.ORG_NUM,
+		       g.group_manage_way_cd,
+		       g.status
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.RATING_STATE = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id, tb_csm_party p, tb_csm_management_team t, tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+		       and t.user_num = #userNum#
+			    <isNotNull property="partyName">
+			    	and p.party_Name like '%$partyName$%'
+			    </isNotNull>
+   </select>
+   <!--风险预警管理岗查询风险预警信息-->
+   <select id="queryCsmGroupWarnInfoBySH" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       t.USER_NUM,
+		       t.ORG_NUM,
+		       g.group_manage_way_cd,
+		       g.status
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.RATING_STATE = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id, tb_csm_party p, tb_csm_management_team t, tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+		       <isNull property="orgid">
+		       and (t.user_num = #userNum# or
+		       t.org_num in (select a.orgcode
+		                            from om_organization a
+		                           start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgNum#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or t.org_num in (#orgNum#)
+         )
+         </isNull>
+			    <isNotNull property="partyName">
+			    	and p.party_Name like '%$partyName$%'
+			    </isNotNull>
+			   	<isNotNull property="orgid">
+				    and (t.user_num=#userNum#
+		     or t.org_num in (select a.orgcode
+           from om_organization a
+          start with a.orgid in (select d.orgid
+                                  from 
+                                  om_organization d
+                                 where d.parentorgid = #orgid#
+                                  )
+         connect by prior a.orgid = a.parentorgid)
+         or t.org_num in (select o.orgcode from om_organization o where o.orgid = #orgid#))
+			    </isNotNull>
+	     
+   </select>
+   <!--为queryCsmGroupWarnInfo做的修改备份 供参考-->
+   <select id="queryCsmGroupWarnInfoBackUp" parameterClass="commonj.sdo.DataObject" resultClass="commonj.sdo.DataObject" resultMap="queryCsmGroupWarnInfo">
+		select p.party_Name,
+		       p.party_id,
+		       p.party_num,
+		       a.CREDIT_RATING_CD,
+		       w.WARNING_LEVEL_CD,
+		       to_char(w.confirm_date, 'yyyy-MM-dd') confirm_date,
+		       t.USER_NUM,
+		       t.ORG_NUM,
+		       g.group_manage_way_cd,
+		       g.status
+		  from tb_csm_group_company g
+		  left join (select r.party_id,
+		                    max(r.credit_rating_cd) as credit_rating_cd
+		               from tb_irm_internal_rating_result r
+		              where r.RATING_STATE = '03'
+		              group by r.party_id) a
+		    on a.party_id = g.party_id, tb_csm_party p, tb_csm_management_team t, tb_rew_csm_early_warning w
+		 where g.party_id = p.party_id
+		       and g.party_id = t.party_id
+		       and g.party_id = w.party_id
+		       and g.status = '03'
+		       and (t.user_num = #userNum# or
+		       t.org_num in (select a.orgcode
+		                            from om_organization a
+		                           start with a.orgid =
+		                                      (select d.orgid
+		                                         from om_empposition  a,
+		                                              om_position     b,
+		                                              om_employee     c,
+		                                              om_organization d
+		                                        where a.positionid = b.positionid
+		                                              and c.empid = a.empid
+		                                              and d.orgid = a.orgid
+		                                              and d.orgcode = #orgNum#
+		                                              and c.empcode = #userNum#
+		                                              and b.posicode = 'P1205')
+		                          connect by prior a.orgid = a.parentorgid))
+			    <isNotNull property="partyName">
+			    	and p.party_Name like '%$partyName$%'
+			    </isNotNull>
+			   	<isNotNull property="orgid">
+				    and t.org_num in (select o.orgcode from om_organization o where o.orgseq like '%$orgid$%')
+			    </isNotNull>
+	     
+   </select>
+<!--查询当前用户的机构信息-->
+<select id="findCurrentOrgInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject">
+        select o.orgid as ORGID, o.orgcode as ORGCODE, o.orgname as ORGNAME, o.orglevel as ORGLEVEL
+		  from om_organization o
+		 where o.orgcode = #orgcode#
+</select>
+     
+     <parameterMap class="java.util.HashMap" id="getLevelEditHistory">
+        <parameter javaType="String" jdbcType="TIMESTAMP" property="startTime"/>
+        <parameter javaType="String" jdbcType="TIMESTAMP" property="endTime"/>
+    </parameterMap>
+    
+     <resultMap class="commonj.sdo.DataObject" id="getLevelEditHistory">
+        <result column="EARLY_WARNING_LEVEL_CD" property="warningLevelCd"/>
+        <result column="ADJUST_DATE" property="adjustDate"/>
+        <result column="SUGGEST_STATE" property="suggest"/>
+        <result column="MATTER_STATE" property="matterState"/>
+        <result column="USER_NUM" property="userNum"/>
+        <result column="ORG_NUM" property="orgNum"/>
+   
+    </resultMap>
+       
+   <select id="getLevelEditHistory" parameterMap="getLevelEditHistory"  resultMap="getLevelEditHistory">
+select 
+       EARLY_WARNING_LEVEL_CD,
+       to_char(ADJUST_DATE,'yyyy-mm-dd') ADJUST_DATE,
+       SUGGEST_STATE,
+       MATTER_STATE,
+       USER_NUM,
+       ORG_NUM
+from  
+       TB_REW_LEVEL_ADJUST
+    
+WHERE    party_id=#partyId#
+        
+        <isNotNull property="startTime">
+	    	<![CDATA[and ADJUST_DATE > #startTime#]]> 
+	    </isNotNull>
+	    
+        <isNotNull property="endTime">
+	    	<![CDATA[and ADJUST_DATE < #endTime#]]> 
+	    </isNotNull>
+   </select>
+   
+   <resultMap class="commonj.sdo.DataObject" id="queryAllWarnDictInfo">
+        
+        <result column="DICTTYPEID" property="dicttypeid"/>
+        <result column="DICTID" property="dictid"/>
+        <result column="DICTNAME" property="dictname"/>
+        <result column="PARENTID" property="parentid"/>
+   
+    </resultMap>
+    
+  <select id="queryAllWarnDictInfo" parameterClass="java.util.HashMap" resultClass="commonj.sdo.DataObject" resultMap="queryAllWarnDictInfo">
+   SELECT
+     E.DICTTYPEID ,
+       E.DICTID ,
+         E.DICTNAME ,
+           E.PARENTID 
+             FROM EOS_DICT_ENTRY E  
+             WHERE  E.DICTTYPEID = #dicttypeid#
+                    <isNotNull property="double">
+	    	           and (E.DICTID like '$dictid$' or E.DICTID like '$dictid2$') 
+	                </isNotNull>
+	                
+	                <isNotNull property="one">
+	    	           and (E.DICTID like '$dictid$') 
+	                </isNotNull>
+	    order by e.dictid           
+  </select>
+</sqlMap>

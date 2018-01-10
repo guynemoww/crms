@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:lujinbin -->
+<sqlMap>
+   
+    <select id="select_t24Pro" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select pro.product_name,
+    pro.product_key,
+    pro.other_field1,
+    pro.other_field2 
+    from tb_loan_t24Pro pro
+    where 1=1
+    and trunc(pro.product_key) &lt;=50000
+   	<isNotNull prepend="AND" property="productName">
+	pro.product_name like '%$productName$%'
+	</isNotNull>
+	<isNotNull prepend="AND" property="productCd">
+		pro.product_key =#productCd#
+	</isNotNull>
+    
+    </select>
+    <select id="select_t24UseTree" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select use.loan_dir_name,
+    use.loan_dir_key,
+    use.other_field1,
+    use.other_field2,
+    concat(loan_dir_name,concat(concat('[',loan_dir_key),']')) name
+    from tb_loan_t24use use
+    </select>
+    <select id="select_t24Use" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+    select use.loan_dir_name,
+    use.loan_dir_key,
+    use.other_field1,
+    use.other_field2 
+    from tb_loan_t24use use
+    where 1=1
+    <isNotNull prepend="AND" property="dirName">
+		use.loan_dir_name like '%$dirName$%'
+	</isNotNull>
+	<isNotNull prepend="AND" property="dirKey">
+		use.loan_dir_key =#dirKey#
+	</isNotNull>
+    </select>
+     <select id="select_t24Pro_name" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+       select pro.product_name as productName from tb_loan_t24Pro pro where pro.product_key=#productKey#  
+     
+    </select>
+     <select id="select_t24Use_name" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+     select use.loan_dir_name as loanDirName from tb_loan_t24use use where use.loan_dir_key=#loanDirKey#
+     </select>
+</sqlMap>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:chenchuan -->
+<sqlMap>
+	 <resultMap id="accountChangeList" class="java.util.HashMap">
+    		<result property="orgNum" column="ORG_NUM"/>
+    		<result property="partyId" column="PARTY_ID"/>
+    		<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="productType" column="PRODUCT_TYPE"/>
+			<result property="summaryNum" column="SUMMARY_NUM"/>
+			<result property="summaryAmt" column="SUMMARY_AMT"/>
+			<result property="summaryId" column="SUMMARY_ID"/>
+			<result property="loanId" column="LOAN_ID"/>
+			<result property="jjye" column="JJYE"/>
+			<result property="summaryCurrencyCd" column="SUMMARY_CURRENCY_CD"/>
+			<result property="beginDate" column="BEGIN_DATE"/>
+			<result property="endDate" column="END_DATE"/>
+			<result property="yqts" column="YQTS"/>
+			<result property="jjyqbj" column="JJYQBJ"/>
+			<result property="normalItr" column="NORMAL_ITR"/>
+			<result property="arrearItr" column="ARREAR_ITR"/>
+			<result property="punishItr" column="PUNISH_ITR"/>
+			<result property="contractNum" column="CONTRACT_NUM"/>
+	</resultMap>
+		 <!--查询可以进行账务调整的借据信息 -->
+    <select id="accountChangeList" parameterClass="java.util.HashMap" resultMap="accountChangeList">
+				select v.party_id,
+		       v.party_num,
+		       v.party_name,
+		       l.loan_id,
+		       l.product_type,
+		       l.org_num,
+		       l.user_num,
+		       c.contract_num,
+		       s.summary_id,
+		       s.summary_num,
+		       s.summary_amt,
+		       s.jjye,
+		       s.summary_currency_cd,
+		       to_char(s.begin_date, 'yyyy-mm-dd') begin_date,
+		       to_char(s.end_date, 'yyyy-mm-dd') end_date,
+		       s.yqts,
+		       s.jjyqbj,
+           		s.normal_itr,
+		       s.arrear_itr,
+		       s.punish_itr
+		  from tb_loan_info         l,
+		       tb_loan_summary      s,
+		       v_csm_party          v,
+		       tb_con_contract_info c
+		 where l.loan_id = s.loan_id
+		   and l.party_id = v.party_id
+		   and c.contract_id = l.contract_id
+		   and s.summary_status_cd in('02', '03')
+		  <isNotNull property="partyNum">  AND v.party_num = #partyNum# </isNotNull>
+		  <isNotNull property="partyName">  AND v.party_name LIKE '%$partyName$%' </isNotNull>
+		  <isNotNull property="productType">    AND l.product_type = #productType# </isNotNull>
+		  <isNotNull property="contractNum">    AND c.contract_num = #contractNum# </isNotNull>
+		  <isNotNull property="summaryNum">    AND s.SUMMARY_NUM = #summaryNum# </isNotNull>
+		  <isNotNull property="certNum">    AND v.cert_num = #certNum# </isNotNull>
+		  <isNotNull property="certType">    AND v.cert_type = #certType# </isNotNull>
+	 </select>
+</sqlMap>

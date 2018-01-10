@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:ljf -->
+<sqlMap>
+    <resultMap class="java.util.HashMap" id="resultMap">
+        <result column="INVEST_CUST_NAME" javaType="string" property="investCustName"/>
+        <result column="INVEST_CUST_TYPE" javaType="string" property="investCustType"/>
+        <result column="ORG_REGISTER_NUM" javaType="string" property="orgRegisterNum"/>
+        <result column="INVEST_CUST_ID" javaType="string" property="investCustId"/>
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="INVESTMENT_ID" javaType="string" property="investmentId"/>
+        <result column="INVESTIMENT_METHOD_CD" javaType="string" property="investimentMethodCd"/>
+        <result column="CURRECY_CD" javaType="string" property="currecyCd"/>
+        <result column="INVESTMENT_AMT" javaType="string" property="investmentAmt"/>
+        <result column="SHAREHOLDING_RATIO" javaType="string" property="shareholdingRatio"/>
+        <result column="INVESTMENT_DATE" javaType="string" property="investmentDate"/>
+        <result column="REGISTER_NUM" javaType="string" property="registerNum"/>
+        <result column="MIDDLE_NUM" javaType="string" property="middleNum"/>
+        <result column="CERT_TYPE" javaType="string" property="certType"/>
+    </resultMap>
+    <!--某一个对外股权投资的详细信息-->
+    <select id="select_all_id" parameterClass="java.util.HashMap" resultMap="resultMap">
+		SELECT
+			   i.invest_cust_name ,
+			   i.invest_cust_type,
+			   '202'as cert_type,
+		       i.org_register_num ,
+		       I.INVEST_CUST_ID,
+		       I.PARTY_ID,
+		       I.INVESTMENT_ID,
+		       I.INVESTIMENT_METHOD_CD,
+		       I.CURRECY_CD,
+		       I.INVESTMENT_AMT,
+		       I.SHAREHOLDING_RATIO,
+		       I.INVESTMENT_DATE,
+		       i.register_num,
+		       i.middle_num 
+		  FROM TB_CSM_INVESTMENT_INFO I
+		   where i.party_id = #partyId#
+     	<isNotNull property="investId"> and i.investment_id = #investId# </isNotNull>
+    </select>
+</sqlMap>

@@ -1,0 +1,923 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- author:cc -->
+<sqlMap>
+    <resultMap id="transfer" class="java.util.HashMap">
+			<result property="transferId" column="TRANSFER_ID"/>
+			<result property="originalUserNum" column="ORIGINAL_USER_NUM"/>
+			<result property="managementTeamId" column="MANAGEMENT_TEAM_ID"/>
+			<result property="userId" column="USER_ID"/>
+			<result property="originalOrgNum" column="ORIGINAL_ORG_NUM" />
+			<result property="orgId" column="ORG_ID" />
+			<result property="handlingUserNum" column="HANDLING_USER_NUM" />
+			<result property="handlingOrgNum" column="HANDLING_ORG_NUM" />
+			<result property="createTime" column="CREATE_TIME" />
+			<result property="updateTime" column="UPDATE_TIME" />
+			<result property="transferTypeCd" column="TRANSFER_TYPE_CD" />
+			<result property="transferWay" column="TRANSFER_WAY" />
+			<result property="isKeepBusinessPower" column="IS_KEEP_BUSINESS_POWER" />
+			<result property="transPerson" column="TRANS_PERSON" />
+			<result property="partyId" column="PARTY_ID" />
+			<result property="partyNum" column="PARTY_NUM" />
+			<result property="partyName" column="PARTY_NAME" />
+			<result property="appStatus" column="APP_STATUS" />
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM" />
+	</resultMap>
+	
+	<!--客户移交历史记录-->
+    <select id="customerMoveHistory" parameterClass="java.util.HashMap" resultMap="transfer">
+	SELECT T.TRANSFER_ID,
+	             T.ORIGINAL_USER_NUM,
+	             T.MANAGEMENT_TEAM_ID,
+	             T.USER_ID,
+	             T.ORIGINAL_ORG_NUM,
+	             T.ORG_ID,
+	             T.HANDLING_USER_NUM,
+	             T.HANDLING_ORG_NUM,
+	             T.CREATE_TIME,
+	             T.UPDATE_TIME,
+	             T.TRANSFER_TYPE_CD,
+	             T.TRANSFER_WAY,
+	             T.IS_KEEP_BUSINESS_POWER,
+	             T.TRANS_PERSON,
+	             T.APP_STATUS,
+	             V.PARTY_ID,
+	             V.PARTY_NUM,
+	             V.PARTY_NAME,
+	             V.PARTY_TYPE_CD,
+	             V.MIDDLE_CODE,
+	             V.CERT_TYPE,
+	             V.CERT_NUM
+	        FROM TB_CSM_CON_LIST T1, TB_CSM_TRANSFER T,V_CSM_PARTY V,OM_ORGANIZATION O
+	       WHERE T.TRANSFER_TYPE_CD = 1 
+	       and  T1.TRANSFER_ID = T.TRANSFER_ID
+	       and o.orgcode=t.HANDLING_ORG_NUM
+	       and V.PARTY_ID = T1.PARTY_ID
+	   	<isNotNull property="partyId">  AND V.party_Id =#partyId#</isNotNull>
+	    <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  AND V.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+	    <isNotNull property="appStatus">  AND T.APP_STATUS = '%$appStatus$%' </isNotNull>
+	    <isNotNull property="partyTypeCd">and V.PARTY_TYPE_CD like  '%$partyTypeCd$%'</isNotNull>
+	    <isNotNull property="certType">and V.CERT_TYPE like  '%$certType$%'</isNotNull>
+	    <isNotNull property="certNum">and V.CERT_NUM like  '%$certNum$%'</isNotNull>
+	    <isNotNull property="middleCode">and V.MIDDLE_CODE like  '%$middleCode$%'</isNotNull>
+		<isNotNull property="userNum">  AND T.HANDLING_USER_NUM = #userNum# </isNotNull>
+	 	<isNotNull property="orgNum">  and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#)  </isNotNull>
+    </select>
+    <resultMap id="business" class="java.util.HashMap">
+			<result property="transferId" column="TRANSFER_ID"/>
+			<result property="originalUserNum" column="ORIGINAL_USER_NUM"/>
+			<result property="managementTeamId" column="MANAGEMENT_TEAM_ID"/>
+			<result property="userId" column="USER_ID"/>
+			<result property="originalOrgNum" column="ORIGINAL_ORG_NUM" />
+			<result property="orgId" column="ORG_ID" />
+			<result property="handlingUserNum" column="HANDLING_USER_NUM" />
+			<result property="handlingOrgNum" column="HANDLING_ORG_NUM" />
+			<result property="createTime" column="CREATE_TIME" />
+			<result property="updateTime" column="UPDATE_TIME" />
+			<result property="transferTypeCd" column="TRANSFER_TYPE_CD" />
+			<result property="transferWay" column="TRANSFER_WAY" />
+			<result property="isKeepBusinessPower" column="IS_KEEP_BUSINESS_POWER" />
+			<result property="transPerson" column="TRANS_PERSON" />
+			<result property="partyNum" column="PARTY_NUM" />
+			<result property="partyName" column="PARTY_NAME" />
+			<result property="appStatus" column="APP_STATUS" />
+			<result property="partyId" column="PARTY_ID" />
+	</resultMap>
+    <select id="businessList" parameterClass="java.util.HashMap" resultMap="business">
+		SELECT T.TRANSFER_ID,
+	           T.ORIGINAL_USER_NUM,
+	           T1.MANAGEMENT_TEAM_ID,
+	           T.USER_ID,
+	           T.ORIGINAL_ORG_NUM,
+	           T.ORG_ID,
+	           T.HANDLING_USER_NUM,
+	           T.HANDLING_ORG_NUM,
+	           T.CREATE_TIME,
+	           T.UPDATE_TIME,
+	           T.TRANSFER_TYPE_CD,
+	           T.TRANSFER_WAY,
+	           T.IS_KEEP_BUSINESS_POWER,
+	           T.TRANS_PERSON,
+	           T.APP_STATUS,
+	           T3.PARTY_NUM,
+	           T3.PARTY_NAME,
+	           T1.PARTY_ID
+	      FROM TB_CSM_CON_LIST T1
+	      JOIN TB_CSM_TRANSFER T
+	        ON T1.TRANSFER_ID = T.TRANSFER_ID
+	      JOIN TB_CSM_PARTY T3
+	        ON T1.PARTY_ID = T3.PARTY_ID
+		 WHERE T.TRANSFER_ID = #id#
+	    <isNotNull property="partyName">  AND T3.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	    <isNotNull property="partyNum">  AND T3.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+	    <isNotNull property="appStatus">  AND T.APP_STATUS = '%$appStatus$%' </isNotNull>
+	    <isNotNull property="date1">
+		<![CDATA[
+			AND T.CREATE_TIME >= to_date(#date1# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+		<isNotNull property="date2">
+		<![CDATA[
+			AND T.CREATE_TIME <= to_date(#date2# ,'yyyy-mm-dd hh24:mi:ss')
+		]]>
+		</isNotNull>
+    </select>
+    <resultMap id="con" class="java.util.HashMap">
+			<result property="transferId" column="TRANSFER_ID"/>
+			<result property="originalUserNum" column="ORIGINAL_USER_NUM"/>
+			<result property="managementTeamId" column="MANAGEMENT_TEAM_ID"/>
+			<result property="userId" column="USER_ID"/>
+			<result property="originalOrgNum" column="ORIGINAL_ORG_NUM" />
+			<result property="orgId" column="ORG_ID" />
+			<result property="handlingUserNum" column="HANDLING_USER_NUM" />
+			<result property="handlingOrgNum" column="HANDLING_ORG_NUM" />
+			<result property="createTime" column="CREATE_TIME" />
+			<result property="updateTime" column="UPDATE_TIME" />
+			<result property="transferTypeCd" column="TRANSFER_TYPE_CD" />
+			<result property="transferWay" column="TRANSFER_WAY" />
+			<result property="isKeepBusinessPower" column="IS_KEEP_BUSINESS_POWER" />
+			<result property="transPerson" column="TRANS_PERSON" />
+			<result property="partyId" column="PARTY_ID" />
+			<result property="partyName" column="PARTY_NAME" />
+			<result property="partyNum" column="PARTY_NUM" />
+			<result property="appStatus" column="APP_STATUS" />
+			<result property="approvalNum" column="APPROVAL_NUM" />
+			<result property="approveId" column="APPROVE_ID" />
+			<result property="contractId" column="CONTRACT_ID" />
+			<result property="currencyCd" column="CURRENCY_CD" />
+			<result property="creditAmt" column="CREDIT_AMT" />
+			<result property="availableAmt" column="AVAILABLE_AMT" />
+	</resultMap>
+	<!--业务移交历史记录；流程中展示的移交业务的列表-->
+    <select id="businessMoveHistory" parameterClass="java.util.HashMap" resultMap="con">
+	SELECT distinct T.TRANSFER_ID,
+	       T.ORIGINAL_USER_NUM,
+	       T1.MANAGEMENT_TEAM_ID,
+	       T1.CONTRACT_ID,
+	       T.USER_ID,
+	       T.ORIGINAL_ORG_NUM,
+	       T.ORG_ID,
+	       T.HANDLING_USER_NUM,
+	       T.HANDLING_ORG_NUM,
+	       T.CREATE_TIME,
+	       T.UPDATE_TIME,
+	       T.TRANSFER_TYPE_CD,
+	       T.TRANSFER_WAY,
+	       T.IS_KEEP_BUSINESS_POWER,
+	       T.TRANS_PERSON,
+	       T.APP_STATUS,
+	       V.PARTY_ID,
+	       V.PARTY_NAME,
+	       V.PARTY_NUM,
+	       V2.APPROVAL_NUM,
+	       V2.APPROVE_ID,
+	       V2.CURRENCY_CD,
+	       V2.CREDIT_AMT,
+	       V2.AVAILABLE_AMT
+	  FROM TB_CSM_CON_LIST T1
+	  JOIN TB_CSM_TRANSFER T ON T1.TRANSFER_ID = T.TRANSFER_ID
+	  JOIN (SELECT T.APPROVE_ID,
+	  			   T.APPROVAL_NUM,
+	               T.ORG_NUM,
+	               V.PARTY_NAME,
+	               TA.CURRENCY_CD,
+	               ta.CREDIT_AMOUNT as CREDIT_AMT,
+	               ta.CREDIT_AVI as AVAILABLE_AMT,
+	               V.PARTY_ID
+	          FROM TB_BIZ_APPROVE               T,
+	               TB_BIZ_AMOUNT_APPROVE        TA,
+	               TB_BIZ_AMOUNT_DETAIL_APPROVE TB,
+	               V_CSM_PARTY                  V
+	         WHERE T.APPROVE_ID = TA.APPROVE_ID
+	           AND TA.AMOUNT_ID = TB.AMOUNT_ID
+	           AND T.PARTY_ID = V.PARTY_ID) V2
+	    ON V2.APPROVE_ID = T1.CONTRACT_ID
+	  JOIN V_CSM_PARTY V ON V.PARTY_ID = V2.PARTY_ID
+	  join  OM_ORGANIZATION O  on o.orgcode=t.handling_org_num
+	 WHERE T.TRANSFER_TYPE_CD = '2'
+	 <isNotNull property="approveId">  AND T1.CONTRACT_ID = #approveId# </isNotNull>
+	 <isNotNull property="id">  AND T.TRANSFER_ID = #id# </isNotNull>
+	 <isNotNull property="userNum">  AND T.HANDLING_USER_NUM = #userNum# </isNotNull>
+	 <isNotNull property="orgNum">  and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#)  </isNotNull>
+	 <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+	 <isNotNull property="partyTypeCd">  AND V.PARTY_TYPE_CD = #partyTypeCd# </isNotNull>
+	 <isNotNull property="certType">  AND V.CERT_TYPE = #certType# </isNotNull>
+	 <isNotNull property="certNum">  AND V.CERT_NUM LIKE '%$certNum$%' </isNotNull>
+	 <isNotNull property="approvalNum">  AND V2.APPROVAL_NUM =#approvalNum# </isNotNull>
+    </select>
+    
+    <select id="checkRights" parameterClass="java.util.HashMap">
+	SELECT * FROM TB_CSM_MANAGEMENT_TEAM T 
+	WHERE T.PARTY_ID = #partyId# 
+	AND T.ORG_NUM = #orgNum# 
+	AND T.USER_NUM = #userNum#
+	</select>
+    
+    <resultMap id="approve" class="java.util.HashMap">
+			<result property="approveId" column="APPROVE_ID"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="approvalNum" column="APPROVAL_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="creditAmt" column="CREDIT_AMT"/>
+			<result property="availableAmt" column="AVAILABLE_AMT"/>
+	</resultMap>
+    <select id="approveList" parameterClass="java.util.HashMap" resultMap="approve">
+		SELECT distinct T.APPROVE_ID,
+		           T.ORG_NUM,
+		           T.APPROVAL_NUM,
+		           V.PARTY_ID,
+		           V.PARTY_NAME,
+		           V.CERT_TYPE,
+				   V.CERT_NUM,
+				   T.user_Num,
+				   T.ORG_NUM,
+		           TA.CURRENCY_CD,
+		           ta.CREDIT_AMOUNT as CREDIT_AMT,
+		           ta.CREDIT_AVI AVAILABLE_AMT
+		      FROM TB_BIZ_APPROVE               T,
+		           TB_BIZ_AMOUNT_APPROVE        TA,
+		           TB_BIZ_AMOUNT_DETAIL_APPROVE TB,
+		           V_CSM_PARTY                  V
+		     WHERE T.APPROVE_ID = TA.APPROVE_ID
+		       AND TA.AMOUNT_ID = TB.AMOUNT_ID
+		       AND T.PARTY_ID = V.PARTY_ID
+		       AND T.USER_NUM = #userNum#
+  			   AND T.ORG_NUM = #orgNum#
+		    <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		    <isNotNull property="partyNum">  AND V.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		    <isNotNull property="partyTypeCd">
+		    	and V.PARTY_TYPE_CD like  '%$partyTypeCd$%'
+		    </isNotNull>
+		    <isNotNull property="certType">
+		    	and V.CERT_TYPE like  '%$certType$%'
+		    </isNotNull>
+		    <isNotNull property="certNum">
+		    	and V.CERT_NUM like  '%$certNum$%'
+		    </isNotNull>
+		    <isNotNull property="middleCode">
+		    	and V.MIDDLE_CODE like  '%$middleCode$%'
+		    </isNotNull>
+    </select>
+    
+	<resultMap id="businessMoveAllList" class="java.util.HashMap">
+			<result property="approveId" column="APPROVE_ID"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+	</resultMap>
+    <!--查询可以全部移交的业务-->
+    <select id="businessMoveAllList" parameterClass="java.util.HashMap" resultMap="businessMoveAllList">
+select distinct T.APPROVE_ID,
+                T.user_Num,
+                T.ORG_NUM,
+                t.party_id,
+                p.party_name,
+                p.party_num
+  from TB_BIZ_APPROVE t, tb_csm_party p
+ where t.party_id = p.party_id
+   and t.user_num = #oldUserNum#
+   and t.org_num = #oldOrgNum#
+    </select>
+     <resultMap id="businessMoveList" class="java.util.HashMap">
+			<result property="approveId" column="APPROVE_ID"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="approvalNum" column="APPROVAL_NUM"/>
+			<result property="partyName" column="PARTY_NAME"/>
+			<result property="partyId" column="PARTY_ID"/>
+			<result property="partyNum" column="PARTY_NUM"/>
+			<result property="certType" column="CERT_TYPE"/>
+			<result property="certNum" column="CERT_NUM"/>
+			<result property="userNum" column="USER_NUM"/>
+			<result property="orgNum" column="ORG_NUM"/>
+			<result property="currencyCd" column="CURRENCY_CD"/>
+			<result property="creditAmt" column="CREDIT_AMT"/>
+			<result property="availableAmt" column="AVAILABLE_AMT"/>
+			<result property="creditUsed" column="CREDIT_USED"/>
+			<result property="middleCode" column="MIDDLE_CODE"/>
+	</resultMap>
+    <!--待部分移交的业务列表-->
+    <select id="businessMoveList" parameterClass="java.util.HashMap" resultMap="businessMoveList">
+		SELECT DISTINCT T.APPROVE_ID,
+		           T.ORG_NUM,
+		           T.APPROVAL_NUM,
+		           V.PARTY_ID,
+		           V.party_num,
+		           V.PARTY_NAME,
+		           V.CERT_TYPE,
+				   V.CERT_NUM,
+				   T.USER_NUM,
+				   T.ORG_NUM,
+		           TA.CURRENCY_CD,
+		           ta.CREDIT_AMOUNT as CREDIT_AMT,
+		           ta.CREDIT_AVI as AVAILABLE_AMT,
+		           ta.CREDIT_USED ,
+		           V.MIDDLE_CODE
+		      FROM TB_BIZ_APPROVE               T,
+		           TB_BIZ_AMOUNT_APPROVE        TA,
+		           TB_BIZ_AMOUNT_DETAIL_APPROVE TB,
+		           V_CSM_PARTY                  V,
+		          OM_ORGANIZATION O
+		     WHERE T.APPROVE_ID = TA.APPROVE_ID
+		       AND TA.AMOUNT_ID = TB.AMOUNT_ID
+		       AND T.PARTY_ID = V.PARTY_ID
+		       AND O.ORGCODE=T.ORG_NUM
+		       AND T.BECOME_EFFECTIVE_MARK IN ('03','05','07','08')
+		    <isNotNull property="userNum">   AND T.USER_NUM = #userNum#</isNotNull>
+  			<isNotNull property="orgNum">  and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#) </isNotNull>
+		    <isNotNull property="partyName">  AND V.PARTY_NAME LIKE '%$partyName$%' </isNotNull>
+		    <isNotNull property="partyNum">  AND V.PARTY_NUM LIKE '%$partyNum$%' </isNotNull>
+		    <isNotNull property="partyTypeCd">and V.PARTY_TYPE_CD like  '%$partyTypeCd$%'</isNotNull>
+		    <isNotNull property="certType">and V.CERT_TYPE like  '%$certType$%'</isNotNull>
+		    <isNotNull property="certNum">and V.CERT_NUM like  '%$certNum$%'</isNotNull>
+		    <isNotNull property="middleCode">and V.MIDDLE_CODE like  '%$middleCode$%'</isNotNull>
+		   	<isNotNull property="approvalNum">  AND T.APPROVAL_NUM LIKE '%$approvalNum$%' </isNotNull>
+		    order by t.org_num,t.user_num
+    </select>
+  <resultMap class="java.util.HashMap" id="customerMoveList">
+        <result column="PARTY_ID" javaType="string" property="partyId"/>
+        <result column="PARTY_NUM" javaType="string" property="partyNum"/>
+        <result column="PARTY_NAME" javaType="string" property="partyName"/>
+        <result column="CERT_TYPE" javaType="string" property="certType"/>
+        <result column="CERT_NUM" javaType="string" property="certNum"/>
+        <result column="USER_NUM" javaType="string" property="userNum"/>
+         <result column="ORG_NUM" javaType="string" property="orgNum"/>
+        <result column="USER_PLACING_CD" javaType="string" property="userPlacingCd"/>
+        <result column="MANAGEMENT_TEAM_ID" javaType="string" property="managementTeamId"/>
+        <result column="MIDDLE_CODE" javaType="string" property="middleCode"/>
+    </resultMap>  
+        <!--可以移交的客户-->
+    <select id="customerMoveList" parameterClass="java.util.HashMap" resultMap="customerMoveList">
+		SELECT distinct T1.PARTY_ID,
+		       T1.PARTY_NUM,
+		       T1.PARTY_NAME,
+		       T2.USER_NUM,
+		       T2.ORG_NUM,
+		       T2.USER_PLACING_CD,
+		       T2.MANAGEMENT_TEAM_ID,
+		       T1.PARTY_TYPE_CD,
+		       T1.CERT_TYPE,
+		       T1.CERT_NUM,
+		       T1.MIDDLE_CODE
+		  FROM  TB_CSM_MANAGEMENT_TEAM T2, V_CSM_PARTY T1, OM_ORGANIZATION O
+		 WHERE T1.PARTY_ID = T2.PARTY_ID
+		   AND T2.USER_PLACING_CD = '01'
+		    AND O.ORGCODE=T2.ORG_NUM
+	    <isNotNull property="orgNum">and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#)</isNotNull>
+	    <isNotNull property="userNum">and t2.USER_NUM= #userNum#</isNotNull>	   
+		<isNotNull property="partyName">and t1.PARTY_NAME like  '%$partyName$%'</isNotNull>
+	   	<isNotNull property="partyTypeCd">and T1.PARTY_TYPE_CD like  '%$partyTypeCd$%'</isNotNull>
+	  	<isNotNull property="certType">and T1.CERT_TYPE like  '%$certType$%'</isNotNull>
+	   	<isNotNull property="certNum">and T1.CERT_NUM like  '%$certNum$%'</isNotNull>
+	   	<isNotNull property="middleCode">and T1. MIDDLE_CODE like  '%$middleCode$%'</isNotNull>
+	   		order by t2.org_num,t2.user_num
+    </select>     
+    <!--可以共享的客户-->
+    <select id="customerShareList" parameterClass="java.util.HashMap" resultMap="customerMoveList">
+	SELECT distinct T1.PARTY_ID,
+		       T1.PARTY_NUM,
+		       T1.PARTY_NAME,
+		       T2.USER_NUM,
+		       T2.ORG_NUM,
+		       T2.USER_PLACING_CD,
+		       T2.MANAGEMENT_TEAM_ID,
+		       T1.PARTY_TYPE_CD,
+		       T1.CERT_TYPE,
+		       T1.CERT_NUM,
+		       T1.MIDDLE_CODE
+		  FROM  TB_CSM_MANAGEMENT_TEAM T2, V_CSM_PARTY T1, OM_ORGANIZATION O
+		 WHERE T1.PARTY_ID = T2.PARTY_ID
+		   AND T2.USER_PLACING_CD = '01'
+		   and t1.party_type_cd in('01','02','05')
+		    AND O.ORGCODE=T2.ORG_NUM
+	     <isNotNull property="orgNum">and  o.orgseq like (select '%.'||orgid||'.%'  from OM_ORGANIZATION where orgcode=#orgNum#)</isNotNull>
+	    <isNotNull property="userNum">and t2.USER_NUM= #userNum#</isNotNull>	   
+		<isNotNull property="partyName">and t1.PARTY_NAME like  '%$partyName$%'</isNotNull>
+	   	<isNotNull property="partyTypeCd">and T1.PARTY_TYPE_CD like  '%$partyTypeCd$%'</isNotNull>
+	  	<isNotNull property="certType">and T1.CERT_TYPE like  '%$certType$%'</isNotNull>
+	   	<isNotNull property="certNum">and T1.CERT_NUM like  '%$certNum$%'</isNotNull>
+	   	<isNotNull property="middleCode">and T1. MIDDLE_CODE like  '%$middleCode$%'</isNotNull>
+	   		order by t2.org_num,t2.user_num
+    </select> 
+    
+    
+    <!--批复下的合同借据批复移交-->
+	<procedure id="movebusiness" parameterClass="java.util.Map">
+		<![CDATA[
+		call CSM_BUSINESS_MOVE(#contractId#,#userId#,#orgId#,#originalUserNum#,#originalOrgNum#,#transferWay#)
+		]]>
+	</procedure>
+	
+	<!--add by shangmf:查询出批复ID下的押品-->
+	<resultMap id="collList" class="java.util.HashMap">
+			<result property="surety_no" column="surety_no"/>
+	</resultMap>
+    <select id="collListbyApplyId" parameterClass="java.util.HashMap" resultMap="collList">
+	 select m.surety_no
+     from tb_biz_grt_rel b, tb_biz_approve t,tb_grt_mortgage_basic m
+     where b.apply_id = t.apply_id and b.surety_id = m.surety_id     
+	    <isNotNull property="approveId">and t.approve_id = #approveId#</isNotNull>	   
+    </select> 
+	
+	    <!--取消业务权-->
+	<delete id="deleBizRight" parameterClass="java.util.Map">
+		delete from tb_csm_management_team 
+		where party_id=#partyId# and user_num=#originalUserNum# and org_num=#originalOrgNum#
+		and user_placing_cd='02'
+	</delete>
+	<!--批复下 对应客户经理 机构 并且状态是 未提交 的合同-->
+	<select id="checkContractList" parameterClass="java.util.HashMap" resultMap="approve">
+		SELECT T.CONTRACT_ID
+	      FROM TB_CON_CONTRACT_INFO T
+	     WHERE T.AMOUNT_DETAIL_ID in
+	           (SELECT TC.AMOUNT_DETAIL_ID
+	              FROM TB_BIZ_APPROVE               TA,
+	                   TB_BIZ_AMOUNT_APPROVE        TB,
+	                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+	             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+	               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+	               AND TB.APPROVE_ID = #approveId#)
+	       AND T.USER_NUM = #userNum#
+	       AND T.ORG_NUM = #orgCode#
+	       AND T.CON_STATUS IN ('01','02')
+    </select>
+    <!--批复下 对应客户经理 机构 并且状态是 未提交 在途的放款-->
+	<select id="checkLoanList" parameterClass="java.util.HashMap" resultMap="approve">
+		SELECT T.CONTRACT_ID
+	      FROM TB_CON_CONTRACT_INFO T,TB_LOAN_INFO L
+	     WHERE T.AMOUNT_DETAIL_ID in
+	           (SELECT TC.AMOUNT_DETAIL_ID
+	              FROM TB_BIZ_APPROVE               TA,
+	                   TB_BIZ_AMOUNT_APPROVE        TB,
+	                   TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+	             WHERE TA.APPROVE_ID = TB.APPROVE_ID
+	               AND TB.AMOUNT_ID = TC.AMOUNT_ID
+	               AND TB.APPROVE_ID = #approveId#)
+	       AND T.USER_NUM = #userNum#
+	       AND T.ORG_NUM = #orgCode#
+	       AND T.CONTRACT_ID = L.CONTRACT_ID
+	       AND L.LOAN_STATUS IN ('01','02')
+    </select>
+    
+    <!--add by ZHOUXU:查询出批复ID下对应客户经理 机构 的借据编号 并且合同是已生效 借据 非结清 -->
+	<resultMap id="summaryNumList" class="java.util.HashMap">
+			<result property="SUMMARY_NUM" column="SUMMARY_NUM"/>
+			<result property="LOAN_ID" column="LOAN_ID"/>
+	</resultMap>
+    <select id="summaryNumListbyApplyId" parameterClass="java.util.HashMap" resultMap="summaryNumList">
+	  SELECT TL.SUMMARY_NUM,TL.LOAN_ID FROM TB_LOAN_SUMMARY TL WHERE TL.CONTRACT_ID IN
+	(SELECT T.CONTRACT_ID
+                     FROM TB_CON_CONTRACT_INFO T
+                    WHERE T.AMOUNT_DETAIL_ID IN
+                          (SELECT TC.AMOUNT_DETAIL_ID
+                             FROM TB_BIZ_APPROVE               TA,
+                                  TB_BIZ_AMOUNT_APPROVE        TB,
+                                  TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+                            WHERE TA.APPROVE_ID = TB.APPROVE_ID
+                              AND TB.AMOUNT_ID = TC.AMOUNT_ID
+                              AND TB.APPROVE_ID = #approveId#)
+	       AND T.USER_NUM = #userNum#
+	       AND T.ORG_NUM = #orgCode# AND T.CON_STATUS='03' ) AND TL.SUMMARY_STATUS_CD !='04'    
+    </select> 
+    
+    <!--add by ZHOUXU:查询出批复ID下对应客户经理 机构 的开户机构 并且合同是已生效 -->
+	<resultMap id="loanOrg" class="java.util.HashMap">
+			<result property="loan_org" column="LOAN_ORG"/>
+	</resultMap>
+    <select id="SelectLoanOrg" parameterClass="java.util.HashMap" resultMap="loanOrg">
+	select distinct ti.loan_org from tb_loan_info  ti where ti.contract_id in
+	(SELECT distinct T.CONTRACT_ID
+                     FROM TB_CON_CONTRACT_INFO T
+                    WHERE T.AMOUNT_DETAIL_ID IN
+                          (SELECT TC.AMOUNT_DETAIL_ID
+                             FROM TB_BIZ_APPROVE               TA,
+                                  TB_BIZ_AMOUNT_APPROVE        TB,
+                                  TB_BIZ_AMOUNT_DETAIL_APPROVE TC
+                            WHERE TA.APPROVE_ID = TB.APPROVE_ID
+                              AND TB.AMOUNT_ID = TC.AMOUNT_ID
+                              AND TB.APPROVE_ID = #approveId#)
+	       AND T.USER_NUM = #userNum#
+	       AND T.ORG_NUM = #orgCode# AND T.CON_STATUS='03' ) 
+    </select> 
+    
+    <resultMap id="searchCsmxfe" class="java.util.HashMap">
+		<result property="transferId" column="TRANSFER_ID"/>
+		<result property="processId" column="PROCESS_ID"/>
+		<result property="createTime" column="CREATE_TIME"/>
+		<result property="transferType" column="TRANSFER_TYPE"/>
+		<result property="keepCsm" column="KEEP_CSM"/>
+		<result property="xfeBiz" column="XFE_BIZ"/>
+		<result property="xfeAcct" column="XFE_ACCT"/>
+		<result property="newLoanOrg" column="NEW_LOAN_ORG"/>
+		<result property="userId" column="USER_ID"/>
+		<result property="status" column="STATUS"/>
+		<result property="oldOrgId" column="OLD_ORG_ID"/>
+		<result property="oldUserId" column="OLD_USER_ID"/>
+		<result property="newOrgId" column="NEW_ORG_ID"/>
+		<result property="newUserId" column="NEW_USER_ID"/>
+	</resultMap>
+    
+    <select id="searchCsmxfe" parameterClass="java.util.HashMap" resultMap="searchCsmxfe">
+SELECT * FROM TB_CSMXFE_TRANSFER WHERE 1=1
+<isNotNull property="transferId">AND TRANSFER_ID=#transferId#</isNotNull>
+<isNotNull property="transferType">AND TRANSFER_TYPE=#transferType#</isNotNull>
+<isNotNull property="userId">AND USER_ID=#userId#</isNotNull>
+<isNotNull property="orgId">AND ORG_ID=#orgId#</isNotNull>
+<isNotNull property="status">AND STATUS=#status#</isNotNull>
+ORDER BY CREATE_TIME DESC
+    </select> 
+    
+    <insert id="insertCsmxfeParty" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_PARTY(TRANSFER_ID,PARTY_ID,OLD_USER_ID,STATUS,ACTIVE) 
+SELECT #transferId#,#partyId#,#userNum#,'0','0' FROM DUAL WHERE 
+NOT EXISTS (SELECT TRANSFER_ID FROM TB_CSMXFE_PARTY WHERE TRANSFER_ID=#transferId# AND PARTY_ID=#partyId#)
+    </insert>
+    <insert id="insertCsmxfePartyByUser" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_PARTY(TRANSFER_ID,PARTY_ID,OLD_USER_ID,STATUS,ACTIVE) 
+SELECT #transferId#,PARTY_ID,#userNum#,'0','0' FROM TB_CSM_MANAGEMENT_TEAM t WHERE USER_NUM=#userNum# AND ORG_NUM=#orgNum#
+AND NOT EXISTS (SELECT TRANSFER_ID FROM TB_CSMXFE_PARTY x WHERE TRANSFER_ID=#transferId# AND t.PARTY_ID=x.PARTY_ID)
+    </insert>
+    <update id="updateCsmxfeParty" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_PARTY p SET STATUS='1' WHERE TRANSFER_ID=#transferId# AND PARTY_ID=#partyId# AND STATUS='0'	
+	</update>
+    <update id="activeCsmxfeParty" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_PARTY p SET ACTIVE='1' WHERE TRANSFER_ID=#transferId# AND ACTIVE='0' AND 
+NOT EXISTS (SELECT PARTY_ID FROM TB_CSMXFE_APPROVE a WHERE TRANSFER_ID=#transferId# AND a.PARTY_ID=p.PARTY_ID AND NVL(ACTIVE,'0') = '0')	
+	</update>
+    <delete id="removeCsmxfeParty" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSMXFE_PARTY WHERE TRANSFER_ID=#transferId# 
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="userNum">AND OLD_USER_ID=#userNum#</isNotNull>
+AND STATUS = '0'
+    </delete>
+    <select id="getApproveId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT APPROVE_ID FROM TB_CSMXFE_APPROVE WHERE TRANSFER_ID=#transferId# 
+<isNotNull property="approveId">AND APPROVE_ID=#approveId#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="userNum">AND OLD_USER_ID=#userNum#</isNotNull>
+<isNotNull property="orgNum">AND OLD_ORG_ID=#orgNum#</isNotNull>
+<isNotNull property="status">AND STATUS=#status#</isNotNull>
+    </select>
+    <select id="getApproveIdToInsert" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT DISTINCT APPROVE_ID FROM TB_BIZ_APPROVE WHERE 1=1
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull> 
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="orgNum">AND ORG_NUM=#orgNum#</isNotNull>
+    </select> 
+    <insert id="insertCsmxfeApprove" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_APPROVE(TRANSFER_ID,PARTY_ID,APPROVE_ID,OLD_USER_ID,OLD_ORG_ID,STATUS,ACTIVE)
+SELECT #transferId#,PARTY_ID,APPROVE_ID,USER_NUM,ORG_NUM,'0','0' FROM TB_BIZ_APPROVE WHERE APPROVE_ID=#approveId#
+    </insert>
+    <update id="activeCsmxfeApprove" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_APPROVE a SET ACTIVE='1' WHERE TRANSFER_ID=#transferId# AND ACTIVE='0' AND 
+NOT EXISTS (SELECT APPROVE_ID FROM TB_CSMXFE_CONTRACT c WHERE TRANSFER_ID=#transferId# AND a.APPROVE_ID=c.APPROVE_ID AND NVL(ACTIVE,'0') = '0')
+	</update>
+    <delete id="removeCsmxfeApprove" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSMXFE_APPROVE WHERE TRANSFER_ID=#transferId# 
+<isNotNull property="approveId">AND APPROVE_ID=#approveId#</isNotNull>
+<isNotNull property="userNum">AND OLD_USER_ID=#userNum#</isNotNull>
+AND STATUS='0'
+    </delete>
+
+    <insert id="insertCsmxfeContract" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_CONTRACT(TRANSFER_ID,CONTRACT_ID,APPROVE_ID,STATUS,ACTIVE)
+SELECT DISTINCT #transferId#,c.CONTRACT_ID,aa.APPROVE_ID,'0','0' FROM TB_BIZ_AMOUNT_APPROVE aa 
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON aa.AMOUNT_ID=ad.AMOUNT_ID
+INNER JOIN TB_CON_CONTRACT_INFO c ON ad.amount_detail_id = c.AMOUNT_DETAIL_ID
+WHERE aa.APPROVE_ID=#approveId# 
+    </insert>
+    <update id="activeCsmxfeContract" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_CONTRACT c SET ACTIVE='1' WHERE TRANSFER_ID=#transferId# AND ACTIVE='0' AND 
+NOT EXISTS (SELECT CONTRACT_ID FROM TB_CSMXFE_SUMMARY s WHERE TRANSFER_ID=#transferId# AND c.CONTRACT_ID=s.CONTRACT_ID AND NVL(ACTIVE,'0') = '0')
+	</update>
+    <delete id="removeCsmxfeContract" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSMXFE_CONTRACT WHERE TRANSFER_ID =#transferId# AND STATUS='0' AND 
+NOT EXISTS(SELECT APPROVE_ID FROM TB_CSMXFE_APPROVE WHERE TRANSFER_ID=#transferId# AND TB_CSMXFE_CONTRACT.APPROVE_ID=TB_CSMXFE_APPROVE.APPROVE_ID)
+    </delete>
+    
+    <insert id="insertCsmxfeSummary" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_SUMMARY(TRANSFER_ID,CONTRACT_ID,LOAN_ID,SUMMARY_ID,OLD_LOAN_ORG,STATUS,ACTIVE)
+SELECT DISTINCT #transferId#,xc.CONTRACT_ID,li.LOAN_ID,ls.SUMMARY_ID,li.LOAN_ORG,'0','0' FROM TB_CSMXFE_CONTRACT xc
+INNER JOIN TB_LOAN_INFO li ON li.CONTRACT_ID=xc.CONTRACT_ID
+INNER JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+WHERE xc.TRANSFER_ID=#transferId# AND xc.APPROVE_ID=#approveId# 
+    </insert>
+    <update id="activeCsmxfeSummary" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_SUMMARY SET ACTIVE='1' WHERE TRANSFER_ID=#transferId# AND ACTIVE='0' AND 
+SUMMARY_ID IN(SELECT SUMMARY_ID FROM TB_LOAN_SUMMARY where SUMMARY_NUM=#summaryNum#) 
+	</update>
+    <delete id="removeCsmxfeSummary" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSMXFE_SUMMARY WHERE TRANSFER_ID=#transferId# AND STATUS='0'
+AND NOT EXISTS(SELECT APPROVE_ID FROM TB_CSMXFE_CONTRACT WHERE TRANSFER_ID=#transferId# AND TB_CSMXFE_CONTRACT.CONTRACT_ID=TB_CSMXFE_SUMMARY.CONTRACT_ID)  
+	</delete>
+    
+    <select id="getSuretyToSubmit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT DISTINCT gm.SURETY_NO,xa.OLD_ORG_ID,xa.OLD_USER_ID,NVL(xt.NEW_ORG_ID,xa.OLD_ORG_ID)NEW_ORG_ID,
+NVL(xt.NEW_USER_ID,xa.OLD_USER_ID)NEW_USER_ID,xs.SURETY_ID,xs.SUBCONTRACT_ID
+FROM TB_CSMXFE_SUBCONTRACT xs
+INNER JOIN TB_CSMXFE_CONTRACT xc ON xs.TRANSFER_ID=xc.TRANSFER_ID AND xs.CONTRACT_ID=xc.CONTRACT_ID
+INNER JOIN TB_CSMXFE_APPROVE xa ON xa.TRANSFER_ID=xs.TRANSFER_ID AND xa.APPROVE_ID=xc.APPROVE_ID
+INNER JOIN TB_CSMXFE_TRANSFER xt ON xt.TRANSFER_ID = xs.TRANSFER_ID
+INNER JOIN TB_GRT_MORTGAGE_BASIC gm ON gm.SURETY_ID=xs.SURETY_ID
+WHERE xs.TRANSFER_ID=#transferId# AND xs.CALL_WSDL='0' AND xs.STATUS='0'
+    </select>
+    <insert id="insertCsmxfeSubcontract" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSMXFE_SUBCONTRACT(TRANSFER_ID,CONTRACT_ID,SUBCONTRACT_ID,SURETY_ID,STATUS,CALL_WSDL,ACTIVE)
+SELECT DISTINCT #transferId#,xc.CONTRACT_ID,sr.SUBCONTRACT_ID,csgr.SURETY_ID,'0','0','0' FROM TB_CSMXFE_CONTRACT xc 
+INNER JOIN TB_CON_SUBCONTRACT_REL sr ON xc.CONTRACT_ID=sr.CONTRACT_ID
+INNER JOIN TB_CON_SUB_GRT_REL csgr ON csgr.SUBCONTRACT_ID=sr.SUBCONTRACT_ID
+WHERE xc.TRANSFER_ID=#transferId# AND xc.APPROVE_ID=#approveId#
+AND NOT EXISTS(SELECT x.SUBCONTRACT_ID FROM TB_CSMXFE_SUBCONTRACT x WHERE x.TRANSFER_ID=#transferId# AND x.SURETY_ID=csgr.SURETY_ID AND x.SUBCONTRACT_ID=sr.SUBCONTRACT_ID )
+    </insert>
+    <update id="updateCsmxfeSubcontract" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_SUBCONTRACT SET CALL_WSDL='1' WHERE TRANSFER_ID=#transferId# AND SUBCONTRACT_ID=#subcontractId# AND SURETY_ID=#suretyId#  
+	</update>
+	<update id="activeCsmxfeSubcontract" parameterClass="java.util.HashMap">
+UPDATE TB_CSMXFE_SUBCONTRACT s SET ACTIVE='1' WHERE TRANSFER_ID=#transferId# AND ACTIVE='0' AND 
+NOT EXISTS(SELECT CONTRACT_ID FROM TB_CSMXFE_CONTRACT c WHERE TRANSFER_ID=#transferId# AND s.CONTRACT_ID=c.CONTRACT_ID AND NVL(ACTIVE,'0') = '0')
+	</update>
+    <delete id="removeCsmxfeSubcontract" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSMXFE_SUBCONTRACT WHERE TRANSFER_ID=#transferId# AND STATUS='0' AND CALL_WSDL='0'
+AND NOT EXISTS(SELECT APPROVE_ID FROM TB_CSMXFE_CONTRACT WHERE TRANSFER_ID=#transferId# AND TB_CSMXFE_CONTRACT.CONTRACT_ID=TB_CSMXFE_SUBCONTRACT.CONTRACT_ID)  
+	</delete>
+	
+	<select id="validAplusSplitReq" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT REQ_DATE FROM aplus.TB_SUP_SPLIT_REQ where RCV_DATE=#RCV_DATE# and REQ_DATE=#RCV_DATE#
+    </select>
+	<select id="validAplusSplitDue" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT FLAG FROM TB_SUP_SPLIT_DUE WHERE RCV_DATE=#RCV_DATE# AND DUE_NUM=#DUE_NUM#
+    </select>
+	<select id="getAplusSplitDue" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT DUE_NUM FROM TB_SUP_SPLIT_DUE WHERE RCV_DATE=#rcvDate# AND FLAG='2'
+    </select>
+    <insert id="insertAplusSplitDue" parameterClass="java.util.HashMap">
+INSERT INTO TB_SUP_SPLIT_DUE (RCV_DATE,LEG_PER_COD,ORG_DEP_COD,ORG_DEP,ORG_DEP_SPR,DUE_NUM,NOW_DEP_COD,NOW_DEP_OBJ,NOW_DEP_OBJ_SPR,FLAG)
+values(#RCV_DATE#,#LEG_PER_COD#,#ORG_DEP_COD#,#ORG_DEP#,#ORG_DEP_SPR#,#DUE_NUM#,#NOW_DEP_COD#,#NOW_DEP_OBJ#,#NOW_DEP_OBJ_SPR#,#FLAG#)
+    </insert>
+    <delete id="removeAplusSplitDue" parameterClass="java.util.HashMap">
+DELETE FROM TB_SUP_SPLIT_DUE WHERE RCV_DATE=#RCV_DATE# AND DUE_NUM=#DUE_NUM# AND FLAG='0'
+    </delete>
+
+    <select id="getSummaryToSubmit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT ls.SUMMARY_NUM,xs.OLD_LOAN_ORG FROM TB_CSMXFE_SUMMARY xs
+INNER JOIN TB_CSMXFE_CONTRACT xc ON xs.TRANSFER_ID=xc.TRANSFER_ID AND xs.CONTRACT_ID=xc.CONTRACT_ID
+INNER JOIN TB_LOAN_SUMMARY ls ON xs.SUMMARY_ID=ls.SUMMARY_ID
+WHERE xs.TRANSFER_ID=#transferId# AND xs.STATUS='0'
+    </select>
+    
+    <select id="getUserToSubmit" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT xp.OLD_USER_ID USER_NUM,xt.OLD_ORG_ID ORG_NUM,xp.PARTY_ID,NVL(t.USER_PLACING_CD,'02')USER_PLACING_CD FROM TB_CSMXFE_PARTY xp
+INNER JOIN TB_CSMXFE_TRANSFER xt on xt.TRANSFER_ID=xp.TRANSFER_ID
+LEFT JOIN TB_CSM_MANAGEMENT_TEAM t ON xp.OLD_USER_ID=t.USER_NUM AND xt.OLD_ORG_ID=t.ORG_NUM AND xp.PARTY_ID = t.PARTY_ID
+WHERE xt.TRANSFER_ID=#transferId# AND xp.STATUS='0'
+    </select>
+    <select id="validManagement" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT MANAGEMENT_TEAM_ID FROM TB_CSM_MANAGEMENT_TEAM WHERE PARTY_ID=#PARTY_ID# AND USER_NUM=#newUserNum# AND ORG_NUM=#newOrgNum# 
+    </select>
+    <insert id="insertManagement" parameterClass="java.util.HashMap">
+INSERT INTO TB_CSM_MANAGEMENT_TEAM(MANAGEMENT_TEAM_ID,USER_NUM,USER_PLACING_CD,STATUS,PARTY_ID,ORG_NUM,CREATE_TIME) 
+VALUES(SYS_GUID(),#newUserNum#,#USER_PLACING_CD#,'01',#PARTY_ID#,#newOrgNum#,SYSDATE) 
+    </insert>
+    <update id="updateManagement" parameterClass="java.util.HashMap">
+UPDATE TB_CSM_MANAGEMENT_TEAM SET USER_PLACING_CD=#USER_PLACING_CD#,STATUS='01'
+WHERE PARTY_ID=#PARTY_ID# AND 
+<isEqual property="updateManagerMode" compareValue="old">USER_NUM=#USER_NUM# AND ORG_NUM=#ORG_NUM#</isEqual>
+<isEqual property="updateManagerMode" compareValue="new">USER_NUM=#newUserNum# AND ORG_NUM=#newOrgNum#</isEqual>
+    </update>
+    <delete id="removeManagement" parameterClass="java.util.HashMap">
+DELETE FROM TB_CSM_MANAGEMENT_TEAM WHERE PARTY_ID=#PARTY_ID# AND USER_NUM=#USER_NUM# AND ORG_NUM=#ORG_NUM#
+    </delete>
+    
+	<select id="getEmpOrgId" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+select * from (
+select EMPID,OPERATORID from OM_EMPLOYEE where USERID=#USER_NUM#
+),(select ORGID from OM_ORGANIZATION where ORGCODE=#ORG_NUM#) where 1=1 
+    </select>
+    
+    <update id="updateEmpOrg" parameterClass="java.util.HashMap">
+UPDATE OM_EMPORG SET ORGID=#newOrgId# WHERE EMPID=#EMPID# and ORGID=#ORGID# AND 
+NOT EXISTS (SELECT * FROM OM_EMPORG WHERE EMPID=#EMPID# AND ORGID=#newOrgId#)
+    </update>
+    <update id="updateEmpPosition" parameterClass="java.util.HashMap">
+UPDATE OM_EMPPOSITION x SET EMPID=#newEmpId#,ORGID=#newOrgId# WHERE EMPID=#EMPID# AND ORGID=#ORGID# AND
+NOT EXISTS(SELECT EMPPOSID FROM OM_EMPPOSITION e WHERE EMPID=#newEmpId# AND ORGID=#newOrgId# AND e.POSITIONID=x.POSITIONID)
+    </update>
+    <update id="updateOperatorRole" parameterClass="java.util.HashMap">s
+UPDATE AC_OPERATORROLE x SET ORGID=#newOrgId# WHERE OPERATORID=#OPERATORID# AND ORGID=#ORGID# AND
+NOT EXISTS(SELECT OPERATORID FROM AC_OPERATORROLE o WHERE OPERATORID=#OPERATORID# AND ORGID=#newOrgId# AND o.ROLEID =x.ROLEID) 
+    </update>
+
+    <select id="getBizInfoByApprove" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT c.CONTRACT_ID,li.LOAN_ORG,ls.SUMMARY_ID,sr.SUBCONTRACT_ID FROM TB_BIZ_AMOUNT_APPROVE aa 
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON aa.AMOUNT_ID=ad.AMOUNT_ID
+LEFT JOIN TB_CON_CONTRACT_INFO c ON ad.amount_detail_id = c.AMOUNT_DETAIL_ID
+LEFT JOIN TB_CON_SUBCONTRACT_REL sr ON c.CONTRACT_ID=sr.CONTRACT_ID
+LEFT JOIN TB_LOAN_INFO li ON li.CONTRACT_ID=c.CONTRACT_ID
+LEFT JOIN TB_LOAN_SUMMARY ls ON li.LOAN_ID=ls.LOAN_ID
+WHERE aa.APPROVE_ID=#approveId#
+    </select> 
+
+	<select id="getPartyInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT p.PARTY_ID,p.PARTY_NAME,a.APPROVE_NUM,
+CASE WHEN pn.PARTY_ID IS NULL THEN '202' ELSE pn.CERT_TYPE END CERT_TYPE,
+CASE WHEN pn.PARTY_ID IS NULL THEN pc.ORG_REGISTER_CD ELSE pn.CERT_NUM END CERT_NUM
+FROM TB_CSMXFE_PARTY xp
+LEFT JOIN TB_CSM_PARTY p on xp.PARTY_ID=p.PARTY_ID
+LEFT JOIN TB_CSM_NATURAL_PERSON pn ON pn.PARTY_ID=p.PARTY_ID
+LEFT JOIN TB_CSM_CORPORATION pc ON pc.PARTY_ID=p.PARTY_ID
+LEFT JOIN (
+SELECT PARTY_ID,COUNT(*) APPROVE_NUM FROM TB_CSMXFE_APPROVE WHERE TRANSFER_ID=#transferId# GROUP BY PARTY_ID
+)a ON p.PARTY_ID=a.PARTY_ID
+WHERE TRANSFER_ID=#transferId#
+<isNotNull property="certNum">
+<isNotEqual property="certType" compareValue="202">AND pn.CERT_NUM=#certNum#</isNotEqual>
+</isNotNull>
+<isNotNull property="middelCode">AND pc.MIDDEL_CODE=#middelCode#</isNotNull>
+<isNotNull property="registerCd">AND pc.REGISTR_CD=#registerCd#</isNotNull>
+<isNotNull property="unifySocietyCreditNum">AND pc.UNIFY_SOCIETY_CREDIT_NUM=#unifySocietyCreditNum#</isNotNull>
+<isNotNull property="certType">
+<isEqual property="certType" compareValue="202">
+<isNotNull property="certNum">AND pc.ORG_REGISTER_CD=#certNum#</isNotNull>
+<isNull property="certNum">AND pc.PARTY_ID IS NOT NULL</isNull>
+</isEqual>
+<isNotEqual property="certType" compareValue="202">AND pn.CERT_TYPE=#certType#</isNotEqual>
+</isNotNull>
+<isNotNull property="partyName">AND p.PARTY_NAME LIKE '%$partyName$%'</isNotNull>
+    </select>
+    
+    <select id="getPartyInfoToSelect" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT p.PARTY_ID,p.PARTY_NUM,p.PARTY_NAME,t.USER_NUM,t.ORG_NUM,b.APPROVE_NUM,
+CASE WHEN pn.PARTY_ID IS NULL THEN '202' ELSE pn.CERT_TYPE END CERT_TYPE,
+CASE WHEN pn.PARTY_ID IS NULL THEN pc.ORG_REGISTER_CD ELSE pn.CERT_NUM END CERT_NUM
+FROM TB_CSM_MANAGEMENT_TEAM t
+INNER JOIN TB_CSM_PARTY p ON t.PARTY_ID= p.PARTY_ID
+LEFT JOIN TB_CSM_NATURAL_PERSON pn ON pn.PARTY_ID=p.PARTY_ID
+LEFT JOIN TB_CSM_CORPORATION pc ON pc.PARTY_ID=p.PARTY_ID
+LEFT JOIN (
+SELECT PARTY_ID,COUNT(*)APPROVE_NUM FROM TB_BIZ_APPROVE GROUP BY PARTY_ID
+)b on b.PARTY_ID=p.PARTY_ID
+WHERE ORG_NUM=#orgNum# AND NOT EXISTS (SELECT PARTY_ID FROM TB_CSMXFE_PARTY x WHERE x.PARTY_ID=t.PARTY_ID AND x.ACTIVE = '0')
+<isNotNull property="certNum">
+<isNotEqual property="certType" compareValue="202">AND pn.CERT_NUM=#certNum#</isNotEqual>
+</isNotNull>
+<isNotNull property="middelCode">AND pc.MIDDEL_CODE=#middelCode#</isNotNull>
+<isNotNull property="registerCd">AND pc.REGISTR_CD=#registerCd#</isNotNull>
+<isNotNull property="unifySocietyCreditNum">AND pc.UNIFY_SOCIETY_CREDIT_NUM=#unifySocietyCreditNum#</isNotNull>
+<isNotNull property="certType">
+<isEqual property="certType" compareValue="202">
+<isNotNull property="certNum">AND pc.ORG_REGISTER_CD=#certNum#</isNotNull>
+<isNull property="certNum">AND pc.PARTY_ID IS NOT NULL</isNull>
+</isEqual>
+<isNotEqual property="certType" compareValue="202">AND pn.CERT_TYPE=#certType#</isNotEqual>
+</isNotNull>
+<isNotNull property="partyName">AND p.PARTY_NAME LIKE '%$partyName$%'</isNotNull>
+ORDER BY p.PARTY_NAME
+    </select>
+
+    <select id="getUserInfo" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT p.OLD_USER_ID,COUNT(p.PARTY_ID) party_num,SUM(NVL(approve_num,0)) approve_num 
+FROM TB_CSMXFE_PARTY p
+LEFT JOIN (
+SELECT PARTY_ID,COUNT(APPROVE_ID)approve_num FROM TB_CSMXFE_APPROVE WHERE TRANSFER_ID = #transferId# GROUP BY PARTY_ID
+) a on p.PARTY_ID=a.PARTY_ID
+WHERE p.TRANSFER_ID = #transferId#
+GROUP BY p.OLD_USER_ID
+    </select>
+    <select id="getUserInfoToSelect" parameterClass="java.util.HashMap" resultClass="java.util.HashMap">
+SELECT #orgNum# ORG_NUM,USER_NUM,COUNT(DISTINCT PARTY_ID)PARTY_NUM FROM TB_CSM_MANAGEMENT_TEAM m WHERE ORG_NUM=#orgNum#
+AND NOT EXISTS(SELECT x.TRANSFER_ID FROM TB_CSMXFE_PARTY x WHERE TRANSFER_ID=#transferId# AND m.PARTY_ID=x.PARTY_ID)
+GROUP BY USER_NUM
+ORDER BY USER_NUM
+    </select>
+	
+	<select id="getApproveInfo" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT a.APPROVE_ID,a.PRODUCT_TYPE,a.BIZ_NUM,aa.CREDIT_TERM,
+aa.CYCLE_UNIT,a.BECOME_EFFECTIVE_MARK,aa.CURRENCY_CD,x.STATUS
+,aa.CREDIT_AMOUNT,aa.MAIN_GUARANTY_TYPE,aa.CREDIT_AVI,aa.CREDIT_USED,a.APPROVAL_NUM,a.USER_NUM,a.ORG_NUM
+FROM TB_CSMXFE_APPROVE x
+INNER JOIN TB_BIZ_APPROVE a ON x.APPROVE_ID=a.APPROVE_ID
+INNER JOIN TB_BIZ_AMOUNT_APPROVE aa ON aa.APPROVE_ID=a.APPROVE_ID
+WHERE x.TRANSFER_ID=#transferId#
+ORDER BY a.BIZ_NUM
+    </select>
+	<select id="getApproveInfoToSelect" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT a.APPROVE_ID,a.PRODUCT_TYPE,a.BIZ_NUM,aa.CREDIT_TERM,aa.CYCLE_UNIT
+,a.BECOME_EFFECTIVE_MARK,aa.CURRENCY_CD
+,aa.CREDIT_AMOUNT,aa.MAIN_GUARANTY_TYPE,aa.CREDIT_AVI,aa.CREDIT_USED,a.APPROVAL_NUM,a.USER_NUM,a.ORG_NUM
+FROM TB_BIZ_APPROVE a
+INNER JOIN TB_BIZ_AMOUNT_APPROVE aa ON aa.APPROVE_ID=a.APPROVE_ID
+WHERE USER_NUM=#userNum# AND ORG_NUM=#orgNum#
+AND NOT EXISTS (SELECT xa.APPROVE_ID FROM TB_CSMXFE_APPROVE xa WHERE a.APPROVE_ID=xa.APPROVE_ID AND xa.ACTIVE = '0')
+ORDER BY a.BIZ_NUM
+	</select>
+    
+    <select id="getContractInfo" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT c.CONTRACT_ID,c.CONTRACT_NUM,to_char(c.CREATE_TIME,'yyyy-mm-dd')CREATE_TIME,c.USER_NUM,c.ORG_NUM,c.CONTRACT_AMT,c.CURRENCY_CD,c.CON_STATUS,
+CONTRACT_TERM,CYCLE_UNIT,to_char(BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,to_char(END_DATE,'yyyy-mm-dd') END_DATE,PRODUCT_TYPE
+FROM TB_CSMXFE_CONTRACT x
+INNER JOIN TB_CON_CONTRACT_INFO c ON x.CONTRACT_ID=c.CONTRACT_ID
+WHERE TRANSFER_ID=#transferId#
+ORDER BY c.BEGIN_DATE
+    </select>
+    
+    <select id="getSummaryInfo" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT ls.SUMMARY_ID,ls.SUMMARY_NUM,ls.CREATE_TIME,ls.USER_NUM,ls.ORG_NUM,ls.SUMMARY_AMT,SUMMARY_STATUS_CD,
+ls.CYCLE_UNIT,to_char(ls.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,to_char(ls.END_DATE,'yyyy-mm-dd') END_DATE,
+li.PRODUCT_TYPE,li.LOAN_ORG,ls.SUMMARY_CURRENCY_CD,ls.SUMMARY_TERM,
+ls.SUMMARY_TERM
+FROM TB_CSMXFE_SUMMARY x
+INNER JOIN TB_LOAN_SUMMARY ls ON ls.SUMMARY_ID=x.SUMMARY_ID
+INNER JOIN TB_LOAN_INFO li ON li.LOAN_ID=ls.LOAN_ID
+WHERE TRANSFER_ID=#transferId#
+ORDER BY ls.BEGIN_DATE
+    </select>
+
+    <select id="getSubcontractInfo" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT cs.SUBCONTRACT_ID,cs.SUBCONTRACT_NUM,cs.SUBCONTRACT_TYPE,cs.SUBCONTRACT_STATUS,cs.IF_TOP_SUBCON,
+to_char(cs.BEGIN_DATE,'yyyy-mm-dd') BEGIN_DATE,to_char(cs.END_DATE,'yyyy-mm-dd') END_DATE,
+cs.SUBCONTRACT_AMT,cs.BZ,cs.USER_NUM,cs.ORG_NUM
+FROM TB_CSMXFE_SUBCONTRACT x
+INNER JOIN TB_CON_SUBCONTRACT cs ON cs.SUBCONTRACT_ID=x.SUBCONTRACT_ID
+WHERE TRANSFER_ID=#transferId#
+    </select>
+    
+	<procedure id="callXfeTransfer" parameterClass="java.util.HashMap">
+{call XFE_TRANSFER (#TRANSFER_ID#,#APPROVE_ID#)}
+	</procedure>
+    
+    <select id="validApply" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT APPLY_ID ID,BIZ_NUM NUM FROM TB_BIZ_APPLY WHERE 1=1
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+AND STATUS_TYPE IN ('01','02','10')
+    </select>
+    <select id="validApprove" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT APPROVE_ID,BIZ_NUM NUM FROM TB_BIZ_APPROVE WHERE 1=1
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+AND BECOME_EFFECTIVE_MARK IN ('01','02','10')
+    </select>
+    <select id="validContract" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT CONTRACT_ID ID,CONTRACT_NUM NUM FROM TB_CON_CONTRACT_INFO WHERE 1=1
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="approveId">AND AMOUNT_DETAIL_ID IN(
+SELECT ad.AMOUNT_DETAIL_ID FROM TB_BIZ_AMOUNT_APPROVE a
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON a.AMOUNT_ID=ad.AMOUNT_ID 
+WHERE a.APPROVE_ID=#approveId#
+)</isNotNull>
+AND CON_STATUS IN ('01','02','10')
+    </select>
+    <select id="validCredit" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT CONTRACT_ID ID,CONTRACT_NUM NUM FROM TB_CON_CREDIT_INFO WHERE 1=1
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="approveId">AND EXISTS (SELECT a.APPLY_ID FROM TB_BIZ_APPROVE a WHERE a.APPROVE_ID=#approveId# AND a.APPLY_ID=c.APPLY_ID)</isNotNull>
+AND CON_STATUS IN ('01','02','10')
+    </select>
+    <select id="validLoan" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT LOAN_ID ID,LOAN_NUM NUM FROM TB_LOAN_INFO WHERE 1=1
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="approveId">AND CONTRACT_ID IN(
+SELECT ci.CONTRACT_ID FROM TB_BIZ_AMOUNT_APPROVE a
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON a.AMOUNT_ID=ad.AMOUNT_ID 
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.AMOUNT_DETAIL_ID=ad.AMOUNT_DETAIL_ID
+WHERE a.APPROVE_ID=#approveId#
+)</isNotNull>
+ AND LOAN_STATUS IN ('01','02','10')
+    </select>
+    <select id="validChange" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT CHANGE_ID ID FROM TB_CON_LOAN_CHANGE
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="approveId">AND CONTRACT_ID IN(
+SELECT ci.CONTRACT_ID FROM TB_BIZ_AMOUNT_APPROVE a
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON a.AMOUNT_ID=ad.AMOUNT_ID 
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.AMOUNT_DETAIL_ID=ad.AMOUNT_DETAIL_ID
+WHERE a.APPROVE_ID=#approveId#
+)</isNotNull>
+ AND CHANGE_STATUS IN ('01','02','10')
+    </select>
+    <select id="validAftExpire" parameterClass="java.util.HashMap"  resultClass="java.util.HashMap">
+SELECT CHECK_ID ID,CHECK_NUM NUM FROM TB_AFT_EXPIRE_CHECK
+<isNotNull property="userNum">AND USER_NUM=#userNum#</isNotNull>
+<isNotNull property="partyId">AND PARTY_ID=#partyId#</isNotNull>
+<isNotNull property="approveId">AND CONTRACT_ID IN(
+SELECT DISTINCT ci.CONTRACT_ID FROM TB_BIZ_AMOUNT_APPROVE a
+INNER JOIN TB_BIZ_AMOUNT_DETAIL_APPROVE ad ON a.AMOUNT_ID=ad.AMOUNT_ID 
+INNER JOIN TB_CON_CONTRACT_INFO ci ON ci.AMOUNT_DETAIL_ID=ad.AMOUNT_DETAIL_ID
+WHERE a.APPROVE_ID=#approveId#
+)</isNotNull>
+ AND CHANGE_STATUS IN ('01','02','10')
+    </select>
+    
+</sqlMap>
